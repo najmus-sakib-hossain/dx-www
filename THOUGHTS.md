@@ -13,6 +13,8 @@
 │  ◼ mcp (Svelte MCP - https://svelte.dev/docs/mcp)
 └
 
+Please study this codebase and format, lint and fix the folder structue of this project like remove unnecessary files and folders, move files to their appropriate places so that this project follows the best practices of svelte projects. As current the dist-macro, dist-micro is in root folder which is not a good practice. So move them to appropriate places.
+
 Now, this is good, before moving forward let's confirm somehting - dx-www-micro is supposed to have wasm of 300 bytes and dx-www-macro is supposed to have wasm of 7.5 kilo bytes. Let's see if this is the case. And also run and test the dx www new and dx dev commands to test if what we have created is working as expected. With new folder structure and all things!!!
 
 Shohan@dx MINGW64 /f/Code/dx-www/svelte (main)
