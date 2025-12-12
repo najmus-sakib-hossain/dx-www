@@ -11,8 +11,8 @@
 
 use anyhow::{Context, Result};
 use bincode::config;
-use flate2::Compression;
 use flate2::write::GzEncoder;
+use flate2::Compression;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;

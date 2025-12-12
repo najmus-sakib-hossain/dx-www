@@ -117,7 +117,7 @@ fn parse_config(source: &str, verbose: bool) -> Result<DxConfig> {
     // Production would use a proper parser
     for line in source.lines() {
         let line = line.trim();
-        
+
         // Skip comments and empty lines
         if line.is_empty() || line.starts_with("//") || line.starts_with('#') {
             continue;
@@ -180,7 +180,7 @@ fn extract_quoted_value(line: &str) -> Option<String> {
 /// Extract a string array from a line like: net: ["a.com", "b.com"]
 fn extract_string_array(line: &str) -> Vec<String> {
     let mut results = Vec::new();
-    
+
     // Find content between brackets
     if let (Some(start), Some(end)) = (line.find('['), line.rfind(']')) {
         let content = &line[start + 1..end];
@@ -259,7 +259,7 @@ fn extract_fetch_url(line: &str) -> Option<String> {
     // Simple extraction: fetch("https://example.com")
     let start = line.find("fetch(")? + 6;
     let rest = &line[start..];
-    
+
     // Find the quoted URL
     let quote_char = if rest.starts_with('"') {
         '"'
@@ -290,9 +290,7 @@ fn is_allowed_domain(url: &str, allowed: &[String]) -> bool {
     };
 
     if let Some(domain) = domain {
-        allowed.iter().any(|a| {
-            domain == a || domain.ends_with(&format!(".{}", a))
-        })
+        allowed.iter().any(|a| domain == a || domain.ends_with(&format!(".{}", a)))
     } else {
         false
     }

@@ -73,18 +73,14 @@ pub fn scan_server_api(root: &Path, verbose: bool) -> Result<RpcRegistry> {
         println!("  📡 RPC: Scanning server/api/...");
     }
 
-    for entry in WalkDir::new(&api_dir)
-        .follow_links(true)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
+    for entry in WalkDir::new(&api_dir).follow_links(true).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
-        
+
         // Only process .fn.dx files
         if !path.is_file() {
             continue;
         }
-        
+
         let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
         if !filename.ends_with(".fn.dx") {
             continue;
@@ -99,11 +95,18 @@ pub fn scan_server_api(root: &Path, verbose: bool) -> Result<RpcRegistry> {
 
         // Parse the file for exported functions
         let functions = parse_fn_file(path, &module, verbose)?;
-        
+
         for func in functions {
             if verbose {
-                println!("      + {}({})", func.fqn, 
-                    func.params.iter().map(|(n, t)| format!("{}: {}", n, t)).collect::<Vec<_>>().join(", "));
+                println!(
+                    "      + {}({})",
+                    func.fqn,
+                    func.params
+                        .iter()
+                        .map(|(n, t)| format!("{}: {}", n, t))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
             }
             registry.functions.insert(func.fqn.clone(), func);
         }
@@ -118,16 +121,14 @@ pub fn scan_server_api(root: &Path, verbose: bool) -> Result<RpcRegistry> {
 
 /// Parse a .fn.dx file for exported functions
 fn parse_fn_file(path: &Path, module: &str, _verbose: bool) -> Result<Vec<ServerFunction>> {
-    let source = fs::read_to_string(path)
-        .with_context(|| format!("Failed to read {}", path.display()))?;
+    let source =
+        fs::read_to_string(path).with_context(|| format!("Failed to read {}", path.display()))?;
 
     let mut functions = Vec::new();
 
     // Regex to match: export fn name(params) -> ReturnType
     // Simplified pattern - production would use proper parser
-    let fn_regex = Regex::new(
-        r"export\s+fn\s+(\w+)\s*\(([^)]*)\)(?:\s*->\s*(\S+))?"
-    ).unwrap();
+    let fn_regex = Regex::new(r"export\s+fn\s+(\w+)\s*\(([^)]*)\)(?:\s*->\s*(\S+))?").unwrap();
 
     for cap in fn_regex.captures_iter(&source) {
         let name = cap[1].to_string();
@@ -193,25 +194,27 @@ pub fn generate_client_ghosts(registry: &RpcRegistry, verbose: bool) -> Result<S
 
         for func in funcs {
             // Generate the ghost function
-            let params_sig: String = func.params
+            let params_sig: String = func
+                .params
                 .iter()
                 .map(|(name, ty)| format!("{}: {}", name, rust_type(ty)))
                 .collect::<Vec<_>>()
                 .join(", ");
 
-            let return_ty = func.return_type
+            let return_ty = func
+                .return_type
                 .as_ref()
                 .map(|t| rust_type(t))
                 .unwrap_or_else(|| "()".to_string());
 
-            code.push_str(&format!("    pub fn {}({}) -> {} {{\n", func.name, params_sig, return_ty));
-            
+            code.push_str(&format!(
+                "    pub fn {}({}) -> {} {{\n",
+                func.name, params_sig, return_ty
+            ));
+
             // Serialize arguments
-            let args: String = func.params
-                .iter()
-                .map(|(name, _)| name.as_str())
-                .collect::<Vec<_>>()
-                .join(", ");
+            let args: String =
+                func.params.iter().map(|(name, _)| name.as_str()).collect::<Vec<_>>().join(", ");
 
             code.push_str(&format!("        dx_rpc::call(\"{}\", ({}))\n", func.fqn, args));
             code.push_str("    }\n\n");
@@ -237,17 +240,11 @@ pub fn generate_server_handlers(registry: &RpcRegistry, verbose: bool) -> Result
     code.push_str("pub fn register_rpc_handlers(router: &mut RpcRouter) {\n");
 
     for func in registry.functions.values() {
-        code.push_str(&format!(
-            "    router.register(\"{}\", |args| {{\n",
-            func.fqn
-        ));
+        code.push_str(&format!("    router.register(\"{}\", |args| {{\n", func.fqn));
         code.push_str(&format!(
             "        // TODO: Deserialize args and call actual implementation\n"
         ));
-        code.push_str(&format!(
-            "        {}::{}(args)\n",
-            func.module, func.name
-        ));
+        code.push_str(&format!("        {}::{}(args)\n", func.module, func.name));
         code.push_str("    });\n");
     }
 

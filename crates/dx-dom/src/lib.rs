@@ -265,8 +265,9 @@ impl BatchCloner {
 
                 // Process removals
                 for op in remove_ops {
-                    if let Some(node) = registry.remove(op.arg1) &&
-                       let Some(parent) = node.parent_node() {
+                    if let Some(node) = registry.remove(op.arg1)
+                        && let Some(parent) = node.parent_node()
+                    {
                         let _ = parent.remove_child(&node);
                     }
                 }

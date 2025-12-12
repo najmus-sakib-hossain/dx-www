@@ -60,8 +60,11 @@ pub fn scan_project(root: &Path, verbose: bool) -> Result<SymbolTable> {
     }
 
     if verbose {
-        println!("  🔗 Linker: Indexed {} components, {} assets", 
-            table.components.len(), table.assets.len());
+        println!(
+            "  🔗 Linker: Indexed {} components, {} assets",
+            table.components.len(),
+            table.assets.len()
+        );
     }
 
     Ok(table)
@@ -69,11 +72,7 @@ pub fn scan_project(root: &Path, verbose: bool) -> Result<SymbolTable> {
 
 /// Scan units directory for components
 fn scan_units(units_dir: &Path, table: &mut SymbolTable, verbose: bool) -> Result<()> {
-    for entry in WalkDir::new(units_dir)
-        .follow_links(true)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
+    for entry in WalkDir::new(units_dir).follow_links(true).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
         if path.extension().map_or(false, |ext| ext == "dx" || ext == "tsx") {
             if let Some(symbol) = derive_symbol_name(units_dir, path) {
@@ -84,7 +83,7 @@ fn scan_units(units_dir: &Path, table: &mut SymbolTable, verbose: bool) -> Resul
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -94,18 +93,14 @@ fn scan_media(media_dir: &Path, table: &mut SymbolTable, verbose: bool) -> Resul
         println!("  🎨 Scanning media/...");
     }
 
-    for entry in WalkDir::new(media_dir)
-        .follow_links(true)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
+    for entry in WalkDir::new(media_dir).follow_links(true).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
         if !path.is_file() {
             continue;
         }
 
         let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-        
+
         // Support common asset types
         match ext {
             "svg" | "png" | "jpg" | "jpeg" | "webp" | "gif" | "ico" => {
@@ -139,7 +134,7 @@ fn derive_asset_name(base: &Path, path: &Path) -> Option<String> {
         let dir = parts[0].to_string();
         // Singularize common plurals
         if dir.ends_with('s') && dir.len() > 1 {
-            dir[..dir.len()-1].to_string()
+            dir[..dir.len() - 1].to_string()
         } else {
             dir
         }
@@ -161,12 +156,12 @@ fn derive_symbol_name(base: &Path, path: &Path) -> Option<String> {
     let parts: Vec<_> = relative.iter().map(|s| s.to_string_lossy()).collect();
 
     if parts.len() < 2 {
-        return None; 
+        return None;
     }
 
     // Category is the directory (ui, auth, etc.)
     let category = capitalize(&parts[0]);
-    
+
     // Component is the filename without extension
     let filename = path.file_stem()?.to_string_lossy();
     let component = capitalize(&filename);
@@ -189,16 +184,16 @@ mod tests {
     #[test]
     fn test_derive_symbol_name() {
         let base = Path::new("/app/units");
-        
+
         // Simple case
         let path = Path::new("/app/units/ui/button.dx");
         assert_eq!(derive_symbol_name(base, path), Some("Ui.Button".to_string()));
-        
+
         // Capitalization check (though folder conventions are usually lowercase)
         let path = Path::new("/app/units/auth/userProfile.dx");
         assert_eq!(derive_symbol_name(base, path), Some("Auth.UserProfile".to_string()));
     }
-    
+
     #[test]
     fn test_capitalize() {
         assert_eq!(capitalize("ui"), "Ui");

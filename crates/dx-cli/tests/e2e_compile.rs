@@ -14,7 +14,9 @@ async fn test_compile_simple_counter() -> Result<()> {
     fs::create_dir_all(&src_dir)?;
 
     let entry = src_dir.join("App.tsx");
-    fs::write(&entry, r#"
+    fs::write(
+        &entry,
+        r#"
 import { useState } from 'dx';
 
 export default function Counter() {
@@ -27,7 +29,8 @@ export default function Counter() {
     </div>
   );
 }
-    "#)?;
+    "#,
+    )?;
 
     let output = temp.path().join("dist");
 
@@ -65,7 +68,9 @@ async fn test_compile_complex_dashboard() -> Result<()> {
     fs::create_dir_all(&src_dir)?;
 
     let entry = src_dir.join("App.tsx");
-    fs::write(&entry, r#"
+    fs::write(
+        &entry,
+        r#"
 import { useState, useEffect } from 'dx';
 
 interface Metric {
@@ -127,7 +132,8 @@ export default function Dashboard() {
     </div>
   );
 }
-    "#)?;
+    "#,
+    )?;
 
     let output = temp.path().join("dist");
 
@@ -162,7 +168,9 @@ async fn test_compile_multiple_components() -> Result<()> {
     fs::create_dir_all(&src_dir)?;
 
     let entry = src_dir.join("App.tsx");
-    fs::write(&entry, r#"
+    fs::write(
+        &entry,
+        r#"
 import { useState } from 'dx';
 
 function Header() {
@@ -198,7 +206,8 @@ export default function App() {
     </div>
   );
 }
-    "#)?;
+    "#,
+    )?;
 
     let output = temp.path().join("dist");
     let result = dx_compiler::compile_tsx(&entry, &output, false)?;
@@ -219,19 +228,23 @@ async fn test_error_on_invalid_tsx() {
     fs::create_dir_all(&src_dir).unwrap();
 
     let entry = src_dir.join("App.tsx");
-    fs::write(&entry, r#"
+    fs::write(
+        &entry,
+        r#"
 export default function App() {
   // Invalid TSX - unclosed tag
   return <div><h1>Broken;
 }
-    "#).unwrap();
+    "#,
+    )
+    .unwrap();
 
     let output = temp.path().join("dist");
     let result = dx_compiler::compile_tsx(&entry, &output, false);
 
     // Should fail gracefully
     assert!(result.is_err(), "Should fail on invalid TSX");
-    
+
     println!("✓ Invalid TSX rejected correctly");
 }
 
@@ -242,7 +255,9 @@ async fn test_compile_preserves_semantic_meaning() -> Result<()> {
     fs::create_dir_all(&src_dir)?;
 
     let entry = src_dir.join("App.tsx");
-    fs::write(&entry, r#"
+    fs::write(
+        &entry,
+        r#"
 export default function App() {
   return (
     <div class="container">
@@ -252,14 +267,15 @@ export default function App() {
     </div>
   );
 }
-    "#)?;
+    "#,
+    )?;
 
     let output = temp.path().join("dist");
     dx_compiler::compile_tsx(&entry, &output, false)?;
 
     // Read templates JSON to verify structure preserved
     let templates_json = fs::read_to_string(output.join("templates.json"))?;
-    
+
     // Verify semantic elements are preserved
     assert!(templates_json.contains("container"), "Should preserve class names");
     assert!(templates_json.contains("title"), "Should preserve IDs");
@@ -277,11 +293,14 @@ async fn test_incremental_compilation_speed() -> Result<()> {
     fs::create_dir_all(&src_dir)?;
 
     let entry = src_dir.join("App.tsx");
-    fs::write(&entry, r#"
+    fs::write(
+        &entry,
+        r#"
 export default function App() {
   return <div>Initial</div>;
 }
-    "#)?;
+    "#,
+    )?;
 
     let output = temp.path().join("dist");
 
@@ -291,11 +310,14 @@ export default function App() {
     let first_time = start.elapsed();
 
     // Modify file
-    fs::write(&entry, r#"
+    fs::write(
+        &entry,
+        r#"
 export default function App() {
   return <div>Modified</div>;
 }
-    "#)?;
+    "#,
+    )?;
 
     // Second compilation (should be fast)
     let start = std::time::Instant::now();

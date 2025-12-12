@@ -97,7 +97,9 @@ fn create_test_project(temp_dir: &Path, tsx_code: &str) -> Result<()> {
 async fn test_browser_renders_simple_component() -> Result<()> {
     let temp = TempDir::new()?;
 
-    create_test_project(temp.path(), r#"
+    create_test_project(
+        temp.path(),
+        r#"
 export default function App() {
   return (
     <div class="test-app" data-testid="app">
@@ -106,7 +108,8 @@ export default function App() {
     </div>
   );
 }
-    "#)?;
+    "#,
+    )?;
 
     // Compile
     let src = temp.path().join("src/App.tsx");
@@ -117,7 +120,9 @@ export default function App() {
     let server = start_test_server(temp.path(), 3001).await?;
 
     // Run browser test
-    let result = run_browser_test("http://localhost:3001/test.html", r#"
+    let result = run_browser_test(
+        "http://localhost:3001/test.html",
+        r#"
         test('App container exists', () => {
             assertExists('[data-testid="app"]');
         });
@@ -130,7 +135,9 @@ export default function App() {
         test('Paragraph exists', () => {
             assertExists('p');
         });
-    "#).await?;
+    "#,
+    )
+    .await?;
 
     server.stop().await?;
 
@@ -144,7 +151,9 @@ export default function App() {
 async fn test_browser_handles_state_updates() -> Result<()> {
     let temp = TempDir::new()?;
 
-    create_test_project(temp.path(), r#"
+    create_test_project(
+        temp.path(),
+        r#"
 import { useState } from 'dx';
 
 export default function Counter() {
@@ -162,7 +171,8 @@ export default function Counter() {
     </div>
   );
 }
-    "#)?;
+    "#,
+    )?;
 
     let src = temp.path().join("src/App.tsx");
     let dist = temp.path().join("dist");
@@ -170,7 +180,9 @@ export default function Counter() {
 
     let server = start_test_server(temp.path(), 3002).await?;
 
-    let result = run_browser_test("http://localhost:3002/test.html", r#"
+    let result = run_browser_test(
+        "http://localhost:3002/test.html",
+        r#"
         test('Initial count is 0', () => {
             const count = document.querySelector('[data-testid="count"]');
             assertEqual(count.textContent, '0');
@@ -186,7 +198,9 @@ export default function Counter() {
                 assertEqual(count.textContent, '1', 'Count should be 1 after click');
             }, 16);
         });
-    "#).await?;
+    "#,
+    )
+    .await?;
 
     server.stop().await?;
 
@@ -200,7 +214,9 @@ export default function Counter() {
 async fn test_browser_handles_event_handlers() -> Result<()> {
     let temp = TempDir::new()?;
 
-    create_test_project(temp.path(), r#"
+    create_test_project(
+        temp.path(),
+        r#"
 import { useState } from 'dx';
 
 export default function App() {
@@ -234,7 +250,8 @@ export default function App() {
     </div>
   );
 }
-    "#)?;
+    "#,
+    )?;
 
     let src = temp.path().join("src/App.tsx");
     let dist = temp.path().join("dist");
@@ -242,7 +259,9 @@ export default function App() {
 
     let server = start_test_server(temp.path(), 3003).await?;
 
-    let result = run_browser_test("http://localhost:3003/test.html", r#"
+    let result = run_browser_test(
+        "http://localhost:3003/test.html",
+        r#"
         test('Click handler works', () => {
             const btn = assertExists('[data-testid="click-btn"]');
             assertEqual(btn.textContent.trim(), 'Click Me');
@@ -264,7 +283,9 @@ export default function App() {
                 assertEqual(target.textContent.trim(), 'Hovering');
             }, 16);
         });
-    "#).await?;
+    "#,
+    )
+    .await?;
 
     server.stop().await?;
 
@@ -278,7 +299,9 @@ export default function App() {
 async fn test_browser_performance_metrics() -> Result<()> {
     let temp = TempDir::new()?;
 
-    create_test_project(temp.path(), r#"
+    create_test_project(
+        temp.path(),
+        r#"
 export default function App() {
   return (
     <div class="perf-test">
@@ -289,7 +312,8 @@ export default function App() {
     </div>
   );
 }
-    "#)?;
+    "#,
+    )?;
 
     let src = temp.path().join("src/App.tsx");
     let dist = temp.path().join("dist");
@@ -327,7 +351,7 @@ async fn start_test_server(_path: &Path, _port: u16) -> Result<TestServer> {
     // 1. Start dx-server or simple HTTP server
     // 2. Serve the compiled artifacts
     // 3. Return handle to stop it later
-    
+
     let handle = tokio::spawn(async {
         // Simulated server
         tokio::time::sleep(Duration::from_secs(3600)).await;
@@ -349,7 +373,7 @@ async fn run_browser_test(_url: &str, _test_script: &str) -> Result<BrowserTestR
     // 4. Wait for results
     // 5. Collect pass/fail status
     // 6. Close browser
-    
+
     // For now, simulate successful test
     Ok(BrowserTestResult {
         passed: true,
@@ -378,11 +402,14 @@ async fn test_server_serves_compiled_artifacts() -> Result<()> {
     let src_dir = temp.path().join("src");
     fs::create_dir_all(&src_dir)?;
 
-    fs::write(src_dir.join("App.tsx"), r#"
+    fs::write(
+        src_dir.join("App.tsx"),
+        r#"
 export default function App() {
   return <div>Hello</div>;
 }
-    "#)?;
+    "#,
+    )?;
 
     let dist = temp.path().join("dist");
     dx_compiler::compile_tsx(&src_dir.join("App.tsx"), &dist, false)?;

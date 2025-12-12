@@ -1,17 +1,16 @@
 /**
  * dx-cli: The Command-Line Orchestrator
- * 
+ *
  * This is the entry point that connects:
  * - dx-compiler (TSX → Binary)
  * - dx-server (Binary → HTTP)
  * - dx-client (HTTP → Rendered App)
- * 
+ *
  * Commands:
  * - `dx new <name>` - Scaffold a new project
  * - `dx dev` - Development server with hot reload
  * - `dx build` - Production build
  */
-
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use console::style;
@@ -25,7 +24,7 @@ mod watch;
 use commands::{build, dev, new_project};
 
 /// dx-www: The Binary Web Runtime
-/// 
+///
 /// Build web applications that compile to WebAssembly and render
 /// via the HTIP protocol, achieving 338 bytes (Micro) to 7.5 KB (Macro)
 /// bundle sizes with zero-parse, zero-GC, zero-hydration architecture.
@@ -117,21 +116,19 @@ async fn main() -> Result<()> {
 
     // Execute command
     let result = match cli.command {
-        Commands::New { name, path, template } => {
-            new_project::execute(&name, path, &template).await
-        }
-        Commands::Dev { port, host, open } => {
-            dev::execute(port, &host, open).await
-        }
-        Commands::Build { release, output, skip_optimize } => {
-            build::execute(release, output, skip_optimize).await
-        }
-        Commands::Info => {
-            show_info().await
-        }
-        Commands::Clean => {
-            clean_artifacts().await
-        }
+        Commands::New {
+            name,
+            path,
+            template,
+        } => new_project::execute(&name, path, &template).await,
+        Commands::Dev { port, host, open } => dev::execute(port, &host, open).await,
+        Commands::Build {
+            release,
+            output,
+            skip_optimize,
+        } => build::execute(release, output, skip_optimize).await,
+        Commands::Info => show_info().await,
+        Commands::Clean => clean_artifacts().await,
     };
 
     // Handle errors with pretty formatting
@@ -148,33 +145,33 @@ async fn main() -> Result<()> {
 
 /// Initialize tracing/logging
 fn init_tracing(verbose: bool) {
-    use tracing_subscriber::{EnvFilter, fmt};
+    use tracing_subscriber::{fmt, EnvFilter};
 
     let filter = if verbose {
-        EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::new("debug"))
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("debug"))
     } else {
-        EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::new("info"))
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"))
     };
 
-    fmt()
-        .with_env_filter(filter)
-        .with_target(false)
-        .without_time()
-        .init();
+    fmt().with_env_filter(filter).with_target(false).without_time().init();
 }
 
 /// Print the dx banner
 fn print_banner() {
-    println!("{}", style("
+    println!(
+        "{}",
+        style(
+            "
 ██████╗ ██╗  ██╗      ██╗    ██╗██╗    ██╗██╗    ██╗
 ██╔══██╗╚██╗██╔╝      ██║    ██║██║    ██║██║    ██║
 ██║  ██║ ╚███╔╝ █████╗██║ █╗ ██║██║ █╗ ██║██║ █╗ ██║
 ██║  ██║ ██╔██╗ ╚════╝██║███╗██║██║███╗██║██║███╗██║
 ██████╔╝██╔╝ ██╗      ╚███╔███╔╝╚███╔███╔╝╚███╔███╔╝
 ╚═════╝ ╚═╝  ╚═╝       ╚══╝╚══╝  ╚══╝╚══╝  ╚══╝╚══╝
-    ").cyan());
+    "
+        )
+        .cyan()
+    );
     println!("{}", style("The Binary Web Runtime").cyan().dim());
     println!("{}\n", style("v0.4.0").dim());
 }
@@ -184,7 +181,7 @@ async fn show_info() -> Result<()> {
     use crate::config::ProjectConfig;
 
     let config = ProjectConfig::load(".")?;
-    
+
     println!("{}", style("📦 Project Information").bold());
     println!();
     println!("  {}: {}", style("Name").bold(), config.name());
@@ -193,26 +190,20 @@ async fn show_info() -> Result<()> {
     println!();
     println!("{}", style("📊 Build Status").bold());
     println!();
-    
+
     let dist_exists = std::path::Path::new("dist").exists();
     if dist_exists {
         println!("  {} Built artifacts in dist/", style("✓").green());
-        
+
         // Show sizes
         if let Ok(metadata) = std::fs::metadata("dist/app.dxb") {
-            println!("  {} app.dxb: {} bytes", 
-                style("•").dim(), 
-                metadata.len()
-            );
+            println!("  {} app.dxb: {} bytes", style("•").dim(), metadata.len());
         }
     } else {
         println!("  {} No build artifacts found", style("○").dim());
-        println!("  {} Run {} to build", 
-            style("→").cyan(), 
-            style("dx build").bold()
-        );
+        println!("  {} Run {} to build", style("→").cyan(), style("dx build").bold());
     }
-    
+
     Ok(())
 }
 
@@ -221,17 +212,16 @@ async fn clean_artifacts() -> Result<()> {
     use std::fs;
 
     println!("{}", style("🧹 Cleaning build artifacts...").bold());
-    
+
     let dirs = vec!["dist", "target/dx"];
-    
+
     for dir in dirs {
         if std::path::Path::new(dir).exists() {
-            fs::remove_dir_all(dir)
-                .with_context(|| format!("Failed to remove {}", dir))?;
+            fs::remove_dir_all(dir).with_context(|| format!("Failed to remove {}", dir))?;
             println!("  {} Removed {}", style("✓").green(), dir);
         }
     }
-    
+
     println!("\n{}", style("✨ Clean complete").green().bold());
     Ok(())
 }

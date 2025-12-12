@@ -89,7 +89,7 @@ fn serve_spa_shell(state: ServerState) -> impl IntoResponse {
             tracing::warn!("index.html not found at {}", index_path.display());
         }
     }
-    
+
     // Fallback to demo HTML
     tracing::debug!("Using demo HTML (index.html not found in project)");
     Html(include_str!("../../../examples/hello-world/demo.html")).into_response()
@@ -130,10 +130,7 @@ pub async fn serve_binary_stream(
         .map(|s| s.trim_matches('"'));
 
     // Get current version hash
-    let current_hash = state
-        .current_version
-        .get("app.wasm")
-        .map(|entry| entry.value().clone());
+    let current_hash = state.current_version.get("app.wasm").map(|entry| entry.value().clone());
 
     // Check for version negotiation
     if let (Some(client_hash_str), Some(current_hash_str)) = (client_hash, &current_hash) {
@@ -161,7 +158,7 @@ pub async fn serve_binary_stream(
 
         if let Some(patch_data) = patch_result {
             tracing::info!("📦 Sending patch ({} bytes)", patch_data.len());
-            
+
             return axum::response::Response::builder()
                 .status(StatusCode::OK)
                 .header(header::CONTENT_TYPE, "application/octet-stream")
@@ -234,11 +231,8 @@ pub async fn serve_binary_stream(
 pub async fn serve_favicon() -> impl IntoResponse {
     // Simple SVG favicon with "dx" text
     let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#667eea"/><text x="16" y="22" text-anchor="middle" fill="white" font-family="Arial" font-size="14" font-weight="bold">dx</text></svg>"##;
-    
-    (
-        [(header::CONTENT_TYPE, "image/svg+xml")],
-        svg
-    )
+
+    ([(header::CONTENT_TYPE, "image/svg+xml")], svg)
 }
 
 /// Health check endpoint

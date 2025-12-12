@@ -14,7 +14,7 @@
 //! theme_color "#1a1a2e"
 //! background_color "#16213e"
 //! display "standalone"
-//! 
+//!
 //! icons {
 //!     "icon:app-192" 192
 //!     "icon:app-512" 512
@@ -116,7 +116,7 @@ fn parse_manifest_content(source: &str, _verbose: bool) -> Result<PwaManifest> {
 
     for line in source.lines() {
         let line = line.trim();
-        
+
         if line.is_empty() || line.starts_with("//") || line.starts_with('#') {
             continue;
         }
@@ -176,20 +176,22 @@ fn extract_quoted(line: &str) -> Option<String> {
 }
 
 /// Generate binary service worker
-pub fn generate_service_worker(manifest: &PwaManifest, cache_files: &[String], verbose: bool) -> Result<String> {
+pub fn generate_service_worker(
+    manifest: &PwaManifest,
+    cache_files: &[String],
+    verbose: bool,
+) -> Result<String> {
     if verbose {
         println!("  📱 PWA: Generating service worker...");
     }
 
     let cache_name = format!("{}-v1", manifest.short_name.to_lowercase().replace(' ', "-"));
-    
-    let cache_list = cache_files
-        .iter()
-        .map(|f| format!("  '{}'", f))
-        .collect::<Vec<_>>()
-        .join(",\n");
 
-    let sw_code = format!(r#"// Auto-generated Service Worker by dx-compiler
+    let cache_list =
+        cache_files.iter().map(|f| format!("  '{}'", f)).collect::<Vec<_>>().join(",\n");
+
+    let sw_code = format!(
+        r#"// Auto-generated Service Worker by dx-compiler
 // DO NOT EDIT
 
 const CACHE_NAME = '{}';
@@ -261,7 +263,9 @@ self.addEventListener('message', (event) => {{
     console.log('DX RPC:', event.data.method);
   }}
 }});
-"#, cache_name, cache_list);
+"#,
+        cache_name, cache_list
+    );
 
     if verbose {
         println!("    Generated SW: {} bytes", sw_code.len());
@@ -272,7 +276,8 @@ self.addEventListener('message', (event) => {{
 
 /// Generate the HTML meta tags for PWA
 pub fn generate_pwa_meta(manifest: &PwaManifest) -> String {
-    format!(r#"
+    format!(
+        r#"
     <meta name="theme-color" content="{theme}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">

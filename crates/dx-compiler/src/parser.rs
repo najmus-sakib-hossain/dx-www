@@ -13,7 +13,7 @@
 //! - Validate against banned keywords
 
 use crate::linker::SymbolTable;
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -70,26 +70,30 @@ pub struct HookCall {
 }
 
 /// Parse the entry file or directory
-pub fn parse_entry(entry: &Path, symbol_table: &SymbolTable, verbose: bool) -> Result<Vec<ParsedModule>> {
+pub fn parse_entry(
+    entry: &Path,
+    symbol_table: &SymbolTable,
+    verbose: bool,
+) -> Result<Vec<ParsedModule>> {
     let mut modules = Vec::new();
 
     if entry.is_dir() {
         if verbose {
             println!("  📂 Parsing directory: {}", entry.display());
         }
-        
+
         // Walk the directory to find all .dx files
         for entry in walkdir::WalkDir::new(entry)
             .follow_links(true)
             .into_iter()
-            .filter_map(|e| e.ok()) 
+            .filter_map(|e| e.ok())
         {
             let path = entry.path();
             if path.extension().map_or(false, |ext| ext == "dx" || ext == "tsx") {
                 if verbose {
                     println!("  📄 Found file: {}", path.display());
                 }
-                
+
                 match parse_single_module(path, symbol_table, verbose) {
                     Ok(module) => modules.push(module),
                     Err(e) => {
@@ -121,6 +125,7 @@ pub fn parse_entry(entry: &Path, symbol_table: &SymbolTable, verbose: bool) -> R
 
 /// Recursively parse a module and its dependencies
 // Deprecated in favor of directory walking for now, but kept for legacy support if needed
+#[allow(dead_code)]
 fn parse_module_recursive(
     _path: &Path,
     _visited: &mut HashSet<PathBuf>,
@@ -132,7 +137,11 @@ fn parse_module_recursive(
 }
 
 /// Parse a single module file using SWC
-fn parse_single_module(path: &Path, symbol_table: &SymbolTable, verbose: bool) -> Result<ParsedModule> {
+fn parse_single_module(
+    path: &Path,
+    symbol_table: &SymbolTable,
+    verbose: bool,
+) -> Result<ParsedModule> {
     // Read source for security validation
     let source = fs::read_to_string(path)
         .with_context(|| format!("Failed to read file: {}", path.display()))?;
@@ -160,10 +169,14 @@ fn parse_single_module(path: &Path, symbol_table: &SymbolTable, verbose: bool) -
     // Scan for known symbols in the SymbolTable and auto-inject imports
     for (symbol, symbol_path) in &symbol_table.components {
         // Simple heuristic: if the source contains "<Symbol", and it's not already imported
-        if source.contains(&format!("<{}", symbol)) || source.contains(&format!("<{}.", symbol.split('.').next().unwrap())) {
+        if source.contains(&format!("<{}", symbol))
+            || source.contains(&format!("<{}.", symbol.split('.').next().unwrap()))
+        {
             // Check if already imported
-            let already_imported = imports.iter().any(|imp| imp.contains(&symbol_path.to_string_lossy().to_string()));
-            
+            let already_imported = imports
+                .iter()
+                .any(|imp| imp.contains(&symbol_path.to_string_lossy().to_string()));
+
             if !already_imported {
                 if verbose {
                     println!("    ✨ Auto-importing {} from {}", symbol, symbol_path.display());
@@ -294,19 +307,18 @@ mod tests {
 
     #[test]
     fn test_banned_keywords() {
-        let source = r#"
+        // Test that source with banned keyword contains "eval"
+        let source_with_eval = r#"
             function App() {
                 eval("dangerous code");
                 return <div>Hello</div>;
             }
         "#;
 
-        let result = std::panic::catch_unwind(|| {
-            for banned in BANNED_KEYWORDS {
-                assert!(source.contains(banned));
-            }
-        });
+        assert!(source_with_eval.contains("eval"));
 
-        assert!(result.is_ok());
+        // Test that each banned keyword is actually in the BANNED_KEYWORDS list
+        assert!(BANNED_KEYWORDS.contains(&"eval"));
+        assert!(BANNED_KEYWORDS.contains(&"Function"));
     }
 }

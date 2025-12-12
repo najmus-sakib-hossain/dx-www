@@ -11,7 +11,7 @@
 //! - `templates`: A list of unique DOM structures
 //! - `bindings`: A mapping of Slot IDs to Rust expressions
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

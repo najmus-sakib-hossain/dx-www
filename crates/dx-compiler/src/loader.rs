@@ -113,7 +113,8 @@ fn generate_micro_loader() -> String {
   // Export API
   window.DX = { load, registerTemplate, nodes };
 })();
-"##.to_string()
+"##
+    .to_string()
 }
 
 /// Generate full Macro loader with HTIP support
@@ -276,7 +277,8 @@ fn generate_macro_loader() -> String {
   // Export API
   window.DX = { load, registerTemplate, on, nodes, templates };
 })();
-"##.to_string()
+"##
+    .to_string()
 }
 
 /// Generate HTML shell with loader embedded
@@ -286,7 +288,8 @@ pub fn generate_html_shell(mode: RuntimeMode, title: &str, wasm_path: &str) -> S
         RuntimeMode::Macro => generate_macro_loader(),
     };
 
-    format!(r##"<!DOCTYPE html>
+    format!(
+        r##"<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -325,7 +328,12 @@ pub fn generate_html_shell(mode: RuntimeMode, title: &str, wasm_path: &str) -> S
   </script>
 </body>
 </html>
-"##, title = title, mode = mode, loader = loader, wasm_path = wasm_path)
+"##,
+        title = title,
+        mode = mode,
+        loader = loader,
+        wasm_path = wasm_path
+    )
 }
 
 #[cfg(test)]

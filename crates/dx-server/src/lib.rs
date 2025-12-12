@@ -100,16 +100,18 @@ impl ServerState {
         if layout_path.exists() {
             let bytes = std::fs::read(&layout_path)?;
             self.binary_cache.insert("layout.bin".to_string(), bytes.clone());
-            
+
             // Store version for delta patching
             let hash = {
                 let mut store = self.version_store.lock().unwrap();
                 store.store(bytes)
             };
             self.current_version.insert("layout.bin".to_string(), hash.clone());
-            tracing::debug!("  ✓ Cached layout.bin ({} bytes, hash: {})", 
-                self.binary_cache.get("layout.bin").unwrap().len(), 
-                &hash[..8]);
+            tracing::debug!(
+                "  ✓ Cached layout.bin ({} bytes, hash: {})",
+                self.binary_cache.get("layout.bin").unwrap().len(),
+                &hash[..8]
+            );
         }
 
         // Load app.wasm
@@ -118,7 +120,7 @@ impl ServerState {
             let bytes = std::fs::read(&wasm_path)?;
             let size = bytes.len();
             self.binary_cache.insert("app.wasm".to_string(), bytes.clone());
-            
+
             // Store version for delta patching
             let hash = {
                 let mut store = self.version_store.lock().unwrap();

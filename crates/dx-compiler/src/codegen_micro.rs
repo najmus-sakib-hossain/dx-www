@@ -112,6 +112,7 @@ impl EventIndex {
     }
 
     /// Register an event handler, returning its ID
+    #[allow(dead_code)]
     fn register(&mut self, expression: &str) -> u32 {
         if let Some(&id) = self.handlers.get(expression) {
             return id;
@@ -129,11 +130,12 @@ impl EventIndex {
             return String::new();
         }
 
-        let mut lines = Vec::new();
-        lines.push("/// Event dispatcher - called by JS with event ID".to_string());
-        lines.push("#[no_mangle]".to_string());
-        lines.push("pub extern \"C\" fn on_event(id: u32) {".to_string());
-        lines.push("    match id {".to_string());
+        let mut lines = vec![
+            "/// Event dispatcher - called by JS with event ID".to_string(),
+            "#[no_mangle]".to_string(),
+            "pub extern \"C\" fn on_event(id: u32) {".to_string(),
+            "    match id {".to_string(),
+        ];
 
         // Sort for deterministic output
         let mut entries: Vec<_> = self.handlers.iter().collect();

@@ -64,7 +64,8 @@ pub fn compile_tsx(entry: &Path, output: &Path, verbose: bool) -> Result<Compile
     let symbol_table = linker::scan_project(search_root, verbose)?;
 
     // Step 1: Parse
-    let parsed_ast = parser::parse_entry(entry, &symbol_table, verbose).context("Failed to parse entry file")?;
+    let parsed_ast =
+        parser::parse_entry(entry, &symbol_table, verbose).context("Failed to parse entry file")?;
 
     // Step 2: Analyze & Decide
     let (metrics, runtime_variant) = analyzer::analyze_and_decide(&parsed_ast, verbose)?;
@@ -151,7 +152,10 @@ pub fn compile_tsx(entry: &Path, output: &Path, verbose: bool) -> Result<Compile
 /// This is useful for build tools that want to understand the application
 /// without performing a full compilation.
 /// Analyze a TSX file and return complexity metrics without compiling
-pub fn analyze_tsx(entry: &Path, verbose: bool) -> Result<(analyzer::ComplexityMetrics, analyzer::RuntimeVariant)> {
+pub fn analyze_tsx(
+    entry: &Path,
+    verbose: bool,
+) -> Result<(analyzer::ComplexityMetrics, analyzer::RuntimeVariant)> {
     let search_root = entry.parent().unwrap_or_else(|| Path::new("."));
     let symbol_table = linker::scan_project(search_root, verbose)?;
     let parsed_ast = parser::parse_entry(entry, &symbol_table, verbose)?;
@@ -177,11 +181,15 @@ mod tests {
         let output = temp.path().join("dist");
 
         // Create a simple TSX file
-        fs::write(&entry, r#"
+        fs::write(
+            &entry,
+            r#"
 export default function App() {
     return <div>Hello World</div>;
 }
-        "#).unwrap();
+        "#,
+        )
+        .unwrap();
 
         let result = compile_tsx(&entry, &output, false);
         assert!(result.is_ok(), "Compilation should succeed");
@@ -196,13 +204,17 @@ export default function App() {
         let temp = TempDir::new().unwrap();
         let entry = temp.path().join("App.tsx");
 
-        fs::write(&entry, r#"
+        fs::write(
+            &entry,
+            r#"
 import { useState } from 'dx';
 export default function App() {
     const [count, setCount] = useState(0);
     return <div>{count}</div>;
 }
-        "#).unwrap();
+        "#,
+        )
+        .unwrap();
 
         let result = analyze_tsx(&entry, false);
         assert!(result.is_ok(), "Analysis should succeed");

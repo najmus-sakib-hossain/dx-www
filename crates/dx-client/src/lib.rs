@@ -55,7 +55,7 @@ extern "C" {
 
     // State
     fn host_notify_state_change(slot_id: u32);
-    
+
     // Debug
     fn host_log(val: u32);
 }
@@ -125,99 +125,123 @@ unsafe fn process_htip_stream(data: &[u8]) -> u32 {
 
         match op {
             OP_CLONE => {
-                if offset >= data.len() { break; }
+                if offset >= data.len() {
+                    break;
+                }
                 let template_id = data[offset] as u32;
                 offset += 1;
-                
+
                 let node = host_clone_template(template_id);
                 host_append(0, node);
                 RUNTIME.node_count += 1;
             }
 
             OP_TEMPLATE_DEF => {
-                if offset + 3 >= data.len() { break; }
+                if offset + 3 >= data.len() {
+                    break;
+                }
                 let id = data[offset] as u32;
                 offset += 1;
                 let len = read_u16(&data, offset) as usize;
                 offset += 2;
-                
-                if offset + len > data.len() { break; }
+
+                if offset + len > data.len() {
+                    break;
+                }
                 let html = &data[offset..offset + len];
                 offset += len;
-                
+
                 host_cache_template(id, html.as_ptr(), len as u32);
                 RUNTIME.template_count += 1;
             }
 
             OP_PATCH_TEXT => {
-                if offset + 4 >= data.len() { break; }
+                if offset + 4 >= data.len() {
+                    break;
+                }
                 let node_id = read_u16(&data, offset) as u32;
                 offset += 2;
                 let text_len = read_u16(&data, offset) as usize;
                 offset += 2;
-                
-                if offset + text_len > data.len() { break; }
+
+                if offset + text_len > data.len() {
+                    break;
+                }
                 let text = &data[offset..offset + text_len];
                 offset += text_len;
-                
+
                 host_set_text(node_id, text.as_ptr(), text_len as u32);
             }
 
             OP_PATCH_ATTR => {
-                if offset + 6 >= data.len() { break; }
+                if offset + 6 >= data.len() {
+                    break;
+                }
                 let node_id = read_u16(&data, offset) as u32;
                 offset += 2;
                 let key_len = read_u16(&data, offset) as usize;
                 offset += 2;
-                
-                if offset + key_len >= data.len() { break; }
+
+                if offset + key_len >= data.len() {
+                    break;
+                }
                 let key = &data[offset..offset + key_len];
                 offset += key_len;
-                
+
                 let val_len = read_u16(&data, offset) as usize;
                 offset += 2;
-                
-                if offset + val_len > data.len() { break; }
+
+                if offset + val_len > data.len() {
+                    break;
+                }
                 let val = &data[offset..offset + val_len];
                 offset += val_len;
-                
+
                 host_set_attr(node_id, key.as_ptr(), key_len as u32, val.as_ptr(), val_len as u32);
             }
 
             OP_CLASS_TOGGLE => {
-                if offset + 5 >= data.len() { break; }
+                if offset + 5 >= data.len() {
+                    break;
+                }
                 let node_id = read_u16(&data, offset) as u32;
                 offset += 2;
                 let class_len = read_u16(&data, offset) as usize;
                 offset += 2;
-                
-                if offset + class_len >= data.len() { break; }
+
+                if offset + class_len >= data.len() {
+                    break;
+                }
                 let class = &data[offset..offset + class_len];
                 offset += class_len;
-                
+
                 let enable = data[offset] as u32;
                 offset += 1;
-                
+
                 host_toggle_class(node_id, class.as_ptr(), class_len as u32, enable);
             }
 
             OP_REMOVE => {
-                if offset + 2 > data.len() { break; }
+                if offset + 2 > data.len() {
+                    break;
+                }
                 let node_id = read_u16(&data, offset) as u32;
                 offset += 2;
-                
+
                 host_remove(node_id);
             }
 
             OP_EVENT => {
-                if offset + 5 > data.len() { break; }
+                if offset + 5 > data.len() {
+                    break;
+                }
                 let node_id = read_u16(&data, offset) as u32;
                 offset += 2;
                 let event_type = data[offset] as u32;
                 offset += 1;
                 let handler_id = read_u16(&data, offset) as u32;
                 offset += 2;
-                
+
                 host_listen(node_id, event_type, handler_id);
             }
 

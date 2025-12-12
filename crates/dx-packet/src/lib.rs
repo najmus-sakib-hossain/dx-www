@@ -456,12 +456,10 @@ impl PatchHeader {
             return None;
         }
         let base = u64::from_le_bytes([
-            bytes[0], bytes[1], bytes[2], bytes[3],
-            bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
         ]);
         let target = u64::from_le_bytes([
-            bytes[8], bytes[9], bytes[10], bytes[11],
-            bytes[12], bytes[13], bytes[14], bytes[15],
+            bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15],
         ]);
         let algo = bytes[16];
         Some(Self {
@@ -481,8 +479,7 @@ impl PatchHeader {
     feature = "std",
     derive(Serialize, Deserialize, bincode::Encode, bincode::Decode)
 )]
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct CapabilitiesManifest {
     pub network: bool,
     pub storage: bool,
@@ -491,4 +488,3 @@ pub struct CapabilitiesManifest {
     pub microphone: bool,
     pub signature: alloc::vec::Vec<u8>,
 }
-

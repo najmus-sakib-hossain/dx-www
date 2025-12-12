@@ -1,8 +1,8 @@
 /**
  * `dx new` - Project scaffolder
- * 
+ *
  * Creates a new dx-www project with the Binary Dawn v1.0 structure.
- * 
+ *
  * Structure:
  * - dx (God file)
  * - .dx/ (System)
@@ -12,7 +12,6 @@
  * - server/ (Backend)
  * - pwa/ (Manifest)
  */
-
 use anyhow::{Context, Result};
 use console::style;
 use std::fs;
@@ -52,40 +51,37 @@ fn create_binary_dawn_structure(target: &Path) -> Result<()> {
         ".dx/style",
         ".dx/www",
         ".dx/temp",
-
         // Media Reactor
         "media/images",
         "media/video",
         "media/audio",
         "media/fonts",
         "media/raw",
-
         // Routes
         "pages",
         "pages/(marketing)",
         "pages/(auth)",
         "pages/(app)/projects",
         "pages/(app)/settings",
-
         // Units (Components)
         "units/ui",
         "units/cart",
         "units/auth",
         "units/analytics",
-
         // Server (Binary Backend)
         "server/api",
         "server/actions",
         "server/cron",
-
         // PWA
         "pwa/icons",
     ];
 
     let pb = indicatif::ProgressBar::new(dirs.len() as u64);
-    pb.set_style(indicatif::ProgressStyle::default_bar()
-        .template("{spinner:.green} {msg}")
-        .unwrap());
+    pb.set_style(
+        indicatif::ProgressStyle::default_bar()
+            .template("{spinner:.green} {msg}")
+            .unwrap(),
+    );
 
     for dir in dirs {
         pb.set_message(format!("Creating {}...", dir));
@@ -93,7 +89,7 @@ fn create_binary_dawn_structure(target: &Path) -> Result<()> {
             .with_context(|| format!("Failed to create directory: {}", dir))?;
         pb.inc(1);
     }
-    
+
     pb.finish_with_message("Structure created.");
     println!("  {} Folder structure (Binary Dawn v1.0)", style("✓").green());
 
@@ -102,7 +98,8 @@ fn create_binary_dawn_structure(target: &Path) -> Result<()> {
 
 /// Create the 'dx' God File
 fn create_god_file(target: &Path, name: &str) -> Result<()> {
-    let config = format!(r#"# dx - God File
+    let config = format!(
+        r#"# dx - God File
 # Binary Dawn v1.0 Config
     
 name: "{}"
@@ -116,10 +113,11 @@ optimize: "max"
 [server]
 port: 3000
 compression: "brotli"
-"#, name);
+"#,
+        name
+    );
 
-    fs::write(target.join("dx"), config)
-        .with_context(|| "Failed to write dx file")?;
+    fs::write(target.join("dx"), config).with_context(|| "Failed to write dx file")?;
 
     println!("  {} dx (God File)", style("✓").green());
     Ok(())
@@ -128,7 +126,8 @@ compression: "brotli"
 /// Generate starter files for the structure
 fn generate_binary_dawn_starter(target: &Path, name: &str) -> Result<()> {
     // 1. pages/index.dx
-    let index_dx = format!(r#"import {{ Button }} from 'units/ui/button';
+    let index_dx = format!(
+        r#"import {{ Button }} from 'units/ui/button';
 
 export default function Landing() {{
   return (
@@ -143,7 +142,8 @@ export default function Landing() {{
     </div>
   );
 }}
-"#);
+"#
+    );
     fs::write(target.join("pages/index.dx"), index_dx)?;
 
     // 2. files in units/ui/button.dx
@@ -172,7 +172,8 @@ export default function Landing() {{
     fs::write(target.join("pages/_layout.dx"), layout_dx)?;
 
     // 4. pwa/manifest.dx
-    let manifest_dx = format!(r##"{{
+    let manifest_dx = format!(
+        r##"{{
     "name": "{}",
     "short_name": "{}",
     "start_url": "/",
@@ -184,7 +185,9 @@ export default function Landing() {{
         {{ "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }}
     ]
 }}
-"##, name, name);
+"##,
+        name, name
+    );
     fs::write(target.join("pwa/manifest.dx"), manifest_dx)?;
 
     // 5. Create .gitignore
@@ -201,7 +204,7 @@ export default function Landing() {{
 .idea/
 "#;
     fs::write(target.join(".gitignore"), gitignore)?;
-    
+
     println!("  {} Starter files (index, layout, button)", style("✓").green());
 
     Ok(())

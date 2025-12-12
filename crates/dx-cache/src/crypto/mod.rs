@@ -38,7 +38,7 @@ pub fn generate_cache_key(origin: &str, public_key: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::SigningKey;
+    use ed25519_dalek::{Signer, SigningKey};
     use rand::rngs::OsRng;
 
     #[test]

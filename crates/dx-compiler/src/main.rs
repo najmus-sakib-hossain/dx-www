@@ -156,7 +156,8 @@ async fn build_project(
 
     // Step 1: Parse
     pb.set_message("Parsing .dx files...");
-    let parsed_ast = parser::parse_entry(&entry, &symbol_table, verbose).context("Failed to parse entry file")?;
+    let parsed_ast = parser::parse_entry(&entry, &symbol_table, verbose)
+        .context("Failed to parse entry file")?;
     pb.inc(1);
 
     // Step 2: Analyze & Decide (THE INTELLIGENCE)

@@ -1,12 +1,11 @@
 /**
  * `dx build` - Production build command
- * 
+ *
  * Compiles the application with optimizations:
  * 1. dx-compiler → generates optimized binary
  * 2. wasm-opt → optimizes WASM (if not skipped)
  * 3. Output → dist/ directory
  */
-
 use anyhow::{Context, Result};
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
@@ -20,8 +19,7 @@ pub async fn execute(release: bool, output: PathBuf, skip_optimize: bool) -> Res
     println!();
 
     // Load configuration
-    let config = ProjectConfig::load(".")
-        .with_context(|| "Failed to load dx config")?;
+    let config = ProjectConfig::load(".").with_context(|| "Failed to load dx config")?;
 
     let start = Instant::now();
 
@@ -38,7 +36,7 @@ pub async fn execute(release: bool, output: PathBuf, skip_optimize: bool) -> Res
     pb.set_message("📝 Compiling TSX to binary...");
     pb.set_position(0);
     let _compile_result = compile_typescript(&config, &output).await?;
-    pb.set_position(70);  // Compilation includes WASM generation
+    pb.set_position(70); // Compilation includes WASM generation
 
     // Step 3: Optimize (if not skipped)
     if !skip_optimize && release {
@@ -70,10 +68,9 @@ pub async fn execute(release: bool, output: PathBuf, skip_optimize: bool) -> Res
 
     // Show next steps
     println!("\n{}", style("Next steps:").bold());
-    println!("  {} Deploy the dist/ directory to your hosting provider", 
-        style("1.").cyan()
-    );
-    println!("  {} Or run a local server: {}", 
+    println!("  {} Deploy the dist/ directory to your hosting provider", style("1.").cyan());
+    println!(
+        "  {} Or run a local server: {}",
         style("2.").cyan(),
         style("python -m http.server 8000").bold()
     );
@@ -82,7 +79,10 @@ pub async fn execute(release: bool, output: PathBuf, skip_optimize: bool) -> Res
 }
 
 /// Compile TypeScript using dx-compiler
-async fn compile_typescript(_config: &ProjectConfig, output: &PathBuf) -> Result<dx_compiler::CompileResult> {
+async fn compile_typescript(
+    _config: &ProjectConfig,
+    output: &PathBuf,
+) -> Result<dx_compiler::CompileResult> {
     use std::path::Path;
 
     // Determine entry point
@@ -121,9 +121,7 @@ async fn optimize_wasm(output: &PathBuf) -> Result<()> {
     let wasm_path = output.join("runtime.wasm");
 
     // Check if wasm-opt is available
-    let status = Command::new("wasm-opt")
-        .arg("--version")
-        .output();
+    let status = Command::new("wasm-opt").arg("--version").output();
 
     if status.is_err() {
         tracing::warn!("wasm-opt not found, skipping optimization");
@@ -155,8 +153,7 @@ async fn copy_artifacts(output: &PathBuf) -> Result<()> {
     use std::fs;
 
     // Create output directory
-    fs::create_dir_all(output)
-        .with_context(|| "Failed to create output directory")?;
+    fs::create_dir_all(output).with_context(|| "Failed to create output directory")?;
 
     // Copy files
     let files = vec![
@@ -168,10 +165,9 @@ async fn copy_artifacts(output: &PathBuf) -> Result<()> {
     for (src, dst) in files {
         let src_path = PathBuf::from("target/dx").join(src);
         let dst_path = output.join(dst);
-        
+
         if src_path.exists() {
-            fs::copy(&src_path, &dst_path)
-                .with_context(|| format!("Failed to copy {}", src))?;
+            fs::copy(&src_path, &dst_path).with_context(|| format!("Failed to copy {}", src))?;
         }
     }
 
@@ -198,7 +194,8 @@ async fn show_bundle_sizes(output: &PathBuf) -> Result<()> {
         if let Ok(metadata) = fs::metadata(&path) {
             let size = metadata.len();
             total_size += size;
-            println!("  {} {}: {} ({} bytes)", 
+            println!(
+                "  {} {}: {} ({} bytes)",
                 style("•").dim(),
                 style(desc).bold(),
                 format_size(size),
@@ -208,15 +205,13 @@ async fn show_bundle_sizes(output: &PathBuf) -> Result<()> {
     }
 
     println!();
-    println!("  {} Total: {}", 
-        style("→").cyan(),
-        style(format_size(total_size)).bold()
-    );
+    println!("  {} Total: {}", style("→").cyan(), style(format_size(total_size)).bold());
 
     // Show comparison
     if total_size > 0 && total_size < 50_000 {
         println!();
-        println!("  {} That's {}× smaller than React!", 
+        println!(
+            "  {} That's {}× smaller than React!",
             style("🎉").bold(),
             style((140_000 / total_size).to_string()).green()
         );

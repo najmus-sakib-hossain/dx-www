@@ -4,48 +4,51 @@ Welcome to the comprehensive documentation for the **dx-www** runtime - The Bina
 
 ## 📚 Documentation Index
 
-### Getting Started
-- [Project Summary](./PROJECT_SUMMARY.md) - High-level overview
-- [Quick Start Guide](./QUICKSTART.md) - Get up and running
-- [Binary Dawn Folder Structure](./BINARY_DAWN_FOLDER_STRUCTURE.md) - Canonical dx application layout (v1.0)
-- [Architecture Overview](./ARCHITECTURE.md) - System design and philosophy
+### 📖 Guides (`/guides`)
+- [Project Summary](./guides/PROJECT_SUMMARY.md) - High-level overview
+- [Quick Start Guide](./guides/QUICKSTART.md) - Get up and running
+- [Development Guide](./guides/DEVELOPMENT.md) - Build, test, and contribute
+- [Contributing Guide](./guides/CONTRIBUTING.md) - How to contribute
+- [Changelog](./guides/CHANGELOG.md) - Version history
+- [Launch Summary](./guides/LAUNCH_SUMMARY.md) - Release milestones
 
-### Core Concepts
-- [HTIP Protocol](./COMPILER.md) - Hybrid Template Instantiation Protocol
-- [Compiler Intelligence](./COMPILER_INTELLIGENCE.md) - Auto-selection algorithm
-- [Bundle Size Analysis](./BUNDLE_SIZE.md) - Performance metrics
+### 🏗️ Architecture (`/architecture`)
+- [Architecture Overview](./architecture/ARCHITECTURE.md) - System design and philosophy
+- [HTIP Protocol](./architecture/COMPILER.md) - Hybrid Template Instantiation Protocol
+- [Compiler Intelligence](./architecture/COMPILER_INTELLIGENCE.md) - Auto-selection algorithm
+- [Project Structure](./architecture/PROJECT_STRUCTURE.md) - Codebase organization
+- [Binary Dawn Folder Structure](./architecture/BINARY_DAWN_FOLDER_STRUCTURE.md) - App layout (v1.0)
 
-### Implementation Guides
-- [Server Implementation](./SERVER_PHASE5_DAY15.md) - SSR & Holographic Server
-- [Development Guide](./DEVELOPMENT.md) - Build, test, and contribute
-- [Project Structure](./PROJECT_STRUCTURE.md) - Codebase organization
+### 📊 Progress & Status (`/progress`)
+- [Achievements](./progress/ACHIEVEMENTS.md) - Completed milestones
+- [48-Hour Plan](./progress/48_HOUR_PLAN.md) - Development roadmap
+- [Day 12-14 Progress](./progress/) - Daily implementation logs
+- [Phase 5-7 Status](./progress/) - Phase completion summaries
+- [Server Implementation](./progress/SERVER_PHASE5_DAY15.md) - SSR & Holographic Server
 
-### Release Information
-- [Changelog](./CHANGELOG.md) - Version history
-- [48-Hour Plan](./48_HOUR_PLAN.md) - Development roadmap
-- [Launch Summary](./LAUNCH_SUMMARY.md) - Release milestones
-
-### Technical References
-- [Code Quality Audit](./CODE_QUALITY_AUDIT.md) - Standards and checks
-- [Compiler Build Summary](./COMPILER_BUILD_SUMMARY_DEC12.md) - Build details
-- [Framework Comparison](./BEST_CURRENT_FRAMEWORKS.MD) - Industry analysis
+### 📋 Reference (`/reference`)
+- [Bundle Size Analysis](./reference/BUNDLE_SIZE.md) - Performance metrics
+- [Code Quality Audit](./reference/CODE_QUALITY_AUDIT.md) - Standards and checks
+- [Compiler Build Summary](./reference/COMPILER_BUILD_SUMMARY_DEC12.md) - Build details
+- [Framework Comparison](./reference/BEST_CURRENT_FRAMEWORKS.MD) - Industry analysis
+- [Workflow Verification](./reference/WORKFLOW_VERIFICATION.md) - Testing procedures
 
 ## 🎯 Quick Links
 
 **For Users:**
-- Start here: [QUICKSTART.md](./QUICKSTART.md)
-- Understand the tech: [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Compare performance: [BUNDLE_SIZE.md](./BUNDLE_SIZE.md)
+- Start here: [QUICKSTART.md](./guides/QUICKSTART.md)
+- Understand the tech: [ARCHITECTURE.md](./architecture/ARCHITECTURE.md)
+- Compare performance: [BUNDLE_SIZE.md](./reference/BUNDLE_SIZE.md)
 
 **For Contributors:**
-- Development setup: [DEVELOPMENT.md](./DEVELOPMENT.md)
-- Code standards: [CODE_QUALITY_AUDIT.md](./CODE_QUALITY_AUDIT.md)
-- Project structure: [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)
+- Development setup: [DEVELOPMENT.md](./guides/DEVELOPMENT.md)
+- Code standards: [CODE_QUALITY_AUDIT.md](./reference/CODE_QUALITY_AUDIT.md)
+- Project structure: [PROJECT_STRUCTURE.md](./architecture/PROJECT_STRUCTURE.md)
 
 **For Researchers:**
-- Technical deep-dive: [COMPILER.md](./COMPILER.md)
-- Innovation summary: [STACK_COMPLETE.md](./STACK_COMPLETE.md)
-- Current status: [ACHIEVEMENTS.md](./ACHIEVEMENTS.md)
+- Technical deep-dive: [COMPILER.md](./architecture/COMPILER.md)
+- Innovation summary: [STACK_COMPLETE.md](./progress/STACK_COMPLETE.md)
+- Current status: [ACHIEVEMENTS.md](./progress/ACHIEVEMENTS.md)
 
 ## 📖 Reading Order
 

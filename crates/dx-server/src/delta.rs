@@ -141,16 +141,17 @@ pub fn apply_block_patch(old: &[u8], patch: &[u8]) -> Result<Vec<u8>, String> {
             break;
         }
 
-        let offset = u32::from_le_bytes([patch[i], patch[i+1], patch[i+2], patch[i+3]]) as usize;
-        let length = u16::from_le_bytes([patch[i+4], patch[i+5]]) as usize;
+        let offset =
+            u32::from_le_bytes([patch[i], patch[i + 1], patch[i + 2], patch[i + 3]]) as usize;
+        let length = u16::from_le_bytes([patch[i + 4], patch[i + 5]]) as usize;
         i += 6;
 
         if i + length > patch.len() {
             return Err("Patch data truncated".to_string());
         }
 
-        let data = &patch[i..i+length];
-        result[offset..offset+length].copy_from_slice(data);
+        let data = &patch[i..i + length];
+        result[offset..offset + length].copy_from_slice(data);
         i += length;
     }
 
@@ -174,7 +175,7 @@ impl VersionStore {
     /// Store a new version
     pub fn store(&mut self, data: Vec<u8>) -> String {
         let hash = hash_binary(&data);
-        
+
         // Evict oldest if at capacity (simple FIFO for now)
         if self.versions.len() >= self.max_versions {
             if let Some(oldest_key) = self.versions.keys().next().cloned() {
@@ -284,11 +285,11 @@ mod tests {
         new[1000..1064].fill(0xBB); // Change one 64-byte block
 
         let patch = create_block_patch(&old, &new);
-        
+
         // Patch should be much smaller than full binary
         // Note: The exact size depends on which blocks differ
         assert!(patch.len() < 500, "Patch size {} should be < 500 bytes", patch.len());
-        
+
         let result = apply_block_patch(&old, &patch).unwrap();
         assert_eq!(result, new);
     }

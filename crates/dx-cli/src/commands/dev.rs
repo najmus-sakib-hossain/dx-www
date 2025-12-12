@@ -1,13 +1,12 @@
 /**
  * `dx dev` - Development server with hot reload
- * 
+ *
  * Orchestrates:
  * 1. File watching (notify) → triggers rebuild
  * 2. dx-compiler → compiles TSX to binary
  * 3. dx-server → serves the binary over HTTP
  * 4. WebSocket → pushes updates to client
  */
-
 use anyhow::{Context, Result};
 use console::style;
 use tokio::sync::broadcast;
@@ -31,8 +30,9 @@ pub async fn execute(port: u16, host: &str, open_browser: bool) -> Result<()> {
     // Initial build
     println!("{}", style("📦 Building application...").bold());
     let build_result = compile_project(&config).await?;
-    println!("{} Initial build complete ({:.2}ms)", 
-        style("✓").green(), 
+    println!(
+        "{} Initial build complete ({:.2}ms)",
+        style("✓").green(),
         build_result.duration_ms
     );
     println!("  {} Runtime: {}", style("→").cyan(), build_result.runtime);
@@ -42,15 +42,21 @@ pub async fn execute(port: u16, host: &str, open_browser: bool) -> Result<()> {
     // Start file watcher
     let config_clone = config.clone();
     let shutdown_rx = shutdown_tx.subscribe();
-    let watcher_handle = tokio::spawn(async move {
-        watch_and_rebuild(config_clone, shutdown_rx).await
-    });
+    let watcher_handle =
+        tokio::spawn(async move { watch_and_rebuild(config_clone, shutdown_rx).await });
 
     // Start HTTP server
     // Convert localhost to 127.0.0.1 for proper parsing
-    let bind_host = if host == "localhost" { "127.0.0.1" } else { host };
+    let bind_host = if host == "localhost" {
+        "127.0.0.1"
+    } else {
+        host
+    };
     let addr = format!("{}:{}", bind_host, port);
-    println!("{}", style(format!("🌐 Server running at http://{}:{}", host, port)).green().bold());
+    println!(
+        "{}",
+        style(format!("🌐 Server running at http://{}:{}", host, port)).green().bold()
+    );
     println!("{}", style("   Press Ctrl+C to stop").dim());
     println!();
 
@@ -157,26 +163,26 @@ async fn watch_and_rebuild(
     loop {
         tokio::select! {
             Some(path) = rx.recv() => {
-                println!("\n{} File changed: {}", 
-                    style("🔄").cyan(), 
+                println!("\n{} File changed: {}",
+                    style("🔄").cyan(),
                     path.display()
                 );
                 println!("{}", style("📦 Rebuilding...").bold());
-                
+
                 match compile_project(&config).await {
                     Ok(result) => {
-                        println!("{} Build complete ({:.2}ms)", 
-                            style("✓").green(), 
+                        println!("{} Build complete ({:.2}ms)",
+                            style("✓").green(),
                             result.duration_ms
                         );
-                        println!("  {} Size: {} bytes\n", 
-                            style("→").cyan(), 
+                        println!("  {} Size: {} bytes\n",
+                            style("→").cyan(),
                             result.size
                         );
                     }
                     Err(e) => {
-                        println!("{} Build failed: {}\n", 
-                            style("✗").red(), 
+                        println!("{} Build failed: {}\n",
+                            style("✗").red(),
                             e
                         );
                     }
@@ -200,11 +206,11 @@ async fn start_server(addr: &str) -> Result<()> {
 
     // Create server state and load artifacts
     let state = dx_server::ServerState::new();
-    
+
     // Set project directory (current directory)
     let current_dir = std::env::current_dir()?;
     state.set_project_dir(current_dir);
-    
+
     // Load compiled artifacts from .dx-cache
     let cache_path = Path::new(".dx-cache");
     if cache_path.exists() {
@@ -214,11 +220,12 @@ async fn start_server(addr: &str) -> Result<()> {
     }
 
     // Parse address
-    let socket_addr: SocketAddr = addr.parse()
-        .with_context(|| format!("Invalid address: {}", addr))?;
+    let socket_addr: SocketAddr =
+        addr.parse().with_context(|| format!("Invalid address: {}", addr))?;
 
     // Start dx-server
-    dx_server::serve(socket_addr, state).await
+    dx_server::serve(socket_addr, state)
+        .await
         .map_err(|e| anyhow::anyhow!("Server error: {}", e))?;
 
     Ok(())

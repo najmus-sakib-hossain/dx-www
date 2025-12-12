@@ -162,7 +162,7 @@ mod tests {
 
         // Parse binary
         let verifying_key = signing_key.verifying_key();
-        let mut stream = HtipStream::new(&binary, &verifying_key).unwrap();
+        let stream = HtipStream::new(&binary, &verifying_key).unwrap();
 
         assert!(stream.is_verified());
         assert_eq!(stream.remaining(), 2);

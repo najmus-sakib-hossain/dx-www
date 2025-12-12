@@ -653,6 +653,7 @@ dependencies = [
  "getrandom 0.2.16",
  "indexed_db_futures",
  "js-sys",
+ "rand",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
