@@ -1,41 +1,39 @@
-use core::alloc::{GlobalAlloc, Layout};
-use core::cell::UnsafeCell;
+//! Ultra-minimal bump allocator for no_std WASM
+//!
+//! Zero malloc/free overhead - just a pointer increment
 
-// 1MB Static Heap. Zero cost startup.
-// dx-www design: "Reset the world every frame"
-const HEAP_SIZE: usize = 1024 * 1024;
-static mut HEAP: [u8; HEAP_SIZE] = [0; HEAP_SIZE];
-static mut POINTER: usize = 0;
+use core::alloc::{GlobalAlloc, Layout};
 
 pub struct BumpAlloc;
 
+const HEAP_SIZE: usize = 65536; // 64KB = 1 WASM page
+static mut HEAP: [u8; HEAP_SIZE] = [0; HEAP_SIZE];
+static mut PTR: usize = 0;
+
 unsafe impl GlobalAlloc for BumpAlloc {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let start = POINTER;
+        let align = layout.align();
+        let start = (PTR + align - 1) & !(align - 1);
         let end = start + layout.size();
 
-        // Security: Crash if OOM to prevent memory corruption
         if end > HEAP_SIZE {
             #[cfg(target_arch = "wasm32")]
             core::arch::wasm32::unreachable();
             #[cfg(not(target_arch = "wasm32"))]
-            panic!("Heap OOM");
+            return core::ptr::null_mut();
         }
 
-        POINTER = end;
+        PTR = end;
         HEAP.as_mut_ptr().add(start)
     }
 
     unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {
-        // No-Op. We don't free individual items.
-        // We free the WHOLE world at the end of the frame/transaction.
-        // This is 1000x faster than malloc/free.
+        // No-op - bump allocator doesn't free
     }
 }
 
-/// Reset the heap pointer to 0
-///
-/// Call this at the start of every HTIP transaction/frame
+/// Reset heap pointer
+#[no_mangle]
 pub unsafe fn reset_heap() {
-    POINTER = 0;
+    PTR = 0;
 }
