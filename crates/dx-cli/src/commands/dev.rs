@@ -21,7 +21,7 @@ pub async fn execute(port: u16, host: &str, open_browser: bool) -> Result<()> {
 
     // Load project configuration
     let config = ProjectConfig::load(".")
-        .with_context(|| "Failed to load dx.toml. Run 'dx new' to create a project.")?;
+        .with_context(|| "Failed to load dx config. Run 'dx new' to create a project.")?;
 
     info!("Project: {} v{}", config.name(), config.version());
 

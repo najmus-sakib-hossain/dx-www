@@ -108,17 +108,72 @@ impl Default for OptimizeConfig {
 }
 
 impl ProjectConfig {
-    /// Load configuration from dx.toml
+    /// Load configuration from dx (God File) or dx.toml (legacy)
     pub fn load<P: AsRef<Path>>(dir: P) -> Result<Self> {
-        let path = dir.as_ref().join("dx.toml");
+        let dx_path = dir.as_ref().join("dx");
+        let toml_path = dir.as_ref().join("dx.toml");
         
-        let content = fs::read_to_string(&path)
-            .with_context(|| format!("Failed to read {}", path.display()))?;
+        // Try dx (God File) first
+        if dx_path.exists() {
+            let content = fs::read_to_string(&dx_path)
+                .with_context(|| format!("Failed to read {}", dx_path.display()))?;
+            
+            // Parse God File format (TOML-like but simpler)
+            return Self::parse_god_file(&content);
+        }
         
-        let config: ProjectConfig = toml::from_str(&content)
-            .with_context(|| "Failed to parse dx.toml")?;
+        // Fallback to dx.toml for legacy projects
+        if toml_path.exists() {
+            let content = fs::read_to_string(&toml_path)
+                .with_context(|| format!("Failed to read {}", toml_path.display()))?;
+            
+            let config: ProjectConfig = toml::from_str(&content)
+                .with_context(|| "Failed to parse dx.toml")?;
+            
+            return Ok(config);
+        }
         
-        Ok(config)
+        // Neither found
+        anyhow::bail!("No dx config found. Run 'dx new' to create a project.")
+    }
+    
+    /// Parse the dx God File format
+    fn parse_god_file(content: &str) -> Result<Self> {
+        // God File is TOML-compatible, just with different naming
+        // Convert name: -> [project]\nname =
+        let normalized = content
+            .replace("name:", "[project]\nname =")
+            .replace("version:", "version =");
+        
+        // Try to parse as TOML
+        if let Ok(config) = toml::from_str::<ProjectConfig>(&normalized) {
+            return Ok(config);
+        }
+        
+        // Manual parsing for simple God File format
+        let mut name = String::new();
+        let mut version = String::from("1.0.0");
+        
+        for line in content.lines() {
+            let line = line.trim();
+            if line.starts_with("name:") {
+                name = line.trim_start_matches("name:").trim().trim_matches('"').to_string();
+            }
+            if line.starts_with("version:") {
+                version = line.trim_start_matches("version:").trim().trim_matches('"').to_string();
+            }
+        }
+        
+        if name.is_empty() {
+            anyhow::bail!("Invalid dx config: missing 'name'");
+        }
+        
+        Ok(ProjectConfig {
+            project: ProjectInfo { name, version },
+            build: BuildConfig::default(),
+            server: ServerConfig::default(),
+            optimize: OptimizeConfig::default(),
+        })
     }
     
     /// Save configuration to dx.toml

@@ -1,0 +1,11 @@
+# dx system
+.dx/temp/
+.dx/cache/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/

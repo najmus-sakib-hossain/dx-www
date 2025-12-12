@@ -21,7 +21,7 @@ pub async fn execute(release: bool, output: PathBuf, skip_optimize: bool) -> Res
 
     // Load configuration
     let config = ProjectConfig::load(".")
-        .with_context(|| "Failed to load dx.toml")?;
+        .with_context(|| "Failed to load dx config")?;
 
     let start = Instant::now();
 
