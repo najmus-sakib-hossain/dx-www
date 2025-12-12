@@ -12,6 +12,7 @@
 //! - Extract state declarations
 //! - Validate against banned keywords
 
+use crate::linker::SymbolTable;
 use anyhow::{Context, Result, anyhow};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -69,7 +70,7 @@ pub struct HookCall {
 }
 
 /// Parse the entry file or directory
-pub fn parse_entry(entry: &Path, verbose: bool) -> Result<Vec<ParsedModule>> {
+pub fn parse_entry(entry: &Path, symbol_table: &SymbolTable, verbose: bool) -> Result<Vec<ParsedModule>> {
     let mut modules = Vec::new();
 
     if entry.is_dir() {
@@ -89,7 +90,7 @@ pub fn parse_entry(entry: &Path, verbose: bool) -> Result<Vec<ParsedModule>> {
                     println!("  📄 Found file: {}", path.display());
                 }
                 
-                match parse_single_module(path, verbose) {
+                match parse_single_module(path, symbol_table, verbose) {
                     Ok(module) => modules.push(module),
                     Err(e) => {
                         eprintln!("  ⚠️ Failed to parse {}: {}", path.display(), e);
@@ -104,7 +105,7 @@ pub fn parse_entry(entry: &Path, verbose: bool) -> Result<Vec<ParsedModule>> {
         if verbose {
             println!("  Parsing entry file: {}", entry.display());
         }
-        modules.push(parse_single_module(entry, verbose)?);
+        modules.push(parse_single_module(entry, symbol_table, verbose)?);
     }
 
     // TODO: Still need dependency graph traversal for imported units?
@@ -131,7 +132,7 @@ fn parse_module_recursive(
 }
 
 /// Parse a single module file using SWC
-fn parse_single_module(path: &Path, verbose: bool) -> Result<ParsedModule> {
+fn parse_single_module(path: &Path, symbol_table: &SymbolTable, verbose: bool) -> Result<ParsedModule> {
     // Read source for security validation
     let source = fs::read_to_string(path)
         .with_context(|| format!("Failed to read file: {}", path.display()))?;
@@ -152,8 +153,26 @@ fn parse_single_module(path: &Path, verbose: bool) -> Result<ParsedModule> {
 
     // Extract imports (simplified - looks for import statements)
     let import_regex = Regex::new(r#"import\s+.*?\s+from\s+['"]([^'"]+)['"]"#).unwrap();
-    let imports: Vec<String> =
+    let mut imports: Vec<String> =
         import_regex.captures_iter(&source).map(|cap| cap[1].to_string()).collect();
+
+    // AUTO-IMPORT MAGIC 🪄
+    // Scan for known symbols in the SymbolTable and auto-inject imports
+    for (symbol, symbol_path) in &symbol_table.components {
+        // Simple heuristic: if the source contains "<Symbol", and it's not already imported
+        if source.contains(&format!("<{}", symbol)) || source.contains(&format!("<{}.", symbol.split('.').next().unwrap())) {
+            // Check if already imported
+            let already_imported = imports.iter().any(|imp| imp.contains(&symbol_path.to_string_lossy().to_string()));
+            
+            if !already_imported {
+                if verbose {
+                    println!("    ✨ Auto-importing {} from {}", symbol, symbol_path.display());
+                }
+                // Inject virtual import
+                imports.push(symbol_path.to_string_lossy().to_string());
+            }
+        }
+    }
 
     // Extract exports (simplified)
     let export_regex = Regex::new(r"export\s+(default\s+)?(function|const|class)\s+(\w+)").unwrap();

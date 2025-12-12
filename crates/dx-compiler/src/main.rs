@@ -25,6 +25,7 @@ mod codegen;
 mod codegen_macro;
 mod codegen_micro;
 mod dev_server;
+mod linker;
 mod packer;
 mod parser;
 mod splitter;
@@ -140,9 +141,18 @@ async fn build_project(
     // Silence unused warning for now
     let _ = skip_optimize;
 
+    // Step 0: Linker Scan (The Omni-Linker)
+    pb.set_message("Linking project symbols...");
+    let search_root = if entry.file_name().map_or(false, |n| n == "pages") {
+        PathBuf::from(".")
+    } else {
+        entry.parent().map(|p| p.to_path_buf()).unwrap_or(PathBuf::from("."))
+    };
+    let symbol_table = linker::scan_project(&search_root, verbose)?;
+
     // Step 1: Parse
-    pb.set_message("Parsing .tsx files...");
-    let parsed_ast = parser::parse_entry(&entry, verbose).context("Failed to parse entry file")?;
+    pb.set_message("Parsing .dx files...");
+    let parsed_ast = parser::parse_entry(&entry, &symbol_table, verbose).context("Failed to parse entry file")?;
     pb.inc(1);
 
     // Step 2: Analyze & Decide (THE INTELLIGENCE)

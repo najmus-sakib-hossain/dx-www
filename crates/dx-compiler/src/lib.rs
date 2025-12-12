@@ -12,6 +12,7 @@ pub mod analyzer;
 pub mod codegen;
 pub mod codegen_macro;
 pub mod codegen_micro;
+pub mod linker;
 pub mod packer;
 pub mod parser;
 pub mod splitter;
@@ -54,8 +55,12 @@ pub fn compile_tsx(entry: &Path, output: &Path, verbose: bool) -> Result<Compile
         println!("🏭 Compiling {} → {}", entry.display(), output.display());
     }
 
+    // Step 0: Linker Scan
+    let search_root = entry.parent().unwrap_or_else(|| Path::new("."));
+    let symbol_table = linker::scan_project(search_root, verbose)?;
+
     // Step 1: Parse
-    let parsed_ast = parser::parse_entry(entry, verbose).context("Failed to parse entry file")?;
+    let parsed_ast = parser::parse_entry(entry, &symbol_table, verbose).context("Failed to parse entry file")?;
 
     // Step 2: Analyze & Decide
     let (metrics, runtime_variant) = analyzer::analyze_and_decide(&parsed_ast, verbose)?;
@@ -141,14 +146,18 @@ pub fn compile_tsx(entry: &Path, output: &Path, verbose: bool) -> Result<Compile
 ///
 /// This is useful for build tools that want to understand the application
 /// without performing a full compilation.
+/// Analyze a TSX file and return complexity metrics without compiling
 pub fn analyze_tsx(entry: &Path, verbose: bool) -> Result<(analyzer::ComplexityMetrics, analyzer::RuntimeVariant)> {
-    let parsed_ast = parser::parse_entry(entry, verbose)?;
+    let search_root = entry.parent().unwrap_or_else(|| Path::new("."));
+    let symbol_table = linker::scan_project(search_root, verbose)?;
+    let parsed_ast = parser::parse_entry(entry, &symbol_table, verbose)?;
     analyzer::analyze_and_decide(&parsed_ast, verbose)
 }
 
 /// Quick compilation check - returns true if entry file can be compiled
 pub fn can_compile(entry: &Path) -> bool {
-    parser::parse_entry(entry, false).is_ok()
+    let symbol_table = linker::SymbolTable::new();
+    parser::parse_entry(entry, &symbol_table, false).is_ok()
 }
 
 #[cfg(test)]

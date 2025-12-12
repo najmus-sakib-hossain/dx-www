@@ -87,7 +87,15 @@ async fn perform_build(entry: &PathBuf, verbose: bool) -> Result<BuildArtifact> 
     // Simplified build for dev mode
     // In production, this would call the full build pipeline
 
-    let parsed = crate::parser::parse_entry(entry, verbose)?;
+    // Linker Scan
+    let search_root = if entry.file_name().map_or(false, |n| n == "pages") {
+        PathBuf::from(".")
+    } else {
+        entry.parent().map(|p| p.to_path_buf()).unwrap_or(PathBuf::from("."))
+    };
+    let symbol_table = crate::linker::scan_project(&search_root, verbose)?;
+
+    let parsed = crate::parser::parse_entry(entry, &symbol_table, verbose)?;
     let shaken = crate::parser::tree_shake(parsed, verbose)?;
     let (templates, bindings, schemas) = crate::splitter::split_components(shaken, verbose)?;
 
