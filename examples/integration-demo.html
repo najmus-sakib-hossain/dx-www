@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dx-www Integration Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #00ff88;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        .subtitle {
+            color: #88ddff;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .card p {
+            color: #88ddff;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+            color: #0a0a0a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .console {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #00ff88;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .console-line {
+            margin-bottom: 4px;
+        }
+
+        .console-line.error {
+            color: #ff4444;
+        }
+
+        .console-line.success {
+            color: #00ff88;
+        }
+
+        .console-line.info {
+            color: #88ddff;
+        }
+
+        .console-line.dim {
+            color: #666;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-box .label {
+            color: #88ddff;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .stat-box .value {
+            color: #00ff88;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .stat-box .unit {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .badge.pass {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .badge.fail {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88 0%, #00ccff 100%);
+            transition: width 0.3s;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 dx-www Integration Demo</h1>
+        <p class="subtitle">Stream → Patch → Cache: The Complete Update Workflow</p>
+
+        <div class="demo-grid">
+            <!-- Benchmark Card -->
+            <div class="card">
+                <h2>📊 Cache Performance</h2>
+                <p>Benchmark IndexedDB read/write speed. Target: < 10ms overhead.</p>
+                <button onclick="runBenchmark()" id="btnBenchmark">Run Benchmark</button>
+            </div>
+
+            <!-- Update Simulation Card -->
+            <div class="card">
+                <h2>🔄 Update Simulation</h2>
+                <p>Simulate complete update workflow with ETag negotiation and patching.</p>
+                <button onclick="runSimulation()" id="btnSimulation">Run Simulation</button>
+            </div>
+
+            <!-- ETag Test Card -->
+            <div class="card">
+                <h2>🏷️ ETag Negotiation</h2>
+                <p>Test If-None-Match header logic and 304 vs 200 responses.</p>
+                <button onclick="runETagTest()" id="btnETag">Test ETag</button>
+            </div>
+        </div>
+
+        <!-- Stats Display -->
+        <div class="card">
+            <h2>📈 Live Statistics</h2>
+            <div class="stats" id="stats">
+                <div class="stat-box">
+                    <div class="label">Cache Entries</div>
+                    <div class="value" id="statEntries">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Total Size</div>
+                    <div class="value" id="statSize">-</div>
+                    <div class="unit">KB</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Hit Rate</div>
+                    <div class="value" id="statHitRate">-</div>
+                    <div class="unit">%</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Bandwidth Saved</div>
+                    <div class="value" id="statSaved">-</div>
+                    <div class="unit">KB</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console Output -->
+        <div class="card">
+            <h2>💻 Console Output</h2>
+            <button onclick="clearConsole()">Clear Console</button>
+            <div class="console" id="console">
+                <div class="console-line dim">Ready. Click a button to run a demo.</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { benchmarkCache, simulateUpdate, testETagNegotiation } from './integration-example.js';
+        import { getCache } from './dx-cache.js';
+
+        // Global console capture
+        const consoleDiv = document.getElementById('console');
+        const originalLog = console.log;
+
+        console.log = (...args) => {
+            originalLog(...args);
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            
+            const text = args.join(' ');
+            if (text.includes('✅') || text.includes('PASS')) {
+                line.className += ' success';
+            } else if (text.includes('❌') || text.includes('FAIL') || text.includes('Error')) {
+                line.className += ' error';
+            } else if (text.includes('===')) {
+                line.className += ' info';
+            } else if (text.startsWith('  ')) {
+                line.className += ' dim';
+            }
+            
+            line.textContent = text;
+            consoleDiv.appendChild(line);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+
+        // Update stats display
+        async function updateStats() {
+            try {
+                const cache = await getCache();
+                const stats = await cache.getStats();
+
+                document.getElementById('statEntries').textContent = stats.entries;
+                document.getElementById('statSize').textContent = (stats.totalSize / 1024).toFixed(2);
+                document.getElementById('statHitRate').textContent = stats.hitRate;
+                document.getElementById('statSaved').textContent = (stats.metrics.totalSaved / 1024).toFixed(2);
+            } catch (error) {
+                console.error('Failed to update stats:', error);
+            }
+        }
+
+        // Benchmark handler
+        window.runBenchmark = async function() {
+            const btn = document.getElementById('btnBenchmark');
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+
+            try {
+                console.log('\n');
+                const results = await benchmarkCache();
+                
+                // Check if passed
+                const passed = results.avgOverhead < 10;
+                const badge = passed ? 
+                    '<span class="badge pass">PASS</span>' : 
+                    '<span class="badge fail">FAIL</span>';
+                
+                document.querySelector('#btnBenchmark').innerHTML = 
+                    `Benchmark Complete ${badge}`;
+                
+                await updateStats();
+            } catch (error) {
+                console.error('Benchmark error:', error);
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = 'Run Benchmark';
+                }, 3000);
+            }
+        };
+
+        // Simulation handler
+        window.runSimulation = async function() {
+            const btn = document.getElementById('btnSimulation');
+            btn.disabled = true;
+            btn.textContent = 'Simulating...';
+
+            try {
+                console.log('\n');
+                await simulateUpdate();
+                await updateStats();
+            } catch (error) {
+                console.error('Simulation error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Run Simulation';
+            }
+        };
+
+        // ETag test handler
+        window.runETagTest = async function() {
+            const btn = document.getElementById('btnETag');
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+
+            try {
+                console.log('\n');
+                await testETagNegotiation();
+                await updateStats();
+            } catch (error) {
+                console.error('ETag test error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test ETag';
+            }
+        };
+
+        // Clear console
+        window.clearConsole = function() {
+            consoleDiv.innerHTML = '<div class="console-line dim">Console cleared.</div>';
+        };
+
+        // Initialize stats on load
+        updateStats();
+        setInterval(updateStats, 5000); // Update every 5 seconds
+    </script>
+</body>
+</html>

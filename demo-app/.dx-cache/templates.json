@@ -1,0 +1,30 @@
+[
+  {
+    "id": 0,
+    "html": "<div class=\"container\">\n      <h1>Welcome to demo-app!</h1>\n      <div class=\"counter\">\n        <button onClick=<!--SLOT_0-->>-</button>\n        <span class=\"count\"><!--SLOT_1--></span>\n        <button onClick=<!--SLOT_2-->>+</button>\n      </div>\n      <p class=\"info\">\n        Edit <code>src/App.tsx</code> and save to reload.\n      </p>\n    </div>",
+    "slots": [
+      {
+        "slot_id": 0,
+        "slot_type": "Text",
+        "path": [
+          0
+        ]
+      },
+      {
+        "slot_id": 1,
+        "slot_type": "Text",
+        "path": [
+          0
+        ]
+      },
+      {
+        "slot_id": 2,
+        "slot_type": "Text",
+        "path": [
+          0
+        ]
+      }
+    ],
+    "hash": "c6b4581fda942e227e761119564a436857d772de6eb6f864608c593db9cea972"
+  }
+]

@@ -1,0 +1,19 @@
+[package]
+name = "dx-morph"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen.workspace = true
+bytemuck.workspace = true
+dx-core.workspace = true
+dx-dom.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys.workspace = true
+console_error_panic_hook.workspace = true

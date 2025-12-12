@@ -1,0 +1,75 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+
+# WASM Build Outputs
+examples/**/pkg/
+pkg/
+pkg_*/
+*.wasm
+*_bg.wasm
+*_bg.wasm.d.ts
+wasm-pack.log
+
+# Build outputs
+/dist/
+/build/
+*.dxb
+*.dx
+**/generated/
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules/
+bower_components/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Debug
+debug/
+*.dSYM/
+
+# Python (for serve scripts)
+__pycache__/
+*.py[cod]
+.Python
+venv/
+env/
+
+# Benchmarks
+benchmarks/node_modules/
+benchmarks/*.json
+!benchmarks/benchmark-results.json
+
+# Build artifacts
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/

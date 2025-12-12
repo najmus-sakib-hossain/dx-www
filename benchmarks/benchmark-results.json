@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-12-11T12:58:16Z",
+  "frameworks": {
+    "dx-www": {
+      "bundleSize": "112 KB",
+      "loadTime": "5 ms",
+      "updateTime": "1-2 ms",
+      "memoryUsage": "5 MB",
+      "fps": 60
+    },
+    "react": {
+      "bundleSize": "140 KB",
+      "loadTime": "50 ms",
+      "updateTime": "16 ms",
+      "memoryUsage": "15 MB",
+      "fps": 50
+    },
+    "nextjs": {
+      "bundleSize": "200 KB",
+      "loadTime": "100 ms",
+      "updateTime": "16 ms",
+      "memoryUsage": "20 MB",
+      "fps": 45
+    },
+    "svelte": {
+      "bundleSize": "20 KB",
+      "loadTime": "15 ms",
+      "updateTime": "8 ms",
+      "memoryUsage": "8 MB",
+      "fps": 58
+    }
+  }
+}

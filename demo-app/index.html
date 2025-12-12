@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dx App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 600px;
+        }
+        
+        h1 {
+            font-size: 36px;
+            margin-bottom: 32px;
+            color: #667eea;
+        }
+        
+        .counter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        
+        button {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 12px;
+            background: #667eea;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .count {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 80px;
+        }
+        
+        .info {
+            margin-top: 32px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        code {
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- dx-www Binary Web Runtime -->
+    <script type="module">
+        // Fetch the compiled binary from the dev server
+        async function loadDxApp() {
+            try {
+                const response = await fetch('/stream/app');
+                const binary = await response.arrayBuffer();
+                
+                console.log('📦 Loaded dx binary:', binary.byteLength, 'bytes');
+                
+                // For now, show a message that we've loaded the binary
+                // In Phase 2, dx-client.wasm will parse and render this
+                document.getElementById('root').innerHTML = `
+                    <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+                        <h1>🚀 Dx Binary Loaded Successfully!</h1>
+                        <p>Binary size: ${binary.byteLength} bytes</p>
+                        <p style="color: #666; margin-top: 20px;">
+                            ⚠️ Client runtime (dx-client.wasm) integration coming in Phase 2<br>
+                            For now, the binary is compiled and ready at <code>/stream/app</code>
+                        </p>
+                        <div style="margin-top: 30px; padding: 20px; background: #f0f0f0; border-radius: 8px;">
+                            <strong>✅ Working:</strong><br>
+                            • TSX compilation<br>
+                            • Binary generation (${binary.byteLength} bytes)<br>
+                            • Hot reload<br>
+                            • HTTP serving<br>
+                            <br>
+                            <strong>⏳ Coming Soon:</strong><br>
+                            • Browser rendering via dx-client.wasm
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load dx binary:', error);
+                document.getElementById('root').innerHTML = `
+                    <div style="padding: 20px; color: red;">
+                        <h2>Error loading binary</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        loadDxApp();
+    </script>
+</body>
+</html>

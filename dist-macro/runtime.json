@@ -1,0 +1,16 @@
+{
+  "metrics": {
+    "component_count": 10,
+    "event_handler_count": 1,
+    "has_async_logic": false,
+    "has_effects": false,
+    "max_component_depth": 1,
+    "state_complexity": "High",
+    "total_hooks": 0,
+    "total_jsx_nodes": 13,
+    "total_props": 0,
+    "total_state_vars": 70
+  },
+  "runtime": "macro",
+  "timestamp": "2025-12-11T21:11:08.654529200+00:00"
+}

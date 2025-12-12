@@ -1,0 +1,15 @@
+# Clippy Configuration for dx-www-runtime
+# Note: Clippy doesn't support per-lint configuration in clippy.toml
+# Use #[allow(clippy::lint_name)] attributes or Cargo.toml for lint configuration
+# This file is for clippy-specific settings only
+
+# Cognitive complexity threshold
+cognitive-complexity-threshold = 30
+
+# Documentation note:
+# To configure lint levels, add to Cargo.toml:
+# [lints.clippy]
+# perf = "deny"
+# correctness = "deny"
+# style = "warn"
+# Or use #![warn(clippy::perf)] in lib.rs/main.rs
