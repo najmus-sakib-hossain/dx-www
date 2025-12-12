@@ -172,7 +172,7 @@ export default function Landing() {{
     fs::write(target.join("pages/_layout.dx"), layout_dx)?;
 
     // 4. pwa/manifest.dx
-    let manifest_dx = format!(r#"{{
+    let manifest_dx = format!(r##"{{
     "name": "{}",
     "short_name": "{}",
     "start_url": "/",
@@ -184,7 +184,7 @@ export default function Landing() {{
         {{ "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }}
     ]
 }}
-"#, name, name);
+"##, name, name);
     fs::write(target.join("pwa/manifest.dx"), manifest_dx)?;
 
     // 5. Create .gitignore

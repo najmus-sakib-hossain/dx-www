@@ -221,20 +221,22 @@ fn extract_jsx_body(source: &str, component_name: &str) -> String {
         r"(?s)(?:function|const)\s+{}\s*.*?return\s*\((.*?)\);",
         regex::escape(component_name)
     );
-    if let Ok(regex) = Regex::new(&pattern)
-        && let Some(cap) = regex.captures(source) {
+    if let Ok(regex) = Regex::new(&pattern) {
+        if let Some(cap) = regex.captures(source) {
             return cap[1].trim().to_string();
         }
+    }
 
     // Alternative: return without parentheses
     let pattern = format!(
         r"(?s)(?:function|const)\s+{}\s*.*?return\s+(<.*?>)",
         regex::escape(component_name)
     );
-    if let Ok(regex) = Regex::new(&pattern)
-        && let Some(cap) = regex.captures(source) {
+    if let Ok(regex) = Regex::new(&pattern) {
+        if let Some(cap) = regex.captures(source) {
             return cap[1].trim().to_string();
         }
+    }
 
     String::new()
 }

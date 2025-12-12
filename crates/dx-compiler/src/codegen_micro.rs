@@ -503,8 +503,8 @@ fn extract_attributes(html: &str) -> Vec<(String, String)> {
                 chars.next(); // consume =
 
                 // Get quote type
-                if let Some(&quote) = chars.peek()
-                    && (quote == '"' || quote == '\'') {
+                if let Some(&quote) = chars.peek() {
+                    if quote == '"' || quote == '\'' {
                         chars.next(); // consume opening quote
                         let mut value = String::new();
                         while let Some(&vc) = chars.peek() {
@@ -520,6 +520,7 @@ fn extract_attributes(html: &str) -> Vec<(String, String)> {
                             attrs.push((key, value));
                         }
                     }
+                }
             }
         }
     }

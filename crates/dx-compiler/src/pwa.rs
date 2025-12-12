@@ -291,13 +291,13 @@ mod tests {
 
     #[test]
     fn test_parse_manifest_content() {
-        let source = r#"
+        let source = r##"
             name "My Awesome App"
             short_name "MyApp"
             theme_color "#1a1a2e"
             background_color "#16213e"
             display "standalone"
-        "#;
+        "##;
 
         let manifest = parse_manifest_content(source, false).unwrap();
         assert_eq!(manifest.name, "My Awesome App");

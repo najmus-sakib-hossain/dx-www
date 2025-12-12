@@ -233,7 +233,7 @@ pub async fn serve_binary_stream(
 /// Serve a simple SVG favicon (prevents 404 errors)
 pub async fn serve_favicon() -> impl IntoResponse {
     // Simple SVG favicon with "dx" text
-    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#667eea"/><text x="16" y="22" text-anchor="middle" fill="white" font-family="Arial" font-size="14" font-weight="bold">dx</text></svg>"#;
+    let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#667eea"/><text x="16" y="22" text-anchor="middle" fill="white" font-family="Arial" font-size="14" font-weight="bold">dx</text></svg>"##;
     
     (
         [(header::CONTENT_TYPE, "image/svg+xml")],

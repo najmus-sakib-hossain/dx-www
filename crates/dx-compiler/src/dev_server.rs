@@ -19,10 +19,11 @@ pub async fn start(entry: PathBuf, port: u16, verbose: bool) -> Result<()> {
 
     let mut watcher: RecommendedWatcher =
         notify::recommended_watcher(move |res: Result<Event, notify::Error>| {
-            if let Ok(event) = res
-                && let Err(e) = tx.blocking_send(event) {
+            if let Ok(event) = res {
+                if let Err(e) = tx.blocking_send(event) {
                     eprintln!("Failed to send event: {}", e);
                 }
+            }
         })
         .context("Failed to create file watcher")?;
 

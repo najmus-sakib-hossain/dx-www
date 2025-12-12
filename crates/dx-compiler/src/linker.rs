@@ -7,7 +7,7 @@
 //! - Maps component names (e.g., `UI.Button`) to file paths
 //! - Resolves dependency graphs automatically
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
