@@ -68,16 +68,48 @@ pub struct HookCall {
     pub args: Vec<String>,
 }
 
-/// Parse the entry file and all dependencies
+/// Parse the entry file or directory
 pub fn parse_entry(entry: &Path, verbose: bool) -> Result<Vec<ParsedModule>> {
-    if verbose {
-        println!("  Parsing entry: {}", entry.display());
-    }
-
-    let mut visited = HashSet::new();
     let mut modules = Vec::new();
 
-    parse_module_recursive(entry, &mut visited, &mut modules, verbose)?;
+    if entry.is_dir() {
+        if verbose {
+            println!("  📂 Parsing directory: {}", entry.display());
+        }
+        
+        // Walk the directory to find all .dx files
+        for entry in walkdir::WalkDir::new(entry)
+            .follow_links(true)
+            .into_iter()
+            .filter_map(|e| e.ok()) 
+        {
+            let path = entry.path();
+            if path.extension().map_or(false, |ext| ext == "dx" || ext == "tsx") {
+                if verbose {
+                    println!("  📄 Found file: {}", path.display());
+                }
+                
+                match parse_single_module(path, verbose) {
+                    Ok(module) => modules.push(module),
+                    Err(e) => {
+                        eprintln!("  ⚠️ Failed to parse {}: {}", path.display(), e);
+                        // Continue parsing other files? Or fail hard?
+                        // For now, let's warn and continue
+                    }
+                }
+            }
+        }
+    } else {
+        // Single file mode
+        if verbose {
+            println!("  Parsing entry file: {}", entry.display());
+        }
+        modules.push(parse_single_module(entry, verbose)?);
+    }
+
+    // TODO: Still need dependency graph traversal for imported units?
+    // For Binary Dawn v1.0, units are "auto-imported", so we might just need to parse everything in units/ as well.
+    // Ideally we should walk `units/` too if we are parsing the root.
 
     if verbose {
         println!("  Parsed {} modules", modules.len());
@@ -87,30 +119,14 @@ pub fn parse_entry(entry: &Path, verbose: bool) -> Result<Vec<ParsedModule>> {
 }
 
 /// Recursively parse a module and its dependencies
+// Deprecated in favor of directory walking for now, but kept for legacy support if needed
 fn parse_module_recursive(
-    path: &Path,
-    visited: &mut HashSet<PathBuf>,
-    modules: &mut Vec<ParsedModule>,
-    verbose: bool,
+    _path: &Path,
+    _visited: &mut HashSet<PathBuf>,
+    _modules: &mut Vec<ParsedModule>,
+    _verbose: bool,
 ) -> Result<()> {
-    let canonical = path
-        .canonicalize()
-        .with_context(|| format!("Failed to canonicalize path: {}", path.display()))?;
-
-    if visited.contains(&canonical) {
-        return Ok(());
-    }
-    visited.insert(canonical.clone());
-
-    let module = parse_single_module(path, verbose)?;
-
-    // Queue dependencies
-    for _import in &module.imports {
-        // TODO: Resolve import paths and recurse
-        // This is simplified - production would need proper module resolution
-    }
-
-    modules.push(module);
+    // This logic is temporarily replaced by the flat directory walker above for v1.0 structure
     Ok(())
 }
 

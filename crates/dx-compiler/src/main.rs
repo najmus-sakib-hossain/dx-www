@@ -42,11 +42,11 @@ struct Cli {
 enum Commands {
     /// Build the project into optimized .dxb artifacts
     Build {
-        /// Entry point file (default: src/main.dx)
-        #[arg(short, long, default_value = "src/main.dx")]
+        /// Entry point directory (default: pages)
+        #[arg(short, long, default_value = "pages")]
         entry: PathBuf,
 
-        /// Output directory (default: dist/)
+        /// Output directory (default: dist)
         #[arg(short, long, default_value = "dist")]
         output: PathBuf,
 
@@ -61,8 +61,8 @@ enum Commands {
 
     /// Start development mode with hot-swap
     Dev {
-        /// Entry point file (default: src/main.dx)
-        #[arg(short, long, default_value = "src/main.dx")]
+        /// Entry point directory (default: pages)
+        #[arg(short, long, default_value = "pages")]
         entry: PathBuf,
 
         /// Port for dev server (default: 3000)

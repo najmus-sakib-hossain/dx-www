@@ -27,7 +27,13 @@ pub async fn start(entry: PathBuf, port: u16, verbose: bool) -> Result<()> {
         .context("Failed to create file watcher")?;
 
     // Watch the source directory
-    let watch_dir = entry.parent().unwrap_or_else(|| std::path::Path::new("."));
+    // For Binary Dawn, if entry is "pages", we must watch "." (root) to catch "units/" changes
+    let watch_dir = if entry.is_dir() || entry.starts_with("pages") {
+        std::path::Path::new(".")
+    } else {
+        entry.parent().unwrap_or_else(|| std::path::Path::new("."))
+    };
+
     watcher
         .watch(watch_dir, RecursiveMode::Recursive)
         .context("Failed to watch directory")?;
