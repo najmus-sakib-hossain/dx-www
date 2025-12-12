@@ -7,6 +7,7 @@ Welcome to the comprehensive documentation for the **dx-www** runtime - The Bina
 ### Getting Started
 - [Project Summary](./PROJECT_SUMMARY.md) - High-level overview
 - [Quick Start Guide](./QUICKSTART.md) - Get up and running
+- [Binary Dawn Folder Structure](./BINARY_DAWN_FOLDER_STRUCTURE.md) - Canonical dx application layout (v1.0)
 - [Architecture Overview](./ARCHITECTURE.md) - System design and philosophy
 
 ### Core Concepts

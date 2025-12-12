@@ -126,6 +126,7 @@ crates/
 - [Architecture Overview](docs/ARCHITECTURE.md) - HTIP protocol deep-dive
 - [Compiler Intelligence](docs/COMPILER_INTELLIGENCE.md) - Auto-selection algorithm
 - [Bundle Size Analysis](docs/BUNDLE_SIZE.md) - Size breakdowns and comparisons
+- [Binary Dawn Folder Structure](docs/BINARY_DAWN_FOLDER_STRUCTURE.md) - Canonical dx application layout (v1.0)
 
 **Phase 6 - Client Trinity:**
 - [Phase 6 Victory](docs/PHASE_6_VICTORY.md) - Complete summary with benchmarks

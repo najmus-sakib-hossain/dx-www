@@ -64,15 +64,21 @@ ls -lh target/pkg_minimal/dx_client_optimized.wasm
 
 ## Project Structure
 
+dx applications follow the canonical **Binary Dawn v1.0** structure:
+
+- Full spec: [BINARY_DAWN_FOLDER_STRUCTURE.md](./BINARY_DAWN_FOLDER_STRUCTURE.md)
+
+Minimal overview:
+
 ```
 my-dx-app/
-├── src/
-│   ├── App.tsx          # Your components
-│   ├── Counter.tsx      # More components
-│   └── styles.css       # Optional CSS
-├── dist/
-│   └── app.dxb          # Compiled binary (tiny!)
-└── index.html           # Entry point
+├── dx          # No extension. Single configuration source.
+├── pages/      # Routes (file system = URL)
+├── units/      # Auto-imported building blocks
+├── server/     # Binary backend (api/actions/cron)
+├── media/      # Asset reactor (images/video/audio/fonts/raw)
+├── pwa/        # PWA manifest/icons/service-worker
+└── .dx/        # Build/cache/forge output (never touch)
 ```
 
 ---
