@@ -27,6 +27,7 @@ mod codegen_micro;
 mod config;
 mod dev_server;
 mod linker;
+mod loader;
 mod packer;
 mod parser;
 mod pwa;

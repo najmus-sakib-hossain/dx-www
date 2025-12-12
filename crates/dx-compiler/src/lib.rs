@@ -14,6 +14,7 @@ pub mod codegen_macro;
 pub mod codegen_micro;
 pub mod config;
 pub mod linker;
+pub mod loader;
 pub mod packer;
 pub mod parser;
 pub mod pwa;
