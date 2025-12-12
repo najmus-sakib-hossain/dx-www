@@ -24,10 +24,13 @@ mod analyzer;
 mod codegen;
 mod codegen_macro;
 mod codegen_micro;
+mod config;
 mod dev_server;
 mod linker;
 mod packer;
 mod parser;
+mod pwa;
+mod rpc;
 mod splitter;
 
 #[derive(Parser)]

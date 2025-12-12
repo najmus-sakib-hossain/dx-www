@@ -12,11 +12,15 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-/// strict symbol table mapping
-/// e.g. "UI.Button" -> "units/ui/button.dx"
+/// Strict symbol table mapping
+/// Components: "UI.Button" -> "units/ui/button.dx"
+/// Assets: "icon:user" -> "media/icons/user.svg"
+/// Functions: "user.login" -> "server/api/user.fn.dx"
 #[derive(Debug, Clone, Default)]
 pub struct SymbolTable {
     pub components: HashMap<String, PathBuf>,
+    pub assets: HashMap<String, PathBuf>,
+    pub functions: HashMap<String, PathBuf>,
 }
 
 impl SymbolTable {
@@ -27,6 +31,11 @@ impl SymbolTable {
     /// Resolve a component name to a path
     pub fn resolve(&self, name: &str) -> Option<&PathBuf> {
         self.components.get(name)
+    }
+
+    /// Resolve an asset name to a path
+    pub fn resolve_asset(&self, name: &str) -> Option<&PathBuf> {
+        self.assets.get(name)
     }
 }
 
@@ -44,8 +53,15 @@ pub fn scan_project(root: &Path, verbose: bool) -> Result<SymbolTable> {
         scan_units(&units_dir, &mut table, verbose)?;
     }
 
+    // 2. Scan media/ for assets
+    let media_dir = root.join("media");
+    if media_dir.exists() {
+        scan_media(&media_dir, &mut table, verbose)?;
+    }
+
     if verbose {
-        println!("  🔗 Linker: Indexed {} symbols", table.components.len());
+        println!("  🔗 Linker: Indexed {} components, {} assets", 
+            table.components.len(), table.assets.len());
     }
 
     Ok(table)
@@ -60,10 +76,6 @@ fn scan_units(units_dir: &Path, table: &mut SymbolTable, verbose: bool) -> Resul
     {
         let path = entry.path();
         if path.extension().map_or(false, |ext| ext == "dx" || ext == "tsx") {
-            // Check if it's a valid component file
-            // Expected structure: units/{category}/{component}.dx
-            // e.g. units/ui/button.dx -> UI.Button
-            
             if let Some(symbol) = derive_symbol_name(units_dir, path) {
                 if verbose {
                     println!("     + {} -> {}", symbol, path.display());
@@ -74,6 +86,71 @@ fn scan_units(units_dir: &Path, table: &mut SymbolTable, verbose: bool) -> Resul
     }
     
     Ok(())
+}
+
+/// Scan media directory for assets (icons, images, etc.)
+fn scan_media(media_dir: &Path, table: &mut SymbolTable, verbose: bool) -> Result<()> {
+    if verbose {
+        println!("  🎨 Scanning media/...");
+    }
+
+    for entry in WalkDir::new(media_dir)
+        .follow_links(true)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+
+        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+        
+        // Support common asset types
+        match ext {
+            "svg" | "png" | "jpg" | "jpeg" | "webp" | "gif" | "ico" => {
+                if let Some(asset_key) = derive_asset_name(media_dir, path) {
+                    if verbose {
+                        println!("     + {} -> {}", asset_key, path.display());
+                    }
+                    table.assets.insert(asset_key, path.to_path_buf());
+                }
+            }
+            _ => {}
+        }
+    }
+
+    Ok(())
+}
+
+/// Derive asset name from file path
+/// media/icons/user.svg -> "icon:user"
+/// media/images/hero.png -> "image:hero"
+fn derive_asset_name(base: &Path, path: &Path) -> Option<String> {
+    let relative = pathdiff::diff_paths(path, base)?;
+    let parts: Vec<_> = relative.iter().map(|s| s.to_string_lossy()).collect();
+
+    if parts.is_empty() {
+        return None;
+    }
+
+    // Category from directory: "icons" -> "icon", "images" -> "image"
+    let category = if parts.len() > 1 {
+        let dir = parts[0].to_string();
+        // Singularize common plurals
+        if dir.ends_with('s') && dir.len() > 1 {
+            dir[..dir.len()-1].to_string()
+        } else {
+            dir
+        }
+    } else {
+        "asset".to_string()
+    };
+
+    // Name is filename without extension
+    let name = path.file_stem()?.to_string_lossy().to_string();
+
+    Some(format!("{}:{}", category, name))
 }
 
 /// Derive symbol name from file path
