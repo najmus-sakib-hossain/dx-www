@@ -24,6 +24,10 @@ name = "omega-comparison"
 path = "benchmarks/omega-comparison.rs"
 
 [[bin]]
+name = "infinity-comparison"
+path = "benchmarks/infinity-comparison.rs"
+
+[[bin]]
 name = "dx-machine-example"
 path = "examples/dx-machine-example.rs"
 

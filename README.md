@@ -1,13 +1,13 @@
-# dx-www Runtime
+# dx-www
 
 [![Rust](https://img.shields.io/badge/Rust-2024_Edition-orange.svg)](https://www.rust-lang.org/)
 [![WASM](https://img.shields.io/badge/WebAssembly-Binary-blue.svg)](https://webassembly.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> **The Binary Web Runtime**  
+> **The Binary Web**  
 > Zero-parse, zero-GC, zero-hydration architecture powered by WebAssembly and HTIP (Hybrid Template Instantiation Protocol).
 
-A revolutionary web framework that compiles TypeScript to binary WebAssembly, achieving **338 bytes (Micro)** or **7.5 KB (Macro)** runtime with intelligent automatic selection based on application complexity.
+A revolutionary web framework that compiles TypeScript to binary WebAssembly, achieving **338 bytes (Micro)** or **7.5 KB (Macro)** with intelligent automatic selection based on application complexity.
 
 ## Key Features
 
@@ -46,13 +46,13 @@ See [docs/BUNDLE_SIZE.md](docs/BUNDLE_SIZE.md) and [benchmarks/](benchmarks/) fo
 - **Test Coverage:** 16/16 tests passing (inflation, escaping, detection)
 
 **✅ Dual-Core Codegen Complete (Dec 12, 2025):**
-- **Micro Codegen:** 548 lines, transpiles TSX to raw FFI calls for 338B runtime
-- **Macro Codegen:** 349 lines, generates `layout.bin` + HTIP glue for 7.5KB runtime
-- **WASM Compilation:** Successfully built valid WASM for both runtimes
+- **Micro Codegen:** 548 lines, transpiles TSX to raw FFI calls for 338B
+- **Macro Codegen:** 349 lines, generates `layout.bin` + HTIP glue for 7.5KB
+- **WASM Compilation:** Successfully built valid WASM for boths
 
 **Bundle Sizes:**
-- **Micro:** 530B app logic + 22.8KB shared runtime = **23.3KB total**
-- **Macro:** 663B app logic + 996B layout.bin + 30.3KB runtime = **31.9KB total**
+- **Micro:** 530B app logic + 22.8KB shared = **23.3KB total**
+- **Macro:** 663B app logic + 996B layout.bin + 30.3KB = **31.9KB total**
 
 ## Quick Start
 
@@ -81,7 +81,7 @@ export default function Counter() {
 }
 ```
 
-The compiler automatically selects Micro (338B) or Macro (7.5KB) runtime based on your app's complexity.
+The compiler automatically selects Micro (338B) or Macro (7.5KB) based on your app's complexity.
 
 ## Architecture
 
@@ -108,10 +108,10 @@ crates/
 ├── dx-compiler/    # TSX → Binary compiler (~2700 lines)
 │   ├── codegen_micro.rs  # Raw FFI calls (548 lines)
 │   └── codegen_macro.rs  # HTIP binary templates (349 lines)
-├── dx-client/      # 🎯 Full runtime with streaming + patching (~1330 lines)
+├── dx-client/      # 🎯 Full with streaming + patching (~1330 lines)
 │   ├── streaming.rs      # Zero-copy stream consumer (480 lines)
 │   └── patcher.rs        # XOR block patcher (450 lines)
-├── dx-client-tiny/ # Minimal runtime (338 bytes)
+├── dx-client-tiny/ # Minimal (338 bytes)
 ├── dx-packet/      # Binary protocol types (shared)
 ├── dx-server/      # ✨ SSR & Streaming Server (Axum, ~500 lines)
 ├── dx-cache/       # IndexedDB caching (JavaScript, 400 lines)
@@ -143,7 +143,7 @@ crates/
 
 **Current (Dec 12, 2025):**
 - ✅ Dual-core codegen complete (Micro + Macro)
-- ✅ WASM compilation working for both runtimes
+- ✅ WASM compilation working for boths
 - ✅ Intelligent compiler with auto-selection
 - ✅ HTIP protocol implementation
 - ✅ Working examples and benchmarks
