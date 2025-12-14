@@ -10,13 +10,39 @@
 **The world's most token-efficient serialization format**  
 *31.4% better than TOON on regular data. 84.5% better on complex data.*
 
-[Features](#-features) â€¢ [Quick Start](#-quick-start) â€¢ [Benchmarks](#-benchmarks) â€¢ [Documentation](docs/) â€¢ [Examples](examples/)
+[Features](#-features) â€¢ [Converters](#-universal-format-converter-new) â€¢ [Quick Start](#-quick-start) â€¢ [Benchmarks](#-benchmarks) â€¢ [Documentation](docs/) â€¢ [Examples](examples/)
 
 </div>
 
 ---
 
-## í¾¯ Why DX?
+## ğŸš€ Universal Format Converter (NEW!)
+
+**Convert any config format to DX ULTRA with automatic optimization!**
+
+```rust
+use dx_serializer::{json_to_dx, yaml_to_dx, toml_to_dx};
+
+// JSON â†’ DX ULTRA (70-75% smaller)
+let json = r#"{"name": "app", "version": "1.0.0"}"#;
+let dx = json_to_dx(json)?; // c.n:app^v:1.0.0
+
+// YAML â†’ DX ULTRA (65-70% smaller)
+let yaml = "name: app\nversion: 1.0.0";
+let dx = yaml_to_dx(yaml)?;
+
+// TOML â†’ DX ULTRA (60-65% smaller)  
+let toml = r#"name = "app""#;
+let dx = toml_to_dx(toml)?;
+```
+
+**Real-world:** package.json (478 bytes) â†’ package.dx (251 bytes) = **47.5% smaller!**
+
+See [CONVERTER_README.md](./CONVERTER_README.md) for full documentation.
+
+---
+
+## ï¿½ï¿½ï¿½ Why DX?
 
 Traditional formats waste bytes on structure. **DX Î© eliminates the waste.**
 
@@ -39,16 +65,16 @@ DX Î©:  203 bytes  â”â”â”â”â”â”â”â”â”â”â”  âœ… 31.4% smaller
 
 ### Core Innovations
 
-- í´¥ **Inline Prefixing (^)** â€” \`key:val^key2:val2\` eliminates newlines
+- ï¿½ï¿½ï¿½ **Inline Prefixing (^)** â€” \`key:val^key2:val2\` eliminates newlines
 - âš¡ **Header Minification** â€” \`h=i n%s k%f\` vs full column names
-- í¾¯ **Sigil Operators** â€” \`+\` (true), \`-\` (false), \`>\` (stream)
-- íº€ **Type Hints** â€” \`%i %s %f %b\` enable zero-copy vacuum parsing
-- í²¾ **SIMD Acceleration** â€” Uses \`memchr\` for CPU-speed byte scanning
-- í´’ **Zero-Copy Design** â€” Operates on \`&[u8]\` without allocations
+- ï¿½ï¿½ï¿½ **Sigil Operators** â€” \`+\` (true), \`-\` (false), \`>\` (stream)
+- ï¿½ï¿½ï¿½ **Type Hints** â€” \`%i %s %f %b\` enable zero-copy vacuum parsing
+- ï¿½ï¿½ï¿½ **SIMD Acceleration** â€” Uses \`memchr\` for CPU-speed byte scanning
+- ï¿½ï¿½ï¿½ **Zero-Copy Design** â€” Operates on \`&[u8]\` without allocations
 
 ---
 
-## íº€ Quick Start
+## ï¿½ï¿½ï¿½ Quick Start
 
 ### Installation
 
@@ -80,7 +106,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ---
 
-## í³Š Benchmarks
+## ï¿½ï¿½ï¿½ Benchmarks
 
 | Test Case | JSON | TOON | DX Î© | Winner |
 |-----------|------|------|------|--------|
@@ -96,7 +122,7 @@ See [../../playground/results/DX_OMEGA_ANALYSIS.md](../../playground/results/DX_
 
 ---
 
-## í³– Documentation
+## ï¿½ï¿½ï¿½ Documentation
 
 - **[Syntax Guide](docs/SYNTAX.md)** â€” Complete format specification
 - **[API Reference](docs/API.md)** â€” Function documentation
@@ -104,7 +130,7 @@ See [../../playground/results/DX_OMEGA_ANALYSIS.md](../../playground/results/DX_
 
 ---
 
-## í¿—ï¸ Architecture
+## ï¿½ï¿½ï¿½ï¸ Architecture
 
 \`\`\`
 Input (&[u8]) â†’ Tokenizer â†’ Parser â†’ DxValue
@@ -117,7 +143,7 @@ Input (&[u8]) â†’ Tokenizer â†’ Parser â†’ DxValue
 
 ---
 
-## í¼Ÿ Roadmap
+## ï¿½ï¿½ï¿½ Roadmap
 
 ### v0.1.0 (Current) âœ…
 - [x] Core parser with SIMD tokenization
@@ -130,7 +156,7 @@ Input (&[u8]) â†’ Tokenizer â†’ Parser â†’ DxValue
 
 ---
 
-## í³œ License
+## ï¿½ï¿½ï¿½ License
 
 MIT License â€” See [LICENSE](../../LICENSE) for details.
 
@@ -138,7 +164,7 @@ MIT License â€” See [LICENSE](../../LICENSE) for details.
 
 <div align="center">
 
-**Built with Rust í¶€ and SIMD âš¡**
+**Built with Rust ï¿½ï¿½ï¿½ and SIMD âš¡**
 
 *December 14, 2025*
 
