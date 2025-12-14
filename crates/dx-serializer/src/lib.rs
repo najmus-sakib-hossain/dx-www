@@ -3,7 +3,12 @@
 //! Ultra-efficient serialization format optimized for LLM context windows.
 //! Achieves 65%+ better efficiency than TOON through schema-guided parsing,
 //! vertical compression, and zero-copy operations.
+//!
+//! DX ∞ features:
+//! - Base62 integers (%x): 320→5A, 540→8k
+//! - Auto-increment (%#): Sequential IDs generated automatically
 
+pub mod base62;
 pub mod encoder;
 pub mod error;
 pub mod formatter;
@@ -12,6 +17,7 @@ pub mod schema;
 pub mod tokenizer;
 pub mod types;
 
+pub use base62::{encode_base62, decode_base62};
 pub use encoder::{encode, encode_to_writer, Encoder};
 pub use error::{DxError, Result};
 pub use formatter::{format_human, HumanFormatter};

@@ -5,9 +5,11 @@
 //! - Alias system ($)
 //! - Prefix inheritance (^)
 //! - Vertical ditto (_)
-//! - Type hints (%i, %s, %f, %b)
+//! - Type hints (%i, %s, %f, %b, %x, %#)
 //! - Anchor references (@)
+//! - DX ∞: Base62 integers (%x), Auto-increment (%#)
 
+use crate::base62::decode_base62;
 use crate::error::{DxError, Result};
 use crate::schema::{Schema, TypeHint};
 use crate::tokenizer::{Token, Tokenizer};
@@ -25,6 +27,8 @@ pub struct Parser<'a> {
     prefix_stack: Vec<String>,
     /// Schema registry for tables
     schemas: FxHashMap<String, Schema>,
+    /// Auto-increment counters per table
+    auto_counters: FxHashMap<String, i64>,
 }
 
 impl<'a> Parser<'a> {
@@ -33,6 +37,7 @@ impl<'a> Parser<'a> {
             tokenizer: Tokenizer::new(input),
             aliases: FxHashMap::default(),
             anchors: Vec::new(),
+            auto_counters: FxHashMap::default(),
             prefix_stack: Vec::new(),
             schemas: FxHashMap::default(),
         }
@@ -328,6 +333,16 @@ impl<'a> Parser<'a> {
         for (col_idx, column) in schema.columns.iter().enumerate() {
             self.tokenizer.skip_whitespace();
 
+            // Handle auto-increment: generate value without reading input
+            if matches!(column.type_hint, TypeHint::AutoIncrement) {
+                let counter = self.auto_counters
+                    .entry(schema.name.clone())
+                    .or_insert(1);
+                row.push(DxValue::Int(*counter));
+                *counter += 1;
+                continue;
+            }
+
             let token = self.tokenizer.peek_token()?;
 
             // Handle ditto (_)
@@ -379,16 +394,37 @@ impl<'a> Parser<'a> {
                         })
                     }
                 },
+                TypeHint::Base62 => {
+                    // Parse Base62 encoded integer
+                    match self.tokenizer.next_token()? {
+                        Token::Ident(bytes) => {
+                            let s = std::str::from_utf8(bytes)?;
+                            let n = decode_base62(s)?;
+                            DxValue::Int(n as i64)
+                        }
+                        Token::Int(i) => DxValue::Int(i), // Fallback for regular numbers
+                        _ => {
+                            return Err(DxError::TypeMismatch {
+                                expected: "base62".to_string(),
+                                got: "other".to_string(),
+                            })
+                        }
+                    }
+                },
                 TypeHint::String => {
                     // Vacuum parsing: read until next column type
                     let next_is_number = col_idx + 1 < schema.columns.len()
                         && matches!(
                             schema.columns[col_idx + 1].type_hint,
-                            TypeHint::Int | TypeHint::Float
+                            TypeHint::Int | TypeHint::Float | TypeHint::Base62
                         );
                     let bytes = self.tokenizer.read_string_vacuum(next_is_number);
                     let s = std::str::from_utf8(bytes)?.trim().to_string();
                     DxValue::String(s)
+                }
+                TypeHint::AutoIncrement => {
+                    // Should not reach here (handled above)
+                    unreachable!("AutoIncrement handled before loop")
                 }
                 TypeHint::Auto => self.parse_value()?,
             };

@@ -2,8 +2,11 @@
 //!
 //! Converts Rust data structures into highly optimized DX bytecode.
 //! Automatically uses aliases, ditto marks, and compression.
+//! DX ∞: Base62 encoding for integers, auto-increment detection.
 
+use crate::base62::encode_base62;
 use crate::error::Result;
+use crate::schema::TypeHint;
 use crate::types::{DxArray, DxObject, DxTable, DxValue};
 use rustc_hash::FxHashMap;
 use std::io::Write;
@@ -182,7 +185,7 @@ impl Encoder {
                 write!(writer, " ")?;
             }
             write!(writer, "{}", col.name)?;
-            if col.type_hint != crate::schema::TypeHint::Auto {
+            if col.type_hint != TypeHint::Auto {
                 write!(writer, "%{}", col.type_hint.to_byte() as char)?;
             }
         }
@@ -191,7 +194,7 @@ impl Encoder {
         // Write rows
         self.prev_row = None;
         for row in &table.rows {
-            self.encode_row(row, writer)?;
+            self.encode_row(row, &table.schema, writer)?;
             self.prev_row = Some(row.clone());
         }
 
@@ -199,8 +202,13 @@ impl Encoder {
     }
 
     /// Encode a table row
-    fn encode_row<W: Write>(&mut self, row: &[DxValue], writer: &mut W) -> Result<()> {
+    fn encode_row<W: Write>(&mut self, row: &[DxValue], schema: &crate::schema::Schema, writer: &mut W) -> Result<()> {
         for (i, value) in row.iter().enumerate() {
+            // Skip auto-increment columns (they're generated on parse)
+            if i < schema.columns.len() && schema.columns[i].type_hint == TypeHint::AutoIncrement {
+                continue;
+            }
+
             if i > 0 {
                 write!(writer, " ")?;
             }
@@ -210,6 +218,16 @@ impl Encoder {
                 if let Some(prev) = &self.prev_row {
                     if i < prev.len() && &prev[i] == value {
                         write!(writer, "_")?;
+                        continue;
+                    }
+                }
+            }
+
+            // Use Base62 encoding if column type is Base62
+            if i < schema.columns.len() && schema.columns[i].type_hint == TypeHint::Base62 {
+                if let DxValue::Int(n) = value {
+                    if *n >= 0 {
+                        write!(writer, "{}", encode_base62(*n as u64))?;
                         continue;
                     }
                 }

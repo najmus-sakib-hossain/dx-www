@@ -41,6 +41,12 @@ pub enum DxError {
 
     #[error("Prefix inheritance failed: {0}")]
     PrefixError(String),
+
+    #[error("Invalid Base62 character '{char}': {msg}")]
+    InvalidBase62 { char: char, msg: String },
+
+    #[error("Integer overflow")]
+    IntegerOverflow,
 }
 
 impl From<std::io::Error> for DxError {

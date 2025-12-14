@@ -2,7 +2,7 @@
 
 use crate::error::{DxError, Result};
 
-/// Type hints for columns (%i, %s, %f, %b)
+/// Type hints for columns (%i, %s, %f, %b, %x, %#)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TypeHint {
     /// Integer (%i)
@@ -13,18 +13,24 @@ pub enum TypeHint {
     Float,
     /// Boolean (%b)
     Bool,
+    /// Base62 Integer (%x) - DX ∞
+    Base62,
+    /// Auto-Increment (%#) - DX ∞
+    AutoIncrement,
     /// Auto-detect (no hint)
     Auto,
 }
 
 impl TypeHint {
-    /// Parse type hint from byte (i, s, f, b)
+    /// Parse type hint from byte (i, s, f, b, x, #)
     pub fn from_byte(b: u8) -> Result<Self> {
         match b {
             b'i' => Ok(TypeHint::Int),
             b's' => Ok(TypeHint::String),
             b'f' => Ok(TypeHint::Float),
             b'b' => Ok(TypeHint::Bool),
+            b'x' => Ok(TypeHint::Base62),
+            b'#' => Ok(TypeHint::AutoIncrement),
             _ => Err(DxError::InvalidTypeHint(format!(
                 "Unknown type hint: {}",
                 b as char
@@ -37,6 +43,8 @@ impl TypeHint {
         match self {
             TypeHint::Int => b'i',
             TypeHint::String => b's',
+            TypeHint::Base62 => b'x',
+            TypeHint::AutoIncrement => b'#',
             TypeHint::Float => b'f',
             TypeHint::Bool => b'b',
             TypeHint::Auto => b'a',
@@ -48,6 +56,8 @@ impl TypeHint {
         match self {
             TypeHint::Int => "int",
             TypeHint::String => "string",
+            TypeHint::Base62 => "base62",
+            TypeHint::AutoIncrement => "auto-increment",
             TypeHint::Float => "float",
             TypeHint::Bool => "bool",
             TypeHint::Auto => "auto",
