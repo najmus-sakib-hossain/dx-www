@@ -33,6 +33,12 @@ Welcome to the comprehensive documentation for the **dx-www** runtime - The Bina
 - [Framework Comparison](./reference/BEST_CURRENT_FRAMEWORKS.MD) - Industry analysis
 - [Workflow Verification](./reference/WORKFLOW_VERIFICATION.md) - Testing procedures
 
+### ⚡ DX Serializer - NEW!
+- **[Quick Reference](./QUICK_REFERENCE.md)** ⭐ - Start here! One-page cheat sheet
+- [Bidirectional System](./BIDIRECTIONAL_SYSTEM.md) - Complete technical guide
+- [Implementation Summary](./IMPLEMENTATION_SUMMARY.md) - What we built
+- [Implementation Checklist](./IMPLEMENTATION_CHECKLIST.md) - Progress tracker
+
 ## 🎯 Quick Links
 
 **For Users:**
@@ -48,6 +54,11 @@ Welcome to the comprehensive documentation for the **dx-www** runtime - The Bina
 **For Researchers:**
 - Technical deep-dive: [COMPILER.md](./architecture/COMPILER.md)
 - Innovation summary: [STACK_COMPLETE.md](./progress/STACK_COMPLETE.md)
+
+**For DX Serializer (NEW!):**
+- ⚡ Quick start: [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
+- 📖 Full guide: [BIDIRECTIONAL_SYSTEM.md](./BIDIRECTIONAL_SYSTEM.md)
+- 📝 Implementation: [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)
 - Current status: [ACHIEVEMENTS.md](./progress/ACHIEVEMENTS.md)
 
 ## 📖 Reading Order

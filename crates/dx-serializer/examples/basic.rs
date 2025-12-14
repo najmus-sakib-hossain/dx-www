@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let DxValue::Object(obj) = &data {
         if let Some(DxValue::Array(arr)) = obj.get("colors") {
             print!("   Colors: ");
-            for elem in &arr.elements {
+            for elem in &arr.values {
                 print!("{} ", elem.as_str().unwrap());
             }
             println!();

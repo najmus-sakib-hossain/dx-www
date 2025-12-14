@@ -9,10 +9,12 @@
 //! - Auto-increment (%#): Sequential IDs generated automatically
 
 pub mod base62;
+pub mod compress;
 pub mod converters;
 pub mod encoder;
 pub mod error;
 pub mod formatter;
+pub mod mappings;
 pub mod optimizer;
 pub mod parser;
 pub mod schema;
@@ -20,10 +22,12 @@ pub mod tokenizer;
 pub mod types;
 
 pub use base62::{encode_base62, decode_base62};
+pub use compress::{format_machine, compress_to_writer};
 pub use converters::{convert_to_dx, json_to_dx, yaml_to_dx, toon_to_dx, toml_to_dx};
 pub use encoder::{encode, encode_to_writer, Encoder};
 pub use error::{DxError, Result};
 pub use formatter::{format_human, HumanFormatter};
+pub use mappings::Mappings;
 pub use optimizer::{optimize_key, optimize_path};
 pub use parser::{parse, parse_stream, Parser};
 pub use schema::{Schema, TypeHint};

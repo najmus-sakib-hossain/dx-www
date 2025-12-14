@@ -2,7 +2,8 @@
 //!
 //! Shows how to integrate the human formatter for IDE/LSP usage.
 
-use dx_serializer::{parse, format_human, FormatterConfig};
+use dx_serializer::{parse, format_human};
+use dx_serializer::formatter::FormatterConfig;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== DX Serializer: LSP Integration ===\n");
