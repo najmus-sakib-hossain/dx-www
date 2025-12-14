@@ -299,3 +299,31 @@ let beautified = format_human(&data)?;
 
 **Built with Rust and WebAssembly**  
 *Binary Everywhere. Zero Parse. Zero GC. Zero Hydration.*
+
+
+
+
+
+
+I am creating a new framework called dx-www, which will be the not the best web related framework of all time but also it solves web development!
+
+Now, I am the point of creating  a code standard for my dx-www that will be ".dx" instead of jsx and its will also support jsx and tsx the sake of the most nextjs and reactjs developers but may be as a nextjs typescript developer myself myself have realized that its not a good idea anymore - so its written in rust so like nextjs and reactjs we don't stuck on js and ts so we can create our own code standard that don't have "use client", useEffect and useState nonesence in it!
+
+So, please help me create the best code standard for the new of era of websites!!!
+
+```markdown
+
+
+So, this will be the files and folder stucture for dx-www:
+```
+.dx
+app
+component
+db
+media
+icon
+font
+i18n
+style
+dx - dx config file!
+```
