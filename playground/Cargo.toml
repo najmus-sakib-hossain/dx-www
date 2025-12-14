@@ -1,0 +1,23 @@
+[package]
+name = "dx-playground"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "size-comparison"
+path = "benchmarks/size-comparison.rs"
+
+[[bin]]
+name = "speed-comparison"
+path = "benchmarks/speed-comparison.rs"
+
+[[bin]]
+name = "dx-machine-example"
+path = "examples/dx-machine-example.rs"
+
+[[bin]]
+name = "dx-human-example"
+path = "examples/dx-human-example.rs"
+
+[dependencies]
+dx-serializer = { path = "../crates/dx-serializer" }

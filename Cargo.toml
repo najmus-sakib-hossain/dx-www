@@ -11,6 +11,9 @@ members = [
     "crates/dx-binary",
     "crates/dx-packet",
     
+    # DX Serializer (ultra-efficient format)
+    "crates/dx-serializer",
+    
     # Client runtimes (WASM)
     "crates/dx-client",
     "crates/dx-client-tiny",
@@ -23,8 +26,9 @@ members = [
     "crates/dx-server",
     "crates/dx-cache",
     
-    # Examples
+    # Examples & Playground
     "examples/hello-world",
+    "playground",
 ]
 
 [workspace.package]

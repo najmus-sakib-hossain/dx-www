@@ -1,0 +1,64 @@
+project: DX Runtime
+version: 0.1.0
+status: active
+
+team:
+  - alice
+  - bob
+  - charlie
+  - diana
+  - evan
+
+tasks:
+  - id: 1
+    name: Parser Implementation
+    hours: 12.5
+    urgent: true
+    assignee: alice
+  - id: 2
+    name: Encoder Optimization
+    hours: 8.0
+    urgent: true
+    assignee: bob
+  - id: 3
+    name: Documentation
+    hours: 6.5
+    urgent: false
+    assignee: charlie
+  - id: 4
+    name: Testing Suite
+    hours: 15.0
+    urgent: true
+    assignee: diana
+  - id: 5
+    name: Benchmarking
+    hours: 4.0
+    urgent: false
+    assignee: evan
+  - id: 6
+    name: Performance Tuning
+    hours: 10.0
+    urgent: true
+    assignee: alice
+  - id: 7
+    name: Security Audit
+    hours: 20.0
+    urgent: true
+    assignee: bob
+
+metrics:
+  - metric: LOC
+    value: 50000
+    unit: lines
+  - metric: Functions
+    value: 2500
+    unit: count
+  - metric: Coverage
+    value: 95
+    unit: percent
+  - metric: Performance
+    value: 820
+    unit: percent
+  - metric: Compression
+    value: 75
+    unit: percent

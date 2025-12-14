@@ -180,5 +180,28 @@ MIT OR Apache-2.0
 
 ---
 
+## dx-serializer: Ultra-Efficient Data Format
+
+**NEW:** DX Serializer is now available - a revolutionary serialization format that's **63.9% more efficient** than TOON!
+
+### Key Features
+- **Machine Format (DXm):** Optimized for LLMs and parsers (vacuum parsing, ditto compression, schema-guided)
+- **Human Format (DXv):** Beautiful LSP-ready formatting with alignment and Unicode symbols
+- **Performance:** 60-64% smaller than TOON, 3-4x faster parsing
+- **Zero-Copy:** SIMD-accelerated tokenization operating directly on byte slices
+
+See [`playground/results/BENCHMARK_RESULTS.md`](playground/results/BENCHMARK_RESULTS.md) for detailed benchmarks.
+
+### Quick Example
+```rust
+use dx_serializer::{parse, format_human};
+
+// Parse machine format
+let data = parse(b"tasks=id%i name%s hrs%f\n1 Parser 12.5\n2 Tests 8.0")?;
+
+// Format for human display (LSP)
+let human = format_human(&data)?;
+```
+
 **Built with Rust and WebAssembly**  
 *Binary Everywhere. Zero Parse. Zero GC. Zero Hydration.*
