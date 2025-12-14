@@ -76,6 +76,11 @@ impl Column {
     pub fn new(name: String, type_hint: TypeHint) -> Self {
         Self { name, type_hint }
     }
+    
+    /// Check if this is an anonymous auto-increment column (#)
+    pub fn is_anonymous_auto_increment(&self) -> bool {
+        self.name == "#" && self.type_hint == TypeHint::AutoIncrement
+    }
 }
 
 /// Schema for a table (defined by `=`)
