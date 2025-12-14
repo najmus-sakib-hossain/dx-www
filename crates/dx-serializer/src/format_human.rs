@@ -15,7 +15,7 @@
 /// Wildflower Loop 5.1 2u sam +
 /// ```
 ///
-/// Output (Human Display - 374 bytes):
+/// Output (Human Display - Beautiful & Informative):
 /// ```dx
 /// context.task   : Our favorite hikes together
 /// ^location      : Boulder
@@ -23,13 +23,25 @@
 /// 
 /// friends        > ana | luis | sam
 /// 
-/// # HIKES TABLE (Auto-ID, Base62 decoded)
+/// # HIKES TABLE (3 Rows, 6 Columns)
 /// # ----------------------------------------------------------
 /// ID   Name                 Km      Gain    Who     Sun
-/// 1    Blue Lake Trail      7.5     320     ana     +
-/// 2    Ridge Overlook       9.2     540     luis    -
-/// 3    Wildflower Loop      5.1     180     sam     +
+/// 1    Blue Lake Trail      7.5     320     ana     true
+/// 2    Ridge Overlook       9.2     540     luis    false
+/// 3    Wildflower Loop      5.1     180     sam     true
 /// ```
+///
+/// Key Features:
+/// - Row/Column counts in table headers for quick overview
+/// - Full boolean words (true/false) instead of symbols
+/// - Base62 integers automatically decoded to readable numbers
+/// - Auto-increment IDs shown but not stored
+/// - Aligned columns with dynamic width calculation
+/// - Prefix inheritance (^) clearly visualized
+/// - Pipe separators (|) for arrays
+///
+/// The goal: Be MORE readable than JSON, YAML, or TOML
+/// while maintaining 185-byte storage efficiency.
 
 use std::fmt::Write;
 use crate::{DxValue, DxData, Schema, TypeHint};
@@ -88,7 +100,8 @@ fn format_object(
             DxValue::String(s) => writeln!(output, "{}{} : {}", full_key, padding, s)?,
             DxValue::Int(n) => writeln!(output, "{}{} : {}", full_key, padding, n)?,
             DxValue::Float(f) => writeln!(output, "{}{} : {}", full_key, padding, f)?,
-            DxValue::Bool(b) => writeln!(output, "{}{} : {}", full_key, padding, if *b { "+" } else { "-" })?,
+            // Use full boolean words in object properties too
+            DxValue::Bool(b) => writeln!(output, "{}{} : {}", full_key, padding, if *b { "true" } else { "false" })?,
             _ => {}
         }
     }
@@ -111,7 +124,8 @@ fn format_array(
         match item {
             DxValue::String(s) => write!(output, "{}", s)?,
             DxValue::Int(n) => write!(output, "{}", n)?,
-            DxValue::Float(f) => write!(output, "{}", f)?,
+            // Use full boolean words everywhere for clarity
+            DxValue::Bool(b) => write!(output, "{}", if *b { "true" } else { "false
             DxValue::Bool(b) => write!(output, "{}", if *b { "+" } else { "-" })?,
             _ => {}
         }
@@ -127,8 +141,13 @@ fn format_table(
     schema: &Schema,
     data: &DxData,
 ) -> Result<(), std::fmt::Error> {
-    // Write comment header
-    writeln!(output, "# {} TABLE (Auto-ID, Base62 decoded)", schema.name.to_uppercase())?;
+    // Count rows and columns
+    let row_count = data.tables.get(&schema.name).map(|rows| rows.len()).unwrap_or(0);
+    let col_count = schema.columns.len();
+    
+    // Write informative comment header
+    writeln!(output, "# {} TABLE ({} Rows, {} Columns)", 
+             schema.name.to_uppercase(), row_count, col_count)?;
     writeln!(output, "# {}", "-".repeat(58))?;
     
     // Calculate column widths
@@ -178,7 +197,8 @@ fn format_table(
                         }
                     },
                     DxValue::Float(f) => format!("{:.1}", f),
-                    DxValue::Bool(b) => if *b { "+" } else { "-" }.to_string(),
+                    // Use full boolean words for maximum human readability
+                    DxValue::Bool(b) => if *b { "true" } else { "false" }.to_string(),
                     _ => "".to_string(),
                 };
                 write!(output, "{:<width$} ", formatted, width = col_widths[i])?;
