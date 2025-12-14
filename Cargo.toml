@@ -2,29 +2,29 @@
 resolver = "2"
 members = [
     # Core runtime crates
-    "crates/dx-core",
-    "crates/dx-dom",
-    "crates/dx-morph",
-    "crates/dx-sched",
+    "crates/core",
+    "crates/dom",
+    "crates/morph",
+    "crates/sched",
     
     # Binary protocol
-    "crates/dx-binary",
-    "crates/dx-packet",
+    "crates/binary",
+    "crates/packet",
     
     # DX Serializer (ultra-efficient format)
-    "crates/dx-serializer",
+    "crates/serializer",
     
     # Client runtimes (WASM)
-    "crates/dx-client",
-    "crates/dx-client-tiny",
+    "crates/client",
+    "crates/client-tiny",
     
     # Developer tools
-    "crates/dx-compiler",
-    "crates/dx-cli",
+    "crates/compiler",
+    "crates/cli",
     
     # Server-side (optional)
-    "crates/dx-server",
-    "crates/dx-cache",
+    "crates/server",
+    "crates/cache",
     
     # Examples & Playground
     "examples/hello-world",
@@ -70,18 +70,21 @@ once_cell = "1.19"
 console_error_panic_hook = "0.1"
 
 # Internal Workspace Crates
-dx-core = { path = "crates/dx-core" }
-dx-dom = { path = "crates/dx-dom" }
-dx-morph = { path = "crates/dx-morph" }
-dx-sched = { path = "crates/dx-sched" }
-dx-compiler = { path = "crates/dx-compiler" }
-dx-binary = { path = "crates/dx-binary" }
-dx-packet = { path = "crates/dx-packet" }
-dx-client = { path = "crates/dx-client" }
+dx-core = { path = "crates/core" }
+dx-dom = { path = "crates/dom" }
+dx-morph = { path = "crates/morph" }
+dx-sched = { path = "crates/sched" }
+dx-compiler = { path = "crates/compiler" }
+dx-binary = { path = "crates/binary" }
+dx-packet = { path = "crates/packet" }
+dx-client = { path = "crates/client" }
 
 # ============================================================================
 # AGGRESSIVE SIZE OPTIMIZATION (9KB TARGET)
 # ============================================================================
+
+[profile.dev]
+panic = "abort"       # Required for no_std crates
 
 [profile.release]
 opt-level = "z"       # Optimize for size (not speed)

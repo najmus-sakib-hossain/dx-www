@@ -35,13 +35,13 @@ fn main() {
 
     println!("\n🔍 FORMATS SIDE-BY-SIDE");
     println!("─────────────────────────────────────────────────────────");
-    
+
     println!("\n📝 TOON ({} bytes):", toon.len());
     println!("{}", String::from_utf8_lossy(&toon));
-    
+
     println!("📝 DX Basic ({} bytes):", dx_basic.len());
     println!("{}", String::from_utf8_lossy(&dx_basic));
-    
+
     println!("📝 DX Optimized ({} bytes):", dx_opt.len());
     println!("{}", String::from_utf8_lossy(&dx_opt));
 
@@ -62,7 +62,7 @@ fn main() {
     println!("🎯 DX Basic: {:.1}% better than TOON", toon_to_dx_basic);
     println!("🚀 DX Optimized: {:.1}% better than TOON", toon_to_dx_opt);
     println!("💥 Overall: {:.1}% smaller than JSON!", json_to_dx_opt);
-    
+
     println!("\n📊 WHY THE DIFFERENCE?");
     println!("─────────────────────────────────────────────────────────");
     println!("TOON already uses tabular compression ([3]{{columns}}:)");
@@ -71,7 +71,7 @@ fn main() {
     println!("  • Shorter boolean syntax (+ vs true)");
     println!("  • Schema-guided parsing (type hints)");
     println!("  • Optional alias system for repeated keys");
-    
+
     println!("\n🔥 WHERE DX REALLY SHINES:");
     println!("DX's advantage grows with:");
     println!("  • Complex nested objects (see complex.dx: 63.9% gain!)");

@@ -36,17 +36,19 @@ fn main() {
 
     println!("\n🔍 DX ADVANTAGES OVER TOON");
     println!("─────────────────────────────────────────────────────────");
-    
+
     // Show the actual files
     println!("\nTOON Format ({} bytes):", toon.len());
     println!("{}", String::from_utf8_lossy(&toon));
-    
+
     println!("\nDX Format ({} bytes):", dx.len());
     println!("{}", String::from_utf8_lossy(&dx));
 
     println!("\n💡 KEY DIFFERENCES:");
-    println!("  1. No indentation in DX (saves {} bytes)", 
-        count_spaces(&toon) - count_spaces(&dx));
+    println!(
+        "  1. No indentation in DX (saves {} bytes)",
+        count_spaces(&toon) - count_spaces(&dx)
+    );
     println!("  2. Shorter booleans: + vs true, - vs false");
     println!("  3. Stream operator: > instead of [3]:");
     println!("  4. Shortened keys: km, gain, who, sun vs full names");
@@ -63,10 +65,9 @@ fn main() {
     } else {
         println!("📊 DX is {:.1}% more efficient than TOON", toon_to_dx);
         println!("   (Target: 65%+, Achieved: {:.1}%)", toon_to_dx);
-        
+
         if toon_to_dx >= 60.0 {
-            println!("\n🎯 Very close to target! ({:.1}% of 65% goal)", 
-                toon_to_dx / 65.0 * 100.0);
+            println!("\n🎯 Very close to target! ({:.1}% of 65% goal)", toon_to_dx / 65.0 * 100.0);
         }
     }
 

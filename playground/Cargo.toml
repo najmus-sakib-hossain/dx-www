@@ -36,4 +36,4 @@ name = "dx-human-example"
 path = "examples/dx-human-example.rs"
 
 [dependencies]
-dx-serializer = { path = "../crates/dx-serializer" }
+dx-serializer = { path = "../crates/serializer" }

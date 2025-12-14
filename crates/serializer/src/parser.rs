@@ -1,0 +1,542 @@
+//! Parser for DX Machine format
+//!
+//! Implements all DX features:
+//! - Schema-guided vacuum parsing
+//! - Alias system ($)
+//! - Prefix inheritance (^)
+//! - Vertical ditto (_)
+//! - Type hints (%i, %s, %f, %b, %x, %#)
+//! - Anchor references (@)
+//! - DX ∞: Base62 integers (%x), Auto-increment (%#)
+
+use crate::base62::decode_base62;
+use crate::error::{DxError, Result};
+use crate::schema::{Schema, TypeHint};
+use crate::tokenizer::{Token, Tokenizer};
+use crate::types::{DxArray, DxObject, DxTable, DxValue};
+use rustc_hash::FxHashMap;
+
+/// Parser state
+pub struct Parser<'a> {
+    tokenizer: Tokenizer<'a>,
+    /// Alias map ($c = context)
+    aliases: FxHashMap<String, String>,
+    /// Anchor storage (@1, @2, ...)
+    anchors: Vec<DxValue>,
+    /// Current prefix for inheritance (^)
+    prefix_stack: Vec<String>,
+    /// Schema registry for tables
+    schemas: FxHashMap<String, Schema>,
+    /// Auto-increment counters per table
+    auto_counters: FxHashMap<String, i64>,
+}
+
+impl<'a> Parser<'a> {
+    pub fn new(input: &'a [u8]) -> Self {
+        Self {
+            tokenizer: Tokenizer::new(input),
+            aliases: FxHashMap::default(),
+            anchors: Vec::new(),
+            auto_counters: FxHashMap::default(),
+            prefix_stack: Vec::new(),
+            schemas: FxHashMap::default(),
+        }
+    }
+
+    /// Parse the entire input
+    pub fn parse(&mut self) -> Result<DxValue> {
+        let mut root = DxObject::new();
+
+        loop {
+            self.tokenizer.skip_whitespace();
+            if self.tokenizer.is_eof() {
+                break;
+            }
+
+            let token = self.tokenizer.peek_token()?;
+            match token {
+                Token::Eof => break,
+                Token::Newline => {
+                    self.tokenizer.next_token()?;
+                    continue;
+                }
+                Token::Dollar => {
+                    // Alias definition: $c=context
+                    self.parse_alias()?;
+                }
+                Token::Ident(_) | Token::Caret => {
+                    // Key-value pair or table
+                    let (key, value) = self.parse_key_value()?;
+                    root.insert(key, value);
+                }
+                _ => {
+                    return Err(DxError::InvalidSyntax {
+                        pos: self.tokenizer.pos(),
+                        msg: format!("Unexpected token: {:?}", token),
+                    });
+                }
+            }
+        }
+
+        Ok(DxValue::Object(root))
+    }
+
+    /// Parse alias definition: $c=context
+    fn parse_alias(&mut self) -> Result<()> {
+        self.tokenizer.next_token()?; // consume $
+
+        let alias = match self.tokenizer.next_token()? {
+            Token::Ident(bytes) => std::str::from_utf8(bytes)?.to_string(),
+            _ => {
+                return Err(DxError::InvalidSyntax {
+                    pos: self.tokenizer.pos(),
+                    msg: "Expected alias name after $".to_string(),
+                })
+            }
+        };
+
+        // Expect =
+        if !matches!(self.tokenizer.next_token()?, Token::Equals) {
+            return Err(DxError::InvalidSyntax {
+                pos: self.tokenizer.pos(),
+                msg: "Expected = after alias".to_string(),
+            });
+        }
+
+        let value = match self.tokenizer.next_token()? {
+            Token::Ident(bytes) => std::str::from_utf8(bytes)?.to_string(),
+            _ => {
+                return Err(DxError::InvalidSyntax {
+                    pos: self.tokenizer.pos(),
+                    msg: "Expected value after alias =".to_string(),
+                })
+            }
+        };
+
+        self.aliases.insert(alias, value);
+        Ok(())
+    }
+
+    /// Parse key-value pair or table definition
+    fn parse_key_value(&mut self) -> Result<(String, DxValue)> {
+        let mut key = String::new();
+
+        // Handle prefix inheritance (^)
+        if matches!(self.tokenizer.peek_token()?, Token::Caret) {
+            self.tokenizer.next_token()?;
+            if let Some(prefix) = self.prefix_stack.last() {
+                key.push_str(prefix);
+                key.push('.');
+            }
+        }
+
+        // Read the key
+        match self.tokenizer.next_token()? {
+            Token::Ident(bytes) => {
+                let key_str = std::str::from_utf8(bytes)?;
+                // Resolve alias if starts with $
+                if let Some(alias_key) = key_str.strip_prefix('$') {
+                    if let Some(resolved) = self.aliases.get(alias_key) {
+                        key.push_str(resolved);
+                    } else {
+                        return Err(DxError::UnknownAlias(alias_key.to_string()));
+                    }
+                } else {
+                    key.push_str(key_str);
+                }
+            }
+            _ => {
+                return Err(DxError::InvalidSyntax {
+                    pos: self.tokenizer.pos(),
+                    msg: "Expected key".to_string(),
+                })
+            }
+        }
+
+        // Save prefix for potential child keys
+        let full_key = key.clone();
+
+        // Read operator
+        self.tokenizer.skip_whitespace();
+        let operator = self.tokenizer.next_token()?;
+
+        let value = match operator {
+            Token::Colon => {
+                // Simple key:value
+                self.prefix_stack.push(full_key.clone());
+                let val = self.parse_value()?;
+                self.prefix_stack.pop();
+                val
+            }
+            Token::Equals => {
+                // Schema definition: table=col1%i col2%s...
+                self.parse_table_definition(&key)?
+            }
+            Token::Stream => {
+                // Stream array: key>val1|val2|val3
+                self.parse_stream_array()?
+            }
+            Token::Bang => {
+                // Implicit true: admin!
+                DxValue::Bool(true)
+            }
+            Token::Void => {
+                // Implicit null: error?
+                DxValue::Null
+            }
+            _ => {
+                return Err(DxError::InvalidSyntax {
+                    pos: self.tokenizer.pos(),
+                    msg: format!("Expected :, =, or > after key, got {:?}", operator),
+                })
+            }
+        };
+
+        Ok((key, value))
+    }
+
+    /// Parse a value
+    fn parse_value(&mut self) -> Result<DxValue> {
+        self.tokenizer.skip_whitespace();
+
+        let token = self.tokenizer.next_token()?;
+        match token {
+            Token::Null | Token::Void => Ok(DxValue::Null),
+            Token::True => Ok(DxValue::Bool(true)),
+            Token::False => Ok(DxValue::Bool(false)),
+            Token::Int(i) => Ok(DxValue::Int(i)),
+            Token::Float(f) => Ok(DxValue::Float(f)),
+            Token::Ditto => Err(DxError::DittoNoPrevious(self.tokenizer.pos())),
+            Token::At => {
+                // Anchor reference: @1
+                let anchor_id = match self.tokenizer.next_token()? {
+                    Token::Int(i) => i as usize,
+                    _ => {
+                        return Err(DxError::InvalidSyntax {
+                            pos: self.tokenizer.pos(),
+                            msg: "Expected number after @".to_string(),
+                        })
+                    }
+                };
+                self.anchors
+                    .get(anchor_id)
+                    .cloned()
+                    .ok_or_else(|| DxError::UnknownAnchor(anchor_id.to_string()))
+            }
+            Token::Ident(bytes) => {
+                let s = std::str::from_utf8(bytes)?;
+                Ok(DxValue::String(s.to_string()))
+            }
+            _ => Err(DxError::InvalidSyntax {
+                pos: self.tokenizer.pos(),
+                msg: format!("Unexpected token in value: {:?}", token),
+            }),
+        }
+    }
+
+    /// Parse stream array: >a|b|c
+    fn parse_stream_array(&mut self) -> Result<DxValue> {
+        let mut values = Vec::new();
+
+        loop {
+            self.tokenizer.skip_whitespace();
+
+            let token = self.tokenizer.peek_token()?;
+            if matches!(token, Token::Newline | Token::Eof) {
+                break;
+            }
+
+            let val = self.parse_value()?;
+            values.push(val);
+
+            self.tokenizer.skip_whitespace();
+            if matches!(self.tokenizer.peek_token()?, Token::Pipe) {
+                self.tokenizer.next_token()?; // consume |
+            } else {
+                break;
+            }
+        }
+
+        Ok(DxValue::Array(DxArray::stream(values)))
+    }
+
+    /// Parse table definition and rows
+    fn parse_table_definition(&mut self, name: &str) -> Result<DxValue> {
+        // Read schema definition until newline
+        self.tokenizer.skip_whitespace();
+        let schema_line = self.tokenizer.read_until(b'\n');
+        let schema_str = std::str::from_utf8(schema_line)?;
+
+        let schema = Schema::parse_definition(name.to_string(), schema_str)?;
+        self.schemas.insert(name.to_string(), schema.clone());
+
+        // Consume newline
+        if matches!(self.tokenizer.peek(), Some(b'\n')) {
+            self.tokenizer.advance(1);
+        }
+
+        // Parse table rows
+        let mut table = DxTable::new(schema.clone());
+        let mut prev_row: Option<Vec<DxValue>> = None;
+
+        loop {
+            self.tokenizer.skip_whitespace();
+
+            // Check if this line is still part of the table
+            let token = self.tokenizer.peek_token()?;
+            if matches!(token, Token::Newline | Token::Eof) {
+                self.tokenizer.next_token()?;
+                continue;
+            }
+
+            // If we hit a key (identifier followed by : = or >), we're done
+            if matches!(token, Token::Ident(_)) {
+                let saved_pos = self.tokenizer.pos();
+                self.tokenizer.next_token()?; // consume ident
+                let next = self.tokenizer.peek_token()?;
+                self.tokenizer = Tokenizer::new(self.tokenizer.input);
+                self.tokenizer.advance(saved_pos);
+
+                if matches!(
+                    next,
+                    Token::Colon
+                        | Token::Equals
+                        | Token::Stream
+                        | Token::Bang
+                        | Token::Void
+                        | Token::Caret
+                        | Token::Dollar
+                ) {
+                    break;
+                }
+            }
+
+            // Parse row based on schema
+            let row = self.parse_table_row(&schema, prev_row.as_ref())?;
+
+            if row.is_empty() {
+                break;
+            }
+
+            prev_row = Some(row.clone());
+            table.add_row(row).map_err(|e| DxError::SchemaError(e))?;
+
+            // Check for end of line
+            self.tokenizer.skip_whitespace();
+            if matches!(self.tokenizer.peek(), Some(b'\n')) {
+                self.tokenizer.advance(1);
+            }
+        }
+
+        Ok(DxValue::Table(table))
+    }
+
+    /// Parse a single table row based on schema
+    fn parse_table_row(
+        &mut self,
+        schema: &Schema,
+        prev_row: Option<&Vec<DxValue>>,
+    ) -> Result<Vec<DxValue>> {
+        let mut row = Vec::with_capacity(schema.columns.len());
+
+        for (col_idx, column) in schema.columns.iter().enumerate() {
+            self.tokenizer.skip_whitespace();
+
+            // Handle auto-increment: generate value without reading input
+            if matches!(column.type_hint, TypeHint::AutoIncrement) {
+                let counter = self.auto_counters.entry(schema.name.clone()).or_insert(1);
+                row.push(DxValue::Int(*counter));
+                *counter += 1;
+                continue;
+            }
+
+            let token = self.tokenizer.peek_token()?;
+
+            // Handle ditto (_)
+            if matches!(token, Token::Ditto) {
+                self.tokenizer.next_token()?;
+                if let Some(prev) = prev_row {
+                    row.push(prev[col_idx].clone());
+                } else {
+                    return Err(DxError::DittoNoPrevious(self.tokenizer.pos()));
+                }
+                continue;
+            }
+
+            // Parse value based on type hint
+            let value = match column.type_hint {
+                TypeHint::Int => match self.tokenizer.next_token()? {
+                    Token::Int(i) => DxValue::Int(i),
+                    Token::Ditto => {
+                        if let Some(prev) = prev_row {
+                            prev[col_idx].clone()
+                        } else {
+                            return Err(DxError::DittoNoPrevious(self.tokenizer.pos()));
+                        }
+                    }
+                    _ => {
+                        return Err(DxError::TypeMismatch {
+                            expected: "int".to_string(),
+                            got: "other".to_string(),
+                        })
+                    }
+                },
+                TypeHint::Float => match self.tokenizer.next_token()? {
+                    Token::Float(f) => DxValue::Float(f),
+                    Token::Int(i) => DxValue::Float(i as f64),
+                    _ => {
+                        return Err(DxError::TypeMismatch {
+                            expected: "float".to_string(),
+                            got: "other".to_string(),
+                        })
+                    }
+                },
+                TypeHint::Bool => match self.tokenizer.next_token()? {
+                    Token::True => DxValue::Bool(true),
+                    Token::False => DxValue::Bool(false),
+                    _ => {
+                        return Err(DxError::TypeMismatch {
+                            expected: "bool".to_string(),
+                            got: "other".to_string(),
+                        })
+                    }
+                },
+                TypeHint::Base62 => {
+                    // Parse Base62 encoded integer
+                    match self.tokenizer.next_token()? {
+                        Token::Ident(bytes) => {
+                            let s = std::str::from_utf8(bytes)?;
+                            let n = decode_base62(s)?;
+                            DxValue::Int(n as i64)
+                        }
+                        Token::Int(i) => DxValue::Int(i), // Fallback for regular numbers
+                        _ => {
+                            return Err(DxError::TypeMismatch {
+                                expected: "base62".to_string(),
+                                got: "other".to_string(),
+                            })
+                        }
+                    }
+                }
+                TypeHint::String => {
+                    // Vacuum parsing: read until next column type
+                    let next_is_number = col_idx + 1 < schema.columns.len()
+                        && matches!(
+                            schema.columns[col_idx + 1].type_hint,
+                            TypeHint::Int | TypeHint::Float | TypeHint::Base62
+                        );
+                    let bytes = self.tokenizer.read_string_vacuum(next_is_number);
+                    let s = std::str::from_utf8(bytes)?.trim().to_string();
+                    DxValue::String(s)
+                }
+                TypeHint::AutoIncrement => {
+                    // Should not reach here (handled above)
+                    unreachable!("AutoIncrement handled before loop")
+                }
+                TypeHint::Auto => self.parse_value()?,
+            };
+
+            row.push(value);
+        }
+
+        Ok(row)
+    }
+}
+
+/// Parse DX bytes into a value
+pub fn parse(input: &[u8]) -> Result<DxValue> {
+    let mut parser = Parser::new(input);
+    parser.parse()
+}
+
+/// Parse DX from string
+pub fn parse_str(input: &str) -> Result<DxValue> {
+    parse(input.as_bytes())
+}
+
+/// Stream parser for large files
+pub fn parse_stream<R: std::io::Read>(reader: R) -> Result<DxValue> {
+    let mut buffer = Vec::new();
+    let mut reader = reader;
+    reader.read_to_end(&mut buffer)?;
+    parse(&buffer)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_simple_parse() {
+        let input = b"name:Alice
+age:30
+active:+";
+
+        let result = parse(input).unwrap();
+        if let DxValue::Object(obj) = result {
+            assert_eq!(obj.get("name"), Some(&DxValue::String("Alice".to_string())));
+            assert_eq!(obj.get("age"), Some(&DxValue::Int(30)));
+            assert_eq!(obj.get("active"), Some(&DxValue::Bool(true)));
+        } else {
+            panic!("Expected object");
+        }
+    }
+
+    #[test]
+    fn test_table_parse() {
+        let input = b"users=id%i name%s active%b
+1 Alice +
+2 Bob -";
+
+        let result = parse(input).unwrap();
+        if let DxValue::Object(obj) = result {
+            if let Some(DxValue::Table(table)) = obj.get("users") {
+                assert_eq!(table.row_count(), 2);
+                assert_eq!(table.rows[0][0], DxValue::Int(1));
+                assert_eq!(table.rows[0][1], DxValue::String("Alice".to_string()));
+            } else {
+                panic!("Expected table");
+            }
+        }
+    }
+
+    #[test]
+    fn test_stream_array() {
+        let input = b"tags>alpha|beta|gamma";
+
+        let result = parse(input).unwrap();
+        if let DxValue::Object(obj) = result {
+            if let Some(DxValue::Array(arr)) = obj.get("tags") {
+                assert!(arr.is_stream);
+                assert_eq!(arr.values.len(), 3);
+            } else {
+                panic!("Expected array");
+            }
+        }
+    }
+
+    #[test]
+    fn test_alias() {
+        let input = b"$c=context
+$c.task:Mission";
+
+        let result = parse(input).unwrap();
+        if let DxValue::Object(obj) = result {
+            assert_eq!(obj.get("context.task"), Some(&DxValue::String("Mission".to_string())));
+        }
+    }
+
+    #[test]
+    fn test_ditto() {
+        let input = b"data=id%i name%s
+1 Alice
+_ Bob";
+
+        let result = parse(input).unwrap();
+        if let DxValue::Object(obj) = result {
+            if let Some(DxValue::Table(table)) = obj.get("data") {
+                assert_eq!(table.rows[1][0], DxValue::Int(1)); // Ditto copies from above
+            }
+        }
+    }
+}

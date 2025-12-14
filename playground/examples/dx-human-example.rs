@@ -16,42 +16,42 @@ fn main() -> Result<()> {
     // Standard Human Format
     println!("📊 STANDARD HUMAN FORMAT (Default)");
     println!("══════════════════════════════════════════════════════════\n");
-    
+
     let human = format_human(&parsed)?;
     println!("{}", human);
 
     // Custom Formatted Version
     println!("\n📊 CUSTOM HUMAN FORMAT (No Unicode)");
     println!("══════════════════════════════════════════════════════════\n");
-    
+
     let config = FormatterConfig {
         column_padding: 4,
         use_unicode: false,
         add_dividers: true,
         use_colors: false,
     };
-    
+
     let custom = format_human_with_config(&parsed, config)?;
     println!("{}", custom);
 
     // Compact Format
     println!("\n📊 COMPACT FORMAT (No Dividers)");
     println!("══════════════════════════════════════════════════════════\n");
-    
+
     let compact_config = FormatterConfig {
         column_padding: 2,
         use_unicode: true,
         add_dividers: false,
         use_colors: false,
     };
-    
+
     let compact = format_human_with_config(&parsed, compact_config)?;
     println!("{}", compact);
 
     // Real-world Example: Configuration File
     println!("\n📊 REAL-WORLD: Application Configuration");
     println!("══════════════════════════════════════════════════════════\n");
-    
+
     let config_dx = b"app.name:My Application
 app.version:2.0.1
 app.debug!

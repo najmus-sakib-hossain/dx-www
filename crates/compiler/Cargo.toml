@@ -1,0 +1,60 @@
+[package]
+name = "dx-compiler"
+version = "0.1.0"
+edition = "2021"
+authors = ["Dx-WWW Team"]
+description = "The Transpiler-to-Binary Pipeline - Converts .tsx to .dxb and .wasm"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "dx_compiler"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dx"
+path = "src/main.rs"
+
+[dependencies]
+# CLI & Terminal
+clap = { version = "4.5", features = ["derive", "cargo"] }
+console = "0.15"
+indicatif = "0.17"  # Loading bars
+
+# Parsing (The Heavy Lifting)
+# Using regex-based parser for MVP speed
+# Production will use OXC once API is stable
+regex = "1.10"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "2.0.0-rc.3"
+flate2 = "1.0" # For Gzipping templates
+
+# Code Generation
+quote = "1.0"
+proc-macro2 = "1.0"
+syn = "2.0"
+
+# Async/System
+tokio = { version = "1.36", features = ["full"] }
+notify = "6.1" # File watching
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Path handling
+pathdiff = "0.2"
+walkdir = "2.4"
+
+# Hashing for cache invalidation
+blake3 = "1.5"
+
+# Datetime for metadata
+chrono = "0.4"
+
+# Internal
+dx-packet = { path = "../packet", features = ["std"] }
+
+[dev-dependencies]
+tempfile = "3.8"
+

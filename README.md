@@ -86,39 +86,56 @@ The compiler automatically selects Micro (338B) or Macro (7.5KB) based on your a
 ## Architecture
 
 **The Complete Stack:**
-- **dx-core:** Linear memory manager with capability-based security
-- **dx-dom:** Template instantiation via native `cloneNode()` with batch operations
-- **dx-morph:** O(1) dirty-bit state patching with static binding maps
-- **dx-sched:** RAF loop with 4ms frame budget controller
-- **dx-compiler:** TSX → Binary compiler with automatic Micro/Macro selection (codegen_micro.rs + codegen_macro.rs)
-- **dx-server:** ✨ SSR & Binary Streaming Server (Axum-based, bot detection, ~1ms inflation)
-- **dx-client:** 🎯 Stream + Patch + Cache (Phase 6: incremental loading, XOR diffs, IndexedDB)
-- **dx-cli:** 🎭 Command-Line Orchestrator (Phase 7: `dx new`, `dx dev`, `dx build`)
+- **core:** Linear memory manager with capability-based security
+- **dom:** Template instantiation via native `cloneNode()` with batch operations
+- **morph:** O(1) dirty-bit state patching with static binding maps
+- **sched:** RAF loop with 4ms frame budget controller
+- **compiler:** TSX → Binary compiler with automatic Micro/Macro selection
+- **server:** SSR & Binary Streaming Server (Axum-based, bot detection, ~1ms inflation)
+- **client:** Stream + Patch + Cache (incremental loading, XOR diffs, IndexedDB)
+- **client-tiny:** Ultra-minimal runtime (< 400 bytes)
+- **cli:** Command-Line Orchestrator (`dx new`, `dx dev`, `dx build`)
+- **binary:** Binary protocol implementation
+- **packet:** Network packet handling
+- **cache:** Advanced caching system
+- **serializer:** DX serialization format with converters
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for technical deep-dive.
+See [docs/architecture/](docs/architecture/) for technical deep-dive.
 
 ## Project Structure
 
 ```
 crates/
-├── dx-core/        # Memory manager (~390 lines)
-├── dx-dom/         # HTIP renderer (~350 lines)
-├── dx-morph/       # State patcher (~380 lines)
-├── dx-sched/       # Frame scheduler (~350 lines)
-├── dx-compiler/    # TSX → Binary compiler (~2700 lines)
+├── core/           # Memory manager (~390 lines)
+├── dom/            # HTIP renderer (~350 lines)
+├── morph/          # State patcher (~380 lines)
+├── sched/          # Frame scheduler (~350 lines)
+├── compiler/       # TSX → Binary compiler (~2700 lines)
 │   ├── codegen_micro.rs  # Raw FFI calls (548 lines)
 │   └── codegen_macro.rs  # HTIP binary templates (349 lines)
-├── dx-client/      # 🎯 Full with streaming + patching (~1330 lines)
+├── client/         # Full runtime with streaming + patching (~1330 lines)
 │   ├── streaming.rs      # Zero-copy stream consumer (480 lines)
 │   └── patcher.rs        # XOR block patcher (450 lines)
-├── dx-client-tiny/ # Minimal (338 bytes)
-├── dx-packet/      # Binary protocol types (shared)
-├── dx-server/      # ✨ SSR & Streaming Server (Axum, ~500 lines)
-├── dx-cache/       # IndexedDB caching (JavaScript, 400 lines)
-└── dx-cli/         # 🎭 Command-Line Orchestrator (~1200 lines)
-    ├── commands/         # new, dev, build
-    └── config.rs         # dx.toml parser
+├── client-tiny/    # Ultra-minimal runtime (338 bytes)
+├── packet/         # Binary protocol types (shared)
+├── server/         # SSR & Streaming Server (Axum, ~500 lines)
+├── cache/          # IndexedDB caching (JavaScript, 400 lines)
+├── cli/            # Command-Line Orchestrator (~1200 lines)
+│   ├── commands/         # new, dev, build
+│   └── config.rs         # dx.toml parser
+├── binary/         # Binary protocol implementation
+└── serializer/     # DX serialization format
+
+docs/
+├── crates/         # Crate-specific documentation
+├── architecture/   # Technical architecture docs
+├── guides/         # User guides and tutorials
+├── progress/       # Development progress logs
+└── reference/      # API and reference docs
 ```
+
+**Note:** Crate folders were recently reorganized from `dx-*` to clean names (Dec 15, 2025). 
+See [docs/REORGANIZATION_SUMMARY.md](docs/REORGANIZATION_SUMMARY.md) for details.
 
 ## Documentation
 
@@ -315,13 +332,16 @@ So, please help me create the best code standard for the new of era of websites!
 
 
 So, this will be the files and folder stucture for dx-www:
+
 ```
 .dx
 app
+auth
 component
 db
 media
 icon
+feature
 font
 i18n
 style

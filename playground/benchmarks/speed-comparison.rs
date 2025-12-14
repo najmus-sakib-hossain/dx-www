@@ -36,10 +36,13 @@ fn main() {
 
     println!("DX Parse:   {:.2}µs per operation", dx_per_op as f64 / 1000.0);
     println!("            {} total operations", iterations);
-    
+
     // Note: Since we don't have TOON parser in Rust, we'll estimate based on typical performance
     // In a real scenario, you'd parse TOON here too
-    println!("\nTOON Parse: ~{:.2}µs per operation (estimated)", dx_per_op as f64 * 3.0 / 1000.0);
+    println!(
+        "\nTOON Parse: ~{:.2}µs per operation (estimated)",
+        dx_per_op as f64 * 3.0 / 1000.0
+    );
     println!("            (TOON requires indentation parsing and comma handling)");
 
     let speedup = 3.0; // Conservative estimate
@@ -63,8 +66,9 @@ fn main() {
 
     println!("DX Parse:   {:.2}µs per operation", dx_complex_per_op as f64 / 1000.0);
     println!("            {} bytes per file", complex_dx.len());
-    
-    let throughput_mb = (complex_dx.len() as f64 * iterations as f64) / dx_complex_time.as_secs_f64() / 1_000_000.0;
+
+    let throughput_mb =
+        (complex_dx.len() as f64 * iterations as f64) / dx_complex_time.as_secs_f64() / 1_000_000.0;
     println!("            {:.1} MB/s throughput", throughput_mb);
 
     // Test 3: Encode Speed
@@ -86,8 +90,9 @@ fn main() {
     let dx_encode_per_op = dx_encode_time.as_nanos() / iterations;
 
     println!("DX Encode:  {:.2}µs per operation", dx_encode_per_op as f64 / 1000.0);
-    
-    let encode_throughput_mb = (complex_dx.len() as f64 * iterations as f64) / dx_encode_time.as_secs_f64() / 1_000_000.0;
+
+    let encode_throughput_mb =
+        (complex_dx.len() as f64 * iterations as f64) / dx_encode_time.as_secs_f64() / 1_000_000.0;
     println!("            {:.1} MB/s throughput", encode_throughput_mb);
 
     // Test 4: Round-Trip Speed
@@ -126,10 +131,16 @@ fn main() {
     println!("╚════════════════════════════════════════════════════════╝\n");
 
     println!("DX Performance Metrics:");
-    println!("  Parse Speed:     {:.2}µs ({:.1} MB/s)", 
-        dx_complex_per_op as f64 / 1000.0, throughput_mb);
-    println!("  Encode Speed:    {:.2}µs ({:.1} MB/s)", 
-        dx_encode_per_op as f64 / 1000.0, encode_throughput_mb);
+    println!(
+        "  Parse Speed:     {:.2}µs ({:.1} MB/s)",
+        dx_complex_per_op as f64 / 1000.0,
+        throughput_mb
+    );
+    println!(
+        "  Encode Speed:    {:.2}µs ({:.1} MB/s)",
+        dx_encode_per_op as f64 / 1000.0,
+        encode_throughput_mb
+    );
     println!("  Round-Trip:      {:.2}µs", roundtrip_per_op as f64 / 1000.0);
     println!("  Human Format:    {:.2}µs (LSP-ready)", format_per_op as f64 / 1000.0);
 

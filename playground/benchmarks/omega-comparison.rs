@@ -23,7 +23,7 @@ fn main() {
 
     let hikes_vs_toon = (1.0 - dx_omega_hikes.len() as f64 / toon_hikes.len() as f64) * 100.0;
     let hikes_vs_json = (1.0 - dx_omega_hikes.len() as f64 / json_hikes.len() as f64) * 100.0;
-    
+
     println!("\n📈 IMPROVEMENT:");
     println!("DX Ω vs TOON: {:.1}% smaller", hikes_vs_toon);
     println!("DX Ω vs JSON: {:.1}% smaller", hikes_vs_json);
@@ -42,7 +42,7 @@ fn main() {
     // === COMPLEX BENCHMARK ===
     println!("\n\n📊 TEST 2: COMPLEX (NESTED DATA)");
     println!("─────────────────────────────────────────────────────────");
-    
+
     let json_complex = fs::read("data/complex.json").unwrap();
     let toon_complex = fs::read("data/complex.toon").unwrap();
     let dx_basic_complex = fs::read("data/complex.dx").unwrap();
@@ -63,7 +63,7 @@ fn main() {
     // === SIMPLE BENCHMARK ===
     println!("\n\n📊 TEST 3: SIMPLE (FLAT DATA)");
     println!("─────────────────────────────────────────────────────────");
-    
+
     let json_simple = fs::read("data/simple.json").unwrap();
     let toon_simple = fs::read("data/simple.toon").unwrap();
     let dx_basic_simple = fs::read("data/simple.dx").unwrap();
@@ -84,17 +84,19 @@ fn main() {
     // === FORMATS SIDE BY SIDE ===
     println!("\n\n🔍 FORMAT COMPARISON: HIKES");
     println!("─────────────────────────────────────────────────────────");
-    
+
     println!("\n📝 TOON ({} bytes):", toon_hikes.len());
     print!("{}", String::from_utf8_lossy(&toon_hikes));
-    
+
     println!("\n📝 DX Ω ({} bytes):", dx_omega_hikes.len());
     print!("{}", String::from_utf8_lossy(&dx_omega_hikes));
 
     println!("\n\n💡 DX Ω INNOVATIONS:");
     println!("─────────────────────────────────────────────────────────");
-    println!("  1. Inline Prefixing: ^ instead of newlines (saves {}B)", 
-        count_newlines(&toon_hikes) - count_newlines(&dx_omega_hikes));
+    println!(
+        "  1. Inline Prefixing: ^ instead of newlines (saves {}B)",
+        count_newlines(&toon_hikes) - count_newlines(&dx_omega_hikes)
+    );
     println!("  2. Header Minification: 'c' vs 'context', 'loc' vs 'location'");
     println!("  3. Single-char operators: i vs %i, + vs true");
     println!("  4. Stream operator: > for arrays");
@@ -119,15 +121,19 @@ fn main() {
     let target_complex = 65.0;
 
     if hikes_vs_toon >= target_regular {
-        println!("✅ TARGET MET: Regular data is {:.1}% better (target: {}%+)", 
-            hikes_vs_toon, target_regular);
+        println!(
+            "✅ TARGET MET: Regular data is {:.1}% better (target: {}%+)",
+            hikes_vs_toon, target_regular
+        );
     } else {
         println!("⚠️  Target: {}%+, Achieved: {:.1}%", target_regular, hikes_vs_toon);
     }
 
     if complex_vs_toon >= target_complex {
-        println!("✅ TARGET MET: Complex data is {:.1}% better (target: {}%+)", 
-            complex_vs_toon, target_complex);
+        println!(
+            "✅ TARGET MET: Complex data is {:.1}% better (target: {}%+)",
+            complex_vs_toon, target_complex
+        );
     } else {
         println!("⚠️  Target: {}%+, Achieved: {:.1}%", target_complex, complex_vs_toon);
     }

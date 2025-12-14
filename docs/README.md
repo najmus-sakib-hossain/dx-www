@@ -4,7 +4,16 @@ Welcome to the comprehensive documentation for the **dx-www** runtime - The Bina
 
 ## 📚 Documentation Index
 
-### 📖 Guides (`/guides`)
+### � Crate Documentation (`/crates`)
+- [binary](./crates/binary.md) - Binary protocol implementation
+- [cache](./crates/cache.md) - Cache management system
+- [cli](./crates/cli.md) - Command-line interface
+- [compiler](./crates/compiler.md) - TSX → WASM compiler
+- [serializer](./crates/serializer.md) - DX serialization format
+- [serializer-converter](./crates/serializer-converter.md) - Format converters
+- [server](./crates/server.md) - HTTP server & SSR
+
+### �📖 Guides (`/guides`)
 - [Project Summary](./guides/PROJECT_SUMMARY.md) - High-level overview
 - [Quick Start Guide](./guides/QUICKSTART.md) - Get up and running
 - [Development Guide](./guides/DEVELOPMENT.md) - Build, test, and contribute
