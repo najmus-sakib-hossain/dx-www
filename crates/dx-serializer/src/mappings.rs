@@ -85,11 +85,27 @@ impl Mappings {
     }
     
     /// Expand short key to full name (machine → human)
+    /// 
+    /// **Smart Logic:**
+    /// - If key is POPULAR (exists in mappings): expand it (n → name)
+    /// - If key is CUSTOM (not in mappings): keep as-is (myKey → myKey)
+    /// 
+    /// Examples:
+    /// - `expand_key("n")` → "name" (popular)
+    /// - `expand_key("myCustomKey")` → "myCustomKey" (custom, preserved)
     pub fn expand_key(&self, key: &str) -> String {
         self.expand.get(key).cloned().unwrap_or_else(|| key.to_string())
     }
     
     /// Compress full name to short key (human → machine)
+    /// 
+    /// **Smart Logic:**
+    /// - If key is POPULAR (exists in mappings): abbreviate it (name → n)
+    /// - If key is CUSTOM (not in mappings): keep as-is (myKey → myKey)
+    /// 
+    /// Examples:
+    /// - `compress_key("name")` → "n" (popular)
+    /// - `compress_key("myCustomKey")` → "myCustomKey" (custom, preserved)
     pub fn compress_key(&self, key: &str) -> String {
         self.compress.get(key).cloned().unwrap_or_else(|| key.to_string())
     }
