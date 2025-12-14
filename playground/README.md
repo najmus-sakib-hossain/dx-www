@@ -27,17 +27,28 @@ playground/
 
 ## Quick Start
 
-### Run Size Comparison
+### Run Benchmarks
 ```bash
-cd playground/benchmarks
+cd playground
+
+# Original benchmarks
 cargo run --bin size-comparison --release
+cargo run --bin speed-comparison --release
+
+# Official TOON comparison
+cargo run --bin hikes-comparison --release
+cargo run --bin full-comparison --release
 ```
 
-### Run Speed Benchmark
-```bash
-cd playground/benchmarks
-cargo run --bin speed-comparison --release
-```
+**📊 Visual Results:** Open [results/toon-vs-dx-visual.html](results/toon-vs-dx-visual.html) in your browser!
+
+## Documentation
+
+- 📊 [TOON_VS_DX_COMPARISON.md](results/TOON_VS_DX_COMPARISON.md) - **Official TOON benchmark**
+- 📈 [BENCHMARK_RESULTS.md](results/BENCHMARK_RESULTS.md) - Performance analysis
+- 📝 [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - Feature list
+- 🚀 [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - API reference
+- 🎨 [toon-vs-dx-visual.html](results/toon-vs-dx-visual.html) - Interactive charts
 
 ## Target Goals
 

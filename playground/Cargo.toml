@@ -12,6 +12,14 @@ name = "speed-comparison"
 path = "benchmarks/speed-comparison.rs"
 
 [[bin]]
+name = "hikes-comparison"
+path = "benchmarks/hikes-comparison.rs"
+
+[[bin]]
+name = "full-comparison"
+path = "benchmarks/full-comparison.rs"
+
+[[bin]]
 name = "dx-machine-example"
 path = "examples/dx-machine-example.rs"
 
