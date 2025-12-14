@@ -20,6 +20,10 @@ name = "full-comparison"
 path = "benchmarks/full-comparison.rs"
 
 [[bin]]
+name = "omega-comparison"
+path = "benchmarks/omega-comparison.rs"
+
+[[bin]]
 name = "dx-machine-example"
 path = "examples/dx-machine-example.rs"
 

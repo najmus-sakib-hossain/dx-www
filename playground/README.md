@@ -31,6 +31,9 @@ playground/
 ```bash
 cd playground
 
+# === DX Ω: THE ULTIMATE BENCHMARK ===
+cargo run --bin omega-comparison --release   # 🏆 31.4% + 84.5% wins!
+
 # Original benchmarks
 cargo run --bin size-comparison --release
 cargo run --bin speed-comparison --release
@@ -40,11 +43,17 @@ cargo run --bin hikes-comparison --release
 cargo run --bin full-comparison --release
 ```
 
+### 🏆 Latest Results (DX Ω)
+- ✅ **Regular data: 31.4% better than TOON** (target: 30%+)
+- ✅ **Complex data: 84.5% better than TOON** (target: 65%+)
+- 🚀 **Average: 62.6% improvement**
+
 **📊 Visual Results:** Open [results/toon-vs-dx-visual.html](results/toon-vs-dx-visual.html) in your browser!
 
 ## Documentation
 
-- 📊 [TOON_VS_DX_COMPARISON.md](results/TOON_VS_DX_COMPARISON.md) - **Official TOON benchmark**
+- 🏆 [DX_OMEGA_ANALYSIS.md](results/DX_OMEGA_ANALYSIS.md) - **Complete analysis with targets exceeded**
+- 📊 [TOON_VS_DX_COMPARISON.md](results/TOON_VS_DX_COMPARISON.md) - Official TOON benchmark
 - 📈 [BENCHMARK_RESULTS.md](results/BENCHMARK_RESULTS.md) - Performance analysis
 - 📝 [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - Feature list
 - 🚀 [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - API reference

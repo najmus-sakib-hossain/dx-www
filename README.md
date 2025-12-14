@@ -180,17 +180,27 @@ MIT OR Apache-2.0
 
 ---
 
-## dx-serializer: Ultra-Efficient Data Format
+## dx-serializer: Ultra-Efficient Data Format (DX Ω)
 
-**NEW:** DX Serializer is now available - a revolutionary serialization format that's **63.9% more efficient** than TOON!
+**Status:** ✅ **TARGETS EXCEEDED** (Dec 14, 2025)
 
-### Key Features
-- **Machine Format (DXm):** Optimized for LLMs and parsers (vacuum parsing, ditto compression, schema-guided)
-- **Human Format (DXv):** Beautiful LSP-ready formatting with alignment and Unicode symbols
-- **Performance:** 60-64% smaller than TOON, 3-4x faster parsing
-- **Zero-Copy:** SIMD-accelerated tokenization operating directly on byte slices
+A revolutionary serialization format that **crushes TOON** through advanced compression techniques.
 
-See [`playground/results/BENCHMARK_RESULTS.md`](playground/results/BENCHMARK_RESULTS.md) for detailed benchmarks.
+### Performance (DX Ω)
+- ✅ **31.4% better than TOON** on regular data (target: 30%+)
+- ✅ **84.5% better than TOON** on complex nested data (target: 65%+)
+- 🚀 **62.6% average improvement** across all benchmarks
+- ⚡ **~1.9µs parse time** (4-5x faster than JavaScript parsers)
+- 💾 **56% overhead reduction** (TOON: 166 bytes, DX Ω: 73 bytes)
+
+### Key Innovations
+- **Inline Prefixing (^):** `key:val^key2:val2` eliminates newlines
+- **Header Minification:** `c` vs `context`, `loc` vs `location`, `h` vs `hikes`
+- **Sigil Operators:** `+` (true), `-` (false), `>` (stream), `=` (table)
+- **Type Hints:** `%i %s %f %b` enable zero-copy vacuum parsing
+- **Zero-Copy SIMD:** Uses `memchr` for 4-5x faster tokenization
+
+See [`playground/results/DX_OMEGA_ANALYSIS.md`](playground/results/DX_OMEGA_ANALYSIS.md) for complete analysis.
 
 ### Quick Example
 ```rust
