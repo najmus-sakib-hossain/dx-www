@@ -2,6 +2,20 @@
 /// 
 /// Compresses human-readable DX format back to ultra-compact machine format.
 /// Enables bidirectional editing in editors.
+/// 
+/// # Architecture: Zero-Cache Design
+/// - Uses HashMap lookups (O(1)) - no additional cache needed
+/// - Mappings loaded once via OnceLock singleton
+/// - Every lookup is instant with automatic fallback for custom keys
+/// 
+/// # The Smart Logic
+/// ```text
+/// For every key encountered:
+///   IF key exists in mappings.dx:
+///       abbreviate it (popular)
+///   ELSE:
+///       keep it as-is (custom)
+/// ```
 
 use crate::mappings::Mappings;
 use std::io::Write;
@@ -105,21 +119,32 @@ pub fn format_machine(human_dx: &str) -> Result<Vec<u8>, String> {
 }
 
 /// Compress full key with dots (e.g., "context.name" → "c.n")
+/// 
+/// # The Smart Logic
+/// - Splits by '.' or '_'
+/// - Compresses each part using HashMap lookup
+/// - IF popular → abbreviate, ELSE → keep as-is
+/// 
+/// # Examples
+/// - "context.name" → "c.n" (both popular)
+/// - "myModule.name" → "myModule.n" (mixed)
+/// - "myModule.myField" → "myModule.myField" (both custom)
+#[inline]
 fn compress_full_key(full_key: &str, mappings: &Mappings) -> String {
     if full_key.contains('.') {
-        // Handle nested keys
+        // Handle nested keys: each part compressed independently
         full_key.split('.')
             .map(|part| mappings.compress_key(part))
             .collect::<Vec<_>>()
             .join(".")
     } else if full_key.contains('_') {
-        // Handle underscore keys (e.g., "forge_items" → "f_i")
+        // Handle underscore keys: each part compressed independently
         full_key.split('_')
             .map(|part| mappings.compress_key(part))
             .collect::<Vec<_>>()
             .join("_")
     } else {
-        // Single key
+        // Single key: direct HashMap lookup (O(1))
         mappings.compress_key(full_key)
     }
 }
