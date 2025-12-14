@@ -26,6 +26,9 @@ members = [
     "crates/server",
     "crates/cache",
     
+    # Style system
+    "crates/style",
+    
     # Examples & Playground
     "examples/hello-world",
     "playground",
