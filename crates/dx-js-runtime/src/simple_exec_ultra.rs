@@ -50,26 +50,36 @@ impl VarStore {
     }
 }
 
-// Stack-allocated output buffer (no Vec allocation!)
+// Ultra-fast output buffer with optimized formatting
 struct OutputBuffer {
-    data: [u8; 4096],
+    data: [u8; 8192], // Larger buffer for batching
     len: usize,
 }
 
 impl OutputBuffer {
     #[inline(always)]
     fn new() -> Self {
-        Self { data: [0; 4096], len: 0 }
+        Self { data: [0; 8192], len: 0 }
     }
     
+    /// Push pre-formatted bytes directly
     #[inline(always)]
-    fn push(&mut self, s: &str) {
-        let bytes = s.as_bytes();
-        if self.len + bytes.len() + 1 < 4096 {
+    fn push_bytes(&mut self, bytes: &[u8]) {
+        if self.len + bytes.len() + 1 < 8192 {
             self.data[self.len..self.len + bytes.len()].copy_from_slice(bytes);
             self.len += bytes.len();
             self.data[self.len] = b'\n';
             self.len += 1;
+        }
+    }
+    
+    /// Fast path for single-digit integers
+    #[inline(always)]
+    fn push_single_digit(&mut self, d: u8) {
+        if self.len + 2 < 8192 {
+            self.data[self.len] = b'0' + d;
+            self.data[self.len + 1] = b'\n';
+            self.len += 2;
         }
     }
     
@@ -128,7 +138,7 @@ fn parse_var_fast<'a>(line: &'a str, vars: &VarStore) -> Option<(&'a str, f64)> 
 #[inline(always)]
 fn extract_log_fast(line: &str, vars: &VarStore) -> Option<f64> {
     let bytes = line.as_bytes();
-    let mut start = 12; // "console.log(".len()
+    let start = 12; // "console.log(".len()
     let mut end = start;
     let mut depth = 1;
     
@@ -160,23 +170,27 @@ fn eval_expr_fast(expr: &str, vars: &VarStore) -> Option<f64> {
     if first == b't' { return Some(1.0); }
     if first == b'f' { return Some(0.0); }
     
-    // Fast Math function with constant folding
-    if first == b'M' {
+    // Fast Math function with aggressive constant folding
+    if first == b'M' && expr.starts_with("Math.") {
         let p = expr.find('(')?;
-        let func_byte = bytes[5]; // Math.X where X is the func
         let end = expr.rfind(')')?;
-        let arg_str = &expr[p+1..end];
+        let arg_str = &expr[p+1..end].trim();
         
-        // Try constant first
-        let arg = arg_str.parse::<f64>().ok()
-            .or_else(|| eval_expr_fast(arg_str, vars))?;
+        // Aggressive constant folding: try to parse as constant first
+        let arg = if let Ok(constant) = arg_str.parse::<f64>() {
+            constant
+        } else {
+            eval_expr_fast(arg_str, vars)?
+        };
         
-        return Some(match func_byte {
-            b's' => arg.sqrt(),     // sqrt
-            b'f' => arg.floor(),    // floor
-            b'c' => arg.ceil(),     // ceil
-            b'a' => arg.abs(),      // abs
-            b'r' => arg.round(),    // round
+        // Determine function from byte pattern (faster than string comparison)
+        let func_name = &expr[5..p];
+        return Some(match func_name {
+            "sqrt" => arg.sqrt(),
+            "floor" => arg.floor(),
+            "ceil" => arg.ceil(),
+            "abs" => arg.abs(),
+            "round" => arg.round(),
             _ => arg,
         });
     }
@@ -248,23 +262,35 @@ fn find_byte_seq(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     None
 }
 
-// Ultra-fast formatter with stack buffer
+// Ultra-fast formatter with optimized fast paths
 #[inline(always)]
 fn format_value_fast(val: f64, output: &mut OutputBuffer) {
+    // Fast path: booleans
     if val == 1.0 {
-        output.push("true");
+        output.push_bytes(b"true");
         return;
     }
     if val == 0.0 && val.is_sign_positive() {
-        output.push("false");
+        output.push_bytes(b"false");
         return;
     }
     
+    // Fast path: single-digit integers (common case)
+    if val >= 0.0 && val < 10.0 && val.fract() == 0.0 {
+        output.push_single_digit(val as u8);
+        return;
+    }
+    
+    // Fast path: small integers
     if val.fract() == 0.0 && val.abs() < 1e15 {
+        let int_val = val as i64;
         let mut buf = itoa::Buffer::new();
-        output.push(buf.format(val as i64));
+        let formatted = buf.format(int_val);
+        output.push_bytes(formatted.as_bytes());
     } else {
+        // Floating point: use ryu
         let mut buf = ryu::Buffer::new();
-        output.push(buf.format(val));
+        let formatted = buf.format(val);
+        output.push_bytes(formatted.as_bytes());
     }
 }

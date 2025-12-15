@@ -2,7 +2,6 @@
 
 pub mod sourcemap;
 
-use crate::error::{DxError, DxResult};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]

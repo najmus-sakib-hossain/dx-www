@@ -1,6 +1,5 @@
 //! Distributed computing primitives
 
-use crate::error::{DxError, DxResult};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 

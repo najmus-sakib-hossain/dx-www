@@ -1,7 +1,6 @@
 //! Web Workers for parallel execution
 
 use crate::error::{DxError, DxResult};
-use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::thread::{self, JoinHandle};
 

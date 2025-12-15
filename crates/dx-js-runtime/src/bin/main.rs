@@ -1,6 +1,5 @@
 //! dx-js CLI entry point
 
-use dx_js_runtime::DxRuntime;
 use std::env;
 use std::process::ExitCode;
 use std::time::Instant;

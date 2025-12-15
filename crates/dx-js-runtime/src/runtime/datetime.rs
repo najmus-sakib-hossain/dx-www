@@ -1,6 +1,5 @@
 //! Date and Time API
 
-use crate::error::DxResult;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct DateTime {

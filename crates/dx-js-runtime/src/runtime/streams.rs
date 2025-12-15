@@ -1,6 +1,6 @@
 //! Stream API (Readable, Writable, Transform)
 
-use crate::error::{DxError, DxResult};
+use crate::error::DxResult;
 use std::collections::VecDeque;
 
 pub trait Readable {

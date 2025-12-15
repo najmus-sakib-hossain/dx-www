@@ -1,6 +1,6 @@
 // Crystallized cache for instant warm starts
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use super::format::CrystallizedCode;
 
 pub struct CrystalCache {

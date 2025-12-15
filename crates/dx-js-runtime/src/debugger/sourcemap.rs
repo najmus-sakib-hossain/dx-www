@@ -1,7 +1,5 @@
 //! Source map generation and parsing
 
-use crate::error::{DxError, DxResult};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct SourceMap {

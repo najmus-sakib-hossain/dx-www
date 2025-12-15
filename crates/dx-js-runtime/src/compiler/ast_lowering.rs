@@ -8,7 +8,6 @@ use crate::compiler::parser::ParsedAST;
 use crate::compiler::statements::StatementLowerer;
 use crate::error::{DxError, DxResult};
 use oxc_allocator::Allocator;
-use oxc_ast::ast::*;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::collections::HashMap;
