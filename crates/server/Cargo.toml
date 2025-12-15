@@ -27,6 +27,14 @@ futures = "0.3"
 dx-binary = { path = "../binary" }
 dx-packet = { path = "../packet", features = ["std"] }
 
+# Ecosystem crates (server-side features)
+dx-query = { path = "../dx-query", optional = true }
+dx-db = { path = "../dx-db", features = ["postgres"], optional = true }
+dx-auth = { path = "../dx-auth", optional = true }
+dx-sync = { path = "../dx-sync", optional = true }
+dx-offline = { path = "../dx-offline", optional = true }
+dx-fallback = { path = "../dx-fallback", optional = true }
+
 # Crypto (for Signed Payloads)
 ed25519-dalek = { version = "2.1.0", features = ["rand_core"] }
 blake3 = "1.8"
@@ -42,6 +50,16 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # File watching
 notify = "6.1"
+
+[features]
+default = ["query", "auth", "fallback"]
+full = ["query", "db", "auth", "sync", "offline", "fallback"]
+query = ["dx-query"]
+db = ["dx-db"]
+auth = ["dx-auth"]
+sync = ["dx-sync"]
+offline = ["dx-offline"]
+fallback = ["dx-fallback"]
 
 [dev-dependencies]
 reqwest = { version = "0.11", features = ["blocking"] }

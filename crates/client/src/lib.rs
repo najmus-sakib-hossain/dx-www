@@ -17,6 +17,10 @@ extern crate alloc;
 
 mod allocator;
 
+// Ecosystem integration (optional features)
+#[cfg(any(feature = "dev", feature = "dx-error", feature = "dx-debug"))]
+pub mod ecosystem;
+
 use alloc::vec::Vec;
 use core::slice;
 

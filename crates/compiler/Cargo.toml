@@ -55,6 +55,16 @@ chrono = "0.4"
 # Internal
 dx-packet = { path = "../packet", features = ["std"] }
 
+# Ecosystem crates (compile-time features)
+dx-form = { path = "../dx-form" }
+dx-query = { path = "../dx-query" }
+dx-db = { path = "../dx-db" }
+dx-state = { path = "../dx-state" }
+dx-a11y = { path = "../dx-a11y" }
+dx-print = { path = "../dx-print" }
+dx-rtl = { path = "../dx-rtl"}
+
+
 [dev-dependencies]
 tempfile = "3.8"
 

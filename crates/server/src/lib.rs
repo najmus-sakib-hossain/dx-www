@@ -31,11 +31,28 @@
 //! ```
 
 pub mod delta;
-pub mod handlers;
-pub mod ssr;
+mod handlers;
+mod ssr;
 pub mod stream;
 
+// Ecosystem integrations
+pub mod ecosystem;
+
+// Ecosystem handlers (feature-gated)
+#[cfg(feature = "query")]
+pub mod rpc_handler;
+
+#[cfg(feature = "auth")]
+pub mod auth_middleware;
+
+#[cfg(feature = "sync")]
+pub mod ws_handler;
+
+pub use handlers::*;
+pub use ssr::*;
+
 use axum::{routing::get, Router};
+
 use dashmap::DashMap;
 use dx_packet::Template;
 use std::net::SocketAddr;
@@ -149,7 +166,7 @@ impl ServerState {
 
 /// Build the Axum router with all routes
 pub fn build_router(state: ServerState) -> Router {
-    Router::new()
+    let mut router = Router::new()
         // Root index (supports bot detection + SSR)
         .route("/", get(handlers::serve_index))
         // Health check
@@ -157,9 +174,27 @@ pub fn build_router(state: ServerState) -> Router {
         // Favicon (prevent 404)
         .route("/favicon.ico", get(handlers::serve_favicon))
         // Binary streaming endpoint (Day 16: The Binary Streamer)
-        .route("/stream/:app_id", get(handlers::serve_binary_stream))
-        // Delta endpoints (Day 17)
-        // .route("/api/delta/:app", get(handlers::serve_delta))
+        .route("/stream/:app_id", get(handlers::serve_binary_stream));
+    
+    // Add ecosystem routes
+    #[cfg(feature = "query")]
+    {
+        use axum::routing::post;
+        router = router.route("/api/rpc", post(rpc_handler::handle_rpc));
+    }
+    
+    #[cfg(feature = "auth")]
+    {
+        use axum::routing::post;
+        router = router.route("/api/auth/login", post(auth_middleware::handle_login));
+    }
+    
+    #[cfg(feature = "sync")]
+    {
+        router = router.route("/ws", get(ws_handler::handle_ws_upgrade));
+    }
+    
+    router
         // Add state
         .with_state(state)
         // Middleware

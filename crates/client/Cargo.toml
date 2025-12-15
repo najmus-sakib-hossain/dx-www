@@ -9,8 +9,14 @@ description = "Sub-20KB WASM runtime for dx-www - pure FFI, no wasm-bindgen"
 crate-type = ["cdylib"]
 
 [dependencies]
-# NO external dependencies for minimal size!
-# All DOM operations via FFI to JavaScript host
+# Core runtime - zero external deps for minimal size
+# Ecosystem features (conditional compilation)
+dx-error = { path = "../dx-error", optional = true }
+dx-debug = { path = "../dx-debug", optional = true }
+
+[features]
+default = []
+dev = ["dx-error", "dx-debug"]
 
 [profile.release]
 opt-level = "z"
