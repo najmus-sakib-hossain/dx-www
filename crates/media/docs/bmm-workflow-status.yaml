@@ -1,0 +1,117 @@
+# Workflow Status - DX Media
+# Generated: 2025-11-30
+# Track: BMad Method (Greenfield)
+
+generated: "2025-11-30"
+project: "media"
+project_type: "cli-library"
+selected_track: "bmad-method"
+field_type: "greenfield"
+workflow_path: "method-greenfield.yaml"
+
+# ═══════════════════════════════════════════════════════════════
+# WORKFLOW PROGRESS
+# ═══════════════════════════════════════════════════════════════
+# Status values:
+#   - required/optional/recommended/conditional: Not yet completed
+#   - skipped: Optional workflow skipped
+#   - {file-path}: Completed, artifact at path
+# ═══════════════════════════════════════════════════════════════
+
+workflow_status:
+
+  # ─────────────────────────────────────────────────────────────
+  # PHASE 0: Discovery (Optional)
+  # ─────────────────────────────────────────────────────────────
+  phase_0_discovery:
+    brainstorm-project:
+      status: "skipped"
+      agent: "analyst"
+      command: "*brainstorm-project"
+
+    research:
+      status: "skipped"
+      agent: "analyst"
+      command: "*research"
+
+    product-brief:
+      status: "docs/product-brief-media-2025-11-30.md"
+      agent: "analyst"
+      command: "*product-brief"
+      output: "docs/product-brief-media-2025-11-30.md"
+
+  # ─────────────────────────────────────────────────────────────
+  # PHASE 1: Planning
+  # ─────────────────────────────────────────────────────────────
+  phase_1_planning:
+    prd:
+      status: "required"
+      agent: "pm"
+      command: "*prd"
+      output: null
+      note: "Product Requirements Document with FRs and NFRs"
+
+    validate-prd:
+      status: "optional"
+      agent: "pm"
+      command: "*validate-prd"
+
+    create-design:
+      status: "conditional"
+      condition: "if_has_ui"
+      agent: "ux-designer"
+      command: "*create-design"
+      note: "CLI project - likely skipped unless TUI mode planned"
+
+  # ─────────────────────────────────────────────────────────────
+  # PHASE 2: Solutioning
+  # ─────────────────────────────────────────────────────────────
+  phase_2_solutioning:
+    create-architecture:
+      status: "required"
+      agent: "architect"
+      command: "*create-architecture"
+      output: null
+      note: "System architecture document"
+
+    create-epics-and-stories:
+      status: "required"
+      agent: "pm"
+      command: "*create-epics-and-stories"
+      note: "Break PRD into implementable epics and stories"
+
+    test-design:
+      status: "recommended"
+      agent: "tea"
+      command: "*test-design"
+      note: "System-level testability review"
+
+    validate-architecture:
+      status: "optional"
+      agent: "architect"
+      command: "*validate-architecture"
+
+    implementation-readiness:
+      status: "required"
+      agent: "architect"
+      command: "*implementation-readiness"
+      note: "Gate check before implementation"
+
+  # ─────────────────────────────────────────────────────────────
+  # PHASE 3: Implementation
+  # ─────────────────────────────────────────────────────────────
+  phase_3_implementation:
+    sprint-planning:
+      status: "required"
+      agent: "sm"
+      command: "*sprint-planning"
+      note: "Creates sprint plan - subsequent work tracked in sprint-status.yaml"
+
+# ═══════════════════════════════════════════════════════════════
+# NOTES
+# ═══════════════════════════════════════════════════════════════
+notes:
+  - "README.md contains comprehensive product vision - use as input for Product Brief"
+  - "50+ API providers planned - architecture must handle provider abstraction"
+  - "CLI + Library dual-mode - consider API surface design"
+  - "Async Rust with Tokio - architectural patterns important"
