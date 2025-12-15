@@ -1,0 +1,41 @@
+# dx-js-runtime Implementation Task List
+
+## Phase 1: Core Infrastructure
+- [ ] Create `crates/dx-js-runtime` directory structure
+- [ ] Create [Cargo.toml](file:///f:/Code/dx/Cargo.toml) with OXC and Cranelift dependencies
+- [ ] Create `src/lib.rs` - main runtime entry point
+- [ ] Create `src/error.rs` - custom error types
+
+## Phase 2: Compiler Pipeline (OXC Integration)
+- [ ] Create `src/compiler/mod.rs` - compiler module
+- [ ] Create `src/compiler/parser.rs` - OXC parser integration
+- [ ] Create `src/compiler/type_solver.rs` - type inference engine
+- [ ] Create `src/compiler/mir.rs` - Typed Middle IR
+- [ ] Create `src/compiler/codegen.rs` - Cranelift code generation
+- [ ] Create `src/compiler/optimize.rs` - optimization passes
+
+## Phase 3: Runtime Environment
+- [ ] Create `src/runtime/mod.rs` - runtime module
+- [ ] Create `src/runtime/memory.rs` - arena-based memory allocation
+- [ ] Create `src/runtime/builtins.rs` - console, JSON, etc.
+- [ ] Create `src/runtime/async_rt.rs` - async executor
+
+## Phase 4: Value System
+- [ ] Create `src/value/mod.rs` - value types module
+- [ ] Create `src/value/tagged.rs` - NaN-boxed values
+- [ ] Create `src/value/object.rs` - object representation
+- [ ] Create `src/value/string.rs` - interned strings
+
+## Phase 5: Code Cache
+- [ ] Create `src/snapshot/mod.rs` - snapshot module
+- [ ] Create `src/snapshot/immortal.rs` - persistent code cache
+
+## Phase 6: Integration & Testing
+- [ ] Update workspace [Cargo.toml](file:///f:/Code/dx/Cargo.toml) to include dx-js-runtime
+- [ ] Create test.ts benchmark file in playground folder
+- [ ] Create benchmark comparing Bun vs dx-js-runtime
+- [ ] Run benchmarks and document results
+
+## Phase 7: Documentation
+- [ ] Create README.md for dx-js-runtime
+- [ ] Create walkthrough.md with benchmark results
