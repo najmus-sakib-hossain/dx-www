@@ -2,6 +2,9 @@
 
 pub mod async_runtime;
 pub mod builtins;
+pub mod builtins_instance;
+pub mod crypto;
+pub mod http;
 pub mod memory;
 pub mod nodejs;
 

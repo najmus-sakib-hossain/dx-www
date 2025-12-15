@@ -45,6 +45,7 @@ blake3 = "1.5"
 # Serialization
 postcard = { version = "1.1", features = ["alloc"] }
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 # Concurrency
 parking_lot = "0.12"
