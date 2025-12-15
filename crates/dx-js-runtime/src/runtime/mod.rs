@@ -1,7 +1,9 @@
 //! Runtime execution environment
 
+pub mod async_runtime;
 pub mod builtins;
 pub mod memory;
+pub mod nodejs;
 
 use crate::compiler::CompiledModule;
 use crate::error::DxResult;

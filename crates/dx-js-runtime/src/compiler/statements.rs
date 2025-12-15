@@ -16,7 +16,7 @@
 
 use crate::compiler::expressions::{lower_expr, ExprContext, FunctionBuilder};
 use crate::compiler::mir::*;
-use crate::error::{DxError, DxResult};
+use crate::error::DxResult;
 use oxc_ast::ast::*;
 use std::collections::HashMap;
 

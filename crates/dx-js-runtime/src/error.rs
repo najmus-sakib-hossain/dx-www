@@ -24,7 +24,7 @@ pub enum DxError {
     CacheError(String),
 
     #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
+    IoError(String),
 
     #[error("Module not found: {0}")]
     ModuleNotFound(String),
@@ -36,5 +36,11 @@ pub enum DxError {
 impl From<anyhow::Error> for DxError {
     fn from(err: anyhow::Error) -> Self {
         DxError::Internal(err.to_string())
+    }
+}
+
+impl From<std::io::Error> for DxError {
+    fn from(err: std::io::Error) -> Self {
+        DxError::IoError(err.to_string())
     }
 }

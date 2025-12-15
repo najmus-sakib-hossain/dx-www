@@ -1,7 +1,7 @@
 //! Persistent code cache
 
 use crate::compiler::CompiledModule;
-use crate::error::{DxError, DxResult};
+use crate::error::DxResult;
 use crate::CacheStats;
 use blake3::Hasher;
 use std::collections::HashMap;

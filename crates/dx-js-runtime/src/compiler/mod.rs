@@ -1,13 +1,18 @@
 //! Compiler module - OXC parser + Cranelift JIT
 
 pub mod ast_lowering;
+pub mod builtins_registry;
 pub mod codegen;
 pub mod expressions;
+pub mod functions;
 pub mod mir;
+pub mod modules;
 pub mod optimize;
+pub mod optimizations;
 pub mod parser;
 pub mod statements;
 pub mod type_solver;
+pub mod typescript;
 
 use crate::error::DxResult;
 

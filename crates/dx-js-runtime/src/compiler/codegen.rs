@@ -1,8 +1,8 @@
 //! Cranelift code generation with built-in function support
 
 use crate::compiler::mir::{
-    BinOpKind, BlockId, Constant, FunctionId, LocalId, PrimitiveType, Terminator,
-    Type, TypedFunction, TypedInstruction, TypedMIR,
+    BinOpKind, BlockId, Constant, FunctionId, LocalId, Terminator,
+    TypedFunction, TypedInstruction, TypedMIR,
 };
 use crate::compiler::OptLevel;
 use crate::error::{DxError, DxResult};
