@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 /// JavaScript object
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Object {
     /// Properties
     properties: HashMap<String, super::Value>,

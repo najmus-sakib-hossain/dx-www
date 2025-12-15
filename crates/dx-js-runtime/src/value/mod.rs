@@ -7,7 +7,7 @@ pub mod tagged;
 use std::fmt;
 
 /// JavaScript value
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     /// Undefined
     Undefined,
@@ -27,7 +27,7 @@ pub enum Value {
     Function(FunctionValue),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct FunctionValue {
     pub name: String,
     pub ptr: usize,

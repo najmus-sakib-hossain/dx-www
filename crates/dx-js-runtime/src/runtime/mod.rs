@@ -42,10 +42,13 @@ impl Runtime {
         // Reset arena for this execution
         self.arena.reset();
 
-        // Execute the module
-        let result = unsafe { module.execute() };
+        // Execute the module using its built-in execute method
+        module.execute()
+    }
 
-        // Convert result to Value
-        Ok(Value::Number(result as f64))
+    /// Get arena usage
+    #[allow(dead_code)]
+    pub fn memory_usage(&self) -> usize {
+        self.arena.usage()
     }
 }

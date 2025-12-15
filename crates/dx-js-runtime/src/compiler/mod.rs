@@ -1,12 +1,13 @@
 //! Compiler module - OXC parser + Cranelift JIT
 
+pub mod ast_lowering;
 pub mod codegen;
 pub mod mir;
 pub mod optimize;
 pub mod parser;
 pub mod type_solver;
 
-use crate::error::{DxError, DxResult};
+use crate::error::DxResult;
 
 pub use codegen::CompiledModule;
 pub use mir::{Type, TypeId, TypedMIR};
@@ -43,7 +44,6 @@ pub enum OptLevel {
 /// The main compiler
 pub struct Compiler {
     config: CompilerConfig,
-    type_solver: type_solver::TypeSolver,
     codegen: codegen::CodeGenerator,
 }
 
@@ -52,7 +52,6 @@ impl Compiler {
     pub fn new(config: CompilerConfig) -> DxResult<Self> {
         Ok(Self {
             config: config.clone(),
-            type_solver: type_solver::TypeSolver::new(),
             codegen: codegen::CodeGenerator::new(config.optimization_level)?,
         })
     }
@@ -62,13 +61,10 @@ impl Compiler {
         // Phase 1: Parse with OXC
         let ast = parser::parse(source, filename)?;
 
-        // Phase 2: Type solving
-        let typed_ast = self.type_solver.solve(&ast)?;
+        // Phase 2: Lower AST to Typed MIR (includes type solving)
+        let mir = ast_lowering::lower_ast_to_mir(source, &ast)?;
 
-        // Phase 3: Lower to Typed MIR
-        let mir = mir::lower_to_mir(&typed_ast)?;
-
-        // Phase 4: Optimizations
+        // Phase 3: Optimizations
         let optimized_mir = match self.config.optimization_level {
             OptLevel::None => mir,
             OptLevel::Basic => optimize::basic_optimize(mir),
@@ -79,7 +75,7 @@ impl Compiler {
             }
         };
 
-        // Phase 5: Cranelift codegen
+        // Phase 4: Cranelift codegen
         let compiled = self.codegen.generate(&optimized_mir)?;
 
         Ok(compiled)
