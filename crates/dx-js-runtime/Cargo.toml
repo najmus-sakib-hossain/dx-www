@@ -74,6 +74,14 @@ tempfile = "3.15"
 name = "runtime"
 harness = false
 
+[[bench]]
+name = "runtime_bench"
+harness = false
+
 [[bin]]
 name = "dx-js"
 path = "src/bin/main.rs"
+
+[[bin]]
+name = "runtime_bench"
+path = "benches/runtime_bench.rs"

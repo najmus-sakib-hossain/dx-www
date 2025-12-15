@@ -23,6 +23,7 @@
 #![allow(unused_variables)]
 
 pub mod compiler;
+pub mod debugger;
 pub mod error;
 pub mod runtime;
 pub mod snapshot;

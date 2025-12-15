@@ -3,10 +3,17 @@
 pub mod async_runtime;
 pub mod builtins;
 pub mod builtins_instance;
+pub mod child_process;
 pub mod crypto;
+pub mod datetime;
+pub mod events;
 pub mod http;
 pub mod memory;
 pub mod nodejs;
+pub mod regexp;
+pub mod streams;
+pub mod url;
+pub mod util;
 
 use crate::compiler::CompiledModule;
 use crate::error::DxResult;
