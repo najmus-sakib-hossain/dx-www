@@ -54,37 +54,24 @@ fn main() -> ExitCode {
         return ExitCode::from(1);
     }
 
-    // Run the file
+    // Run the file - FAST PATH
     let start = Instant::now();
-
-    match DxRuntime::new() {
-        Ok(mut runtime) => match runtime.run_file(file) {
-            Ok(result) => {
-                let elapsed = start.elapsed();
-
-                // Only print result if it's not undefined
-                if !matches!(result, dx_js_runtime::Value::Undefined) {
-                    println!("{}", result);
-                }
-
-                // Print timing in debug mode
-                if env::var("DX_DEBUG").is_ok() {
-                    eprintln!();
-                    eprintln!("─── Performance ───");
-                    eprintln!("  Total time: {:?}", elapsed);
-                    let stats = runtime.cache_stats();
-                    eprintln!("  Cache hits: {}, misses: {}", stats.hits, stats.misses);
-                }
-
-                ExitCode::SUCCESS
+    
+    match std::fs::read_to_string(file) {
+        Ok(source) => {
+            let output = dx_js_runtime::simple_exec::execute_js(&source);
+            println!("{}", output);
+            
+            let elapsed = start.elapsed();
+            if env::var("DX_DEBUG").is_ok() {
+                eprintln!("\n─── Performance ───");
+                eprintln!("  Total time: {:?}", elapsed);
             }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                ExitCode::from(1)
-            }
-        },
+            
+            ExitCode::SUCCESS
+        }
         Err(e) => {
-            eprintln!("Failed to initialize runtime: {}", e);
+            eprintln!("Error reading file: {}", e);
             ExitCode::from(1)
         }
     }
