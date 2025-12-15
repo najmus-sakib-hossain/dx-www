@@ -79,8 +79,8 @@ fn main() -> ExitCode {
                 }
             }
             
-            // Cache miss - execute with SIMD Console (Phase 29)
-            let output = dx_js_runtime::simple_exec::execute_js(&source);
+            // Cache miss - execute with ULTRA optimizations
+            let output = dx_js_runtime::simple_exec_ultra::execute_js(&source);
             
             // Store in cache for next run
             if let Some(ref mut c) = cache {
