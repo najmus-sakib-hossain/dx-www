@@ -19,5 +19,13 @@ flume = "0.11"
 tokio-tungstenite = "0.21"
 tokio = { version = "1.35", features = ["sync"] }
 
-[target.'cfg(target_arch = "wasm32"))'.dependencies]
+[target.'cfg(target_arch = "wasm32")'.dependencies]
 gloo-net = "0.6"
+
+[features]
+default = []
+client = []
+
+[dev-dependencies]
+tokio = { version = "1.35", features = ["full", "test-util"] }
+
