@@ -1,0 +1,45 @@
+[package]
+name = "dx-db"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Zero-copy database layer with compile-time SQL verification"
+
+[lib]
+name = "dx_db"
+path = "src/lib.rs"
+
+[dependencies]
+# Database drivers
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-rustls"], optional = true }
+tokio-postgres = { version = "0.7", optional = true }
+
+# Connection pooling
+deadpool-postgres = { version = "0.12", optional = true }
+
+# Zero-copy operations
+bytes = "1.5"
+zerocopy = { version = "0.7", features = ["derive"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+bincode = "2.0.0-rc.3"
+
+# Async runtime
+tokio = { version = "1.35", features = ["sync"], optional = true }
+
+# Error handling
+thiserror = "1.0"
+
+# Internal
+dx-packet = { workspace = true, features = ["std"], optional = true }
+
+[features]
+default = ["postgres"]
+postgres = ["sqlx", "tokio-postgres", "deadpool-postgres", "tokio"]
+std = ["dx-packet"]
+
+[dev-dependencies]
+tokio = { version = "1.35", features = ["full", "test-util"] }

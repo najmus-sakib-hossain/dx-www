@@ -1,0 +1,50 @@
+[package]
+name = "dx-query"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Binary RPC data fetching - zero-parse request/response with cache"
+
+[lib]
+name = "dx_query"
+path = "src/lib.rs"
+
+[dependencies]
+# Binary serialization
+bincode = "2.0.0-rc.3"
+serde = { version = "1.0", features = ["derive"] }
+
+# Fast hashing for cache keys
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+
+# Concurrent cache storage
+dashmap = "6.0"
+
+# async runtime
+tokio = { version = "1.35", features = ["sync", "time"], optional = true }
+
+# For WASM (client-side)
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gloo-net = "0.6"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["Headers", "Request", "RequestInit", "RequestMode", "Response", "Window"] }
+
+# For native (server-side)
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+reqwest = { version = "0.12", features = ["json"] }
+
+# Internal dependencies
+dx-packet = { workspace = true, features = ["std"], optional = true }
+
+[features]
+default = ["std", "tokio"]
+std = ["dx-packet"]
+server = ["tokio", "reqwest"]
+wasm = ["gloo-net"]
+
+[dev-dependencies]
+tokio = { version = "1.35", features = ["full", "test-util"] }

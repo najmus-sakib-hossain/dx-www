@@ -1,0 +1,15 @@
+[package]
+name = "dx-error"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Binary error boundaries"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+console_error_panic_hook = "0.1"
+bincode = "2.0.0-rc.3"
+serde = { version = "1.0", features = ["derive"] }

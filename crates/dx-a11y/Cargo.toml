@@ -1,0 +1,14 @@
+[package]
+name = "dx-a11y"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Compile-time accessibility auditor"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+oxc_parser = "0.22"
+miette = "7.0"
