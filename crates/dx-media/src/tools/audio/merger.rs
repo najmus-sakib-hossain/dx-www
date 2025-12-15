@@ -98,12 +98,7 @@ fn concatenate_audio<P: AsRef<Path>>(inputs: &[P], output: &Path) -> Result<Tool
 
     let list_content: String = inputs
         .iter()
-        .map(|p| {
-            format!(
-                "file '{}'",
-                p.as_ref().to_string_lossy().replace("'", "'\\''")
-            )
-        })
+        .map(|p| format!("file '{}'", p.as_ref().to_string_lossy().replace("'", "'\\''")))
         .collect::<Vec<_>>()
         .join("\n");
 
@@ -135,10 +130,7 @@ fn concatenate_audio<P: AsRef<Path>>(inputs: &[P], output: &Path) -> Result<Tool
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Concatenation failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Concatenation failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -160,10 +152,7 @@ fn mix_audio<P: AsRef<Path>>(inputs: &[P], output: &Path) -> Result<ToolOutput> 
     }
 
     // Build amix filter
-    let filter = format!(
-        "amix=inputs={}:duration=longest:dropout_transition=2",
-        inputs.len()
-    );
+    let filter = format!("amix=inputs={}:duration=longest:dropout_transition=2", inputs.len());
 
     cmd.arg("-filter_complex").arg(&filter).arg(output);
 
@@ -174,10 +163,7 @@ fn mix_audio<P: AsRef<Path>>(inputs: &[P], output: &Path) -> Result<ToolOutput> 
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Audio mixing failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Audio mixing failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -227,11 +213,7 @@ fn crossfade_audio<P: AsRef<Path>>(
 
     let filter = filter_parts.join(";");
 
-    cmd.arg("-filter_complex")
-        .arg(&filter)
-        .arg("-map")
-        .arg("[out]")
-        .arg(output);
+    cmd.arg("-filter_complex").arg(&filter).arg("-map").arg("[out]").arg(output);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run FFmpeg: {}", e),
@@ -240,20 +222,13 @@ fn crossfade_audio<P: AsRef<Path>>(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Crossfade failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Crossfade failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Crossfaded {} audio files ({}s transitions)",
-            inputs.len(),
-            fade_duration
-        ),
+        format!("Crossfaded {} audio files ({}s transitions)", inputs.len(), fade_duration),
         output,
     ))
 }
@@ -294,18 +269,12 @@ pub fn overlay_audio<P: AsRef<Path>>(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Audio overlay failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Audio overlay failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Overlaid audio tracks",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Overlaid audio tracks", output_path))
 }
 
 /// Append silence to audio.
@@ -354,12 +323,7 @@ pub fn prepend_silence<P: AsRef<Path>>(input: P, output: P, duration: f64) -> Re
     let filter = format!("adelay={}s:all=1", duration);
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-af")
-        .arg(&filter)
-        .arg(output_path);
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-af").arg(&filter).arg(output_path);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run FFmpeg: {}", e),

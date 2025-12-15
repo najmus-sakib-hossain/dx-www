@@ -61,10 +61,10 @@ enum Commands {
     Style {
         /// Input file or directory
         input: PathBuf,
-        
+
         /// Output file
         output: PathBuf,
-    }
+    },
 }
 
 #[tokio::main]

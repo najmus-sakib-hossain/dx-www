@@ -2,16 +2,16 @@
 //!
 //! Handles downloading fonts from various providers with progress indication.
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use futures::StreamExt;
-use indicatif::{ProgressBar, ProgressStyle, MultiProgress};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use reqwest::Client;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::fs::{self, File};
 use tokio::io::AsyncWriteExt;
 
-use crate::models::{FontProvider, DownloadOptions};
+use crate::models::{DownloadOptions, FontProvider};
 use crate::providers::{create_http_client, ProviderRegistry};
 
 /// Font downloader with progress indication
@@ -26,14 +26,14 @@ impl FontDownloader {
     pub fn new() -> Result<Self> {
         let client = create_http_client()?;
         let registry = ProviderRegistry::with_defaults()?;
-        
+
         Ok(Self {
             client,
             registry: Arc::new(registry),
             multi_progress: MultiProgress::new(),
         })
     }
-    
+
     /// Download a font by ID from a specific provider
     pub async fn download_font(
         &self,
@@ -43,14 +43,14 @@ impl FontDownloader {
     ) -> Result<Vec<PathBuf>> {
         // Ensure output directory exists
         fs::create_dir_all(&options.output_dir).await?;
-        
+
         // Get download URL from provider
         let download_url = self.get_download_url(provider, font_id).await?;
-        
+
         // Download the font
         self.download_file(&download_url, &options.output_dir, font_id).await
     }
-    
+
     /// Download a font using a direct URL
     pub async fn download_from_url(
         &self,
@@ -59,11 +59,11 @@ impl FontDownloader {
         filename: &str,
     ) -> Result<PathBuf> {
         fs::create_dir_all(output_dir).await?;
-        
+
         let paths = self.download_file(url, output_dir, filename).await?;
         paths.into_iter().next().ok_or_else(|| anyhow::anyhow!("No files downloaded"))
     }
-    
+
     /// Download using Google Webfonts Helper (provides zip with all formats)
     pub async fn download_google_font(
         &self,
@@ -73,51 +73,44 @@ impl FontDownloader {
         subsets: &[&str],
     ) -> Result<PathBuf> {
         fs::create_dir_all(output_dir).await?;
-        
+
         let formats_str = formats.join(",");
         let subsets_str = subsets.join(",");
-        
+
         let url = format!(
             "https://gwfh.mranftl.com/api/fonts/{}?download=zip&subsets={}&formats={}",
             font_id, subsets_str, formats_str
         );
-        
+
         let output_path = output_dir.join(format!("{}.zip", font_id));
-        
+
         let pb = self.create_progress_bar(font_id);
-        
-        let response = self.client
-            .get(&url)
-            .send()
-            .await
-            .context("Failed to send request")?;
-        
+
+        let response = self.client.get(&url).send().await.context("Failed to send request")?;
+
         if !response.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "Failed to download font: HTTP {}",
-                response.status()
-            ));
+            return Err(anyhow::anyhow!("Failed to download font: HTTP {}", response.status()));
         }
-        
+
         let total_size = response.content_length().unwrap_or(0);
         pb.set_length(total_size);
-        
+
         let mut file = File::create(&output_path).await?;
         let mut stream = response.bytes_stream();
         let mut downloaded = 0u64;
-        
+
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.context("Error reading chunk")?;
             file.write_all(&chunk).await?;
             downloaded += chunk.len() as u64;
             pb.set_position(downloaded);
         }
-        
+
         pb.finish_with_message(format!("Downloaded {}", font_id));
-        
+
         Ok(output_path)
     }
-    
+
     /// Download font from Fontsource via CDN
     pub async fn download_fontsource_font(
         &self,
@@ -127,60 +120,53 @@ impl FontDownloader {
         style: &str,
     ) -> Result<PathBuf> {
         fs::create_dir_all(output_dir).await?;
-        
+
         let url = format!(
             "https://cdn.jsdelivr.net/npm/@fontsource/{}/files/{}-latin-{}-{}.woff2",
             font_id, font_id, weight, style
         );
-        
+
         let filename = format!("{}-{}-{}.woff2", font_id, weight, style);
         let output_path = output_dir.join(&filename);
-        
+
         let pb = self.create_progress_bar(&filename);
-        
-        let response = self.client
-            .get(&url)
-            .send()
-            .await
-            .context("Failed to send request")?;
-        
+
+        let response = self.client.get(&url).send().await.context("Failed to send request")?;
+
         if !response.status().is_success() {
             pb.finish_with_message(format!("Failed: {}", filename));
-            return Err(anyhow::anyhow!(
-                "Failed to download font: HTTP {}",
-                response.status()
-            ));
+            return Err(anyhow::anyhow!("Failed to download font: HTTP {}", response.status()));
         }
-        
+
         let total_size = response.content_length().unwrap_or(0);
         pb.set_length(total_size);
-        
+
         let mut file = File::create(&output_path).await?;
         let mut stream = response.bytes_stream();
         let mut downloaded = 0u64;
-        
+
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.context("Error reading chunk")?;
             file.write_all(&chunk).await?;
             downloaded += chunk.len() as u64;
             pb.set_position(downloaded);
         }
-        
+
         pb.finish_with_message(format!("Downloaded {}", filename));
-        
+
         Ok(output_path)
     }
-    
+
     async fn get_download_url(&self, provider: &FontProvider, font_id: &str) -> Result<String> {
         for p in self.registry.providers() {
             if p.name() == provider.name() {
                 return p.get_download_url(font_id).await;
             }
         }
-        
+
         Err(anyhow::anyhow!("Provider not found: {:?}", provider))
     }
-    
+
     async fn download_file(
         &self,
         url: &str,
@@ -188,45 +174,38 @@ impl FontDownloader {
         name: &str,
     ) -> Result<Vec<PathBuf>> {
         let pb = self.create_progress_bar(name);
-        
-        let response = self.client
-            .get(url)
-            .send()
-            .await
-            .context("Failed to send request")?;
-        
+
+        let response = self.client.get(url).send().await.context("Failed to send request")?;
+
         if !response.status().is_success() {
             pb.finish_with_message(format!("Failed: {}", name));
-            return Err(anyhow::anyhow!(
-                "Failed to download: HTTP {}",
-                response.status()
-            ));
+            return Err(anyhow::anyhow!("Failed to download: HTTP {}", response.status()));
         }
-        
+
         // Determine file extension from content-type or URL
         let extension = self.get_extension_from_response(&response, url);
         let filename = format!("{}.{}", name, extension);
         let output_path = output_dir.join(&filename);
-        
+
         let total_size = response.content_length().unwrap_or(0);
         pb.set_length(total_size);
-        
+
         let mut file = File::create(&output_path).await?;
         let mut stream = response.bytes_stream();
         let mut downloaded = 0u64;
-        
+
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.context("Error reading chunk")?;
             file.write_all(&chunk).await?;
             downloaded += chunk.len() as u64;
             pb.set_position(downloaded);
         }
-        
+
         pb.finish_with_message(format!("Downloaded {}", filename));
-        
+
         Ok(vec![output_path])
     }
-    
+
     fn create_progress_bar(&self, name: &str) -> ProgressBar {
         let pb = self.multi_progress.add(ProgressBar::new(0));
         pb.set_style(
@@ -238,7 +217,7 @@ impl FontDownloader {
         pb.set_message(format!("Downloading {}", name));
         pb
     }
-    
+
     fn get_extension_from_response(&self, response: &reqwest::Response, url: &str) -> String {
         // Try to get from content-type
         if let Some(content_type) = response.headers().get("content-type") {
@@ -256,7 +235,7 @@ impl FontDownloader {
                 }
             }
         }
-        
+
         // Try to get from URL
         if url.contains(".zip") {
             "zip".to_string()

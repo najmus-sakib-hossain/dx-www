@@ -154,11 +154,7 @@ fn create_gif_high_quality(
         cmd1.arg("-t").arg(duration.to_string());
     }
 
-    cmd1.arg("-vf")
-        .arg(&palette_filter)
-        .arg("-update")
-        .arg("1")
-        .arg(&palette_path);
+    cmd1.arg("-vf").arg(&palette_filter).arg("-update").arg("1").arg(&palette_path);
 
     let output1 = cmd1.output().map_err(|e| DxError::Config {
         message: format!("Failed to generate palette: {}", e),
@@ -210,10 +206,7 @@ fn create_gif_high_quality(
 
     if !output2.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "GIF creation failed: {}",
-                String::from_utf8_lossy(&output2.stderr)
-            ),
+            message: format!("GIF creation failed: {}", String::from_utf8_lossy(&output2.stderr)),
             source: None,
         });
     }
@@ -280,10 +273,7 @@ fn create_gif_simple(input: &Path, output: &Path, options: &GifOptions) -> Resul
 
 /// Build FFmpeg filter string for scaling and fps.
 fn build_filter_string(options: &GifOptions) -> String {
-    format!(
-        "fps={},scale={}:-1:flags=lanczos,",
-        options.fps, options.width
-    )
+    format!("fps={},scale={}:-1:flags=lanczos,", options.fps, options.width)
 }
 
 /// Quick GIF creation with defaults.
@@ -322,9 +312,7 @@ mod tests {
 
     #[test]
     fn test_gif_options() {
-        let opts = GifOptions::with_width(320)
-            .with_fps(10)
-            .with_range(5.0, 10.0);
+        let opts = GifOptions::with_width(320).with_fps(10).with_range(5.0, 10.0);
 
         assert_eq!(opts.width, 320);
         assert_eq!(opts.fps, 10);

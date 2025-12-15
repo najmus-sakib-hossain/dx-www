@@ -8,7 +8,7 @@
 //! - Progressive enhancement
 //! - Zero client-side JavaScript required
 
-use maud::{html, Markup, PreEscaped, DOCTYPE};
+use maud::{DOCTYPE, Markup, PreEscaped, html};
 
 /// Page metadata
 #[derive(Debug, Clone)]
@@ -64,23 +64,23 @@ impl HTMLGenerator {
                     meta charset="utf-8";
                     meta name="viewport" content="width=device-width, initial-scale=1";
                     title { (meta.title) }
-                    
+
                     @if let Some(ref desc) = meta.description {
                         meta name="description" content=(desc);
                     }
-                    
+
                     @if let Some(ref keywords) = meta.keywords {
                         meta name="keywords" content=(keywords.join(", "));
                     }
-                    
+
                     @if let Some(ref author) = meta.author {
                         meta name="author" content=(author);
                     }
-                    
+
                     @if let Some(ref canonical) = meta.canonical {
                         link rel="canonical" href=(canonical);
                     }
-                    
+
                     // Basic styles for fallback
                     style {
                         (PreEscaped(r#"
@@ -119,7 +119,7 @@ impl HTMLGenerator {
                             }
                         }
                     }
-                    
+
                     (body_content)
                 }
             }
@@ -174,7 +174,7 @@ pub struct ComponentRenderer;
 
 impl ComponentRenderer {
     /// Render navigation
-    pub fn nav(links: &[(& str, &str)]) -> Markup {
+    pub fn nav(links: &[(&str, &str)]) -> Markup {
         html! {
             nav {
                 ul style="list-style: none; padding: 0; display: flex; gap: 20px;" {
@@ -210,7 +210,7 @@ impl ComponentRenderer {
     /// Render button
     pub fn button(text: &str, href: &str) -> Markup {
         html! {
-            a href=(href) 
+            a href=(href)
               style="display: inline-block; padding: 10px 20px; background: #0066cc; color: white; text-decoration: none; border-radius: 4px;" {
                 (text)
             }
@@ -237,7 +237,7 @@ mod tests {
     #[test]
     fn test_simple_page() {
         let html = HTMLGenerator::simple_page("Hello", "<p>World</p>");
-        
+
         assert!(html.contains("<!DOCTYPE html>"));
         assert!(html.contains("<title>Hello</title>"));
         assert!(html.contains("<p>World</p>"));
@@ -246,7 +246,7 @@ mod tests {
     #[test]
     fn test_error_page() {
         let html = HTMLGenerator::error_page(404, "Page not found");
-        
+
         assert!(html.contains("Error 404"));
         assert!(html.contains("Page not found"));
         assert!(html.contains("Back to home"));
@@ -255,7 +255,7 @@ mod tests {
     #[test]
     fn test_loading_page() {
         let html = HTMLGenerator::loading_page("Dashboard");
-        
+
         assert!(html.contains("<title>Dashboard</title>"));
         assert!(html.contains("Loading..."));
     }
@@ -265,7 +265,7 @@ mod tests {
         let links = vec![("Home", "/"), ("About", "/about")];
         let nav = ComponentRenderer::nav(&links);
         let html = nav.into_string();
-        
+
         assert!(html.contains("Home"));
         assert!(html.contains("/about"));
     }
@@ -274,9 +274,8 @@ mod tests {
     fn test_card_component() {
         let card = ComponentRenderer::card("Title", "Content");
         let html = card.into_string();
-        
+
         assert!(html.contains("<h3>Title</h3>"));
         assert!(html.contains("<p>Content</p>"));
     }
 }
-

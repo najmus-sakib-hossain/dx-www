@@ -1,10 +1,9 @@
+use once_cell::sync::Lazy;
 /// Level 1: Binary Style ID System
-/// 
+///
 /// Maps CSS utility class names to u16 binary IDs
 /// Stores pre-computed CSS strings in static arrays
-
 use std::collections::HashMap;
-use once_cell::sync::Lazy;
 
 /// Style ID type - u16 allows 65,536 unique utilities
 pub type StyleId = u16;
@@ -15,7 +14,7 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
     vec![
         // Display utilities (0-10)
         "display:none",
-        "display:block", 
+        "display:block",
         "display:inline",
         "display:inline-block",
         "display:flex",
@@ -25,7 +24,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "display:table",
         "display:table-row",
         "display:table-cell",
-        
         // Flexbox utilities (11-30)
         "flex-direction:row",
         "flex-direction:row-reverse",
@@ -48,7 +46,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "align-self:auto",
         "align-self:flex-start",
         "align-self:flex-end",
-        
         // Spacing - Padding (31-100)
         "padding:0",
         "padding:0.25rem",
@@ -90,7 +87,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "padding-bottom:1rem",
         "padding-bottom:1.5rem",
         "padding-bottom:2rem",
-        
         // Spacing - Margin (101-170)
         "margin:0",
         "margin:0.25rem",
@@ -132,7 +128,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "margin-bottom:1.5rem",
         "margin-bottom:2rem",
         "margin-bottom:auto",
-        
         // Colors (171-250)
         "color:#000",
         "color:#fff",
@@ -172,7 +167,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "background:#d946ef",
         "background:#ec4899",
         "background:#f43f5e",
-        
         // Border (251-300)
         "border:1px solid #e5e7eb",
         "border:2px solid #e5e7eb",
@@ -188,7 +182,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "border-radius:0.75rem",
         "border-radius:1rem",
         "border-radius:9999px",
-        
         // Typography (301-350)
         "font-size:0.75rem;line-height:1rem",
         "font-size:0.875rem;line-height:1.25rem",
@@ -212,7 +205,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "text-align:center",
         "text-align:right",
         "text-align:justify",
-        
         // Shadow (351-370)
         "box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05)",
         "box-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
@@ -220,7 +212,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
         "box-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
         "box-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25)",
-        
         // Width/Height (371-420)
         "width:auto",
         "width:50%",
@@ -234,7 +225,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "height:100vh",
         "height:min-content",
         "height:max-content",
-        
         // Position (421-450)
         "position:static",
         "position:relative",
@@ -251,7 +241,6 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
         "z-index:30",
         "z-index:40",
         "z-index:50",
-        
         // Overflow (451-460)
         "overflow:visible",
         "overflow:hidden",
@@ -271,7 +260,7 @@ pub static STYLE_DICT: Lazy<Vec<&'static str>> = Lazy::new(|| {
 /// Reverse mapping: class name → style ID
 pub static CLASS_TO_ID: Lazy<HashMap<&'static str, StyleId>> = Lazy::new(|| {
     let mut map = HashMap::new();
-    
+
     // Display
     map.insert("hidden", 0);
     map.insert("block", 1);
@@ -284,7 +273,7 @@ pub static CLASS_TO_ID: Lazy<HashMap<&'static str, StyleId>> = Lazy::new(|| {
     map.insert("table", 8);
     map.insert("table-row", 9);
     map.insert("table-cell", 10);
-    
+
     // Flexbox
     map.insert("flex-row", 11);
     map.insert("flex-row-reverse", 12);
@@ -304,7 +293,7 @@ pub static CLASS_TO_ID: Lazy<HashMap<&'static str, StyleId>> = Lazy::new(|| {
     map.insert("items-center", 26);
     map.insert("items-baseline", 27);
     map.insert("items-stretch", 28);
-    
+
     // Padding
     map.insert("p-0", 31);
     map.insert("p-1", 32);
@@ -314,7 +303,7 @@ pub static CLASS_TO_ID: Lazy<HashMap<&'static str, StyleId>> = Lazy::new(|| {
     map.insert("p-5", 36);
     map.insert("p-6", 37);
     map.insert("p-8", 39);
-    
+
     // Colors
     map.insert("text-black", 171);
     map.insert("text-white", 172);
@@ -324,7 +313,7 @@ pub static CLASS_TO_ID: Lazy<HashMap<&'static str, StyleId>> = Lazy::new(|| {
     map.insert("bg-white", 190);
     map.insert("bg-red-500", 191);
     map.insert("bg-blue-500", 203);
-    
+
     // Border
     map.insert("border", 251);
     map.insert("border-2", 252);
@@ -332,7 +321,7 @@ pub static CLASS_TO_ID: Lazy<HashMap<&'static str, StyleId>> = Lazy::new(|| {
     map.insert("rounded-md", 259);
     map.insert("rounded-lg", 261);
     map.insert("rounded-full", 263);
-    
+
     // Typography
     map.insert("text-xs", 301);
     map.insert("text-sm", 302);
@@ -342,21 +331,21 @@ pub static CLASS_TO_ID: Lazy<HashMap<&'static str, StyleId>> = Lazy::new(|| {
     map.insert("text-2xl", 306);
     map.insert("font-bold", 316);
     map.insert("text-center", 320);
-    
+
     // Shadow
     map.insert("shadow", 352);
     map.insert("shadow-md", 353);
     map.insert("shadow-lg", 354);
-    
+
     // Width/Height
     map.insert("w-full", 373);
     map.insert("h-full", 379);
-    
+
     // Position
     map.insert("relative", 422);
     map.insert("absolute", 423);
     map.insert("fixed", 424);
-    
+
     map
 });
 

@@ -29,7 +29,7 @@ impl CRDTDocument {
     pub fn new(id: impl Into<String>) -> Self {
         let doc = Doc::new();
         let text = doc.get_or_insert_text("content");
-        
+
         Self {
             doc,
             id: id.into(),
@@ -104,9 +104,7 @@ impl CRDTStore {
     /// Get or create document
     pub fn get_or_create(&mut self, id: impl Into<String>) -> &mut CRDTDocument {
         let id = id.into();
-        self.documents
-            .entry(id.clone())
-            .or_insert_with(|| CRDTDocument::new(id))
+        self.documents.entry(id.clone()).or_insert_with(|| CRDTDocument::new(id))
     }
 
     /// Get document
@@ -169,7 +167,7 @@ pub mod persistence {
     /// Initialize IndexedDB
     pub async fn init_db() -> Result<IdbDatabase, JsValue> {
         let mut db_req = IdbDatabase::open_u32(DB_NAME, 1)?;
-        
+
         db_req.set_on_upgrade_needed(Some(|evt: &IdbVersionChangeEvent| {
             // Create object store if it doesn't exist
             if !evt.db().object_store_names().any(|n| n == STORE_NAME) {
@@ -189,10 +187,10 @@ pub mod persistence {
     ) -> Result<(), JsValue> {
         let txn = db.transaction_on_one_with_mode(STORE_NAME, IdbTransactionMode::Readwrite)?;
         let store = txn.object_store(STORE_NAME)?;
-        
+
         let js_state = js_sys::Uint8Array::from(state);
         store.put_key_val(&JsValue::from_str(doc_id), &js_state.into())?;
-        
+
         txn.await.into_result()?;
         Ok(())
     }
@@ -201,13 +199,13 @@ pub mod persistence {
     pub async fn load_document(db: &IdbDatabase, doc_id: &str) -> Result<Option<Vec<u8>>, JsValue> {
         let txn = db.transaction_on_one(STORE_NAME)?;
         let store = txn.object_store(STORE_NAME)?;
-        
+
         let value = store.get(&JsValue::from_str(doc_id))?.await?;
-        
+
         if value.is_undefined() || value.is_null() {
             return Ok(None);
         }
-        
+
         let array = js_sys::Uint8Array::from(value);
         Ok(Some(array.to_vec()))
     }
@@ -216,9 +214,9 @@ pub mod persistence {
     pub async fn delete_document(db: &IdbDatabase, doc_id: &str) -> Result<(), JsValue> {
         let txn = db.transaction_on_one_with_mode(STORE_NAME, IdbTransactionMode::Readwrite)?;
         let store = txn.object_store(STORE_NAME)?;
-        
+
         store.delete(&JsValue::from_str(doc_id))?;
-        
+
         txn.await.into_result()?;
         Ok(())
     }
@@ -284,13 +282,13 @@ mod tests {
     #[test]
     fn test_crdt_document() {
         let doc = CRDTDocument::new("test-doc");
-        
+
         doc.insert(0, "Hello");
         assert_eq!(doc.get_text(), "Hello");
-        
+
         doc.insert(5, " World");
         assert_eq!(doc.get_text(), "Hello World");
-        
+
         doc.delete(5, 6);
         assert_eq!(doc.get_text(), "Hello");
     }
@@ -299,29 +297,29 @@ mod tests {
     fn test_crdt_sync() {
         let doc1 = CRDTDocument::new("doc1");
         let doc2 = CRDTDocument::new("doc2");
-        
+
         // Doc1 inserts text
         doc1.insert(0, "Alice");
-        
+
         // Get state from doc1
         let state = doc1.get_full_state();
-        
+
         // Apply to doc2
         doc2.apply_update(&state).unwrap();
-        
+
         // Doc2 should have same text
         assert_eq!(doc2.get_text(), "Alice");
-        
+
         // Doc2 appends text
         doc2.insert(5, " and Bob");
-        
+
         // Get update from doc2
         let sv = doc1.get_state_vector();
         let update = doc2.encode_state_as_update(&sv);
-        
+
         // Apply to doc1
         doc1.apply_update(&update).unwrap();
-        
+
         // Both should match
         assert_eq!(doc1.get_text(), "Alice and Bob");
         assert_eq!(doc2.get_text(), "Alice and Bob");
@@ -330,13 +328,13 @@ mod tests {
     #[test]
     fn test_crdt_store() {
         let mut store = CRDTStore::new();
-        
+
         let doc = store.get_or_create("doc1");
         doc.insert(0, "Test");
-        
+
         assert_eq!(store.get("doc1").unwrap().get_text(), "Test");
         assert_eq!(store.list_ids(), vec!["doc1"]);
-        
+
         store.remove("doc1");
         assert!(store.get("doc1").is_none());
     }
@@ -344,14 +342,13 @@ mod tests {
     #[test]
     fn test_sync_manager() {
         let mut manager = SyncManager::new();
-        
+
         assert!(manager.is_online());
-        
+
         manager.set_online(false);
         assert!(!manager.is_online());
-        
+
         manager.mark_synced(12345);
         assert_eq!(manager.state.last_sync, Some(12345));
     }
 }
-

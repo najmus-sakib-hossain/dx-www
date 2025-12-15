@@ -269,12 +269,8 @@ mod tests {
             (Argb::from_u32(0xffa08f5d), 81),
         ]);
 
-        let ranked = Score::score(
-            &argb_to_population,
-            None,
-            Some(Argb::from_u32(0xff7d772b)),
-            None,
-        );
+        let ranked =
+            Score::score(&argb_to_population, None, Some(Argb::from_u32(0xff7d772b)), None);
 
         assert_eq!(ranked.len(), 3);
         assert_eq!(ranked[0], Argb::from_u32(0xff3205cc));
@@ -291,12 +287,8 @@ mod tests {
             (Argb::from_u32(0xff94c574), 82),
         ]);
 
-        let ranked = Score::score(
-            &argb_to_population,
-            Some(3),
-            Some(Argb::from_u32(0xffaa79a4)),
-            None,
-        );
+        let ranked =
+            Score::score(&argb_to_population, Some(3), Some(Argb::from_u32(0xffaa79a4)), None);
 
         assert_eq!(ranked.len(), 3);
         assert_eq!(ranked[0], Argb::from_u32(0xff94c574));
@@ -381,12 +373,8 @@ mod tests {
             (Argb::from_u32(0xff68bcc3), 81),
         ]);
 
-        let ranked = Score::score(
-            &argb_to_population,
-            Some(2),
-            Some(Argb::from_u32(0xfff588dc)),
-            None,
-        );
+        let ranked =
+            Score::score(&argb_to_population, Some(2), Some(Argb::from_u32(0xfff588dc)), None);
 
         assert_eq!(ranked.len(), 2);
         assert_eq!(ranked[0], Argb::from_u32(0xff2e05ed));
@@ -423,12 +411,8 @@ mod tests {
             (Argb::from_u32(0xff277766), 59),
         ]);
 
-        let ranked = Score::score(
-            &argb_to_population,
-            Some(3),
-            Some(Argb::from_u32(0xff02b415)),
-            None,
-        );
+        let ranked =
+            Score::score(&argb_to_population, Some(3), Some(Argb::from_u32(0xff02b415)), None);
 
         assert_eq!(ranked.len(), 3);
         assert_eq!(ranked[0], Argb::from_u32(0xfff51401));
@@ -445,12 +429,8 @@ mod tests {
             (Argb::from_u32(0xff77fdf2), 78),
         ]);
 
-        let ranked = Score::score(
-            &argb_to_population,
-            None,
-            Some(Argb::from_u32(0xff5e7a10)),
-            None,
-        );
+        let ranked =
+            Score::score(&argb_to_population, None, Some(Argb::from_u32(0xff5e7a10)), None);
 
         assert_eq!(ranked.len(), 3);
         assert_eq!(ranked[0], Argb::from_u32(0xff27effe));

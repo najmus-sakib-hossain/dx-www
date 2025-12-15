@@ -246,10 +246,7 @@ impl IntoIterator for Scheme {
             ("primary_fixed".into(), self.primary_fixed),
             ("primary_fixed_dim".into(), self.primary_fixed_dim),
             ("on_primary_fixed".into(), self.on_primary_fixed),
-            (
-                "on_primary_fixed_variant".into(),
-                self.on_primary_fixed_variant,
-            ),
+            ("on_primary_fixed_variant".into(), self.on_primary_fixed_variant),
             ("secondary".into(), self.secondary),
             ("on_secondary".into(), self.on_secondary),
             ("secondary_container".into(), self.secondary_container),
@@ -257,10 +254,7 @@ impl IntoIterator for Scheme {
             ("secondary_fixed".into(), self.secondary_fixed),
             ("secondary_fixed_dim".into(), self.secondary_fixed_dim),
             ("on_secondary_fixed".into(), self.on_secondary_fixed),
-            (
-                "on_secondary_fixed_variant".into(),
-                self.on_secondary_fixed_variant,
-            ),
+            ("on_secondary_fixed_variant".into(), self.on_secondary_fixed_variant),
             ("tertiary".into(), self.tertiary),
             ("on_tertiary".into(), self.on_tertiary),
             ("tertiary_container".into(), self.tertiary_container),
@@ -268,10 +262,7 @@ impl IntoIterator for Scheme {
             ("tertiary_fixed".into(), self.tertiary_fixed),
             ("tertiary_fixed_dim".into(), self.tertiary_fixed_dim),
             ("on_tertiary_fixed".into(), self.on_tertiary_fixed),
-            (
-                "on_tertiary_fixed_variant".into(),
-                self.on_tertiary_fixed_variant,
-            ),
+            ("on_tertiary_fixed_variant".into(), self.on_tertiary_fixed_variant),
             ("error".into(), self.error),
             ("on_error".into(), self.on_error),
             ("error_container".into(), self.error_container),
@@ -280,17 +271,11 @@ impl IntoIterator for Scheme {
             ("surface".into(), self.surface),
             ("surface_tint".into(), self.surface_tint),
             ("surface_bright".into(), self.surface_bright),
-            (
-                "surface_container_lowest".into(),
-                self.surface_container_lowest,
-            ),
+            ("surface_container_lowest".into(), self.surface_container_lowest),
             ("surface_container_low".into(), self.surface_container_low),
             ("surface_container".into(), self.surface_container),
             ("surface_container_high".into(), self.surface_container_high),
-            (
-                "surface_container_highest".into(),
-                self.surface_container_highest,
-            ),
+            ("surface_container_highest".into(), self.surface_container_highest),
             ("on_surface".into(), self.on_surface),
             ("on_surface_variant".into(), self.on_surface_variant),
             ("outline".into(), self.outline),
@@ -311,9 +296,7 @@ impl From<Scheme> for Map<String, String> {
     fn from(value: Scheme) -> Self {
         let map: Map<String, Argb> = Map::from_iter(value);
 
-        map.into_iter()
-            .map(|(key, value)| (key, value.to_hex_with_pound()))
-            .collect()
+        map.into_iter().map(|(key, value)| (key, value.to_hex_with_pound())).collect()
     }
 }
 

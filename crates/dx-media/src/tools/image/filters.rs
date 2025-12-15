@@ -79,12 +79,9 @@ pub fn apply_filter<P: AsRef<Path>>(input: P, output: P, filter: Filter) -> Resu
     args.extend(filter.to_args());
     args.push(output_path.to_str().unwrap_or(""));
 
-    let status = Command::new("magick")
-        .args(&args)
-        .status()
-        .map_err(|e| DxError::Internal {
-            message: format!("Failed to execute ImageMagick: {}", e),
-        })?;
+    let status = Command::new("magick").args(&args).status().map_err(|e| DxError::Internal {
+        message: format!("Failed to execute ImageMagick: {}", e),
+    })?;
 
     if !status.success() {
         return Err(DxError::Internal {
@@ -291,10 +288,7 @@ pub fn flip_horizontal<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Flipped horizontally",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Flipped horizontally", output_path))
 }
 
 /// Flip image vertically.
@@ -320,10 +314,7 @@ pub fn flip_vertical<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> 
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Flipped vertically",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Flipped vertically", output_path))
 }
 
 /// Crop image.

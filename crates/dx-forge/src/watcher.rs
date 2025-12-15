@@ -151,10 +151,8 @@ impl FileWatcher {
         let tx_clone = change_tx.clone();
 
         // Create debouncer with 100ms delay
-        let debouncer = new_debouncer(
-            Duration::from_millis(100),
-            None,
-            move |result: DebounceEventResult| {
+        let debouncer =
+            new_debouncer(Duration::from_millis(100), None, move |result: DebounceEventResult| {
                 if let Ok(events) = result {
                     for debounced_event in events {
                         if let Some(change) = Self::debounced_event_to_change(debounced_event) {
@@ -162,8 +160,7 @@ impl FileWatcher {
                         }
                     }
                 }
-            },
-        )?;
+            })?;
 
         Ok((
             Self {
@@ -226,17 +223,17 @@ impl FileWatcher {
         // Skip hidden files and temp files
         if let Some(name) = path.file_name() {
             let name_str = name.to_string_lossy();
-            
+
             // Skip hidden files
             if name_str.starts_with('.') {
                 return false;
             }
-            
+
             // Skip temp files
             if name_str.contains('~') || name_str.ends_with(".tmp") || name_str.ends_with(".swp") {
                 return false;
             }
-            
+
             // Skip lock files
             if name_str.ends_with(".lock") {
                 return false;
@@ -245,7 +242,7 @@ impl FileWatcher {
 
         // Skip target directories and node_modules
         if let Some(path_str) = path.to_str() {
-            if path_str.contains("/target/") 
+            if path_str.contains("/target/")
                 || path_str.contains("\\target\\")
                 || path_str.contains("/node_modules/")
                 || path_str.contains("\\node_modules\\")
@@ -408,10 +405,7 @@ mod tests {
         // Check if we received an event
         if let Ok(change) = rx.try_recv() {
             assert_eq!(change.source, ChangeSource::FileSystem);
-            assert!(matches!(
-                change.kind,
-                ChangeKind::Created | ChangeKind::Modified
-            ));
+            assert!(matches!(change.kind, ChangeKind::Created | ChangeKind::Modified));
         }
 
         watcher.stop().unwrap();

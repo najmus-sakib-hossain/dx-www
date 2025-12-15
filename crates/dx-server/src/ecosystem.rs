@@ -21,13 +21,13 @@ use std::sync::Arc;
 pub struct EcosystemState {
     #[cfg(feature = "query")]
     pub query_cache: Option<Arc<QueryCache>>,
-    
+
     #[cfg(feature = "db")]
     pub db_pool: Option<Arc<DbPool>>,
-    
+
     #[cfg(feature = "auth")]
     pub token_generator: Option<Arc<TokenGenerator>>,
-    
+
     #[cfg(feature = "sync")]
     pub channel_manager: Option<Arc<ChannelManager>>,
 }
@@ -38,13 +38,13 @@ impl EcosystemState {
         Self {
             #[cfg(feature = "query")]
             query_cache: Some(Arc::new(QueryCache::new(1000))),
-            
+
             #[cfg(feature = "db")]
             db_pool: None, // Initialized later with config
-            
+
             #[cfg(feature = "auth")]
             token_generator: None, // Initialized with keypair
-            
+
             #[cfg(feature = "sync")]
             channel_manager: Some(Arc::new(ChannelManager::new(1000))),
         }
@@ -64,10 +64,10 @@ mod tests {
     #[test]
     fn test_ecosystem_state_creation() {
         let state = EcosystemState::new();
-        
+
         #[cfg(feature = "query")]
         assert!(state.query_cache.is_some());
-        
+
         #[cfg(feature = "sync")]
         assert!(state.channel_manager.is_some());
     }

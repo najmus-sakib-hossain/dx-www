@@ -238,18 +238,14 @@ mod parser {
         fn try_from(header_line: &str) -> Result<Self, Self::Error> {
             let parts: Vec<&str> = header_line.split_whitespace().collect();
             if parts.len() < 6 {
-                return Err(FontError::Parse(
-                    "Header must have at least 6 parts.".to_string(),
-                ));
+                return Err(FontError::Parse("Header must have at least 6 parts.".to_string()));
             }
             let signature = parts[0];
             let hardblank = signature.chars().last().ok_or_else(|| {
                 FontError::Parse("Signature is missing hardblank character.".to_string())
             })?;
-            let height: u32 = parts
-                .get(1)
-                .ok_or(FontError::Parse("Missing height.".to_string()))?
-                .parse()?;
+            let height: u32 =
+                parts.get(1).ok_or(FontError::Parse("Missing height.".to_string()))?.parse()?;
             let comment_lines: u32 = parts
                 .get(5)
                 .ok_or(FontError::Parse("Missing comment line count.".to_string()))?
@@ -378,10 +374,7 @@ mod parser {
                 }
             }
         }
-        stripped
-            .chars()
-            .map(|c| if c == hardblank { ' ' } else { c })
-            .collect()
+        stripped.chars().map(|c| if c == hardblank { ' ' } else { c }).collect()
     }
 
     fn extract_codetag_font_code(line: &str) -> Result<u32, FontError> {
@@ -389,10 +382,7 @@ mod parser {
             .split_whitespace()
             .next()
             .ok_or_else(|| FontError::Parse("Codetag line is empty.".to_string()))?;
-        if let Some(hex_val) = code_str
-            .strip_prefix("0x")
-            .or_else(|| code_str.strip_prefix("0X"))
-        {
+        if let Some(hex_val) = code_str.strip_prefix("0x").or_else(|| code_str.strip_prefix("0X")) {
             u32::from_str_radix(hex_val, 16).map_err(Into::into)
         } else if let Some(oct_val) = code_str.strip_prefix('0') {
             u32::from_str_radix(oct_val, 8).map_err(Into::into)

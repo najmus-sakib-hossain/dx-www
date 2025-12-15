@@ -9,22 +9,22 @@ use std::time::Instant;
 
 // Re-export modules
 pub mod analyzer;
-pub mod linker;
-pub mod loader;
-pub mod splitter;
 pub mod codegen;
 pub mod codegen_macro;
 pub mod codegen_micro;
-pub mod packer;
-pub mod swc_parser;
-pub mod rpc;
-pub mod pwa;
 pub mod config;
 pub mod dev_server;
+pub mod linker;
+pub mod loader;
+pub mod packer;
+pub mod pwa;
+pub mod rpc;
+pub mod splitter;
+pub mod swc_parser;
 
 // Ecosystem integrations
-pub mod ecosystem;
 pub mod cmd;
+pub mod ecosystem;
 
 pub use analyzer::*;
 pub use linker::*;

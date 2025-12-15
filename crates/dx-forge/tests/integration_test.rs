@@ -2,11 +2,11 @@
 //!
 //! Tests end-to-end functionality of the Forge system
 
-use dx_forge::{
-    Forge, ForgeConfig, DxTool, ExecutionContext, ToolOutput, Orchestrator,
-    Version, SnapshotManager,
-};
 use anyhow::Result;
+use dx_forge::{
+    DxTool, ExecutionContext, Forge, ForgeConfig, Orchestrator, SnapshotManager, ToolOutput,
+    Version,
+};
 use std::path::PathBuf;
 use tempfile::TempDir;
 

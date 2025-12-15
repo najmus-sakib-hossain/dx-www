@@ -411,27 +411,15 @@ impl fmt::Display for DynamicScheme {
         writeln!(f, "  primary = {}", self.primary())?;
         writeln!(f, "  on_primary = {}", self.on_primary())?;
         writeln!(f, "  primary_container = {}", self.primary_container())?;
-        writeln!(
-            f,
-            "  on_primary_container = {}",
-            self.on_primary_container()
-        )?;
+        writeln!(f, "  on_primary_container = {}", self.on_primary_container())?;
         writeln!(f, "  secondary = {}", self.secondary())?;
         writeln!(f, "  on_secondary = {}", self.on_secondary())?;
         writeln!(f, "  secondary_container = {}", self.secondary_container())?;
-        writeln!(
-            f,
-            "  on_secondary_container = {}",
-            self.on_secondary_container()
-        )?;
+        writeln!(f, "  on_secondary_container = {}", self.on_secondary_container())?;
         writeln!(f, "  tertiary = {}", self.tertiary())?;
         writeln!(f, "  on_tertiary = {}", self.on_tertiary())?;
         writeln!(f, "  tertiary_container = {}", self.tertiary_container())?;
-        writeln!(
-            f,
-            "  on_tertiary_container = {}",
-            self.on_tertiary_container()
-        )?;
+        writeln!(f, "  on_tertiary_container = {}", self.on_tertiary_container())?;
         writeln!(f, "  error = {}", self.error())?;
         writeln!(f, "  on_error = {}", self.on_error())?;
         writeln!(f, "  error_container = {}", self.error_container())?;

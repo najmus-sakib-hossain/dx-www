@@ -154,8 +154,7 @@ pub fn extract_thumbnail_with_options<P: AsRef<Path>>(
     // Quality settings
     match options.format {
         ThumbnailFormat::Jpeg => {
-            cmd.arg("-q:v")
-                .arg(((100 - options.quality) / 3 + 1).to_string());
+            cmd.arg("-q:v").arg(((100 - options.quality) / 3 + 1).to_string());
         }
         ThumbnailFormat::Png => {
             // PNG compression level
@@ -174,10 +173,7 @@ pub fn extract_thumbnail_with_options<P: AsRef<Path>>(
 
     if !output_result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "FFmpeg failed: {}",
-                String::from_utf8_lossy(&output_result.stderr)
-            ),
+            message: format!("FFmpeg failed: {}", String::from_utf8_lossy(&output_result.stderr)),
             source: None,
         });
     }
@@ -212,10 +208,7 @@ pub fn extract_thumbnails<P: AsRef<Path>>(
     let duration = get_video_duration(input_path)?;
     let interval = duration / (count + 1) as f64;
 
-    let file_stem = input_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("thumb");
+    let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("thumb");
 
     let mut extracted = Vec::new();
 
@@ -228,10 +221,8 @@ pub fn extract_thumbnails<P: AsRef<Path>>(
         }
     }
 
-    Ok(
-        ToolOutput::success(format!("Extracted {} thumbnails", extracted.len()))
-            .with_paths(extracted),
-    )
+    Ok(ToolOutput::success(format!("Extracted {} thumbnails", extracted.len()))
+        .with_paths(extracted))
 }
 
 /// Extract thumbnails at specific timestamps.
@@ -249,10 +240,7 @@ pub fn extract_thumbnails_at<P: AsRef<Path>>(
         source: None,
     })?;
 
-    let file_stem = input_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("thumb");
+    let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("thumb");
 
     let mut extracted = Vec::new();
 
@@ -264,10 +252,8 @@ pub fn extract_thumbnails_at<P: AsRef<Path>>(
         }
     }
 
-    Ok(
-        ToolOutput::success(format!("Extracted {} thumbnails", extracted.len()))
-            .with_paths(extracted),
-    )
+    Ok(ToolOutput::success(format!("Extracted {} thumbnails", extracted.len()))
+        .with_paths(extracted))
 }
 
 /// Create a video contact sheet (grid of thumbnails).

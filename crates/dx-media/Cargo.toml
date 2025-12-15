@@ -92,11 +92,4 @@ tokio-test = "0.4"
 pretty_assertions = "1"
 wiremock = "0.6"
 
-# ═══════════════════════════════════════════════════════════════
-# PROFILE OPTIMIZATIONS
-# ═══════════════════════════════════════════════════════════════
 
-[profile.release]
-lto = true
-codegen-units = 1
-strip = true

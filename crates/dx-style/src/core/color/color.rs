@@ -207,18 +207,9 @@ impl From<Argb> for Lab {
         let matrix = SRGB_TO_XYZ;
 
         let (x, y, z) = (
-            matrix[0][2].mul_add(
-                linear_b,
-                matrix[0][0].mul_add(linear_r, matrix[0][1] * linear_g),
-            ),
-            matrix[1][2].mul_add(
-                linear_b,
-                matrix[1][0].mul_add(linear_r, matrix[1][1] * linear_g),
-            ),
-            matrix[2][2].mul_add(
-                linear_b,
-                matrix[2][0].mul_add(linear_r, matrix[2][1] * linear_g),
-            ),
+            matrix[0][2].mul_add(linear_b, matrix[0][0].mul_add(linear_r, matrix[0][1] * linear_g)),
+            matrix[1][2].mul_add(linear_b, matrix[1][0].mul_add(linear_r, matrix[1][1] * linear_g)),
+            matrix[2][2].mul_add(linear_b, matrix[2][0].mul_add(linear_r, matrix[2][1] * linear_g)),
         );
 
         let white_point = WHITE_POINT_D65;
@@ -339,21 +330,11 @@ impl Argb {
     }
 
     pub fn to_hex(&self) -> String {
-        format!(
-            "{}{}{}",
-            Self::hex(self.red),
-            Self::hex(self.green),
-            Self::hex(self.blue)
-        )
+        format!("{}{}{}", Self::hex(self.red), Self::hex(self.green), Self::hex(self.blue))
     }
 
     pub fn to_hex_with_pound(&self) -> String {
-        format!(
-            "#{}{}{}",
-            Self::hex(self.red),
-            Self::hex(self.green),
-            Self::hex(self.blue)
-        )
+        format!("#{}{}{}", Self::hex(self.red), Self::hex(self.green), Self::hex(self.blue))
     }
 }
 
@@ -460,16 +441,11 @@ mod tests {
     fn _range(start: f64, stop: f64, case_count: i64) -> Vec<f64> {
         let step_size = (stop - start) / (case_count as f64 - 1.0);
 
-        (0..case_count)
-            .map(|index| step_size.mul_add(index as f64, start))
-            .collect()
+        (0..case_count).map(|index| step_size.mul_add(index as f64, start)).collect()
     }
 
     fn rgb_range() -> Vec<u8> {
-        _range(0.0, 255.0, 8)
-            .into_iter()
-            .map(|element| element.round() as u8)
-            .collect()
+        _range(0.0, 255.0, 8).into_iter().map(|element| element.round() as u8).collect()
     }
 
     fn full_rgb_range() -> Vec<u8> {
@@ -481,12 +457,7 @@ mod tests {
         let range = _range(3.0, 9999.0, 1234);
 
         for (i, value) in range.into_iter().enumerate().take(1234) {
-            assert_approx_eq!(
-                f64,
-                value,
-                8.1070559611f64.mul_add(i as f64, 3.0),
-                epsilon = 1e-5
-            );
+            assert_approx_eq!(f64, value, 8.1070559611f64.mul_add(i as f64, 3.0), epsilon = 1e-5);
         }
     }
 
@@ -498,26 +469,14 @@ mod tests {
 
     #[test]
     fn test_argb_from_rgb_returns_correct_value_for_white() {
-        assert_eq!(
-            Argb::from(Rgb::new(255, 255, 255)),
-            Argb::from_u32(0xffffffff)
-        );
-        assert_eq!(
-            Argb::from(Rgb::new(255, 255, 255)),
-            Argb::from_u32(4294967295)
-        );
+        assert_eq!(Argb::from(Rgb::new(255, 255, 255)), Argb::from_u32(0xffffffff));
+        assert_eq!(Argb::from(Rgb::new(255, 255, 255)), Argb::from_u32(4294967295));
     }
 
     #[test]
     fn test_argb_from_rgb_returns_correct_value_for_random_color() {
-        assert_eq!(
-            Argb::from(Rgb::new(50, 150, 250)),
-            Argb::from_u32(0xff3296fa)
-        );
-        assert_eq!(
-            Argb::from(Rgb::new(50, 150, 250)),
-            Argb::from_u32(4281505530)
-        );
+        assert_eq!(Argb::from(Rgb::new(50, 150, 250)), Argb::from_u32(0xff3296fa));
+        assert_eq!(Argb::from(Rgb::new(50, 150, 250)), Argb::from_u32(4281505530));
     }
 
     #[test]
@@ -606,18 +565,8 @@ mod tests {
         let mid = 8.0;
         let right = 8.0 + delta;
 
-        assert_approx_eq!(
-            f64,
-            y_from_lstar(left),
-            y_from_lstar(mid),
-            epsilon = epsilon
-        );
-        assert_approx_eq!(
-            f64,
-            y_from_lstar(right),
-            y_from_lstar(mid),
-            epsilon = epsilon
-        );
+        assert_approx_eq!(f64, y_from_lstar(left), y_from_lstar(mid), epsilon = epsilon);
+        assert_approx_eq!(f64, y_from_lstar(right), y_from_lstar(mid), epsilon = epsilon);
     }
 
     #[test]
@@ -808,12 +757,7 @@ impl serde::Serialize for Argb {
         S: serde::Serializer,
     {
         let oklch = Oklch::from(*self);
-        let oklch_str = format!(
-            "oklch({:.3}% {:.3} {:.1}deg)",
-            oklch.l * 100.0,
-            oklch.c,
-            oklch.h
-        );
+        let oklch_str = format!("oklch({:.3}% {:.3} {:.1}deg)", oklch.l * 100.0, oklch.c, oklch.h);
         serializer.serialize_str(&oklch_str)
     }
 }

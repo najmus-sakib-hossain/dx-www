@@ -20,7 +20,7 @@
 
 use bitflags::bitflags;
 use once_cell::sync::Lazy;
-use regex_automata::{meta::Regex, Match};
+use regex_automata::{Match, meta::Regex};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "std")]
@@ -116,18 +116,16 @@ pub mod patterns {
     });
 
     // URL pattern
-    pub static URL: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"^https?://[^\s/$.?#].[^\s]*$").expect("Invalid URL regex")
-    });
+    pub static URL: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"^https?://[^\s/$.?#].[^\s]*$").expect("Invalid URL regex"));
 
     // Number pattern (int or float)
     pub static NUMBER: Lazy<Regex> =
         Lazy::new(|| Regex::new(r"^-?\d+(\.\d+)?$").expect("Invalid number regex"));
 
     // Date pattern (ISO 8601: YYYY-MM-DD)
-    pub static DATE: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"^\d{4}-\d{2}-\d{2}$").expect("Invalid date regex")
-    });
+    pub static DATE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"^\d{4}-\d{2}-\d{2}$").expect("Invalid date regex"));
 }
 
 /// Core validation functions (branchless when possible)

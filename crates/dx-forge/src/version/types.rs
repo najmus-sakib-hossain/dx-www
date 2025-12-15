@@ -95,15 +95,9 @@ impl FromStr for Version {
             return Err(anyhow!("Invalid version format: {}", s));
         }
 
-        let major = parts[0]
-            .parse()
-            .context("Failed to parse major version")?;
-        let minor = parts[1]
-            .parse()
-            .context("Failed to parse minor version")?;
-        let patch = parts[2]
-            .parse()
-            .context("Failed to parse patch version")?;
+        let major = parts[0].parse().context("Failed to parse major version")?;
+        let minor = parts[1].parse().context("Failed to parse minor version")?;
+        let patch = parts[2].parse().context("Failed to parse patch version")?;
 
         Ok(Self {
             major,

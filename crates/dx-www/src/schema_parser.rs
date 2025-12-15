@@ -22,33 +22,31 @@ pub struct FormSchema {
 /// Parse form schema from .dx file
 pub fn parse_form_schema(source: &str) -> Vec<FormSchema> {
     let mut schemas = Vec::new();
-    
+
     // Pattern: schema FormName { field: type @validator, ... }
     let schema_re = Regex::new(r"schema\s+(\w+)\s*\{([^}]+)\}").unwrap();
-    
+
     for cap in schema_re.captures_iter(source) {
         let name = cap[1].to_string();
         let body = &cap[2];
-        
+
         let mut fields = Vec::new();
-        
+
         // Parse fields: field_name: type @validator1 @validator2
         let field_re = Regex::new(r"(\w+)\s*:\s*(\w+)\s*((?:@\w+(?:\([^)]*\))?\s*)*)").unwrap();
-        
+
         for field_cap in field_re.captures_iter(body) {
             let field_name = field_cap[1].to_string();
             let field_type = field_cap[2].to_string();
             let validators_str = field_cap.get(3).map_or("", |m| m.as_str());
-            
+
             // Parse validators
             let validator_re = Regex::new(r"@(\w+(?:\([^)]*\))?)").unwrap();
-            let validators: Vec<String> = validator_re
-                .captures_iter(validators_str)
-                .map(|v| v[1].to_string())
-                .collect();
-            
+            let validators: Vec<String> =
+                validator_re.captures_iter(validators_str).map(|v| v[1].to_string()).collect();
+
             let required = validators.contains(&"required".to_string());
-            
+
             fields.push(FieldSchema {
                 name: field_name,
                 field_type,
@@ -56,10 +54,10 @@ pub fn parse_form_schema(source: &str) -> Vec<FormSchema> {
                 required,
             });
         }
-        
+
         schemas.push(FormSchema { name, fields });
     }
-    
+
     schemas
 }
 
@@ -75,10 +73,10 @@ pub struct QueryDefinition {
 /// Parse query definitions
 pub fn parse_query_definitions(source: &str) -> Vec<QueryDefinition> {
     let mut queries = Vec::new();
-    
+
     // Pattern: query queryName(param1, param2) => GET /api/endpoint
     let query_re = Regex::new(r"query\s+(\w+)\s*\(([^)]*)\)\s*=>\s*(\w+)\s+([^\s]+)").unwrap();
-    
+
     for cap in query_re.captures_iter(source) {
         queries.push(QueryDefinition {
             name: cap[1].to_string(),
@@ -91,7 +89,7 @@ pub fn parse_query_definitions(source: &str) -> Vec<QueryDefinition> {
                 .collect(),
         });
     }
-    
+
     queries
 }
 
@@ -113,19 +111,19 @@ pub struct ColumnSchema {
 /// Parse database schema
 pub fn parse_db_schema(source: &str) -> Vec<TableSchema> {
     let mut tables = Vec::new();
-    
+
     // Pattern: table TableName { column_name: type nullable primaryKey, ... }
     let table_re = Regex::new(r"table\s+(\w+)\s*\{([^}]+)\}").unwrap();
-    
+
     for cap in table_re.captures_iter(source) {
         let name = cap[1].to_string();
         let body = &cap[2];
-        
+
         let mut columns = Vec::new();
-        
+
         // Parse columns
         let col_re = Regex::new(r"(\w+)\s*:\s*(\w+)\s*(nullable)?\s*(primaryKey)?").unwrap();
-        
+
         for col_cap in col_re.captures_iter(body) {
             columns.push(ColumnSchema {
                 name: col_cap[1].to_string(),
@@ -134,10 +132,10 @@ pub fn parse_db_schema(source: &str) -> Vec<TableSchema> {
                 primary_key: col_cap.get(4).is_some(),
             });
         }
-        
+
         tables.push(TableSchema { name, columns });
     }
-    
+
     tables
 }
 
@@ -151,26 +149,26 @@ pub struct StateDefinition {
 /// Parse state definitions
 pub fn parse_state_definitions(source: &str) -> Vec<StateDefinition> {
     let mut states = Vec::new();
-    
+
     // Pattern: state StateName { field: type, ... }
     let state_re = Regex::new(r"state\s+(\w+)\s*\{([^}]+)\}").unwrap();
-    
+
     for cap in state_re.captures_iter(source) {
         let name = cap[1].to_string();
         let body = &cap[2];
-        
+
         let mut fields = HashMap::new();
-        
+
         // Parse fields
         let field_re = Regex::new(r"(\w+)\s*:\s*(\w+)").unwrap();
-        
+
         for field_cap in field_re.captures_iter(body) {
             fields.insert(field_cap[1].to_string(), field_cap[2].to_string());
         }
-        
+
         states.push(StateDefinition { name, fields });
     }
-    
+
     states
 }
 
@@ -186,7 +184,7 @@ mod tests {
             password: string @minLength(8) @required
         }
         "#;
-        
+
         let schemas = parse_form_schema(source);
         assert_eq!(schemas.len(), 1);
         assert_eq!(schemas[0].name, "LoginForm");
@@ -201,7 +199,7 @@ mod tests {
         query getUser(id) => GET /api/users/:id
         query createPost(title, body) => POST /api/posts
         "#;
-        
+
         let queries = parse_query_definitions(source);
         assert_eq!(queries.len(), 2);
         assert_eq!(queries[0].name, "getUser");
@@ -217,7 +215,7 @@ mod tests {
             name: string nullable
         }
         "#;
-        
+
         let tables = parse_db_schema(source);
         assert_eq!(tables.len(), 1);
         assert_eq!(tables[0].name, "users");
@@ -233,7 +231,7 @@ mod tests {
             user: string
         }
         "#;
-        
+
         let states = parse_state_definitions(source);
         assert_eq!(states.len(), 1);
         assert_eq!(states[0].name, "AppState");

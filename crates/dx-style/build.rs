@@ -165,7 +165,9 @@ fn main() {
         })
         .expect("flatc schema compilation failed");
     } else {
-        println!("cargo:warning=FlatBuffer schema not found - skipping (binary modules work independently)");
+        println!(
+            "cargo:warning=FlatBuffer schema not found - skipping (binary modules work independently)"
+        );
         return; // Skip the rest of the build script
     }
 
@@ -424,8 +426,5 @@ fn main() {
         }
     }
 
-    println!(
-        "cargo:rustc-env=DX_STYLE_BIN={}",
-        style_dir.join("style.bin").to_string_lossy()
-    );
+    println!("cargo:rustc-env=DX_STYLE_BIN={}", style_dir.join("style.bin").to_string_lossy());
 }

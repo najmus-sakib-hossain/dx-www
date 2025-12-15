@@ -102,8 +102,7 @@ pub fn decode_file<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
 /// Encode using base64 command.
 fn encode_with_command(data: &[u8]) -> Result<ToolOutput> {
     let mut cmd = Command::new("base64");
-    cmd.stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped());
+    cmd.stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped());
 
     let mut child = cmd.spawn().map_err(|e| DxError::Config {
         message: format!("Failed to run base64: {}", e),
@@ -148,12 +147,10 @@ fn decode_with_command(input: &str) -> Result<ToolOutput> {
 
     use std::io::Write;
     if let Some(ref mut stdin) = child.stdin {
-        stdin
-            .write_all(input.as_bytes())
-            .map_err(|e| DxError::Config {
-                message: format!("Failed to write to stdin: {}", e),
-                source: None,
-            })?;
+        stdin.write_all(input.as_bytes()).map_err(|e| DxError::Config {
+            message: format!("Failed to write to stdin: {}", e),
+            source: None,
+        })?;
     }
 
     let output = child.wait_with_output().map_err(|e| DxError::Config {

@@ -83,9 +83,7 @@ pub fn transcribe<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
     let mut output = ToolOutput::success(
         "Speech recognition requires external API integration (Whisper, Google Speech, etc.)",
     );
-    output
-        .metadata
-        .insert("status".to_string(), "not_implemented".to_string());
+    output.metadata.insert("status".to_string(), "not_implemented".to_string());
     output.metadata.insert(
         "suggestion".to_string(),
         "Use OpenAI Whisper or similar service for actual transcription".to_string(),
@@ -132,9 +130,7 @@ pub fn generate_subtitles<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOut
         "Subtitle generation requires speech recognition API",
         output_path,
     );
-    output
-        .metadata
-        .insert("status".to_string(), "placeholder".to_string());
+    output.metadata.insert("status".to_string(), "placeholder".to_string());
 
     Ok(output)
 }
@@ -154,9 +150,7 @@ pub fn detect_language<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
     }
 
     let mut output = ToolOutput::success("Language detection requires speech recognition API");
-    output
-        .metadata
-        .insert("status".to_string(), "not_implemented".to_string());
+    output.metadata.insert("status".to_string(), "not_implemented".to_string());
 
     Ok(output)
 }

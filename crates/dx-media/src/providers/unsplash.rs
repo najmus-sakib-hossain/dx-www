@@ -42,9 +42,7 @@ impl UnsplashProvider {
     /// Build authorization header.
     #[allow(dead_code)] // May be used in future methods
     fn auth_header(&self) -> Option<(&'static str, String)> {
-        self.api_key
-            .as_ref()
-            .map(|key| ("Authorization", format!("Client-ID {key}")))
+        self.api_key.as_ref().map(|key| ("Authorization", format!("Client-ID {key}")))
     }
 }
 
@@ -100,10 +98,7 @@ impl Provider for UnsplashProvider {
         let headers_ref: Vec<(&str, &str)> =
             headers.iter().map(|(k, v)| (*k, v.as_str())).collect();
 
-        let response = self
-            .client
-            .get_with_query(&url, &params, &headers_ref)
-            .await?;
+        let response = self.client.get_with_query(&url, &params, &headers_ref).await?;
 
         let api_response: UnsplashSearchResponse = response.json_or_error().await?;
 

@@ -230,10 +230,7 @@ pub fn extract_path(json: &str, path: &str) -> Result<ToolOutput> {
     // For now, return the path info
     Ok(ToolOutput::success(format!("Path: {}", path))
         .with_metadata("path", path.to_string())
-        .with_metadata(
-            "note",
-            "Full JSONPath support requires serde_json".to_string(),
-        ))
+        .with_metadata("note", "Full JSONPath support requires serde_json".to_string()))
 }
 
 /// Sort JSON keys alphabetically.

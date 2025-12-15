@@ -110,19 +110,10 @@ impl OutputFormatter {
         }
 
         // License
-        println!(
-            "     {} {}",
-            "license".dimmed(),
-            asset.license.as_str().green()
-        );
+        println!("     {} {}", "license".dimmed(), asset.license.as_str().green());
 
         // Download command hint
-        println!(
-            "     {} dx download {}:{}",
-            "→".dimmed(),
-            asset.provider,
-            asset.id
-        );
+        println!("     {} dx download {}:{}", "→".dimmed(), asset.provider, asset.id);
 
         println!();
     }
@@ -201,10 +192,7 @@ impl OutputFormatter {
                 self.format_asset_text(1, asset);
             }
             OutputFormat::Json => {
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&self.asset_to_json(asset))?
-                );
+                println!("{}", serde_json::to_string_pretty(&self.asset_to_json(asset))?);
             }
             OutputFormat::JsonCompact => {
                 println!("{}", serde_json::to_string(&self.asset_to_json(asset))?);

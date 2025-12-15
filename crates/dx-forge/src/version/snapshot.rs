@@ -13,8 +13,8 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use crate::storage::Database;
 use super::types::Version;
+use crate::storage::Database;
 
 /// Unique identifier for a snapshot
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -95,7 +95,8 @@ impl FileSnapshot {
         let content = std::fs::read(path)?;
         let hash = format!("{:x}", Sha256::digest(&content));
         let metadata = std::fs::metadata(path)?;
-        let modified = metadata.modified()
+        let modified = metadata
+            .modified()
             .map(|t| DateTime::<Utc>::from(t))
             .unwrap_or_else(|_| Utc::now());
 
@@ -230,7 +231,7 @@ impl SnapshotManager {
     /// Get a snapshot by ID
     pub fn get_snapshot(&self, id: &SnapshotId) -> Result<Option<Snapshot>> {
         let snapshot_file = self.snapshots_path.join(format!("{}.json", id.as_str()));
-        
+
         if !snapshot_file.exists() {
             return Ok(None);
         }
@@ -243,8 +244,9 @@ impl SnapshotManager {
     /// Create a new branch
     pub fn create_branch(&mut self, name: impl Into<String>) -> Result<()> {
         let name = name.into();
-        
-        let head = self.get_branch_head(&self.current_branch)?
+
+        let head = self
+            .get_branch_head(&self.current_branch)?
             .ok_or_else(|| anyhow::anyhow!("Current branch has no commits"))?;
 
         let branch = Branch {
@@ -262,7 +264,7 @@ impl SnapshotManager {
     /// Switch to a different branch
     pub fn checkout_branch(&mut self, name: impl Into<String>) -> Result<()> {
         let name = name.into();
-        
+
         if !self.branch_exists(&name) {
             anyhow::bail!("Branch {} does not exist", name);
         }
@@ -291,7 +293,7 @@ impl SnapshotManager {
     /// Get commit history for current branch
     pub fn history(&self, limit: usize) -> Result<Vec<Snapshot>> {
         let head = self.get_branch_head(&self.current_branch)?;
-        
+
         if head.is_none() {
             return Ok(vec![]);
         }
@@ -316,20 +318,28 @@ impl SnapshotManager {
     }
 
     /// Merge a branch into current branch
-    pub fn merge(&mut self, source_branch: impl Into<String>, message: impl Into<String>) -> Result<SnapshotId> {
+    pub fn merge(
+        &mut self,
+        source_branch: impl Into<String>,
+        message: impl Into<String>,
+    ) -> Result<SnapshotId> {
         let source_branch = source_branch.into();
-        
-        let source_head = self.get_branch_head(&source_branch)?
+
+        let source_head = self
+            .get_branch_head(&source_branch)?
             .ok_or_else(|| anyhow::anyhow!("Source branch has no commits"))?;
 
-        let target_head = self.get_branch_head(&self.current_branch)?
+        let target_head = self
+            .get_branch_head(&self.current_branch)?
             .ok_or_else(|| anyhow::anyhow!("Current branch has no commits"))?;
 
         // Get snapshots
-        let source_snap = self.get_snapshot(&source_head)?
+        let source_snap = self
+            .get_snapshot(&source_head)?
             .ok_or_else(|| anyhow::anyhow!("Source snapshot not found"))?;
 
-        let target_snap = self.get_snapshot(&target_head)?
+        let target_snap = self
+            .get_snapshot(&target_head)?
             .ok_or_else(|| anyhow::anyhow!("Target snapshot not found"))?;
 
         // Merge tool states (target takes precedence for conflicts)
@@ -372,7 +382,7 @@ impl SnapshotManager {
         };
 
         self.save_snapshot(&snapshot)?;
-        
+
         // Update branch head (clone to avoid borrow conflict)
         let current_branch = self.current_branch.clone();
         self.update_branch_head(&current_branch, id.clone())?;
@@ -383,11 +393,12 @@ impl SnapshotManager {
 
     /// Compute diff between two snapshots
     pub fn diff(&self, from: &SnapshotId, to: &SnapshotId) -> Result<SnapshotDiff> {
-        let from_snap = self.get_snapshot(from)?
+        let from_snap = self
+            .get_snapshot(from)?
             .ok_or_else(|| anyhow::anyhow!("From snapshot not found"))?;
 
-        let to_snap = self.get_snapshot(to)?
-            .ok_or_else(|| anyhow::anyhow!("To snapshot not found"))?;
+        let to_snap =
+            self.get_snapshot(to)?.ok_or_else(|| anyhow::anyhow!("To snapshot not found"))?;
 
         let mut added_files = Vec::new();
         let mut modified_files = Vec::new();
@@ -454,7 +465,7 @@ impl SnapshotManager {
 
         let content = std::fs::read_to_string(&self.branches_path)?;
         let branches: HashMap<String, Branch> = serde_json::from_str(&content)?;
-        
+
         Ok(branches.get(name).map(|b| b.head.clone()))
     }
 
@@ -470,12 +481,15 @@ impl SnapshotManager {
             branch.head = head;
             branch.updated_at = Utc::now();
         } else {
-            branches.insert(name.to_string(), Branch {
-                name: name.to_string(),
-                head,
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-            });
+            branches.insert(
+                name.to_string(),
+                Branch {
+                    name: name.to_string(),
+                    head,
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                },
+            );
         }
 
         let content = serde_json::to_string_pretty(&branches)?;
@@ -511,9 +525,9 @@ pub struct SnapshotDiff {
 impl SnapshotDiff {
     /// Check if there are any changes
     pub fn has_changes(&self) -> bool {
-        !self.added_files.is_empty() || 
-        !self.modified_files.is_empty() || 
-        !self.deleted_files.is_empty()
+        !self.added_files.is_empty()
+            || !self.modified_files.is_empty()
+            || !self.deleted_files.is_empty()
     }
 
     /// Count total changed files
@@ -533,15 +547,18 @@ mod tests {
         let mut manager = SnapshotManager::new(temp_dir.path()).unwrap();
 
         let mut tool_states = HashMap::new();
-        tool_states.insert("test-tool".to_string(), ToolState {
-            tool_name: "test-tool".to_string(),
-            version: Version::new(1, 0, 0),
-            config: HashMap::new(),
-            output_files: vec![],
-        });
+        tool_states.insert(
+            "test-tool".to_string(),
+            ToolState {
+                tool_name: "test-tool".to_string(),
+                version: Version::new(1, 0, 0),
+                config: HashMap::new(),
+                output_files: vec![],
+            },
+        );
 
         let id = manager.create_snapshot("Initial commit", tool_states, vec![]).unwrap();
-        
+
         let snapshot = manager.get_snapshot(&id).unwrap().unwrap();
         assert_eq!(snapshot.message, "Initial commit");
         assert_eq!(snapshot.tool_states.len(), 1);
@@ -557,7 +574,7 @@ mod tests {
 
         // Create a new branch
         manager.create_branch("feature").unwrap();
-        
+
         // Switch to new branch
         manager.checkout_branch("feature").unwrap();
         assert_eq!(manager.current_branch(), "feature");

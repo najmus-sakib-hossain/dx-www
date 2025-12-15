@@ -127,10 +127,7 @@ impl Provider for InternetArchiveProvider {
 
         let params = [
             ("q", search_query.as_str()),
-            (
-                "fl[]",
-                "identifier,title,description,mediatype,creator,licenseurl,downloads",
-            ),
+            ("fl[]", "identifier,title,description,mediatype,creator,licenseurl,downloads"),
             ("sort[]", "downloads desc"),
             ("rows", &rows_str),
             ("page", &page_str),
@@ -243,22 +240,10 @@ mod tests {
 
     #[test]
     fn test_media_type_parsing() {
-        assert_eq!(
-            InternetArchiveProvider::parse_media_type("image"),
-            MediaType::Image
-        );
-        assert_eq!(
-            InternetArchiveProvider::parse_media_type("movies"),
-            MediaType::Video
-        );
-        assert_eq!(
-            InternetArchiveProvider::parse_media_type("audio"),
-            MediaType::Audio
-        );
-        assert_eq!(
-            InternetArchiveProvider::parse_media_type("texts"),
-            MediaType::Document
-        );
+        assert_eq!(InternetArchiveProvider::parse_media_type("image"), MediaType::Image);
+        assert_eq!(InternetArchiveProvider::parse_media_type("movies"), MediaType::Video);
+        assert_eq!(InternetArchiveProvider::parse_media_type("audio"), MediaType::Audio);
+        assert_eq!(InternetArchiveProvider::parse_media_type("texts"), MediaType::Document);
     }
 
     #[test]

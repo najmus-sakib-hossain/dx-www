@@ -148,9 +148,7 @@ impl Database {
 
             Ok(Operation {
                 id: uuid::Uuid::parse_str(&id).unwrap(),
-                timestamp: chrono::DateTime::parse_from_rfc3339(&timestamp)
-                    .unwrap()
-                    .into(),
+                timestamp: chrono::DateTime::parse_from_rfc3339(&timestamp).unwrap().into(),
                 actor_id,
                 file_path,
                 op_type,

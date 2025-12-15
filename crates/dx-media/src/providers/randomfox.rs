@@ -91,7 +91,11 @@ impl Provider for RandomFoxProvider {
                     .preview_url(data.image.clone())
                     .source_url(data.link)
                     .license(License::Other("RandomFox - Free".to_string()))
-                    .tags(vec!["fox".to_string(), "animal".to_string(), "wildlife".to_string()])
+                    .tags(vec![
+                        "fox".to_string(),
+                        "animal".to_string(),
+                        "wildlife".to_string(),
+                    ])
                     .build(),
             );
         }

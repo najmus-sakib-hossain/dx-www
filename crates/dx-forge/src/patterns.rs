@@ -26,13 +26,13 @@ pub struct PatternMatch {
 /// DX Tool type
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DxToolType {
-    Ui,       // dx-ui
-    Icons,    // dx-icons
-    Fonts,    // dx-fonts
-    Style,    // dx-style
-    I18n,     // dx-i18n
-    Auth,     // dx-auth
-    Check,    // dx-check
+    Ui,    // dx-ui
+    Icons, // dx-icons
+    Fonts, // dx-fonts
+    Style, // dx-style
+    I18n,  // dx-i18n
+    Auth,  // dx-auth
+    Check, // dx-check
     Custom(String),
 }
 
@@ -88,40 +88,22 @@ impl PatternDetector {
         let mut patterns = HashMap::new();
 
         // dx-ui: dxButton, dxInput, dxCard, etc.
-        patterns.insert(
-            DxToolType::Ui,
-            Regex::new(r"\bdx([A-Z][a-zA-Z0-9]*)\b")?,
-        );
+        patterns.insert(DxToolType::Ui, Regex::new(r"\bdx([A-Z][a-zA-Z0-9]*)\b")?);
 
         // dx-icons: dxiHome, dxiUser, dxiSettings, etc.
-        patterns.insert(
-            DxToolType::Icons,
-            Regex::new(r"\bdxi([A-Z][a-zA-Z0-9]*)\b")?,
-        );
+        patterns.insert(DxToolType::Icons, Regex::new(r"\bdxi([A-Z][a-zA-Z0-9]*)\b")?);
 
         // dx-fonts: dxfRoboto, dxfInter, dxfPoppins, etc.
-        patterns.insert(
-            DxToolType::Fonts,
-            Regex::new(r"\bdxf([A-Z][a-zA-Z0-9]*)\b")?,
-        );
+        patterns.insert(DxToolType::Fonts, Regex::new(r"\bdxf([A-Z][a-zA-Z0-9]*)\b")?);
 
         // dx-style: dxsContainer, dxsFlex, etc.
-        patterns.insert(
-            DxToolType::Style,
-            Regex::new(r"\bdxs([A-Z][a-zA-Z0-9]*)\b")?,
-        );
+        patterns.insert(DxToolType::Style, Regex::new(r"\bdxs([A-Z][a-zA-Z0-9]*)\b")?);
 
         // dx-i18n: dxtText, dxtMessage, etc.
-        patterns.insert(
-            DxToolType::I18n,
-            Regex::new(r"\bdxt([A-Z][a-zA-Z0-9]*)\b")?,
-        );
+        patterns.insert(DxToolType::I18n, Regex::new(r"\bdxt([A-Z][a-zA-Z0-9]*)\b")?);
 
         // dx-auth: dxaGoogleLogin, dxaGithubLogin, etc.
-        patterns.insert(
-            DxToolType::Auth,
-            Regex::new(r"\bdxa([A-Z][a-zA-Z0-9]*)\b")?,
-        );
+        patterns.insert(DxToolType::Auth, Regex::new(r"\bdxa([A-Z][a-zA-Z0-9]*)\b")?);
 
         Ok(Self { patterns })
     }
@@ -153,10 +135,7 @@ impl PatternDetector {
     }
 
     /// Detect patterns in multiple files
-    pub fn detect_in_files(
-        &self,
-        files: &[(PathBuf, String)],
-    ) -> Result<Vec<PatternMatch>> {
+    pub fn detect_in_files(&self, files: &[(PathBuf, String)]) -> Result<Vec<PatternMatch>> {
         let mut all_matches = Vec::new();
 
         for (path, content) in files {
@@ -183,17 +162,13 @@ impl PatternDetector {
 
     /// Check if content contains any dx patterns
     pub fn has_patterns(&self, content: &str) -> bool {
-        self.patterns
-            .values()
-            .any(|regex| regex.is_match(content))
+        self.patterns.values().any(|regex| regex.is_match(content))
     }
 
     /// Extract unique component names from matches
     pub fn extract_components(&self, matches: &[PatternMatch]) -> Vec<String> {
-        let mut components: Vec<String> = matches
-            .iter()
-            .map(|m| m.component_name.clone())
-            .collect();
+        let mut components: Vec<String> =
+            matches.iter().map(|m| m.component_name.clone()).collect();
 
         components.sort();
         components.dedup();
@@ -283,9 +258,7 @@ mod tests {
             };
         "#;
 
-        let matches = detector
-            .detect_in_file(Path::new("test.tsx"), content)
-            .unwrap();
+        let matches = detector.detect_in_file(Path::new("test.tsx"), content).unwrap();
 
         // Note: Regex patterns also match inside tags, so we may get more matches
         assert!(matches.len() >= 3, "Expected at least 3 matches, got {}", matches.len());
@@ -299,9 +272,7 @@ mod tests {
         let detector = PatternDetector::new().unwrap();
         let content = "dxButton dxButton dxInput dxCard";
 
-        let matches = detector
-            .detect_in_file(Path::new("test.tsx"), content)
-            .unwrap();
+        let matches = detector.detect_in_file(Path::new("test.tsx"), content).unwrap();
         let components = detector.extract_components(&matches);
 
         assert_eq!(components.len(), 3);

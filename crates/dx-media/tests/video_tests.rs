@@ -174,9 +174,7 @@ fn test_gif_options() {
     let options_with_width = video::GifOptions::with_width(320);
     assert_eq!(options_with_width.width, 320);
 
-    let options_chained = video::GifOptions::with_width(400)
-        .with_fps(20)
-        .with_range(1.0, 5.0);
+    let options_chained = video::GifOptions::with_width(400).with_fps(20).with_range(1.0, 5.0);
     assert_eq!(options_chained.fps, 20);
 }
 
@@ -503,10 +501,8 @@ fn test_subtitle_style() {
 fn test_burn_subtitles() {
     let fixture = TestFixture::new();
     let video = fixture.create_test_video("test.mp4");
-    let subs = fixture.create_test_text_file(
-        "subtitles.srt",
-        "1\n00:00:00,000 --> 00:00:05,000\nHello World\n",
-    );
+    let subs = fixture
+        .create_test_text_file("subtitles.srt", "1\n00:00:00,000 --> 00:00:05,000\nHello World\n");
     let output = fixture.path("subtitled.mp4");
 
     let result = video::burn_subtitles(&video, &subs, &output);
@@ -517,10 +513,8 @@ fn test_burn_subtitles() {
 fn test_add_soft_subtitles() {
     let fixture = TestFixture::new();
     let video = fixture.create_test_video("test.mp4");
-    let subs = fixture.create_test_text_file(
-        "subtitles.srt",
-        "1\n00:00:00,000 --> 00:00:05,000\nHello World\n",
-    );
+    let subs = fixture
+        .create_test_text_file("subtitles.srt", "1\n00:00:00,000 --> 00:00:05,000\nHello World\n");
     let output = fixture.path("output.mkv");
 
     let result = video::add_soft_subtitles(&video, &subs, &output, Some("eng"));

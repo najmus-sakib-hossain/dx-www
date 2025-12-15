@@ -73,7 +73,7 @@ impl ErrorBoundary {
     pub fn catch_error(&self, error: ComponentError) {
         let mut state = self.state.lock().unwrap();
         *state = BoundaryState::Failed;
-        
+
         let mut error_slot = self.error.lock().unwrap();
         *error_slot = Some(error);
     }
@@ -91,16 +91,16 @@ impl ErrorBoundary {
     /// Attempt recovery
     pub fn recover(&self) -> bool {
         let mut retry_count = self.retry_count.lock().unwrap();
-        
+
         if *retry_count >= self.max_retries {
             return false;
         }
-        
+
         *retry_count += 1;
-        
+
         let mut state = self.state.lock().unwrap();
         *state = BoundaryState::Recovering;
-        
+
         true
     }
 
@@ -108,10 +108,10 @@ impl ErrorBoundary {
     pub fn reset(&self) {
         let mut state = self.state.lock().unwrap();
         *state = BoundaryState::Normal;
-        
+
         let mut error = self.error.lock().unwrap();
         *error = None;
-        
+
         let mut retry_count = self.retry_count.lock().unwrap();
         *retry_count = 0;
     }
@@ -203,12 +203,12 @@ pub mod binary {
     pub fn encode_report(error: &ComponentError) -> Vec<u8> {
         let mut buf = Vec::new();
         buf.push(opcodes::ERROR_REPORT);
-        
+
         // Serialize error to binary
         let error_bytes = bincode::serialize(error).unwrap_or_default();
         buf.extend_from_slice(&(error_bytes.len() as u32).to_le_bytes());
         buf.extend_from_slice(&error_bytes);
-        
+
         buf
     }
 
@@ -217,12 +217,12 @@ pub mod binary {
         if data.len() < 5 {
             return None;
         }
-        
+
         let len = u32::from_le_bytes(data[1..5].try_into().ok()?) as usize;
         if data.len() < 5 + len {
             return None;
         }
-        
+
         bincode::deserialize(&data[5..5 + len]).ok()
     }
 }
@@ -252,10 +252,10 @@ mod tests {
     #[test]
     fn test_error_boundary() {
         let boundary = ErrorBoundary::new(1, 3);
-        
+
         assert_eq!(boundary.get_state(), BoundaryState::Normal);
         assert!(!boundary.has_failed());
-        
+
         let error = ComponentError {
             component_id: 1,
             error_code: 500,
@@ -264,12 +264,12 @@ mod tests {
             timestamp: 12345,
             retry_count: 0,
         };
-        
+
         boundary.catch_error(error.clone());
-        
+
         assert_eq!(boundary.get_state(), BoundaryState::Failed);
         assert!(boundary.has_failed());
-        
+
         let caught_error = boundary.get_error().unwrap();
         assert_eq!(caught_error.error_code, 500);
     }
@@ -277,7 +277,7 @@ mod tests {
     #[test]
     fn test_error_recovery() {
         let boundary = ErrorBoundary::new(1, 3);
-        
+
         let error = ComponentError {
             component_id: 1,
             error_code: 500,
@@ -286,12 +286,12 @@ mod tests {
             timestamp: 12345,
             retry_count: 0,
         };
-        
+
         boundary.catch_error(error);
-        
+
         assert!(boundary.recover());
         assert_eq!(boundary.get_state(), BoundaryState::Recovering);
-        
+
         boundary.reset();
         assert_eq!(boundary.get_state(), BoundaryState::Normal);
     }
@@ -299,7 +299,7 @@ mod tests {
     #[test]
     fn test_max_retries() {
         let boundary = ErrorBoundary::new(1, 2);
-        
+
         let error = ComponentError {
             component_id: 1,
             error_code: 500,
@@ -308,9 +308,9 @@ mod tests {
             timestamp: 12345,
             retry_count: 0,
         };
-        
+
         boundary.catch_error(error.clone());
-        
+
         assert!(boundary.recover()); // Retry 1
         boundary.catch_error(error.clone());
         assert!(boundary.recover()); // Retry 2
@@ -321,10 +321,10 @@ mod tests {
     #[test]
     fn test_registry() {
         let registry = ErrorBoundaryRegistry::new();
-        
+
         registry.register(1, 3);
         registry.register(2, 5);
-        
+
         let error = ComponentError {
             component_id: 1,
             error_code: 404,
@@ -333,9 +333,9 @@ mod tests {
             timestamp: 99999,
             retry_count: 0,
         };
-        
+
         registry.report_error(error);
-        
+
         let boundary = registry.get(1).unwrap();
         assert!(boundary.has_failed());
     }
@@ -350,14 +350,13 @@ mod tests {
             timestamp: 123456789,
             retry_count: 2,
         };
-        
+
         let encoded = binary::encode_report(&error);
         assert_eq!(encoded[0], opcodes::ERROR_REPORT);
-        
+
         let decoded = binary::decode_report(&encoded).unwrap();
         assert_eq!(decoded.component_id, 42);
         assert_eq!(decoded.error_code, 500);
         assert_eq!(decoded.message, "Fatal error");
     }
 }
-

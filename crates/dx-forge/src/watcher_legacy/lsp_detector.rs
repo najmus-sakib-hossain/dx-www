@@ -17,7 +17,7 @@ use tokio::sync::RwLock;
 use crate::crdt::{Operation, OperationType, Position};
 use crate::storage::OperationLog;
 use crate::sync::{SyncManager, GLOBAL_CLOCK};
-use tracing::{debug};
+use tracing::debug;
 
 /// LSP text document change event
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -154,13 +154,7 @@ impl LspDetector {
         let offset = 0; // Would need full document to calculate accurately
 
         let lamport = GLOBAL_CLOCK.tick();
-        let position = Position::new(
-            start_line,
-            start_col,
-            offset,
-            self.actor_id.clone(),
-            lamport,
-        );
+        let position = Position::new(start_line, start_col, offset, self.actor_id.clone(), lamport);
 
         // Determine operation type
         let op_type = if edit.range.start.line == edit.range.end.line
@@ -228,12 +222,7 @@ impl LspDetector {
                 let preview = truncate_preview(new_content, 40);
                 (
                     "REPLACE".yellow(),
-                    format!(
-                        "{}:{} → '{}'",
-                        position.line,
-                        position.column,
-                        preview.green()
-                    ),
+                    format!("{}:{} → '{}'", position.line, position.column, preview.green()),
                 )
             }
             _ => return,

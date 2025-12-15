@@ -160,11 +160,7 @@ impl Hct {
         // 3. Create HCT from:
         // - CAM16 using default VC with Xyz coordinates in specified VC.
         // - L* converted from Y in Xyz coordinates in specified VC.
-        Self::from(
-            recast_in_vc.hue,
-            recast_in_vc.chroma,
-            lstar_from_y(viewed_in_vc.y),
-        )
+        Self::from(recast_in_vc.hue, recast_in_vc.chroma, lstar_from_y(viewed_in_vc.y))
     }
 }
 

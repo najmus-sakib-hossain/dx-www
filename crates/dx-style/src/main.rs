@@ -55,11 +55,7 @@ fn start_delayed_formatter(
                 let changed_at = Instant::now();
                 while changed_at.elapsed() < Duration::from_millis(debounce_ms) {
                     let new_checksum = {
-                        state
-                            .lock()
-                            .ok()
-                            .map(|s| s.class_list_checksum)
-                            .unwrap_or(current_checksum)
+                        state.lock().ok().map(|s| s.class_list_checksum).unwrap_or(current_checksum)
                     };
                     if new_checksum != current_checksum {
                         break;
@@ -347,10 +343,8 @@ fn start_css_validator(state: Arc<Mutex<AppState>>) {
                 }
                 i += 1;
             }
-            let validator_log = std::env::var("DX_VALIDATOR_LOG")
-                .ok()
-                .map(|v| v == "1")
-                .unwrap_or(false);
+            let validator_log =
+                std::env::var("DX_VALIDATOR_LOG").ok().map(|v| v == "1").unwrap_or(false);
             if strict_ok {
                 if let Some((_, last_end)) = layer_ranges.iter().max_by_key(|r| r.1) {
                     let trailing = &text[*last_end..];

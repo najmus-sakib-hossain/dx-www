@@ -38,11 +38,8 @@ pub async fn init(path: &Path) -> Result<()> {
         "real_time_sync": false,
     });
 
-    tokio::fs::write(
-        forge_path.join("config.json"),
-        serde_json::to_string_pretty(&config)?,
-    )
-    .await?;
+    tokio::fs::write(forge_path.join("config.json"), serde_json::to_string_pretty(&config)?)
+        .await?;
 
     Ok(())
 }
@@ -90,12 +87,7 @@ pub async fn git_sync(path: &Path) -> Result<()> {
 }
 
 pub async fn time_travel(file: &Path, timestamp: Option<String>) -> Result<()> {
-    println!(
-        "{}",
-        format!("🕐 Time traveling: {}", file.display())
-            .cyan()
-            .bold()
-    );
+    println!("{}", format!("🕐 Time traveling: {}", file.display()).cyan().bold());
 
     let repo_root = std::env::current_dir()?;
     let forge_path = repo_root.join(FORGE_DIR);

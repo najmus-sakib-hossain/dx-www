@@ -17,9 +17,8 @@ pub fn start(
         if let Ok(interval_ms) = poll_ms_str.parse::<u64>() {
             let interval = Duration::from_millis(interval_ms.max(1));
             use std::fs;
-            let mut last_mtime = fs::metadata(&config.paths.index_file)
-                .and_then(|m| m.modified())
-                .ok();
+            let mut last_mtime =
+                fs::metadata(&config.paths.index_file).and_then(|m| m.modified()).ok();
             loop {
                 std::thread::sleep(interval);
                 if let Ok(meta) = fs::metadata(&config.paths.index_file) {

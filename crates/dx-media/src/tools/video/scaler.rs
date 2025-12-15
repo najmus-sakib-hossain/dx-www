@@ -267,10 +267,7 @@ pub fn scale_video_with_options<P: AsRef<Path>>(
 
     if !output_result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Scaling failed: {}",
-                String::from_utf8_lossy(&output_result.stderr)
-            ),
+            message: format!("Scaling failed: {}", String::from_utf8_lossy(&output_result.stderr)),
             source: None,
         });
     }
@@ -278,10 +275,7 @@ pub fn scale_video_with_options<P: AsRef<Path>>(
     let output_size = std::fs::metadata(output_path).map(|m| m.len()).unwrap_or(0);
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Scaled to {}x{} ({} bytes)",
-            options.width, options.height, output_size
-        ),
+        format!("Scaled to {}x{} ({} bytes)", options.width, options.height, output_size),
         output_path,
     ))
 }
@@ -327,14 +321,8 @@ pub fn batch_scale<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("video");
-        let extension = input_path
-            .extension()
-            .and_then(|s| s.to_str())
-            .unwrap_or("mp4");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("video");
+        let extension = input_path.extension().and_then(|s| s.to_str()).unwrap_or("mp4");
 
         let (w, h) = resolution.dimensions();
         let output_path = output_dir.join(format!("{}_{}x{}.{}", file_stem, w, h, extension));
@@ -344,12 +332,10 @@ pub fn batch_scale<P: AsRef<Path>>(
         }
     }
 
-    Ok(ToolOutput::success(format!(
-        "Scaled {} videos to {}",
-        scaled.len(),
-        resolution.name()
-    ))
-    .with_paths(scaled))
+    Ok(
+        ToolOutput::success(format!("Scaled {} videos to {}", scaled.len(), resolution.name()))
+            .with_paths(scaled),
+    )
 }
 
 #[cfg(test)]

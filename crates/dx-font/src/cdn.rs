@@ -59,7 +59,7 @@ impl CdnUrlGenerator {
     pub fn for_google_font(font_id: &str, font_name: &str) -> FontCdnUrls {
         let font_slug = font_id.to_lowercase().replace(' ', "-");
         let font_family = font_name.replace(' ', "+");
-        
+
         FontCdnUrls {
             css_url: Some(format!(
                 "https://fonts.googleapis.com/css2?family={}:wght@100;200;300;400;500;600;700;800;900&display=swap",
@@ -81,11 +81,11 @@ impl CdnUrlGenerator {
             cdn_provider: CdnProvider::GoogleFonts,
         }
     }
-    
+
     /// Generate CDN URLs for a Bunny Fonts font
     pub fn for_bunny_font(font_id: &str, font_name: &str) -> FontCdnUrls {
         let font_family = font_name.replace(' ', "+");
-        
+
         FontCdnUrls {
             css_url: Some(format!(
                 "https://fonts.bunny.net/css?family={}:100,200,300,400,500,600,700,800,900",
@@ -98,11 +98,11 @@ impl CdnUrlGenerator {
             cdn_provider: CdnProvider::BunnyFonts,
         }
     }
-    
+
     /// Generate CDN URLs for a Fontsource font
     pub fn for_fontsource_font(font_id: &str) -> FontCdnUrls {
         let font_slug = font_id.to_lowercase().replace(' ', "-");
-        
+
         FontCdnUrls {
             css_url: Some(format!(
                 "https://cdn.jsdelivr.net/npm/@fontsource/{}/index.css",
@@ -121,31 +121,23 @@ impl CdnUrlGenerator {
             cdn_provider: CdnProvider::JsDelivr,
         }
     }
-    
+
     /// Generate CDN URLs for a GitHub-hosted font
     pub fn for_github_font(repo: &str, font_path: &str, font_name: &str) -> FontCdnUrls {
         FontCdnUrls {
             css_url: None,
-            woff2_url: Some(format!(
-                "https://cdn.jsdelivr.net/gh/{}/{}.woff2",
-                repo, font_path
-            )),
-            woff_url: Some(format!(
-                "https://cdn.jsdelivr.net/gh/{}/{}.woff",
-                repo, font_path
-            )),
-            ttf_url: Some(format!(
-                "https://cdn.jsdelivr.net/gh/{}/{}.ttf",
-                repo, font_path
-            )),
+            woff2_url: Some(format!("https://cdn.jsdelivr.net/gh/{}/{}.woff2", repo, font_path)),
+            woff_url: Some(format!("https://cdn.jsdelivr.net/gh/{}/{}.woff", repo, font_path)),
+            ttf_url: Some(format!("https://cdn.jsdelivr.net/gh/{}/{}.ttf", repo, font_path)),
             preview_html: Some(Self::generate_github_preview_html(repo, font_path, font_name)),
             cdn_provider: CdnProvider::GitHubRaw,
         }
     }
-    
+
     /// Generate a preview HTML snippet with Google Fonts
     fn generate_preview_html(font_name: &str, font_family: &str) -> String {
-        format!(r#"<!DOCTYPE html>
+        format!(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -177,12 +169,15 @@ impl CdnUrlGenerator {
         <p class="weight-900">Black (900) - The quick brown fox</p>
     </div>
 </body>
-</html>"#, font_family, font_name, font_name)
+</html>"#,
+            font_family, font_name, font_name
+        )
     }
-    
+
     /// Generate a preview HTML snippet with Bunny Fonts
     fn generate_bunny_preview_html(font_name: &str, font_family: &str) -> String {
-        format!(r#"<!DOCTYPE html>
+        format!(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -200,12 +195,15 @@ impl CdnUrlGenerator {
     <p>abcdefghijklmnopqrstuvwxyz</p>
     <p>0123456789 !@#$%^&*()</p>
 </body>
-</html>"#, font_family, font_name, font_name)
+</html>"#,
+            font_family, font_name, font_name
+        )
     }
-    
+
     /// Generate a preview HTML snippet with jsDelivr
     fn generate_jsdelivr_preview_html(font_slug: &str) -> String {
-        format!(r#"<!DOCTYPE html>
+        format!(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <link href="https://cdn.jsdelivr.net/npm/@fontsource/{}/index.css" rel="stylesheet">
@@ -222,12 +220,15 @@ impl CdnUrlGenerator {
     <p>abcdefghijklmnopqrstuvwxyz</p>
     <p>0123456789 !@#$%^&*()</p>
 </body>
-</html>"#, font_slug, font_slug, font_slug)
+</html>"#,
+            font_slug, font_slug, font_slug
+        )
     }
-    
+
     /// Generate a preview HTML snippet for GitHub-hosted fonts
     fn generate_github_preview_html(repo: &str, font_path: &str, font_name: &str) -> String {
-        format!(r#"<!DOCTYPE html>
+        format!(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <style>
@@ -248,7 +249,9 @@ impl CdnUrlGenerator {
     <p>abcdefghijklmnopqrstuvwxyz</p>
     <p>0123456789 !@#$%^&*()</p>
 </body>
-</html>"#, font_name, repo, font_path, repo, font_path, font_name, font_name)
+</html>"#,
+            font_name, repo, font_path, repo, font_path, font_name, font_name
+        )
     }
 }
 
@@ -261,17 +264,26 @@ pub fn get_popular_font_cdn_urls() -> Vec<(&'static str, FontCdnUrls)> {
         ("Montserrat", CdnUrlGenerator::for_google_font("montserrat", "Montserrat")),
         ("Inter", CdnUrlGenerator::for_google_font("inter", "Inter")),
         ("Poppins", CdnUrlGenerator::for_google_font("poppins", "Poppins")),
-        ("Source Code Pro", CdnUrlGenerator::for_google_font("source-code-pro", "Source Code Pro")),
+        (
+            "Source Code Pro",
+            CdnUrlGenerator::for_google_font("source-code-pro", "Source Code Pro"),
+        ),
         ("Fira Code", CdnUrlGenerator::for_google_font("fira-code", "Fira Code")),
-        ("JetBrains Mono", CdnUrlGenerator::for_google_font("jetbrains-mono", "JetBrains Mono")),
-        ("Playfair Display", CdnUrlGenerator::for_google_font("playfair-display", "Playfair Display")),
+        (
+            "JetBrains Mono",
+            CdnUrlGenerator::for_google_font("jetbrains-mono", "JetBrains Mono"),
+        ),
+        (
+            "Playfair Display",
+            CdnUrlGenerator::for_google_font("playfair-display", "Playfair Display"),
+        ),
     ]
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_google_font_cdn_urls() {
         let urls = CdnUrlGenerator::for_google_font("roboto", "Roboto");
@@ -279,7 +291,7 @@ mod tests {
         assert!(urls.woff2_url.is_some());
         assert!(urls.preview_html.is_some());
     }
-    
+
     #[test]
     fn test_bunny_font_cdn_urls() {
         let urls = CdnUrlGenerator::for_bunny_font("roboto", "Roboto");

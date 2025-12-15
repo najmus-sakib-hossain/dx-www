@@ -43,9 +43,7 @@ pub fn generate_v4() -> String {
     let mut bytes = [0u8; 16];
 
     // Use simple random generation based on time and counter
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
 
     let seed = now.as_nanos() as u64;
     let mut state = seed;
@@ -64,9 +62,7 @@ pub fn generate_v4() -> String {
 
 /// Generate a time-based UUID (v1-like).
 fn generate_v1() -> String {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
 
     let timestamp = now.as_nanos() as u64;
     let clock_seq = (now.subsec_nanos() & 0x3fff) as u16 | 0x8000;
@@ -162,9 +158,7 @@ pub fn validate(uuid: &str) -> Result<ToolOutput> {
         }
 
         if !part.chars().all(|c| c.is_ascii_hexdigit()) {
-            return Ok(ToolOutput::failure(
-                "Invalid UUID format: contains non-hex characters",
-            ));
+            return Ok(ToolOutput::failure("Invalid UUID format: contains non-hex characters"));
         }
     }
 
@@ -179,11 +173,9 @@ pub fn validate(uuid: &str) -> Result<ToolOutput> {
         _ => "unknown",
     };
 
-    Ok(
-        ToolOutput::success(format!("Valid UUID (version {})", version))
-            .with_metadata("valid", "true")
-            .with_metadata("version", version.to_string()),
-    )
+    Ok(ToolOutput::success(format!("Valid UUID (version {})", version))
+        .with_metadata("valid", "true")
+        .with_metadata("version", version.to_string()))
 }
 
 /// Parse UUID to bytes.
@@ -194,14 +186,10 @@ pub fn parse(uuid: &str) -> Result<ToolOutput> {
         return Ok(ToolOutput::failure("Invalid UUID length"));
     }
 
-    let bytes: Vec<String> = (0..16)
-        .map(|i| uuid[i * 2..i * 2 + 2].to_string())
-        .collect();
+    let bytes: Vec<String> = (0..16).map(|i| uuid[i * 2..i * 2 + 2].to_string()).collect();
 
-    Ok(
-        ToolOutput::success(format!("Bytes: [{}]", bytes.join(", ")))
-            .with_metadata("hex", bytes.join("")),
-    )
+    Ok(ToolOutput::success(format!("Bytes: [{}]", bytes.join(", ")))
+        .with_metadata("hex", bytes.join("")))
 }
 
 /// Convert UUID to different formats.

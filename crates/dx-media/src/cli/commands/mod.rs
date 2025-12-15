@@ -42,11 +42,7 @@ async fn config_command(format: crate::cli::args::OutputFormat) -> Result<()> {
         _ => {
             println!("{}", "DX Media Configuration".bold().cyan());
             println!();
-            println!(
-                "  {} {}",
-                "Download Directory:".dimmed(),
-                config.download_dir.display()
-            );
+            println!("  {} {}", "Download Directory:".dimmed(), config.download_dir.display());
             println!("  {} {} seconds", "Timeout:".dimmed(), config.timeout_secs);
             println!("  {} {}", "Retry Attempts:".dimmed(), config.retry_attempts);
             println!();
@@ -151,13 +147,9 @@ async fn check_deps_command() -> Result<()> {
     println!();
     println!("{}", "Summary:".bold());
     println!("  {} {} tools installed", "→".cyan(), installed);
-    
+
     if required_missing > 0 {
-        println!(
-            "  {} {} required tools missing",
-            "!".red().bold(),
-            required_missing
-        );
+        println!("  {} {} required tools missing", "!".red().bold(), required_missing);
         println!();
         println!("{}", "Install FFmpeg:".bold().yellow());
         println!("  Windows: winget install FFmpeg");

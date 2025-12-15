@@ -249,10 +249,7 @@ pub fn add_image_watermark_with_options<P: AsRef<Path>>(
 
     // Scale watermark if needed
     if (options.scale - 1.0).abs() > 0.01 {
-        filter.push_str(&format!(
-            "[1:v]scale=iw*{}:ih*{}[wm];",
-            options.scale, options.scale
-        ));
+        filter.push_str(&format!("[1:v]scale=iw*{}:ih*{}[wm];", options.scale, options.scale));
     }
 
     // Apply opacity if needed
@@ -274,11 +271,7 @@ pub fn add_image_watermark_with_options<P: AsRef<Path>>(
     }
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-i")
-        .arg(watermark_path);
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-i").arg(watermark_path);
 
     if filter.contains("[") {
         cmd.arg("-filter_complex").arg(&filter);
@@ -303,10 +296,7 @@ pub fn add_image_watermark_with_options<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Added image watermark",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Added image watermark", output_path))
 }
 
 /// Add animated watermark (moves across screen).
@@ -349,10 +339,7 @@ pub fn add_animated_watermark<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Added animated watermark",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Added animated watermark", output_path))
 }
 
 /// Add timestamp watermark (current time displayed).
@@ -396,10 +383,7 @@ pub fn add_timestamp_watermark<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Added timestamp watermark",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Added timestamp watermark", output_path))
 }
 
 /// Batch add watermark to multiple videos.
@@ -419,10 +403,7 @@ pub fn batch_watermark<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_name = input_path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("output.mp4");
+        let file_name = input_path.file_name().and_then(|s| s.to_str()).unwrap_or("output.mp4");
         let output_path = output_dir.join(format!("wm_{}", file_name));
 
         if add_text_watermark(input_path, &output_path, text).is_ok() {

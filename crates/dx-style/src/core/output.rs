@@ -75,11 +75,7 @@ impl CssOutput {
     }
 
     fn open_writer(path: &str) -> std::io::Result<Self> {
-        let mut f = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open(path)?;
+        let mut f = OpenOptions::new().read(true).write(true).create(true).open(path)?;
         let mut existing = Vec::new();
         f.read_to_end(&mut existing)?;
         if !existing.is_empty() && Self::ensure_marker_in_memory(&existing).is_none() {
@@ -139,11 +135,7 @@ impl CssOutput {
     }
 
     fn open_mmap(path: &str) -> std::io::Result<Self> {
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open(path)?;
+        let file = OpenOptions::new().read(true).write(true).create(true).open(path)?;
         let mut was_empty = false;
         if file.metadata()?.len() == 0 {
             file.set_len(4096)?;
@@ -399,10 +391,7 @@ impl CssOutput {
                 ..
             } => {
                 if *logical_len < 2 {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::Other,
-                        "file too short",
-                    ));
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "file too short"));
                 }
                 let insert_pos = *logical_len - 2;
                 writer.seek(SeekFrom::Start(insert_pos as u64))?;
@@ -420,10 +409,7 @@ impl CssOutput {
                 ..
             } => {
                 if *logical_len < 2 {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::Other,
-                        "file too short",
-                    ));
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "file too short"));
                 }
                 let insert_pos = *logical_len - 2;
                 let needed = insert_pos + bytes.len() + 2;

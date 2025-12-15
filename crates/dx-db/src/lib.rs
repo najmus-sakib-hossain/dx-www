@@ -102,7 +102,7 @@ pub struct IndexDefinition {
 pub struct UserRow {
     pub id: i64,
     pub age: i32,
-    pub active: u32, // bool as u32 for alignment
+    pub active: u32,     // bool as u32 for alignment
     pub created_at: i64, // Unix timestamp
 }
 
@@ -281,10 +281,7 @@ impl DbPool {
 
     /// Get connection from pool
     pub async fn get(&self) -> DbResult<deadpool_postgres::Client> {
-        self.pool
-            .get()
-            .await
-            .map_err(|e| DbError::ConnectionFailed(e.to_string()))
+        self.pool.get().await.map_err(|e| DbError::ConnectionFailed(e.to_string()))
     }
 
     /// Execute query and return raw bytes
@@ -360,8 +357,8 @@ mod tests {
 
     #[test]
     fn test_query_builder() {
-        let query = QueryBuilder::new(1, "SELECT * FROM users WHERE id = $1")
-            .param(QueryParam::Int64(42));
+        let query =
+            QueryBuilder::new(1, "SELECT * FROM users WHERE id = $1").param(QueryParam::Int64(42));
 
         let (sql, params) = query.build();
         assert_eq!(sql, "SELECT * FROM users WHERE id = $1");

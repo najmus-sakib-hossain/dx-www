@@ -157,12 +157,8 @@ impl Provider for DataGovProvider {
                 );
 
                 // Build tags from package tags
-                let mut tags: Vec<String> = package
-                    .tags
-                    .iter()
-                    .map(|t| t.name.clone())
-                    .collect();
-                
+                let mut tags: Vec<String> = package.tags.iter().map(|t| t.name.clone()).collect();
+
                 if let Some(fmt) = &resource.format {
                     tags.push(fmt.to_lowercase());
                 }

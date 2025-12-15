@@ -2,8 +2,8 @@
 //!
 //! This file demonstrates how to create DX tools using the Forge framework.
 
-use dx_forge::{DxTool, ExecutionContext, ToolOutput};
 use anyhow::Result;
+use dx_forge::{DxTool, ExecutionContext, ToolOutput};
 use std::path::PathBuf;
 
 /// Example UI Component Tool
@@ -39,7 +39,7 @@ impl DxTool for DxUiTool {
         println!("🎨 DX-UI: Processing UI components...");
 
         let mut output = ToolOutput::success();
-        
+
         // Example: Generate button component
         let button_path = self.component_dir.join("Button.tsx");
         let button_code = r#"
@@ -61,7 +61,7 @@ export const Button: React.FC<ButtonProps> = ({ variant = 'primary', children })
 
         std::fs::create_dir_all(&self.component_dir)?;
         std::fs::write(&button_path, button_code)?;
-        
+
         output.files_created.push(button_path);
         output.message = "Generated UI components".to_string();
 
@@ -143,7 +143,7 @@ impl DxTool for DxCodegenTool {
         println!("⚙️  DX-Codegen: Generating code from schemas...");
 
         let mut output = ToolOutput::success();
-        
+
         // Example: Generate types from schema
         let types_path = self.output_dir.join("generated_types.ts");
         let types_code = r#"
@@ -165,7 +165,7 @@ export interface Product {
 
         std::fs::create_dir_all(&self.output_dir)?;
         std::fs::write(&types_path, types_code)?;
-        
+
         output.files_created.push(types_path);
         output.message = "Generated types from schemas".to_string();
 
@@ -216,7 +216,7 @@ impl DxTool for DxStyleTool {
         println!("🎨 DX-Style: Processing styles...");
 
         let mut output = ToolOutput::success();
-        
+
         // Example: Generate CSS from design tokens
         let css_path = self.style_dir.join("components.css");
         let css_code = r#"
@@ -245,7 +245,7 @@ impl DxTool for DxStyleTool {
 
         std::fs::create_dir_all(&self.style_dir)?;
         std::fs::write(&css_path, css_code)?;
-        
+
         output.files_created.push(css_path);
         output.message = "Processed styles".to_string();
 
@@ -256,9 +256,9 @@ impl DxTool for DxStyleTool {
     fn should_run(&self, ctx: &ExecutionContext) -> bool {
         // Run if style files changed
         ctx.changed_files.iter().any(|f| {
-            f.extension().and_then(|e| e.to_str()).map_or(false, |e| {
-                e == "css" || e == "scss" || e == "sass" || e == "less"
-            })
+            f.extension()
+                .and_then(|e| e.to_str())
+                .map_or(false, |e| e == "css" || e == "scss" || e == "sass" || e == "less")
         })
     }
 
@@ -321,10 +321,8 @@ mod tests {
         let output_dir = temp_dir.path().join("generated");
 
         let mut tool = DxCodegenTool::new(schema_dir, output_dir.clone());
-        let ctx = ExecutionContext::new(
-            temp_dir.path().to_path_buf(),
-            temp_dir.path().join(".dx/forge"),
-        );
+        let ctx =
+            ExecutionContext::new(temp_dir.path().to_path_buf(), temp_dir.path().join(".dx/forge"));
 
         let result = tool.execute(&ctx).unwrap();
         assert!(result.success);
@@ -353,4 +351,3 @@ fn main() {
         "dx-forge: example_tools – run `cargo run --example full_workflow` or `complete_dx_workflow` to see these tools in action."
     );
 }
-

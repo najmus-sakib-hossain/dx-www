@@ -126,7 +126,7 @@ impl DxTool for ProductionDxStyleTool {
     fn execute(&mut self, _ctx: &ExecutionContext) -> Result<ToolOutput> {
         println!("🎨 Processing styles...");
         sleep(Duration::from_millis(100));
-        
+
         Ok(ToolOutput {
             success: true,
             files_modified: vec![],
@@ -146,10 +146,10 @@ async fn main() -> Result<()> {
     // Step 1: Initialize Tool Registry
     println!("📦 Step 1: Tool Version Management");
     println!("{}", "-".repeat(60));
-    
+
     let forge_dir = std::env::current_dir()?.join(".dx/forge");
     std::fs::create_dir_all(&forge_dir)?;
-    
+
     let mut registry = ToolRegistry::new(&forge_dir)?;
 
     // Register tools
@@ -199,12 +199,7 @@ async fn main() -> Result<()> {
     let matches = detector.detect_in_file(&PathBuf::from("sample.tsx"), sample_code)?;
     println!("✅ Detected {} dx patterns:", matches.len());
     for m in &matches {
-        println!(
-            "   • {} ({}): {}",
-            m.pattern,
-            m.tool.tool_name(),
-            m.component_name
-        );
+        println!("   • {} ({}): {}", m.pattern, m.tool.tool_name(), m.component_name);
     }
     println!();
 
@@ -217,15 +212,9 @@ async fn main() -> Result<()> {
     println!("📥 Fetching components...");
     for m in &matches {
         if m.tool == DxToolType::Ui {
-            let component = injection_mgr
-                .fetch_component(&m.tool, &m.component_name, None)
-                .await?;
+            let component = injection_mgr.fetch_component(&m.tool, &m.component_name, None).await?;
 
-            println!(
-                "   ✅ Cached {} ({} bytes)",
-                m.component_name,
-                component.len()
-            );
+            println!("   ✅ Cached {} ({} bytes)", m.component_name, component.len());
         }
     }
 
@@ -282,10 +271,10 @@ async fn main() -> Result<()> {
     println!("\n✨ Execution Complete!");
     println!("{}", "=".repeat(60));
     println!("\n📈 Summary:");
-    
+
     let total_duration: u64 = outputs.iter().map(|o| o.duration_ms).sum();
     let successful = outputs.iter().filter(|o| o.success).count();
-    
+
     println!("   • Total tools: {}", outputs.len());
     println!("   • Successful: {}", successful);
     println!("   • Total duration: {}ms", total_duration);

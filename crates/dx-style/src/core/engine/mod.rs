@@ -99,7 +99,7 @@ impl StyleEngine {
         let _ = path; // Suppress unused warning
         // Temporarily disabled - requires generated flatbuffer schema
         return Err("FlatBuffer schema not available - use binary modules directly".into());
-        
+
         /* COMMENTED OUT - Requires style_schema from flatbuffer
         let file = File::open(path)?;
         let mmap = unsafe { Mmap::map(&file)? };
@@ -261,29 +261,17 @@ impl StyleEngine {
     pub fn empty() -> Self {
         let override_path = std::env::var("DX_STYLE_BIN").ok();
         let default_path = override_path.as_deref().unwrap_or(".dx/style/style.bin");
-        let file = File::options()
-            .read(true)
-            .write(false)
-            .create(true)
-            .open(default_path)
-            .ok();
+        let file = File::options().read(true).write(false).create(true).open(default_path).ok();
         let mmap = file.and_then(|f| unsafe { Mmap::map(&f).ok() });
         fn anon_read_only_mmap() -> Mmap {
-            let anon = MmapOptions::new()
-                .len(1)
-                .map_anon()
-                .expect("failed to map anon page");
+            let anon = MmapOptions::new().len(1).map_anon().expect("failed to map anon page");
             anon.make_read_only().expect("failed to freeze anon map")
         }
         StyleEngine {
             precompiled: AHashMap::new(),
             _mmap: Arc::new(mmap.unwrap_or_else(|| {
-                let file = File::options()
-                    .read(true)
-                    .write(false)
-                    .create(true)
-                    .open(default_path)
-                    .ok();
+                let file =
+                    File::options().read(true).write(false).create(true).open(default_path).ok();
                 if let Some(file) = file {
                     unsafe { Mmap::map(&file).unwrap_or_else(|_| anon_read_only_mmap()) }
                 } else {
@@ -310,9 +298,7 @@ impl StyleEngine {
     }
 
     pub fn theme_by_name(&self, name: &str) -> Option<&ThemeDefinition> {
-        self.theme_lookup
-            .get(name)
-            .and_then(|idx| self.themes.get(*idx))
+        self.theme_lookup.get(name).and_then(|idx| self.themes.get(*idx))
     }
 
     pub fn compute_css(&self, class_name: &str) -> Option<String> {
@@ -445,10 +431,9 @@ impl StyleEngine {
             out
         };
 
-        if let (Some(light_theme), Some(dark_theme)) = (
-            self.theme_by_name("dx.light"),
-            self.theme_by_name("dx.dark"),
-        ) {
+        if let (Some(light_theme), Some(dark_theme)) =
+            (self.theme_by_name("dx.light"), self.theme_by_name("dx.dark"))
+        {
             let mut root = String::from(":root {\n");
             let mut dark = String::from(".dark {\n");
 
@@ -517,11 +502,7 @@ impl StyleEngine {
         write_argb_token(&mut root, "muted", light.surface_variant);
         write_argb_token(&mut dark, "muted", dark_scheme.surface_variant);
         write_argb_token(&mut root, "muted-foreground", light.on_surface_variant);
-        write_argb_token(
-            &mut dark,
-            "muted-foreground",
-            dark_scheme.on_surface_variant,
-        );
+        write_argb_token(&mut dark, "muted-foreground", dark_scheme.on_surface_variant);
         write_argb_token(&mut root, "accent", light.tertiary);
         write_argb_token(&mut dark, "accent", dark_scheme.tertiary);
         write_argb_token(&mut root, "accent-foreground", light.on_tertiary);
@@ -564,18 +545,10 @@ impl StyleEngine {
         write_argb_token(&mut root, "sidebar-primary", light.primary);
         write_argb_token(&mut dark, "sidebar-primary", dark_scheme.primary);
         write_argb_token(&mut root, "sidebar-primary-foreground", light.on_primary);
-        write_argb_token(
-            &mut dark,
-            "sidebar-primary-foreground",
-            dark_scheme.on_primary,
-        );
+        write_argb_token(&mut dark, "sidebar-primary-foreground", dark_scheme.on_primary);
         write_argb_token(&mut root, "sidebar-accent", light.secondary_container);
         write_argb_token(&mut dark, "sidebar-accent", dark_scheme.secondary_container);
-        write_argb_token(
-            &mut root,
-            "sidebar-accent-foreground",
-            light.on_secondary_container,
-        );
+        write_argb_token(&mut root, "sidebar-accent-foreground", light.on_secondary_container);
         write_argb_token(
             &mut dark,
             "sidebar-accent-foreground",

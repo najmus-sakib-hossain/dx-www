@@ -153,11 +153,7 @@ pub fn convert_audio<P: AsRef<Path>>(
     }
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-c:a")
-        .arg(options.format.codec());
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-c:a").arg(options.format.codec());
 
     if let Some(bitrate) = options.bitrate {
         cmd.arg("-b:a").arg(format!("{}k", bitrate));
@@ -191,11 +187,7 @@ pub fn convert_audio<P: AsRef<Path>>(
     let output_size = std::fs::metadata(output_path).map(|m| m.len()).unwrap_or(0);
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Converted to {} ({} bytes)",
-            options.format.extension(),
-            output_size
-        ),
+        format!("Converted to {} ({} bytes)", options.format.extension(), output_size),
         output_path,
     ))
 }
@@ -232,10 +224,7 @@ pub fn batch_convert<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("audio");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("audio");
         let output_path = output_dir.join(format!("{}.{}", file_stem, options.format.extension()));
 
         if convert_audio(input_path, &output_path, options.clone()).is_ok() {
@@ -254,10 +243,7 @@ mod tests {
     fn test_audio_format() {
         assert_eq!(AudioOutputFormat::Mp3.extension(), "mp3");
         assert_eq!(AudioOutputFormat::Mp3.codec(), "libmp3lame");
-        assert_eq!(
-            AudioOutputFormat::from_extension("flac"),
-            Some(AudioOutputFormat::Flac)
-        );
+        assert_eq!(AudioOutputFormat::from_extension("flac"), Some(AudioOutputFormat::Flac));
     }
 
     #[test]

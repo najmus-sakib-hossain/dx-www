@@ -22,10 +22,8 @@ pub fn generate_container_group(
     } else {
         size_part.to_string()
     };
-    let inner_utils: Vec<&str> = inner_raw
-        .split(|c: char| c.is_whitespace())
-        .filter(|s| !s.is_empty())
-        .collect();
+    let inner_utils: Vec<&str> =
+        inner_raw.split(|c: char| c.is_whitespace()).filter(|s| !s.is_empty()).collect();
     if inner_utils.is_empty() {
         return None;
     }

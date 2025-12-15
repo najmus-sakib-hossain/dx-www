@@ -29,14 +29,12 @@ impl SchemeFruitSalad {
 
     pub fn palette(source_color_hct: &Hct, variant: &Palette) -> TonalPalette {
         match variant {
-            Palette::Primary => TonalPalette::of(
-                sanitize_degrees_double(source_color_hct.get_hue() - 50.0),
-                48.0,
-            ),
-            Palette::Secondary => TonalPalette::of(
-                sanitize_degrees_double(source_color_hct.get_hue() - 50.0),
-                36.0,
-            ),
+            Palette::Primary => {
+                TonalPalette::of(sanitize_degrees_double(source_color_hct.get_hue() - 50.0), 48.0)
+            }
+            Palette::Secondary => {
+                TonalPalette::of(sanitize_degrees_double(source_color_hct.get_hue() - 50.0), 36.0)
+            }
             Palette::Tertiary => TonalPalette::of(source_color_hct.get_hue(), 36.0),
             Palette::Error => TonalPalette::of(25.0, 84.0),
             Palette::Neutral => TonalPalette::of(source_color_hct.get_hue(), 10.0),
@@ -55,25 +53,13 @@ mod tests {
         let scheme =
             SchemeFruitSalad::new(Argb::from_u32(0xff0000ff).into(), false, Some(0.0)).scheme;
 
-        assert_eq!(
-            scheme.primary_palette_key_color(),
-            Argb::from_u32(0xff0393c3)
-        );
+        assert_eq!(scheme.primary_palette_key_color(), Argb::from_u32(0xff0393c3));
 
-        assert_eq!(
-            scheme.secondary_palette_key_color(),
-            Argb::from_u32(0xff3a7e9e)
-        );
+        assert_eq!(scheme.secondary_palette_key_color(), Argb::from_u32(0xff3a7e9e));
 
-        assert_eq!(
-            scheme.tertiary_palette_key_color(),
-            Argb::from_u32(0xff6e72ac)
-        );
+        assert_eq!(scheme.tertiary_palette_key_color(), Argb::from_u32(0xff6e72ac));
 
-        assert_eq!(
-            scheme.neutral_palette_key_color(),
-            Argb::from_u32(0xff777682)
-        );
+        assert_eq!(scheme.neutral_palette_key_color(), Argb::from_u32(0xff777682));
 
         // assert_eq!(
         //     scheme.neutral_variant_palette_key_color(),

@@ -6,9 +6,9 @@
 //! Run with: cargo run --example download_fonts
 
 use anyhow::Result;
+use dx_font::cdn::{CdnUrlGenerator, FontCdnUrls};
 use dx_font::download::FontDownloader;
 use dx_font::search::FontSearch;
-use dx_font::cdn::{CdnUrlGenerator, FontCdnUrls};
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -18,28 +18,26 @@ async fn main() -> Result<()> {
     println!("║           dx-font DOWNLOAD SPEED TEST & DEMO                          ║");
     println!("║           High-Performance Font Downloads                             ║");
     println!("╚═══════════════════════════════════════════════════════════════════════╝\n");
-    
+
     // Create output directory
     let output_dir = PathBuf::from("./playground/downloaded_fonts");
     std::fs::create_dir_all(&output_dir)?;
-    
+
     // Initialize the downloader
     let downloader = FontDownloader::new()?;
     let search = FontSearch::new()?;
-    
+
     // ═══════════════════════════════════════════════════════════════════════════
     // TEST 1: Download Speed Test - Single Font
     // ═══════════════════════════════════════════════════════════════════════════
     println!("📥 TEST 1: Single Font Download Speed");
     println!("─────────────────────────────────────────────────────────────────────────\n");
-    
+
     let start = Instant::now();
-    match downloader.download_google_font(
-        "roboto",
-        &output_dir,
-        &["woff2"],
-        &["latin"],
-    ).await {
+    match downloader
+        .download_google_font("roboto", &output_dir, &["woff2"], &["latin"])
+        .await
+    {
         Ok(path) => {
             let elapsed = start.elapsed();
             let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
@@ -52,31 +50,26 @@ async fn main() -> Result<()> {
             println!("⚠️  Download failed: {}\n", e);
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════
     // TEST 2: Download from Fontsource CDN
     // ═══════════════════════════════════════════════════════════════════════════
     println!("📥 TEST 2: Fontsource CDN Download");
     println!("─────────────────────────────────────────────────────────────────────────\n");
-    
+
     let fonts_to_download = [
         ("inter", 400, "normal"),
         ("inter", 700, "normal"),
         ("open-sans", 400, "normal"),
         ("fira-code", 400, "normal"),
     ];
-    
+
     let mut total_time = std::time::Duration::ZERO;
     let mut total_size: u64 = 0;
-    
+
     for (font_id, weight, style) in &fonts_to_download {
         let start = Instant::now();
-        match downloader.download_fontsource_font(
-            font_id,
-            &output_dir,
-            *weight,
-            style,
-        ).await {
+        match downloader.download_fontsource_font(font_id, &output_dir, *weight, style).await {
             Ok(path) => {
                 let elapsed = start.elapsed();
                 let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
@@ -89,34 +82,40 @@ async fn main() -> Result<()> {
             }
         }
     }
-    
-    println!("\n  📊 Total: {} files, {} bytes in {:?}", fonts_to_download.len(), total_size, total_time);
-    println!("  📊 Average speed: {:.2} KB/s\n", (total_size as f64 / 1024.0) / total_time.as_secs_f64());
-    
+
+    println!(
+        "\n  📊 Total: {} files, {} bytes in {:?}",
+        fonts_to_download.len(),
+        total_size,
+        total_time
+    );
+    println!(
+        "  📊 Average speed: {:.2} KB/s\n",
+        (total_size as f64 / 1024.0) / total_time.as_secs_f64()
+    );
+
     // ═══════════════════════════════════════════════════════════════════════════
     // TEST 3: Search then Download
     // ═══════════════════════════════════════════════════════════════════════════
     println!("🔍 TEST 3: Search & Download Pipeline");
     println!("─────────────────────────────────────────────────────────────────────────\n");
-    
+
     // Search for fonts
     let start = Instant::now();
     let (results, search_time) = search.search_timed("jetbrains").await?;
     println!("  Search completed in {:?}, found {} fonts", search_time, results.total);
-    
+
     // Download the first result
     if let Some(font) = results.fonts.first() {
         println!("  Downloading first result: {}", font.name);
-        
+
         let font_id = font.id.to_lowercase().replace(' ', "-");
         let download_start = Instant::now();
-        
-        match downloader.download_google_font(
-            &font_id,
-            &output_dir,
-            &["woff2"],
-            &["latin"],
-        ).await {
+
+        match downloader
+            .download_google_font(&font_id, &output_dir, &["woff2"], &["latin"])
+            .await
+        {
             Ok(path) => {
                 let download_time = download_start.elapsed();
                 println!("  ✅ Downloaded in {:?}: {}", download_time, path.display());
@@ -126,16 +125,16 @@ async fn main() -> Result<()> {
             }
         }
     }
-    
+
     let total_pipeline_time = start.elapsed();
     println!("\n  Total pipeline time: {:?}\n", total_pipeline_time);
-    
+
     // ═══════════════════════════════════════════════════════════════════════════
     // TEST 4: CDN URL Generation for Preview
     // ═══════════════════════════════════════════════════════════════════════════
     println!("🌐 TEST 4: CDN URLs for Font Preview");
     println!("─────────────────────────────────────────────────────────────────────────\n");
-    
+
     let preview_fonts = [
         ("Roboto", "roboto"),
         ("Open Sans", "open-sans"),
@@ -143,9 +142,9 @@ async fn main() -> Result<()> {
         ("Montserrat", "montserrat"),
         ("Inter", "inter"),
     ];
-    
+
     println!("Use these URLs to preview fonts in your browser:\n");
-    
+
     for (name, id) in &preview_fonts {
         let urls = CdnUrlGenerator::for_google_font(id, name);
         println!("📝 {}", name);
@@ -157,30 +156,30 @@ async fn main() -> Result<()> {
         }
         println!();
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════
     // TEST 5: Generate Preview HTML File
     // ═══════════════════════════════════════════════════════════════════════════
     println!("🖼️  TEST 5: Generate Preview HTML");
     println!("─────────────────────────────────────────────────────────────────────────\n");
-    
+
     let preview_path = output_dir.join("font_preview.html");
-    
+
     let preview_html = generate_multi_font_preview(&preview_fonts);
     std::fs::write(&preview_path, &preview_html)?;
-    
+
     println!("  ✅ Preview HTML generated: {}", preview_path.display());
     println!("  Open this file in your browser to see how the fonts look!\n");
-    
+
     // ═══════════════════════════════════════════════════════════════════════════
     // DOWNLOADED FILES SUMMARY
     // ═══════════════════════════════════════════════════════════════════════════
     println!("📁 Downloaded Files:");
     println!("─────────────────────────────────────────────────────────────────────────\n");
-    
+
     let mut total_downloaded: u64 = 0;
     let mut file_count = 0;
-    
+
     if let Ok(entries) = std::fs::read_dir(&output_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
@@ -192,13 +191,14 @@ async fn main() -> Result<()> {
             }
         }
     }
-    
-    println!("\n  Total: {} files, {} bytes ({:.2} KB)\n", 
-        file_count, 
-        total_downloaded, 
+
+    println!(
+        "\n  Total: {} files, {} bytes ({:.2} KB)\n",
+        file_count,
+        total_downloaded,
         total_downloaded as f64 / 1024.0
     );
-    
+
     // ═══════════════════════════════════════════════════════════════════════════
     // SUMMARY
     // ═══════════════════════════════════════════════════════════════════════════
@@ -211,9 +211,9 @@ async fn main() -> Result<()> {
     println!("║  ✅ Multiple CDN sources: Google, jsDelivr, Bunny                     ║");
     println!("║  ✅ Preview HTML generation: ENABLED                                  ║");
     println!("╚═══════════════════════════════════════════════════════════════════════╝\n");
-    
+
     println!("🎉 All download tests completed successfully!");
-    
+
     Ok(())
 }
 
@@ -221,14 +221,14 @@ async fn main() -> Result<()> {
 fn generate_multi_font_preview(fonts: &[(&str, &str)]) -> String {
     let mut font_links = String::new();
     let mut font_samples = String::new();
-    
+
     for (name, id) in fonts {
         font_links.push_str(&format!(
             r#"    <link href="https://fonts.googleapis.com/css2?family={}&display=swap" rel="stylesheet">
 "#,
             name.replace(' ', "+")
         ));
-        
+
         font_samples.push_str(&format!(
             r#"
     <div class="font-sample">
@@ -241,8 +241,9 @@ fn generate_multi_font_preview(fonts: &[(&str, &str)]) -> String {
             name, name, name, name, name
         ));
     }
-    
-    format!(r#"<!DOCTYPE html>
+
+    format!(
+        r#"<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -293,5 +294,7 @@ fn generate_multi_font_preview(fonts: &[(&str, &str)]) -> String {
         <p>Generated by dx-font</p>
     </div>
 </body>
-</html>"#, font_links, font_samples)
+</html>"#,
+        font_links, font_samples
+    )
 }

@@ -42,10 +42,9 @@ impl SchemeExpressive {
 
     pub fn palette(source_color_hct: &Hct, variant: &Palette) -> TonalPalette {
         match variant {
-            Palette::Primary => TonalPalette::of(
-                sanitize_degrees_double(source_color_hct.get_hue() + 240.0),
-                40.0,
-            ),
+            Palette::Primary => {
+                TonalPalette::of(sanitize_degrees_double(source_color_hct.get_hue() + 240.0), 40.0)
+            }
             Palette::Secondary => TonalPalette::of(
                 DynamicScheme::get_rotated_hue(
                     source_color_hct.get_hue(),
@@ -79,22 +78,10 @@ mod tests {
         let scheme =
             SchemeExpressive::new(Argb::from_u32(0xff0000ff).into(), false, Some(0.0)).scheme;
 
-        assert_eq!(
-            scheme.primary_palette_key_color(),
-            Argb::from_u32(0xff35855f)
-        );
-        assert_eq!(
-            scheme.secondary_palette_key_color(),
-            Argb::from_u32(0xff8c6d8c)
-        );
-        assert_eq!(
-            scheme.tertiary_palette_key_color(),
-            Argb::from_u32(0xff806ea1)
-        );
-        assert_eq!(
-            scheme.neutral_palette_key_color(),
-            Argb::from_u32(0xff79757f)
-        );
+        assert_eq!(scheme.primary_palette_key_color(), Argb::from_u32(0xff35855f));
+        assert_eq!(scheme.secondary_palette_key_color(), Argb::from_u32(0xff8c6d8c));
+        assert_eq!(scheme.tertiary_palette_key_color(), Argb::from_u32(0xff806ea1));
+        assert_eq!(scheme.neutral_palette_key_color(), Argb::from_u32(0xff79757f));
         // assert_eq!(
         //     scheme.neutral_variant_palette_key_color(),
         //     Argb::from_u32(0xff7a7585)

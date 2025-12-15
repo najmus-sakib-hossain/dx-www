@@ -1,5 +1,5 @@
 /// Level 5: Binary CSS Values (Nuclear Option)
-/// 
+///
 /// Instead of storing "display:flex" strings, store property + value as binary enums
 /// This is 6× smaller than string-based CSS
 
@@ -113,44 +113,44 @@ pub type LengthValue = u16;
 
 /// Property name lookup table
 const PROP_NAMES: &[&str] = &[
-    "",                    // 0x00 (unused)
-    "display",             // 0x01
-    "flex-direction",      // 0x02
-    "flex-wrap",           // 0x03
-    "justify-content",     // 0x04
-    "align-items",         // 0x05
-    "align-self",          // 0x06
-    "position",            // 0x07
-    "padding",             // 0x08
-    "padding-top",         // 0x09
-    "padding-right",       // 0x0A
-    "padding-bottom",      // 0x0B
-    "padding-left",        // 0x0C
-    "margin",              // 0x0D
-    "margin-top",          // 0x0E
-    "margin-right",        // 0x0F
-    "margin-bottom",       // 0x10
-    "margin-left",         // 0x11
-    "width",               // 0x12
-    "height",              // 0x13
-    "color",               // 0x14
-    "background",          // 0x15
-    "border",              // 0x16
-    "border-width",        // 0x17
-    "border-radius",       // 0x18
-    "font-size",           // 0x19
-    "font-weight",         // 0x1A
-    "line-height",         // 0x1B
-    "text-align",          // 0x1C
-    "box-shadow",          // 0x1D
-    "overflow",            // 0x1E
-    "overflow-x",          // 0x1F
-    "overflow-y",          // 0x20
-    "top",                 // 0x21
-    "right",               // 0x22
-    "bottom",              // 0x23
-    "left",                // 0x24
-    "z-index",             // 0x25
+    "",                // 0x00 (unused)
+    "display",         // 0x01
+    "flex-direction",  // 0x02
+    "flex-wrap",       // 0x03
+    "justify-content", // 0x04
+    "align-items",     // 0x05
+    "align-self",      // 0x06
+    "position",        // 0x07
+    "padding",         // 0x08
+    "padding-top",     // 0x09
+    "padding-right",   // 0x0A
+    "padding-bottom",  // 0x0B
+    "padding-left",    // 0x0C
+    "margin",          // 0x0D
+    "margin-top",      // 0x0E
+    "margin-right",    // 0x0F
+    "margin-bottom",   // 0x10
+    "margin-left",     // 0x11
+    "width",           // 0x12
+    "height",          // 0x13
+    "color",           // 0x14
+    "background",      // 0x15
+    "border",          // 0x16
+    "border-width",    // 0x17
+    "border-radius",   // 0x18
+    "font-size",       // 0x19
+    "font-weight",     // 0x1A
+    "line-height",     // 0x1B
+    "text-align",      // 0x1C
+    "box-shadow",      // 0x1D
+    "overflow",        // 0x1E
+    "overflow-x",      // 0x1F
+    "overflow-y",      // 0x20
+    "top",             // 0x21
+    "right",           // 0x22
+    "bottom",          // 0x23
+    "left",            // 0x24
+    "z-index",         // 0x25
 ];
 
 /// Display value names
@@ -167,12 +167,7 @@ const DISPLAY_VALUES: &[&str] = &[
 ];
 
 /// Flex direction value names
-const FLEX_DIRECTION_VALUES: &[&str] = &[
-    "row",
-    "row-reverse",
-    "column",
-    "column-reverse",
-];
+const FLEX_DIRECTION_VALUES: &[&str] = &["row", "row-reverse", "column", "column-reverse"];
 
 /// Justify content value names
 const JUSTIFY_CONTENT_VALUES: &[&str] = &[
@@ -185,22 +180,10 @@ const JUSTIFY_CONTENT_VALUES: &[&str] = &[
 ];
 
 /// Align items value names
-const ALIGN_ITEMS_VALUES: &[&str] = &[
-    "flex-start",
-    "flex-end",
-    "center",
-    "baseline",
-    "stretch",
-];
+const ALIGN_ITEMS_VALUES: &[&str] = &["flex-start", "flex-end", "center", "baseline", "stretch"];
 
 /// Position value names
-const POSITION_VALUES: &[&str] = &[
-    "static",
-    "relative",
-    "absolute",
-    "fixed",
-    "sticky",
-];
+const POSITION_VALUES: &[&str] = &["static", "relative", "absolute", "fixed", "sticky"];
 
 /// Get property name from property byte
 #[allow(dead_code)]
@@ -211,9 +194,7 @@ fn get_property_name(prop: u8) -> &'static str {
 /// Get value string for a property
 fn get_value_string(prop: CssProperty, val: u8) -> String {
     match prop {
-        CssProperty::Display => {
-            DISPLAY_VALUES.get(val as usize).unwrap_or(&"block").to_string()
-        }
+        CssProperty::Display => DISPLAY_VALUES.get(val as usize).unwrap_or(&"block").to_string(),
         CssProperty::FlexDirection => {
             FLEX_DIRECTION_VALUES.get(val as usize).unwrap_or(&"row").to_string()
         }
@@ -223,49 +204,47 @@ fn get_value_string(prop: CssProperty, val: u8) -> String {
         CssProperty::AlignItems => {
             ALIGN_ITEMS_VALUES.get(val as usize).unwrap_or(&"stretch").to_string()
         }
-        CssProperty::Position => {
-            POSITION_VALUES.get(val as usize).unwrap_or(&"static").to_string()
-        }
+        CssProperty::Position => POSITION_VALUES.get(val as usize).unwrap_or(&"static").to_string(),
         _ => format!("{}", val), // Numeric value
     }
 }
 
 /// Apply binary CSS from a byte stream
-/// 
+///
 /// Stream format: [PROP, VAL, PROP, VAL, ...]
-/// 
+///
 /// Returns CSS text string
 pub fn apply_binary_css(stream: &[u8]) -> Result<String, &'static str> {
     if stream.len() % 2 != 0 {
         return Err("Invalid stream length (must be even)");
     }
-    
+
     let mut css = String::with_capacity(stream.len() * 15); // Approx 15 chars per property
-    
+
     let mut i = 0;
     while i < stream.len() {
         let prop_byte = stream[i];
         let val_byte = stream[i + 1];
-        
+
         if let Some(&prop_name) = PROP_NAMES.get(prop_byte as usize) {
             if !prop_name.is_empty() {
                 if !css.is_empty() {
                     css.push(';');
                 }
-                
+
                 css.push_str(prop_name);
                 css.push(':');
-                
+
                 // Convert property byte to enum
                 let prop = unsafe { std::mem::transmute::<u8, CssProperty>(prop_byte) };
                 let val_str = get_value_string(prop, val_byte);
                 css.push_str(&val_str);
             }
         }
-        
+
         i += 2;
     }
-    
+
     Ok(css)
 }
 
@@ -277,12 +256,12 @@ pub fn encode_property(prop: CssProperty, value: u8) -> [u8; 2] {
 /// Encode multiple properties into a binary stream
 pub fn encode_properties(props: &[(CssProperty, u8)]) -> Vec<u8> {
     let mut stream = Vec::with_capacity(props.len() * 2);
-    
+
     for &(prop, val) in props {
         stream.push(prop as u8);
         stream.push(val);
     }
-    
+
     stream
 }
 
@@ -302,7 +281,7 @@ mod tests {
             (CssProperty::Display, DisplayValue::Flex as u8),
             (CssProperty::AlignItems, AlignItemsValue::Center as u8),
         ];
-        
+
         let stream = encode_properties(&props);
         assert_eq!(stream, vec![0x01, 0x04, 0x05, 0x02]);
     }
@@ -310,10 +289,10 @@ mod tests {
     #[test]
     fn test_apply_binary_css() {
         let stream = vec![
-            0x01, 0x04,  // display: flex
-            0x05, 0x02,  // align-items: center
+            0x01, 0x04, // display: flex
+            0x05, 0x02, // align-items: center
         ];
-        
+
         let css = apply_binary_css(&stream).unwrap();
         assert_eq!(css, "display:flex;align-items:center");
     }
@@ -329,13 +308,13 @@ mod tests {
     fn test_size_comparison() {
         // String version: "display:flex" = 12 bytes
         let string_version = "display:flex";
-        
+
         // Binary version: [0x01, 0x04] = 2 bytes
         let binary_version = vec![0x01, 0x04];
-        
+
         assert_eq!(string_version.len(), 12);
         assert_eq!(binary_version.len(), 2);
-        
+
         // 6× smaller!
         let ratio = string_version.len() as f64 / binary_version.len() as f64;
         assert!(ratio >= 6.0);
@@ -349,22 +328,26 @@ mod tests {
             (CssProperty::AlignItems, AlignItemsValue::Center as u8),
             (CssProperty::Padding, 16), // 16px = 1rem
         ];
-        
+
         let stream = encode_properties(&props);
         let css = apply_binary_css(&stream).unwrap();
-        
+
         // Should contain all three properties
         assert!(css.contains("display:flex"));
         assert!(css.contains("align-items:center"));
         assert!(css.contains("padding:16"));
-        
+
         // Size comparison
         let string_equivalent = "display:flex;align-items:center;padding:1rem";
         let size_ratio = string_equivalent.len() as f64 / stream.len() as f64;
-        
-        println!("String: {} bytes, Binary: {} bytes, Ratio: {:.1}×",
-                 string_equivalent.len(), stream.len(), size_ratio);
-        
+
+        println!(
+            "String: {} bytes, Binary: {} bytes, Ratio: {:.1}×",
+            string_equivalent.len(),
+            stream.len(),
+            size_ratio
+        );
+
         assert!(size_ratio > 5.0); // At least 5× smaller
     }
 
@@ -382,13 +365,13 @@ mod tests {
             (CssProperty::JustifyContent, JustifyContentValue::Center as u8),
             (CssProperty::AlignItems, AlignItemsValue::Center as u8),
         ];
-        
+
         // Encode
         let stream = encode_properties(&original_props);
-        
+
         // Decode
         let css = apply_binary_css(&stream).unwrap();
-        
+
         // Verify
         assert!(css.contains("display:flex"));
         assert!(css.contains("justify-content:center"));
@@ -398,23 +381,23 @@ mod tests {
     #[test]
     fn test_performance() {
         use std::time::Instant;
-        
+
         let props = vec![
             (CssProperty::Display, DisplayValue::Flex as u8),
             (CssProperty::FlexDirection, FlexDirectionValue::Column as u8),
             (CssProperty::AlignItems, AlignItemsValue::Center as u8),
             (CssProperty::JustifyContent, JustifyContentValue::Center as u8),
         ];
-        
+
         let stream = encode_properties(&props);
-        
+
         // Benchmark decoding
         let start = Instant::now();
         for _ in 0..100000 {
             let _ = apply_binary_css(&stream).unwrap();
         }
         let elapsed = start.elapsed();
-        
+
         println!("100k iterations: {:?}", elapsed);
         assert!(elapsed.as_millis() < 500); // Should be very fast
     }

@@ -71,12 +71,8 @@ impl Provider for CatApiProvider {
 
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
         let count = query.count.min(25); // API max is 25 per request
-        
-        let url = format!(
-            "{}/images/search?limit={}",
-            self.base_url(),
-            count
-        );
+
+        let url = format!("{}/images/search?limit={}", self.base_url(), count);
 
         let response = self.client.get(&url).await?;
         let cats: Vec<CatImage> = response.json_or_error().await?;
@@ -86,7 +82,8 @@ impl Provider for CatApiProvider {
             .enumerate()
             .map(|(idx, cat)| {
                 let breeds = cat.breeds.unwrap_or_default();
-                let breed_name = breeds.first().map(|b| b.name.clone()).unwrap_or_else(|| "Cat".to_string());
+                let breed_name =
+                    breeds.first().map(|b| b.name.clone()).unwrap_or_else(|| "Cat".to_string());
                 let breed_tags: Vec<String> = breeds.iter().map(|b| b.name.clone()).collect();
 
                 MediaAsset::builder()
@@ -102,7 +99,7 @@ impl Provider for CatApiProvider {
                         vec!["cat".to_string(), "animal".to_string(), "pet".to_string()]
                             .into_iter()
                             .chain(breed_tags)
-                            .collect()
+                            .collect(),
                     )
                     .dimensions(cat.width.unwrap_or(0) as u32, cat.height.unwrap_or(0) as u32)
                     .build()

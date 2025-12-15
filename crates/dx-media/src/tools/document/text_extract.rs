@@ -62,11 +62,7 @@ pub fn extract_with_options<P: AsRef<Path>>(
         });
     }
 
-    let extension = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("")
-        .to_lowercase();
+    let extension = input_path.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
 
     match extension.as_str() {
         "pdf" => extract_from_pdf(input_path, &options),
@@ -114,10 +110,7 @@ fn extract_pdf_with_pdftotext(input: &Path, options: &ExtractOptions) -> Result<
 
     if let Some(ref pages) = options.pages {
         if let (Some(first), Some(last)) = (pages.first(), pages.last()) {
-            cmd.arg("-f")
-                .arg(first.to_string())
-                .arg("-l")
-                .arg(last.to_string());
+            cmd.arg("-f").arg(first.to_string()).arg("-l").arg(last.to_string());
         }
     }
 
@@ -281,10 +274,8 @@ fn extract_with_libreoffice(input: &Path) -> Result<ToolOutput> {
 
         if let Ok(result) = cmd.output() {
             if result.status.success() {
-                let output_name = format!(
-                    "{}.txt",
-                    input.file_stem().unwrap_or_default().to_string_lossy()
-                );
+                let output_name =
+                    format!("{}.txt", input.file_stem().unwrap_or_default().to_string_lossy());
                 let output_path = temp_dir.join(&output_name);
 
                 if let Ok(text) = std::fs::read_to_string(&output_path) {
@@ -379,11 +370,7 @@ fn strip_html_tags(html: &str) -> String {
         .replace("&#39;", "'");
 
     // Clean up whitespace
-    let lines: Vec<&str> = result
-        .lines()
-        .map(|l| l.trim())
-        .filter(|l| !l.is_empty())
-        .collect();
+    let lines: Vec<&str> = result.lines().map(|l| l.trim()).filter(|l| !l.is_empty()).collect();
 
     lines.join("\n")
 }
@@ -398,10 +385,7 @@ pub fn extract_to_file<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput
         source: None,
     })?;
 
-    Ok(ToolOutput::success_with_path(
-        "Text extracted and saved",
-        output.as_ref(),
-    ))
+    Ok(ToolOutput::success_with_path("Text extracted and saved", output.as_ref()))
 }
 
 /// Batch extract from multiple files.
@@ -417,10 +401,7 @@ pub fn batch_extract<P: AsRef<Path>>(inputs: &[P], output_dir: P) -> Result<Tool
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("document");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("document");
         let output_path = output_dir.join(format!("{}.txt", file_stem));
 
         if extract_to_file(input_path, &output_path).is_ok() {
@@ -428,10 +409,8 @@ pub fn batch_extract<P: AsRef<Path>>(inputs: &[P], output_dir: P) -> Result<Tool
         }
     }
 
-    Ok(
-        ToolOutput::success(format!("Extracted text from {} files", extracted.len()))
-            .with_paths(extracted),
-    )
+    Ok(ToolOutput::success(format!("Extracted text from {} files", extracted.len()))
+        .with_paths(extracted))
 }
 
 #[cfg(test)]

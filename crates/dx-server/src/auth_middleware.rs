@@ -35,16 +35,16 @@ pub async fn handle_login(
     if !verify_credentials(&req.email, &req.password).await {
         return (StatusCode::UNAUTHORIZED, Json(None));
     }
-    
+
     // Generate token
     #[cfg(feature = "auth")]
     if let Some(ref generator) = state.token_generator {
         let token = generator.generate_token(
             req.email.as_bytes(),
             &[0x01], // Role bitmask
-            3600, // 1 hour
+            3600,    // 1 hour
         );
-        
+
         return (
             StatusCode::OK,
             Json(Some(LoginResponse {
@@ -53,7 +53,7 @@ pub async fn handle_login(
             })),
         );
     }
-    
+
     (StatusCode::INTERNAL_SERVER_ERROR, Json(None))
 }
 
@@ -70,7 +70,7 @@ pub async fn verify_token_middleware<B>(
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or(StatusCode::UNAUTHORIZED)?;
-    
+
     // Verify token (placeholder)
     #[cfg(feature = "auth")]
     if let Some(ref generator) = state.token_generator {
@@ -79,10 +79,10 @@ pub async fn verify_token_middleware<B>(
             return Err(StatusCode::UNAUTHORIZED);
         }
     }
-    
+
     // Add user info to request extensions
     // req.extensions_mut().insert(user_id);
-    
+
     Ok(next.run(req).await)
 }
 

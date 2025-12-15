@@ -60,17 +60,11 @@ pub fn split_archive<P: AsRef<Path>>(
 
 /// Split using 7z.
 fn split_with_7z(input: &Path, output_dir: &Path, part_size_mb: u64) -> Result<ToolOutput> {
-    let file_name = input
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("archive");
+    let file_name = input.file_name().and_then(|s| s.to_str()).unwrap_or("archive");
     let output_path = output_dir.join(file_name);
 
     let mut cmd = Command::new("7z");
-    cmd.arg("a")
-        .arg(format!("-v{}m", part_size_mb))
-        .arg(&output_path)
-        .arg(input);
+    cmd.arg("a").arg(format!("-v{}m", part_size_mb)).arg(&output_path).arg(input);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run 7z: {}", e),
@@ -79,10 +73,7 @@ fn split_with_7z(input: &Path, output_dir: &Path, part_size_mb: u64) -> Result<T
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "7z split failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("7z split failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -95,11 +86,7 @@ fn split_with_7z(input: &Path, output_dir: &Path, part_size_mb: u64) -> Result<T
             source: None,
         })?
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.file_name()
-                .to_string_lossy()
-                .starts_with(&file_name.to_string())
-        })
+        .filter(|e| e.file_name().to_string_lossy().starts_with(&file_name.to_string()))
         .map(|e| e.path())
         .collect();
 
@@ -115,10 +102,7 @@ fn split_with_7z(input: &Path, output_dir: &Path, part_size_mb: u64) -> Result<T
 
 /// Split using split command.
 fn split_with_split(input: &Path, output_dir: &Path, part_size_mb: u64) -> Result<ToolOutput> {
-    let file_name = input
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("archive");
+    let file_name = input.file_name().and_then(|s| s.to_str()).unwrap_or("archive");
     let prefix = output_dir.join(format!("{}.part", file_name));
 
     let mut cmd = Command::new("split");
@@ -160,10 +144,7 @@ pub fn split_zip<P: AsRef<Path>>(inputs: &[P], output: P, part_size_mb: u64) -> 
     let output_path = output.as_ref();
 
     let mut cmd = Command::new("zip");
-    cmd.arg("-r")
-        .arg("-s")
-        .arg(format!("{}m", part_size_mb))
-        .arg(output_path);
+    cmd.arg("-r").arg("-s").arg(format!("{}m", part_size_mb)).arg(output_path);
 
     for input in inputs {
         cmd.arg(input.as_ref());

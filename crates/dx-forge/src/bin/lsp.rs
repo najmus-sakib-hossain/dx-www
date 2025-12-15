@@ -62,11 +62,14 @@ async fn main() -> Result<()> {
 
     for line in stdin.lock().lines() {
         let line = line?;
-        
+
         // Parse JSON-RPC request (simplified)
         if line.contains("initialize") {
             info!("📡 Received initialize request");
-            writeln!(stdout, r#"{{"jsonrpc":"2.0","id":1,"result":{{"capabilities":{{"completionProvider":{{"triggerCharacters":["d","x","<"]}}}}}}}}"#)?;
+            writeln!(
+                stdout,
+                r#"{{"jsonrpc":"2.0","id":1,"result":{{"capabilities":{{"completionProvider":{{"triggerCharacters":["d","x","<"]}}}}}}}}"#
+            )?;
             stdout.flush()?;
         } else if line.contains("textDocument/didOpen") {
             info!("📄 Received didOpen notification");

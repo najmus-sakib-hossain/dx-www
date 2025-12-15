@@ -88,16 +88,12 @@ fn bench_html_parsing(c: &mut Criterion) {
         let html_bytes = html.as_bytes();
         group.throughput(Throughput::Bytes(html_bytes.len() as u64));
 
-        group.bench_with_input(
-            BenchmarkId::from_parameter(name),
-            &html_bytes,
-            |b, &data| {
-                b.iter(|| {
-                    let result = extract_classes_fast(black_box(data), 64);
-                    hint_black_box(result);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(name), &html_bytes, |b, &data| {
+            b.iter(|| {
+                let result = extract_classes_fast(black_box(data), 64);
+                hint_black_box(result);
+            });
+        });
     }
 
     group.finish();
@@ -109,16 +105,12 @@ fn bench_class_extraction_capacity_hints(c: &mut Criterion) {
     let html_bytes = html.as_bytes();
 
     for capacity in &[0, 16, 64, 128, 256, 512, 1024] {
-        group.bench_with_input(
-            BenchmarkId::from_parameter(capacity),
-            capacity,
-            |b, &cap| {
-                b.iter(|| {
-                    let result = extract_classes_fast(black_box(html_bytes), cap);
-                    hint_black_box(result);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(capacity), capacity, |b, &cap| {
+            b.iter(|| {
+                let result = extract_classes_fast(black_box(html_bytes), cap);
+                hint_black_box(result);
+            });
+        });
     }
 
     group.finish();

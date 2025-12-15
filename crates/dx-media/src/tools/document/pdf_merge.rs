@@ -74,10 +74,7 @@ fn merge_with_pdftk<P: AsRef<Path>>(inputs: &[P], output: &Path) -> Result<ToolO
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "pdftk merge failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("pdftk merge failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -194,18 +191,12 @@ pub fn interleave_pdfs<P: AsRef<Path>>(odd: P, even: P, output: P) -> Result<Too
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "PDF interleave failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("PDF interleave failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Interleaved PDF pages",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Interleaved PDF pages", output_path))
 }
 
 #[cfg(test)]

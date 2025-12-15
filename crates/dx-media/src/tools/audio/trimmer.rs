@@ -71,10 +71,7 @@ pub fn trim_audio<P: AsRef<Path>>(input: P, output: P, start: f64, end: f64) -> 
     }
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Trimmed {:.1}s segment ({:.1}s to {:.1}s)",
-            duration, start, end
-        ),
+        format!("Trimmed {:.1}s segment ({:.1}s to {:.1}s)", duration, start, end),
         output_path,
     ))
 }
@@ -184,10 +181,7 @@ pub fn cut_segment<P: AsRef<Path>>(
 
     let cut_duration = cut_end - cut_start;
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Removed {:.1}s segment ({:.1}s to {:.1}s)",
-            cut_duration, cut_start, cut_end
-        ),
+        format!("Removed {:.1}s segment ({:.1}s to {:.1}s)", cut_duration, cut_start, cut_end),
         output_path,
     ))
 }
@@ -200,12 +194,7 @@ pub fn fade_in<P: AsRef<Path>>(input: P, output: P, duration: f64) -> Result<Too
     let filter = format!("afade=t=in:st=0:d={}", duration);
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-af")
-        .arg(&filter)
-        .arg(output_path);
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-af").arg(&filter).arg(output_path);
 
     let output_result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run FFmpeg: {}", e),
@@ -214,10 +203,7 @@ pub fn fade_in<P: AsRef<Path>>(input: P, output: P, duration: f64) -> Result<Too
 
     if !output_result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Fade in failed: {}",
-                String::from_utf8_lossy(&output_result.stderr)
-            ),
+            message: format!("Fade in failed: {}", String::from_utf8_lossy(&output_result.stderr)),
             source: None,
         });
     }
@@ -239,12 +225,7 @@ pub fn fade_out<P: AsRef<Path>>(input: P, output: P, duration: f64) -> Result<To
     let filter = format!("afade=t=out:st={}:d={}", fade_start, duration);
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-af")
-        .arg(&filter)
-        .arg(output_path);
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-af").arg(&filter).arg(output_path);
 
     let output_result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run FFmpeg: {}", e),
@@ -253,10 +234,7 @@ pub fn fade_out<P: AsRef<Path>>(input: P, output: P, duration: f64) -> Result<To
 
     if !output_result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Fade out failed: {}",
-                String::from_utf8_lossy(&output_result.stderr)
-            ),
+            message: format!("Fade out failed: {}", String::from_utf8_lossy(&output_result.stderr)),
             source: None,
         });
     }
@@ -286,12 +264,7 @@ pub fn add_fades<P: AsRef<Path>>(
     );
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-af")
-        .arg(&filter)
-        .arg(output_path);
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-af").arg(&filter).arg(output_path);
 
     let output_result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run FFmpeg: {}", e),
@@ -309,10 +282,7 @@ pub fn add_fades<P: AsRef<Path>>(
     }
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Added {:.1}s fade in and {:.1}s fade out",
-            fade_in_duration, fade_out_duration
-        ),
+        format!("Added {:.1}s fade in and {:.1}s fade out", fade_in_duration, fade_out_duration),
         output_path,
     ))
 }
@@ -335,10 +305,7 @@ pub fn batch_trim<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_name = input_path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("audio.mp3");
+        let file_name = input_path.file_name().and_then(|s| s.to_str()).unwrap_or("audio.mp3");
         let output_path = output_dir.join(format!("trim_{}", file_name));
 
         if trim_audio(input_path, &output_path, start, end).is_ok() {

@@ -49,10 +49,7 @@ pub async fn show_context(file: &Path, line: Option<usize>) -> Result<()> {
     let db = Database::open(".dx/forge")?;
     let annotations = annotations::get_annotations(&db, file, line)?;
 
-    println!(
-        "{}",
-        format!("Context for: {}", file.display()).cyan().bold()
-    );
+    println!("{}", format!("Context for: {}", file.display()).cyan().bold());
     println!("{}", "═".repeat(80).bright_black());
 
     for ann in annotations {
@@ -68,10 +65,7 @@ pub async fn show_context(file: &Path, line: Option<usize>) -> Result<()> {
             icon,
             author,
             format!("(line {})", ann.line).bright_black(),
-            ann.created_at
-                .format("%Y-%m-%d %H:%M")
-                .to_string()
-                .bright_black()
+            ann.created_at.format("%Y-%m-%d %H:%M").to_string().bright_black()
         );
         println!("   {}", ann.content.bright_white());
     }

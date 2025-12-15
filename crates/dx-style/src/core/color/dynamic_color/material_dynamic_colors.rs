@@ -798,9 +798,7 @@ impl MaterialDynamicColors {
                     if scheme.is_dark { 30.0 } else { 90.0 }
                 } else {
                     fix_if_disliked(
-                        scheme
-                            .tertiary_palette
-                            .get_hct(scheme.source_color_hct.get_tone()),
+                        scheme.tertiary_palette.get_hct(scheme.source_color_hct.get_tone()),
                     )
                     .get_tone()
                 }

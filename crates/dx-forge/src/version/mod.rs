@@ -3,13 +3,12 @@
 //! Provides semantic versioning, version requirements, tool registry management,
 //! and Git-like version control with snapshots and branching.
 
-pub mod types;
 pub mod registry;
 pub mod snapshot;
+pub mod types;
 
-pub use types::{Version, VersionReq};
 pub use registry::{ToolInfo, ToolRegistry, ToolSource};
 pub use snapshot::{
-    Snapshot, SnapshotId, SnapshotManager, Branch, ToolState, FileSnapshot,
-    SnapshotDiff,
+    Branch, FileSnapshot, Snapshot, SnapshotDiff, SnapshotId, SnapshotManager, ToolState,
 };
+pub use types::{Version, VersionReq};

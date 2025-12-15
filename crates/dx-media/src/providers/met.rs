@@ -99,22 +99,14 @@ impl Provider for MetMuseumProvider {
             ("isPublicDomain", "true"),
         ];
 
-        let response = self
-            .client
-            .get_with_query(&search_url, &params, &[])
-            .await?;
+        let response = self.client.get_with_query(&search_url, &params, &[]).await?;
 
         let search_response: MetSearchResponse = response.json_or_error().await?;
 
         // Get paginated subset of object IDs
         let start = (query.page - 1) * query.count;
-        let end = (start + query.count).min(
-            search_response
-                .object_ids
-                .as_ref()
-                .map(|v| v.len())
-                .unwrap_or(0),
-        );
+        let end = (start + query.count)
+            .min(search_response.object_ids.as_ref().map(|v| v.len()).unwrap_or(0));
 
         let object_ids = search_response
             .object_ids
@@ -126,31 +118,21 @@ impl Provider for MetMuseumProvider {
         let mut assets = Vec::new();
         for object_id in object_ids.into_iter().take(query.count) {
             if let Ok(Some(obj)) = self.fetch_object(object_id).await {
-                let tags: Vec<String> = obj
-                    .tags
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(|t| t.term)
-                    .collect();
+                let tags: Vec<String> =
+                    obj.tags.unwrap_or_default().into_iter().map(|t| t.term).collect();
 
                 let asset = MediaAsset::builder()
                     .id(obj.object_id.to_string())
                     .provider("met")
                     .media_type(MediaType::Image)
-                    .title(
-                        obj.title
-                            .unwrap_or_else(|| "Met Museum Artwork".to_string()),
-                    )
+                    .title(obj.title.unwrap_or_else(|| "Met Museum Artwork".to_string()))
                     .download_url(obj.primary_image.clone().unwrap_or_default())
                     .preview_url(
                         obj.primary_image_small
                             .unwrap_or_else(|| obj.primary_image.unwrap_or_default()),
                     )
                     .source_url(obj.object_url)
-                    .author(
-                        obj.artist_display_name
-                            .unwrap_or_else(|| "Unknown Artist".to_string()),
-                    )
+                    .author(obj.artist_display_name.unwrap_or_else(|| "Unknown Artist".to_string()))
                     .license(License::Cc0)
                     .tags(tags)
                     .build();

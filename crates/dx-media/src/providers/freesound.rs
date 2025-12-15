@@ -227,14 +227,8 @@ mod tests {
 
     #[test]
     fn test_license_parsing() {
-        assert!(matches!(
-            FreesoundProvider::parse_license("Creative Commons 0"),
-            License::Cc0
-        ));
-        assert!(matches!(
-            FreesoundProvider::parse_license("Attribution"),
-            License::CcBy
-        ));
+        assert!(matches!(FreesoundProvider::parse_license("Creative Commons 0"), License::Cc0));
+        assert!(matches!(FreesoundProvider::parse_license("Attribution"), License::CcBy));
     }
 
     #[test]

@@ -1,8 +1,8 @@
 //! CI/CD & Workspace Orchestration APIs
 
 use anyhow::Result;
-use std::path::PathBuf;
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 pub fn trigger_ci_cd_pipeline(pipeline_name: &str) -> Result<()> {
     tracing::info!("🚀 Triggering CI/CD pipeline: {}", pipeline_name);
@@ -30,19 +30,19 @@ pub fn synchronize_monorepo_workspace() -> Result<()> {
 
 pub fn detect_workspace_root() -> Result<PathBuf> {
     let mut current = std::env::current_dir()?;
-    
+
     loop {
         if current.join(".dx").exists() || current.join(".git").exists() {
             return Ok(current);
         }
-        
+
         if let Some(parent) = current.parent() {
             current = parent.to_path_buf();
         } else {
             break;
         }
     }
-    
+
     Ok(std::env::current_dir()?)
 }
 

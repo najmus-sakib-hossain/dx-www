@@ -88,13 +88,12 @@ impl Provider for DplaProvider {
     }
 
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
-        let api_key = std::env::var("DPLA_API_KEY").map_err(|_| {
-            crate::error::DxError::MissingApiKey {
+        let api_key =
+            std::env::var("DPLA_API_KEY").map_err(|_| crate::error::DxError::MissingApiKey {
                 provider: "dpla".to_string(),
                 env_var: "DPLA_API_KEY".to_string(),
-            }
-        })?;
-        
+            })?;
+
         let url = format!("{}/items", self.base_url());
 
         let page_size = query.count.min(500).to_string();
@@ -227,13 +226,7 @@ mod tests {
             DplaProvider::parse_license(Some("Public Domain")),
             License::PublicDomain
         ));
-        assert!(matches!(
-            DplaProvider::parse_license(Some("CC0")),
-            License::Cc0
-        ));
-        assert!(matches!(
-            DplaProvider::parse_license(Some("CC BY 4.0")),
-            License::CcBy
-        ));
+        assert!(matches!(DplaProvider::parse_license(Some("CC0")), License::Cc0));
+        assert!(matches!(DplaProvider::parse_license(Some("CC BY 4.0")), License::CcBy));
     }
 }

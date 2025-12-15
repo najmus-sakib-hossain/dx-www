@@ -257,10 +257,7 @@ pub fn batch_convert<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("document");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("document");
         let output_path = output_dir.join(format!("{}.{}", file_stem, format.extension()));
 
         if convert_document(input_path, &output_path, format).is_ok() {

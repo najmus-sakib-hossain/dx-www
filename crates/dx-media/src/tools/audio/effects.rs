@@ -179,12 +179,7 @@ pub fn apply_effect<P: AsRef<Path>>(
     }
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-af")
-        .arg(&filter)
-        .arg(output_path);
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-af").arg(&filter).arg(output_path);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run FFmpeg: {}", e),
@@ -231,11 +226,8 @@ pub fn apply_effects<P: AsRef<Path>>(
         });
     }
 
-    let filters: Vec<String> = effects
-        .iter()
-        .map(|e| e.to_filter())
-        .filter(|f| !f.is_empty())
-        .collect();
+    let filters: Vec<String> =
+        effects.iter().map(|e| e.to_filter()).filter(|f| !f.is_empty()).collect();
 
     let filter_chain = filters.join(",");
 
@@ -254,10 +246,7 @@ pub fn apply_effects<P: AsRef<Path>>(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Effects chain failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Effects chain failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -333,10 +322,7 @@ pub fn batch_effect<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_name = input_path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("audio.mp3");
+        let file_name = input_path.file_name().and_then(|s| s.to_str()).unwrap_or("audio.mp3");
         let output_path = output_dir.join(format!("fx_{}", file_name));
 
         if apply_effect(input_path, &output_path, effect.clone()).is_ok() {
@@ -344,12 +330,10 @@ pub fn batch_effect<P: AsRef<Path>>(
         }
     }
 
-    Ok(ToolOutput::success(format!(
-        "Applied {} to {} files",
-        effect_name,
-        processed.len()
-    ))
-    .with_paths(processed))
+    Ok(
+        ToolOutput::success(format!("Applied {} to {} files", effect_name, processed.len()))
+            .with_paths(processed),
+    )
 }
 
 #[cfg(test)]

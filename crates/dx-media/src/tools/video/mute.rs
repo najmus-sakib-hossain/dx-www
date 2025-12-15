@@ -73,10 +73,7 @@ pub fn mute_video_with_options<P: AsRef<Path>>(
     if options.copy_video {
         cmd.arg("-c:v").arg("copy");
     } else {
-        cmd.arg("-c:v")
-            .arg("libx264")
-            .arg("-crf")
-            .arg(options.quality.to_string());
+        cmd.arg("-c:v").arg("libx264").arg("-crf").arg(options.quality.to_string());
     }
 
     cmd.arg(output_path);
@@ -88,10 +85,7 @@ pub fn mute_video_with_options<P: AsRef<Path>>(
 
     if !output_result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Muting failed: {}",
-                String::from_utf8_lossy(&output_result.stderr)
-            ),
+            message: format!("Muting failed: {}", String::from_utf8_lossy(&output_result.stderr)),
             source: None,
         });
     }
@@ -163,10 +157,7 @@ pub fn replace_audio<P: AsRef<Path>>(video: P, audio: P, output: P) -> Result<To
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Replaced audio track",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Replaced audio track", output_path))
 }
 
 /// Add audio track to video (mix with existing).
@@ -177,10 +168,7 @@ pub fn add_audio<P: AsRef<Path>>(video: P, audio: P, output: P, volume: f32) -> 
 
     let volume = volume.clamp(0.0, 2.0);
 
-    let filter = format!(
-        "[0:a][1:a]amix=inputs=2:duration=first:weights=1 {}[aout]",
-        volume
-    );
+    let filter = format!("[0:a][1:a]amix=inputs=2:duration=first:weights=1 {}[aout]", volume);
 
     let mut cmd = Command::new("ffmpeg");
     cmd.arg("-y")
@@ -215,10 +203,7 @@ pub fn add_audio<P: AsRef<Path>>(video: P, audio: P, output: P, volume: f32) -> 
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Added audio track",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Added audio track", output_path))
 }
 
 /// Adjust audio volume in video.
@@ -274,14 +259,8 @@ pub fn batch_mute<P: AsRef<Path>>(inputs: &[P], output_dir: P) -> Result<ToolOut
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("video");
-        let extension = input_path
-            .extension()
-            .and_then(|s| s.to_str())
-            .unwrap_or("mp4");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("video");
+        let extension = input_path.extension().and_then(|s| s.to_str()).unwrap_or("mp4");
         let output_path = output_dir.join(format!("{}_silent.{}", file_stem, extension));
 
         if mute_video(input_path, &output_path).is_ok() {

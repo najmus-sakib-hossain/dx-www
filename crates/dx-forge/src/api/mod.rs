@@ -4,33 +4,33 @@
 //! All 132 functions are implemented here and organized by category.
 
 // Core API modules
+pub mod branching;
+pub mod cart;
+pub mod cicd;
+pub mod codegen;
+pub mod config;
+pub mod dx_directory;
+pub mod dx_experience;
+pub mod events;
 pub mod lifecycle;
-pub mod version;
+pub mod offline;
+pub mod packages;
 pub mod pipeline;
 pub mod reactivity;
-pub mod branching;
-pub mod events;
-pub mod config;
-pub mod cicd;
-pub mod dx_directory;
-pub mod offline;
-pub mod cart;
-pub mod packages;
-pub mod codegen;
-pub mod dx_experience;
+pub mod version;
 
 // Re-export all public API functions
+pub use branching::*;
+pub use cart::*;
+pub use cicd::*;
+pub use codegen::*;
+pub use config::*;
+pub use dx_directory::*;
+pub use dx_experience::*;
+pub use events::*;
 pub use lifecycle::*;
-pub use version::*;
+pub use offline::*;
+pub use packages::*;
 pub use pipeline::*;
 pub use reactivity::*;
-pub use branching::*;
-pub use events::*;
-pub use config::*;
-pub use cicd::*;
-pub use dx_directory::*;
-pub use offline::*;
-pub use cart::*;
-pub use packages::*;
-pub use codegen::*;
-pub use dx_experience::*;
+pub use version::*;

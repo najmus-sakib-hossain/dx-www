@@ -42,17 +42,50 @@ struct NekoResponse {
 }
 
 /// Available image categories.
-const IMAGE_CATEGORIES: &[&str] = &[
-    "neko", "kitsune", "waifu", "husbando",
-];
+const IMAGE_CATEGORIES: &[&str] = &["neko", "kitsune", "waifu", "husbando"];
 
 /// Available GIF categories (reactions).
 const GIF_CATEGORIES: &[&str] = &[
-    "baka", "bite", "blush", "bored", "cry", "cuddle", "dance", "facepalm",
-    "feed", "handhold", "handshake", "happy", "highfive", "hug", "kick",
-    "kiss", "laugh", "lurk", "nod", "nom", "nope", "pat", "peck", "poke",
-    "pout", "punch", "shoot", "shrug", "slap", "sleep", "smile", "smug",
-    "stare", "think", "thumbsup", "tickle", "wave", "wink", "yawn", "yeet",
+    "baka",
+    "bite",
+    "blush",
+    "bored",
+    "cry",
+    "cuddle",
+    "dance",
+    "facepalm",
+    "feed",
+    "handhold",
+    "handshake",
+    "happy",
+    "highfive",
+    "hug",
+    "kick",
+    "kiss",
+    "laugh",
+    "lurk",
+    "nod",
+    "nom",
+    "nope",
+    "pat",
+    "peck",
+    "poke",
+    "pout",
+    "punch",
+    "shoot",
+    "shrug",
+    "slap",
+    "sleep",
+    "smile",
+    "smug",
+    "stare",
+    "think",
+    "thumbsup",
+    "tickle",
+    "wave",
+    "wink",
+    "yawn",
+    "yeet",
 ];
 
 impl NekosBestProvider {
@@ -76,7 +109,7 @@ impl NekosBestProvider {
     fn map_query_to_categories(query: &str, prefer_gif: bool) -> Vec<&'static str> {
         let query_lower = query.to_lowercase();
         let mut categories = Vec::new();
-        
+
         // Check for direct category matches
         for &cat in IMAGE_CATEGORIES {
             if query_lower.contains(cat) {
@@ -88,7 +121,7 @@ impl NekosBestProvider {
                 categories.push(cat);
             }
         }
-        
+
         // Keyword mappings
         if query_lower.contains("cat") || query_lower.contains("kitty") {
             categories.push("neko");
@@ -108,7 +141,7 @@ impl NekosBestProvider {
         if query_lower.contains("cute") || query_lower.contains("happy") {
             categories.push("happy");
         }
-        
+
         // If no matches, default based on preference
         if categories.is_empty() {
             if prefer_gif {
@@ -119,7 +152,7 @@ impl NekosBestProvider {
                 categories.push("waifu");
             }
         }
-        
+
         categories.into_iter().take(3).collect()
     }
 
@@ -164,20 +197,15 @@ impl Provider for NekosBestProvider {
         let prefer_gif = query.media_type == Some(MediaType::Video); // Treat video as GIF request
         let categories = Self::map_query_to_categories(&query.query, prefer_gif);
         let per_category = (query.count / categories.len().max(1)).max(1).min(20);
-        
+
         let mut all_assets = Vec::new();
-        
+
         for category in &categories {
-            let url = format!(
-                "{}/api/v2/{}?amount={}",
-                self.base_url(),
-                category,
-                per_category
-            );
-            
+            let url = format!("{}/api/v2/{}?amount={}", self.base_url(), category, per_category);
+
             // Debug: log URL
             tracing::debug!("Nekos.best fetching: {}", url);
-            
+
             let response = match self.client.get(&url).await {
                 Ok(r) => r,
                 Err(e) => {
@@ -185,7 +213,7 @@ impl Provider for NekosBestProvider {
                     continue;
                 }
             };
-            
+
             let text = match response.text().await {
                 Ok(t) => t,
                 Err(e) => {
@@ -193,21 +221,25 @@ impl Provider for NekosBestProvider {
                     continue;
                 }
             };
-            
+
             let data: NekoResponse = match serde_json::from_str(&text) {
                 Ok(d) => d,
                 Err(e) => {
-                    tracing::debug!("Nekos.best parse error: {} - text: {}", e, &text[..text.len().min(200)]);
+                    tracing::debug!(
+                        "Nekos.best parse error: {} - text: {}",
+                        e,
+                        &text[..text.len().min(200)]
+                    );
                     continue;
                 }
             };
-            
+
             let is_gif = Self::is_gif_category(category);
-            
+
             for (i, result) in data.results.into_iter().enumerate() {
                 let id = format!("nekosbest_{}_{}", category, i);
                 let source_url = result.source_url.clone().unwrap_or_else(|| result.url.clone());
-                
+
                 let mut builder = MediaAsset::builder()
                     .id(id)
                     .provider(self.name().to_string())
@@ -217,17 +249,17 @@ impl Provider for NekosBestProvider {
                     .preview_url(result.url.clone())
                     .source_url(source_url)
                     .license(License::Other("Nekos.best".to_string()));
-                
+
                 if let Some(artist) = result.artist_name {
                     builder = builder.author(artist);
                 }
-                
+
                 all_assets.push(builder.build());
             }
         }
-        
+
         let total = all_assets.len();
-        
+
         Ok(SearchResult {
             query: query.query.clone(),
             media_type: query.media_type,
@@ -259,7 +291,7 @@ mod tests {
     fn test_category_mapping() {
         let cats = NekosBestProvider::map_query_to_categories("neko cat", false);
         assert!(cats.contains(&"neko"));
-        
+
         let cats = NekosBestProvider::map_query_to_categories("anime girl", false);
         assert!(cats.contains(&"waifu"));
     }

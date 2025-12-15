@@ -2,11 +2,11 @@
 //!
 //! Provides LRU caching for operations, blob content, and query results.
 
+use parking_lot::RwLock;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::sync::Arc;
-use parking_lot::RwLock;
-use serde::{Deserialize, Serialize};
 
 /// LRU Cache entry
 struct CacheEntry<V> {
@@ -45,7 +45,7 @@ where
     /// Get a value from the cache
     pub fn get(&self, key: &K) -> Option<V> {
         let mut cache = self.cache.write();
-        
+
         if let Some(entry) = cache.get_mut(key) {
             entry.access_count += 1;
             entry.last_accessed = std::time::Instant::now();
@@ -78,9 +78,7 @@ where
 
     /// Evict least recently used entry
     fn evict_lru(&self, cache: &mut HashMap<K, CacheEntry<V>>) {
-        if let Some((key_to_remove, _)) = cache
-            .iter()
-            .min_by_key(|(_, entry)| entry.last_accessed)
+        if let Some((key_to_remove, _)) = cache.iter().min_by_key(|(_, entry)| entry.last_accessed)
         {
             let key = key_to_remove.clone();
             cache.remove(&key);
@@ -146,10 +144,10 @@ pub struct CacheStats {
 pub struct CacheManager {
     /// Cache for CRDT operations
     operation_cache: LruCache<String, Vec<u8>>,
-    
+
     /// Cache for blob content
     blob_cache: LruCache<String, Vec<u8>>,
-    
+
     /// Cache for query results
     query_cache: LruCache<String, String>,
 }
@@ -165,7 +163,11 @@ impl CacheManager {
     }
 
     /// Create with custom capacities
-    pub fn with_capacities(op_capacity: usize, blob_capacity: usize, query_capacity: usize) -> Self {
+    pub fn with_capacities(
+        op_capacity: usize,
+        blob_capacity: usize,
+        query_capacity: usize,
+    ) -> Self {
         Self {
             operation_cache: LruCache::new(op_capacity),
             blob_cache: LruCache::new(blob_capacity),
@@ -222,26 +224,28 @@ impl CacheManager {
     /// Print cache statistics
     pub fn print_stats(&self) {
         let stats = self.get_stats();
-        
+
         println!("\n=== Cache Statistics ===\n");
-        
+
         println!("Operation Cache:");
         print_cache_stats(&stats.operation_cache);
-        
+
         println!("\nBlob Cache:");
         print_cache_stats(&stats.blob_cache);
-        
+
         println!("\nQuery Cache:");
         print_cache_stats(&stats.query_cache);
-        
-        let total_hits = stats.operation_cache.hits + stats.blob_cache.hits + stats.query_cache.hits;
-        let total_misses = stats.operation_cache.misses + stats.blob_cache.misses + stats.query_cache.misses;
+
+        let total_hits =
+            stats.operation_cache.hits + stats.blob_cache.hits + stats.query_cache.hits;
+        let total_misses =
+            stats.operation_cache.misses + stats.blob_cache.misses + stats.query_cache.misses;
         let overall_hit_rate = if total_hits + total_misses > 0 {
             total_hits as f64 / (total_hits + total_misses) as f64
         } else {
             0.0
         };
-        
+
         println!("\nOverall Hit Rate: {:.2}%", overall_hit_rate * 100.0);
         println!();
     }
@@ -269,7 +273,7 @@ pub struct CombinedStats {
 }
 
 /// Global cache manager instance
-static GLOBAL_CACHE: once_cell::sync::Lazy<CacheManager> = 
+static GLOBAL_CACHE: once_cell::sync::Lazy<CacheManager> =
     once_cell::sync::Lazy::new(|| CacheManager::new());
 
 /// Get the global cache manager

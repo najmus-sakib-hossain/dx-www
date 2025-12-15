@@ -46,11 +46,7 @@ pub fn list_archive<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
     }
 
     // Detect archive type
-    let ext = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("")
-        .to_lowercase();
+    let ext = input_path.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
 
     let name = input_path.to_string_lossy().to_lowercase();
 
@@ -233,10 +229,7 @@ pub fn get_archive_info<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
 
     let file_size = std::fs::metadata(input_path).map(|m| m.len()).unwrap_or(0);
 
-    let ext = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("unknown");
+    let ext = input_path.extension().and_then(|e| e.to_str()).unwrap_or("unknown");
 
     let mut output = ToolOutput::success(format!(
         "Archive: {}\nSize: {} bytes\nFormat: {}",

@@ -64,10 +64,7 @@ fn merge_7z_parts(first_part: &Path, output: &Path) -> Result<ToolOutput> {
     let mut cmd = Command::new("7z");
     cmd.arg("x")
         .arg("-y")
-        .arg(format!(
-            "-o{}",
-            output.parent().unwrap_or(Path::new(".")).to_string_lossy()
-        ))
+        .arg(format!("-o{}", output.parent().unwrap_or(Path::new(".")).to_string_lossy()))
         .arg(first_part);
 
     let result = cmd.output().map_err(|e| DxError::Config {
@@ -77,28 +74,19 @@ fn merge_7z_parts(first_part: &Path, output: &Path) -> Result<ToolOutput> {
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "7z extraction failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("7z extraction failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Merged and extracted 7z split archive",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("Merged and extracted 7z split archive", output))
 }
 
 /// Merge ZIP split archives.
 fn merge_zip_parts(first_part: &Path, output: &Path) -> Result<ToolOutput> {
     // Find main .zip file
     let dir = first_part.parent().unwrap_or(Path::new("."));
-    let base_name = first_part
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("");
+    let base_name = first_part.file_stem().and_then(|s| s.to_str()).unwrap_or("");
 
     // Look for .zip file with same base name
     let main_zip = dir.join(format!("{}.zip", base_name.trim_end_matches(".z")));
@@ -110,10 +98,7 @@ fn merge_zip_parts(first_part: &Path, output: &Path) -> Result<ToolOutput> {
 
         if let Ok(result) = cmd.output() {
             if result.status.success() {
-                return Ok(ToolOutput::success_with_path(
-                    "Fixed and merged split ZIP",
-                    output,
-                ));
+                return Ok(ToolOutput::success_with_path("Fixed and merged split ZIP", output));
             }
         }
     }
@@ -122,10 +107,7 @@ fn merge_zip_parts(first_part: &Path, output: &Path) -> Result<ToolOutput> {
     let mut cmd = Command::new("7z");
     cmd.arg("x")
         .arg("-y")
-        .arg(format!(
-            "-o{}",
-            output.parent().unwrap_or(Path::new(".")).to_string_lossy()
-        ))
+        .arg(format!("-o{}", output.parent().unwrap_or(Path::new(".")).to_string_lossy()))
         .arg(first_part);
 
     let result = cmd.output().map_err(|e| DxError::Config {
@@ -140,10 +122,7 @@ fn merge_zip_parts(first_part: &Path, output: &Path) -> Result<ToolOutput> {
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Merged split ZIP archive",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("Merged split ZIP archive", output))
 }
 
 /// Merge parts by binary concatenation.
@@ -253,16 +232,10 @@ fn extract_base_name(name: &str) -> String {
 
     if lower.ends_with(".001") || lower.ends_with(".002") {
         // Remove .001, .002, etc.
-        name.rsplit_once('.')
-            .map(|(b, _)| b)
-            .unwrap_or(name)
-            .to_string()
+        name.rsplit_once('.').map(|(b, _)| b).unwrap_or(name).to_string()
     } else if lower.contains(".z0") || lower.contains(".z1") {
         // ZIP split: file.z01, file.z02
-        name.rsplit_once('.')
-            .map(|(b, _)| b)
-            .unwrap_or(name)
-            .to_string()
+        name.rsplit_once('.').map(|(b, _)| b).unwrap_or(name).to_string()
     } else if lower.contains(".part") {
         // RAR split: file.part1.rar
         name.split(".part").next().unwrap_or(name).to_string()
@@ -330,10 +303,8 @@ pub fn verify_parts<P: AsRef<Path>>(first_part: P) -> Result<ToolOutput> {
         .with_metadata("total_size", total_size.to_string())
         .with_metadata("valid", "true".to_string()))
     } else {
-        Ok(
-            ToolOutput::success(format!("Missing parts:\n{}", missing.join("\n")))
-                .with_metadata("valid", "false".to_string()),
-        )
+        Ok(ToolOutput::success(format!("Missing parts:\n{}", missing.join("\n")))
+            .with_metadata("valid", "false".to_string()))
     }
 }
 

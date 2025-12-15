@@ -1,23 +1,54 @@
 //! Global Event Bus & Observability APIs
 
 use anyhow::Result;
-use serde::{Serialize, Deserialize};
-use tokio::sync::broadcast;
-use std::sync::{Arc, OnceLock};
 use parking_lot::RwLock;
+use serde::{Deserialize, Serialize};
+use std::sync::{Arc, OnceLock};
+use tokio::sync::broadcast;
 
 /// Forge event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ForgeEvent {
-    ToolStarted { tool_id: String, timestamp: i64 },
-    ToolCompleted { tool_id: String, duration_ms: u64, timestamp: i64 },
-    PipelineStarted { pipeline_id: String, timestamp: i64 },
-    PipelineCompleted { pipeline_id: String, duration_ms: u64, timestamp: i64 },
-    PackageInstallationBegin { package_id: String, timestamp: i64 },
-    PackageInstallationSuccess { package_id: String, timestamp: i64 },
-    SecurityViolationDetected { description: String, severity: String, timestamp: i64 },
-    MagicalConfigInjection { config_section: String, timestamp: i64 },
-    Custom { event_type: String, data: serde_json::Value, timestamp: i64 },
+    ToolStarted {
+        tool_id: String,
+        timestamp: i64,
+    },
+    ToolCompleted {
+        tool_id: String,
+        duration_ms: u64,
+        timestamp: i64,
+    },
+    PipelineStarted {
+        pipeline_id: String,
+        timestamp: i64,
+    },
+    PipelineCompleted {
+        pipeline_id: String,
+        duration_ms: u64,
+        timestamp: i64,
+    },
+    PackageInstallationBegin {
+        package_id: String,
+        timestamp: i64,
+    },
+    PackageInstallationSuccess {
+        package_id: String,
+        timestamp: i64,
+    },
+    SecurityViolationDetected {
+        description: String,
+        severity: String,
+        timestamp: i64,
+    },
+    MagicalConfigInjection {
+        config_section: String,
+        timestamp: i64,
+    },
+    Custom {
+        event_type: String,
+        data: serde_json::Value,
+        timestamp: i64,
+    },
 }
 
 static EVENT_BUS: OnceLock<Arc<RwLock<EventBus>>> = OnceLock::new();

@@ -48,26 +48,11 @@ mod tests {
     fn test_key_colors() {
         let scheme = SchemeNeutral::new(Argb::from_u32(0xff0000ff).into(), false, Some(0.0)).scheme;
 
-        assert_eq!(
-            scheme.primary_palette_key_color(),
-            Argb::from_u32(0xff767685)
-        );
-        assert_eq!(
-            scheme.secondary_palette_key_color(),
-            Argb::from_u32(0xff777680)
-        );
-        assert_eq!(
-            scheme.tertiary_palette_key_color(),
-            Argb::from_u32(0xff75758b)
-        );
-        assert_eq!(
-            scheme.neutral_palette_key_color(),
-            Argb::from_u32(0xff787678)
-        );
-        assert_eq!(
-            scheme.neutral_variant_palette_key_color(),
-            Argb::from_u32(0xff787678)
-        );
+        assert_eq!(scheme.primary_palette_key_color(), Argb::from_u32(0xff767685));
+        assert_eq!(scheme.secondary_palette_key_color(), Argb::from_u32(0xff777680));
+        assert_eq!(scheme.tertiary_palette_key_color(), Argb::from_u32(0xff75758b));
+        assert_eq!(scheme.neutral_palette_key_color(), Argb::from_u32(0xff787678));
+        assert_eq!(scheme.neutral_variant_palette_key_color(), Argb::from_u32(0xff787678));
     }
 
     #[test]

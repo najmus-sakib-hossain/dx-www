@@ -4,12 +4,12 @@
 //! update notifications, and rollback capability.
 
 use anyhow::{anyhow, Result};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use chrono::{DateTime, Utc};
 
-use crate::version::{Version, ToolInfo, ToolRegistry};
+use crate::version::{ToolInfo, ToolRegistry, Version};
 
 /// Traffic level for updates (simplified version)
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -73,7 +73,7 @@ impl AutoUpdateManager {
     /// Create a new auto-update manager
     pub fn new(forge_dir: &Path) -> Result<Self> {
         let registry = ToolRegistry::new(forge_dir)?;
-        
+
         Ok(Self {
             registry,
             backups: HashMap::new(),
@@ -88,7 +88,11 @@ impl AutoUpdateManager {
     }
 
     /// Check for updates for a specific tool
-    pub fn check_update(&self, tool_name: &str, latest_version: Version) -> Option<UpdateNotification> {
+    pub fn check_update(
+        &self,
+        tool_name: &str,
+        latest_version: Version,
+    ) -> Option<UpdateNotification> {
         if let Some(current_version) = self.registry.version(tool_name) {
             if &latest_version > current_version {
                 return Some(UpdateNotification {
@@ -129,29 +133,26 @@ impl AutoUpdateManager {
 
         match notification.traffic_level {
             TrafficLevel::Green => {
-                println!("🟢 Auto-applying green traffic update: {} {} -> {}",
-                    notification.tool_name,
-                    notification.current_version,
-                    notification.new_version
+                println!(
+                    "🟢 Auto-applying green traffic update: {} {} -> {}",
+                    notification.tool_name, notification.current_version, notification.new_version
                 );
                 self.apply_update(notification)?;
-            },
+            }
             TrafficLevel::Yellow => {
-                println!("🟡 Yellow traffic update available: {} {} -> {} (requires review)",
-                    notification.tool_name,
-                    notification.current_version,
-                    notification.new_version
+                println!(
+                    "🟡 Yellow traffic update available: {} {} -> {} (requires review)",
+                    notification.tool_name, notification.current_version, notification.new_version
                 );
                 self.add_notification(notification.clone());
-            },
+            }
             TrafficLevel::Red => {
-                println!("🔴 Red traffic update available: {} {} -> {} (requires manual intervention)",
-                    notification.tool_name,
-                    notification.current_version,
-                    notification.new_version
+                println!(
+                    "🔴 Red traffic update available: {} {} -> {} (requires manual intervention)",
+                    notification.tool_name, notification.current_version, notification.new_version
                 );
                 self.add_notification(notification.clone());
-            },
+            }
         }
 
         Ok(())
@@ -209,22 +210,20 @@ impl AutoUpdateManager {
             backup_path,
         };
 
-        self.backups
-            .entry(tool_name.to_string())
-            .or_insert_with(Vec::new)
-            .push(backup);
+        self.backups.entry(tool_name.to_string()).or_insert_with(Vec::new).push(backup);
 
         Ok(())
     }
 
     /// Rollback to a previous version
     pub fn rollback(&mut self, tool_name: &str) -> Result<()> {
-        let backups = self.backups
+        let backups = self
+            .backups
             .get_mut(tool_name)
             .ok_or_else(|| anyhow!("No backups found for {}", tool_name))?;
 
-        let backup = backups.pop()
-            .ok_or_else(|| anyhow!("No backups available for {}", tool_name))?;
+        let backup =
+            backups.pop().ok_or_else(|| anyhow!("No backups available for {}", tool_name))?;
 
         println!("🔄 Rolling back {} to version {}", tool_name, backup.version);
         println!("  ✓ Restoring from backup: {}", backup.id);
@@ -266,7 +265,9 @@ impl AutoUpdateManager {
     pub fn get_pending_updates(&self) -> Vec<&UpdateNotification> {
         self.notifications
             .iter()
-            .filter(|n| n.status == UpdateStatus::Available || n.status == UpdateStatus::RequiresManual)
+            .filter(|n| {
+                n.status == UpdateStatus::Available || n.status == UpdateStatus::RequiresManual
+            })
             .collect()
     }
 
@@ -305,7 +306,7 @@ impl AutoUpdateManager {
             backups.retain(|backup| {
                 if backup.created_at < cutoff {
                     // Delete backup directory
-                    let _  = std::fs::remove_dir_all(&backup.backup_path);
+                    let _ = std::fs::remove_dir_all(&backup.backup_path);
                     false
                 } else {
                     true

@@ -11,7 +11,7 @@ pub enum FontProvider {
     Fontsource,
     GoogleWebfontsHelper,
     FontLibrary,
-    
+
     // Tier 2: Major Free Sites
     FontSquirrel,
     DaFont,
@@ -23,7 +23,7 @@ pub enum FontProvider {
     FFonts,
     FontMeme,
     FontRiver,
-    
+
     // Tier 3: Curated Foundries
     FontShare,
     Velvetyne,
@@ -40,10 +40,10 @@ pub enum FontProvider {
     Befonts,
     LostType,
     AtipoFoundry,
-    
+
     // Tier 4: GitHub Repositories
     GitHub,
-    
+
     // Tier 5: International
     NotoFonts,
     ArabicFonts,
@@ -57,7 +57,7 @@ pub enum FontProvider {
     TamilFonts,
     BengaliFonts,
     SMCMalayalam,
-    
+
     // Custom/Other
     Custom(String),
 }
@@ -111,7 +111,7 @@ impl FontProvider {
             FontProvider::Custom(name) => name,
         }
     }
-    
+
     pub fn base_url(&self) -> &str {
         match self {
             FontProvider::GoogleFonts => "https://fonts.google.com",
@@ -190,7 +190,7 @@ impl FontWeight {
             _ => FontWeight::Black,
         }
     }
-    
+
     pub fn to_numeric(&self) -> u16 {
         match self {
             FontWeight::Thin => 100,
@@ -226,8 +226,8 @@ pub enum FontCategory {
 /// License type for fonts
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum FontLicense {
-    OFL,      // SIL Open Font License
-    Apache2,  // Apache License 2.0
+    OFL,     // SIL Open Font License
+    Apache2, // Apache License 2.0
     MIT,
     GPL,
     PublicDomain,

@@ -72,14 +72,14 @@ pub fn execute_pipeline(pipeline_name: &str) -> Result<()> {
 
     let state = get_pipeline_state();
     let mut state = state.write();
-    
+
     if state.is_suspended {
         anyhow::bail!("Pipeline execution is suspended");
     }
-    
+
     tracing::info!("🎼 Executing pipeline: {}", pipeline_name);
     state.active_pipeline = Some(pipeline_name.to_string());
-    
+
     // Get global forge instance
     let forge = unsafe {
         if let Some(forge) = crate::api::lifecycle::FORGE_INSTANCE.as_ref() {
@@ -92,17 +92,17 @@ pub fn execute_pipeline(pipeline_name: &str) -> Result<()> {
     // Execute tools via orchestrator
     let orchestrator = forge.read().orchestrator();
     let mut orchestrator = orchestrator.write();
-    
+
     // TODO: Filter tools based on pipeline name
     // For now, we execute all tools for the "default" pipeline
     if pipeline_name == "default" {
         let results = orchestrator.execute_all()?;
-        
+
         // Update state with execution order
         state.execution_order = results.iter()
             .map(|o| "tool-id-placeholder".to_string()) // TODO: Get tool ID from output
             .collect();
-            
+
         // Check for failures
         let failures: Vec<_> = results.iter().filter(|o| !o.success).collect();
         if !failures.is_empty() {
@@ -112,7 +112,7 @@ pub fn execute_pipeline(pipeline_name: &str) -> Result<()> {
         tracing::warn!("Pipeline '{}' not yet implemented, running default", pipeline_name);
         let _ = orchestrator.execute_all()?;
     }
-    
+
     Ok(())
 }
 
@@ -122,9 +122,9 @@ pub fn execute_tool_immediately(tool_id: &str) -> Result<()> {
     let _guard = pipeline_test_guard();
 
     tracing::info!("⚡ Immediate execution: {}", tool_id);
-    
+
     // TODO: Execute tool directly, bypassing normal queue
-    
+
     Ok(())
 }
 
@@ -135,7 +135,7 @@ pub fn get_resolved_execution_order() -> Result<Vec<String>> {
 
     let state = get_pipeline_state();
     let state = state.read();
-    
+
     if let Some(override_order) = &state.override_order {
         Ok(override_order.clone())
     } else {
@@ -150,10 +150,10 @@ pub fn temporarily_override_pipeline_order(new_order: Vec<String>) -> Result<()>
 
     let state = get_pipeline_state();
     let mut state = state.write();
-    
+
     tracing::info!("🔀 Temporarily overriding pipeline order");
     state.override_order = Some(new_order);
-    
+
     Ok(())
 }
 
@@ -164,17 +164,17 @@ pub fn restart_current_pipeline() -> Result<()> {
 
     let state = get_pipeline_state();
     let state = state.read();
-    
+
     if let Some(pipeline) = &state.active_pipeline {
         let name = pipeline.clone();
         drop(state);
-        
+
         tracing::info!("🔄 Restarting pipeline: {}", name);
         execute_pipeline(&name)?;
     } else {
         anyhow::bail!("No active pipeline to restart");
     }
-    
+
     Ok(())
 }
 
@@ -185,10 +185,10 @@ pub fn suspend_pipeline_execution() -> Result<()> {
 
     let state = get_pipeline_state();
     let mut state = state.write();
-    
+
     tracing::info!("⏸️  Pipeline execution suspended");
     state.is_suspended = true;
-    
+
     Ok(())
 }
 
@@ -199,27 +199,27 @@ pub fn resume_pipeline_execution() -> Result<()> {
 
     let state = get_pipeline_state();
     let mut state = state.write();
-    
+
     tracing::info!("▶️  Pipeline execution resumed");
     state.is_suspended = false;
-    
+
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_pipeline_execution() {
         assert!(execute_pipeline("default").is_ok());
     }
-    
+
     #[test]
     fn test_suspend_resume() {
         suspend_pipeline_execution().unwrap();
         assert!(execute_pipeline("test").is_err());
-        
+
         resume_pipeline_execution().unwrap();
         assert!(execute_pipeline("test").is_ok());
     }

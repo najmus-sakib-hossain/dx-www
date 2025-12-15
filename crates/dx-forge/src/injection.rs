@@ -56,9 +56,7 @@ impl InjectionManager {
         };
 
         // Try to initialize R2 storage (optional)
-        let r2_storage = R2Config::from_env()
-            .ok()
-            .and_then(|config| R2Storage::new(config).ok());
+        let r2_storage = R2Config::from_env().ok().and_then(|config| R2Storage::new(config).ok());
 
         Ok(Self {
             cache_dir,
@@ -122,10 +120,7 @@ impl InjectionManager {
             let mut last_error = None;
 
             for attempt in 0..max_retries {
-                match r2
-                    .download_component(tool.tool_name(), component, version)
-                    .await
-                {
+                match r2.download_component(tool.tool_name(), component, version).await {
                     Ok(content) => {
                         // Verify content hash
                         let mut hasher = Sha256::new();
@@ -172,11 +167,7 @@ impl InjectionManager {
                 max_retries,
                 last_error
             );
-            tracing::info!(
-                "📦 Using placeholder component for {}/{}",
-                tool.tool_name(),
-                component
-            );
+            tracing::info!("📦 Using placeholder component for {}/{}", tool.tool_name(), component);
 
             let content = self.create_placeholder_component(tool, component);
             self.cache_component(tool, component, &content).await?;
@@ -336,16 +327,10 @@ export default {};
                 self.fetch_component(tool, component, None).await?;
 
                 // Generate import statement
-                let import_path = format!(
-                    ".dx/forge/component_cache/{}/{}",
-                    tool.tool_name(),
-                    component
-                );
+                let import_path =
+                    format!(".dx/forge/component_cache/{}/{}", tool.tool_name(), component);
 
-                imports.push(format!(
-                    "import {{ {} }} from '{}';",
-                    component, import_path
-                ));
+                imports.push(format!("import {{ {} }} from '{}';", component, import_path));
             }
         }
 
@@ -408,16 +393,10 @@ export default {};
 
     /// Get cache statistics
     pub fn cache_stats(&self) -> CacheStats {
-        let total_size: usize = self
-            .cache_index
-            .values()
-            .map(|e| e.metadata.size)
-            .sum();
+        let total_size: usize = self.cache_index.values().map(|e| e.metadata.size).sum();
 
-        let by_tool: HashMap<String, usize> = self
-            .cache_index
-            .values()
-            .fold(HashMap::new(), |mut acc, entry| {
+        let by_tool: HashMap<String, usize> =
+            self.cache_index.values().fold(HashMap::new(), |mut acc, entry| {
                 *acc.entry(entry.metadata.tool.clone()).or_insert(0) += 1;
                 acc
             });
@@ -455,10 +434,7 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let mut manager = InjectionManager::new(temp_dir.path()).unwrap();
 
-        let content = manager
-            .fetch_component(&DxToolType::Ui, "Button", None)
-            .await
-            .unwrap();
+        let content = manager.fetch_component(&DxToolType::Ui, "Button", None).await.unwrap();
 
         assert!(content.contains("Button"));
         assert!(manager.is_cached(&DxToolType::Ui, "Button"));
@@ -469,14 +445,8 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let mut manager = InjectionManager::new(temp_dir.path()).unwrap();
 
-        manager
-            .fetch_component(&DxToolType::Ui, "Button", None)
-            .await
-            .unwrap();
-        manager
-            .fetch_component(&DxToolType::Icons, "Home", None)
-            .await
-            .unwrap();
+        manager.fetch_component(&DxToolType::Ui, "Button", None).await.unwrap();
+        manager.fetch_component(&DxToolType::Icons, "Home", None).await.unwrap();
 
         let stats = manager.cache_stats();
         assert_eq!(stats.total_components, 2);

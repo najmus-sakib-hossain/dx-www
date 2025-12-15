@@ -72,12 +72,16 @@ impl Provider for DogCeoProvider {
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
         let count = query.count.min(50);
         let query_lower = query.query.to_lowercase();
-        
+
         // Check if query is a specific breed
-        let url = if query_lower.contains("husky") || query_lower.contains("labrador") 
-            || query_lower.contains("poodle") || query_lower.contains("bulldog")
-            || query_lower.contains("beagle") || query_lower.contains("retriever")
-            || query_lower.contains("shepherd") || query_lower.contains("terrier")
+        let url = if query_lower.contains("husky")
+            || query_lower.contains("labrador")
+            || query_lower.contains("poodle")
+            || query_lower.contains("bulldog")
+            || query_lower.contains("beagle")
+            || query_lower.contains("retriever")
+            || query_lower.contains("shepherd")
+            || query_lower.contains("terrier")
         {
             // Try breed-specific endpoint
             let breed = query_lower.split_whitespace().next().unwrap_or("random");

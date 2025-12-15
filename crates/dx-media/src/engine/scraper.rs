@@ -90,8 +90,7 @@ impl Scraper {
         };
 
         let mut visited: HashSet<String> = HashSet::new();
-        self.scrape_page(&base_url, options, &mut result, &mut visited, 0)
-            .await?;
+        self.scrape_page(&base_url, options, &mut result, &mut visited, 0).await?;
 
         Ok(result)
     }
@@ -117,9 +116,7 @@ impl Scraper {
         let response = match self.client.get_raw(&url_str).await {
             Ok(r) => r,
             Err(e) => {
-                result
-                    .errors
-                    .push(format!("Failed to fetch {url_str}: {e}"));
+                result.errors.push(format!("Failed to fetch {url_str}: {e}"));
                 return Ok(());
             }
         };
@@ -197,11 +194,8 @@ impl Scraper {
             r#"https://live\.staticflickr\.com/\d+/[^"'\s<>]+\.(?:jpe?g|png)"#,
         ];
 
-        let mut seen_urls: std::collections::HashSet<String> = result
-            .assets
-            .iter()
-            .map(|a| a.download_url.clone())
-            .collect();
+        let mut seen_urls: std::collections::HashSet<String> =
+            result.assets.iter().map(|a| a.download_url.clone()).collect();
 
         for pattern in &cdn_patterns {
             if result.assets.len() >= options.max_assets {
@@ -214,9 +208,7 @@ impl Scraper {
                         break;
                     }
 
-                    let url_str = cap.as_str()
-                        .replace("&amp;", "&")
-                        .replace("\\u0026", "&");
+                    let url_str = cap.as_str().replace("&amp;", "&").replace("\\u0026", "&");
 
                     // Skip if already found
                     if seen_urls.contains(&url_str) {
@@ -262,15 +254,23 @@ impl Scraper {
     /// Check if URL appears to be a small thumbnail or icon.
     fn is_small_image_url(&self, url: &str) -> bool {
         let url_lower = url.to_lowercase();
-        
+
         // Skip if explicitly marked as small
-        if url_lower.contains("w=50") || url_lower.contains("w=100") || 
-           url_lower.contains("thumb") || url_lower.contains("icon") ||
-           url_lower.contains("avatar") || url_lower.contains("profile") ||
-           url_lower.contains("_s.") || url_lower.contains("_xs.") ||
-           url_lower.contains("_tiny") || url_lower.contains("favicon") ||
-           url_lower.contains("96x96") || url_lower.contains("48x48") ||
-           url_lower.contains("/user/") {  // Pixabay user profile images
+        if url_lower.contains("w=50")
+            || url_lower.contains("w=100")
+            || url_lower.contains("thumb")
+            || url_lower.contains("icon")
+            || url_lower.contains("avatar")
+            || url_lower.contains("profile")
+            || url_lower.contains("_s.")
+            || url_lower.contains("_xs.")
+            || url_lower.contains("_tiny")
+            || url_lower.contains("favicon")
+            || url_lower.contains("96x96")
+            || url_lower.contains("48x48")
+            || url_lower.contains("/user/")
+        {
+            // Pixabay user profile images
             return true;
         }
 
@@ -294,12 +294,8 @@ impl Scraper {
                 let segments: Vec<_> = segments.collect();
                 if let Some(last) = segments.last() {
                     // Clean up the filename
-                    let name = last
-                        .split('.')
-                        .next()
-                        .unwrap_or(last)
-                        .replace('-', " ")
-                        .replace('_', " ");
+                    let name =
+                        last.split('.').next().unwrap_or(last).replace('-', " ").replace('_', " ");
                     if !name.is_empty() && name.len() < 100 {
                         return format!("IMG {}", name);
                     }
@@ -333,8 +329,7 @@ impl Scraper {
             }
 
             // Also check srcset (handle both lowercase and camelCase)
-            let srcset = element.value().attr("srcset")
-                .or_else(|| element.value().attr("srcSet"));
+            let srcset = element.value().attr("srcset").or_else(|| element.value().attr("srcSet"));
             if let Some(srcset) = srcset {
                 for src in self.parse_srcset(srcset) {
                     if result.assets.len() >= options.max_assets {
@@ -478,7 +473,7 @@ impl Scraper {
         // Get dimensions if available and skip if too small
         let width = element.value().attr("width").and_then(|w| w.parse().ok());
         let height = element.value().attr("height").and_then(|h| h.parse().ok());
-        
+
         // Skip images with explicit small dimensions
         if let (Some(w), Some(h)) = (width, height) {
             if w < 100 || h < 100 {
@@ -620,7 +615,7 @@ impl Scraper {
             })
             .filter(|(_, w)| *w >= 400) // Only include images >= 400px width
             .collect();
-        
+
         // Sort by width descending and return only the largest
         entries.sort_by(|a, b| b.1.cmp(&a.1));
         entries.into_iter()
@@ -674,7 +669,7 @@ mod tests {
         // Should return only the largest image >= 400px
         assert_eq!(urls.len(), 1);
         assert_eq!(urls[0], "image-1200.jpg");
-        
+
         // Test with all small images
         let srcset_small = "tiny-50.jpg 50w, small-100.jpg 100w";
         let urls_small = scraper.parse_srcset(srcset_small);
@@ -685,14 +680,8 @@ mod tests {
     fn test_get_extension() {
         let scraper = Scraper::default();
 
-        assert_eq!(
-            scraper.get_extension("https://example.com/image.jpg"),
-            Some("jpg".to_string())
-        );
-        assert_eq!(
-            scraper.get_extension("https://example.com/image.PNG"),
-            Some("png".to_string())
-        );
+        assert_eq!(scraper.get_extension("https://example.com/image.jpg"), Some("jpg".to_string()));
+        assert_eq!(scraper.get_extension("https://example.com/image.PNG"), Some("png".to_string()));
         assert_eq!(
             scraper.get_extension("https://example.com/image.jpg?size=large"),
             Some("jpg".to_string())
@@ -707,27 +696,27 @@ mod tests {
         assert!(scraper.matches_pattern("https://example.com/image.png", "*.png"));
         assert!(!scraper.matches_pattern("https://example.com/image.gif", "*.jpg"));
     }
-    
+
     #[test]
     fn test_pixabay_regex() {
         let pattern = r#"https://cdn\.pixabay\.com/photo/\d+/\d+/\d+/\d+/\d+/[a-zA-Z0-9_-]+_(?:1280|1920|640)\.(?:jpe?g|png|webp)"#;
         let regex = Regex::new(pattern).unwrap();
-        
+
         let test_urls = [
             "https://cdn.pixabay.com/photo/2022/04/15/07/58/sunset-7133867_1280.jpg",
             "https://cdn.pixabay.com/photo/2022/11/05/19/56/bachalpsee-7572681_1280.jpg",
         ];
-        
+
         for url in &test_urls {
             assert!(regex.is_match(url), "Pattern should match: {}", url);
         }
     }
-    
+
     #[test]
     fn test_istock_regex() {
         let pattern = r#"https://media\.istockphoto\.com/[^"'\s<>]+\.(?:jpe?g|png|webp)"#;
         let regex = Regex::new(pattern).unwrap();
-        
+
         let test_html = r#"https://media.istockphoto.com/id/2181735944/photo/natural.webp?a=1"#;
         assert!(regex.is_match(test_html), "Pattern should match iStock URL");
     }

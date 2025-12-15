@@ -230,11 +230,7 @@ pub fn extract_audio_with_options<P: AsRef<Path>>(
     let output_size = std::fs::metadata(output_path).map(|m| m.len()).unwrap_or(0);
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Extracted {} audio ({} bytes)",
-            options.format.extension(),
-            output_size
-        ),
+        format!("Extracted {} audio ({} bytes)", options.format.extension(), output_size),
         output_path,
     ))
 }
@@ -266,10 +262,7 @@ pub fn batch_extract_audio<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("audio");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("audio");
         let output_path = output_dir.join(format!("{}.{}", file_stem, format.extension()));
 
         if extract_audio(input_path, &output_path, format).is_ok() {
@@ -277,10 +270,8 @@ pub fn batch_extract_audio<P: AsRef<Path>>(
         }
     }
 
-    Ok(
-        ToolOutput::success(format!("Extracted audio from {} videos", extracted.len()))
-            .with_paths(extracted),
-    )
+    Ok(ToolOutput::success(format!("Extracted audio from {} videos", extracted.len()))
+        .with_paths(extracted))
 }
 
 #[cfg(test)]
@@ -295,9 +286,7 @@ mod tests {
 
     #[test]
     fn test_extract_options() {
-        let opts = AudioExtractOptions::new(AudioFormat::Wav)
-            .mono()
-            .with_sample_rate(44100);
+        let opts = AudioExtractOptions::new(AudioFormat::Wav).mono().with_sample_rate(44100);
         assert_eq!(opts.channels, Some(1));
         assert_eq!(opts.sample_rate, Some(44100));
     }

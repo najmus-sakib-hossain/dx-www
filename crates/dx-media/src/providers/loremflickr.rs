@@ -44,20 +44,15 @@ impl LoremFlickrProvider {
 
     /// Generate image URL for a keyword search.
     fn generate_url(keywords: &str, width: u32, height: u32, seed: Option<&str>) -> String {
-        let encoded_keywords = keywords.split_whitespace()
-            .collect::<Vec<_>>()
-            .join(",");
-        
+        let encoded_keywords = keywords.split_whitespace().collect::<Vec<_>>().join(",");
+
         if let Some(seed) = seed {
             format!(
                 "https://loremflickr.com/{}/{}/{}?lock={}",
                 width, height, encoded_keywords, seed
             )
         } else {
-            format!(
-                "https://loremflickr.com/{}/{}/{}",
-                width, height, encoded_keywords
-            )
+            format!("https://loremflickr.com/{}/{}/{}", width, height, encoded_keywords)
         }
     }
 }
@@ -94,16 +89,16 @@ impl Provider for LoremFlickrProvider {
 
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
         let count = query.count.min(50);
-        
+
         // Generate multiple unique images using different seeds
         let assets: Vec<MediaAsset> = (0..count)
             .map(|i| {
                 let seed = format!("{}_{}", query.query, i);
                 let url = Self::generate_url(&query.query, 800, 600, Some(&seed));
                 let preview_url = Self::generate_url(&query.query, 400, 300, Some(&seed));
-                let id = format!("loremflickr_{}_{}", 
-                    query.query.replace(' ', "_").to_lowercase(), i);
-                
+                let id =
+                    format!("loremflickr_{}_{}", query.query.replace(' ', "_").to_lowercase(), i);
+
                 MediaAsset::builder()
                     .id(id)
                     .provider(self.name().to_string())
@@ -117,7 +112,7 @@ impl Provider for LoremFlickrProvider {
                     .build()
             })
             .collect();
-        
+
         Ok(SearchResult {
             query: query.query.clone(),
             media_type: query.media_type,

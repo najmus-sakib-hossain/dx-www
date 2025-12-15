@@ -243,11 +243,7 @@ pub fn transcode_video<P: AsRef<Path>>(
     let output_size = std::fs::metadata(output_path).map(|m| m.len()).unwrap_or(0);
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Transcoded to {} format ({} bytes)",
-            options.format.extension(),
-            output_size
-        ),
+        format!("Transcoded to {} format ({} bytes)", options.format.extension(), output_size),
         output_path,
     ))
 }
@@ -279,10 +275,7 @@ pub fn batch_transcode<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("output");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("output");
         let output_path = output_dir.join(format!("{}.{}", file_stem, options.format.extension()));
 
         if transcode_video(input_path, &output_path, options.clone()).is_ok() {

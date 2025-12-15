@@ -169,18 +169,12 @@ fn convert_with_wkhtmltopdf(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "wkhtmltopdf failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("wkhtmltopdf failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Converted HTML to PDF using wkhtmltopdf",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("Converted HTML to PDF using wkhtmltopdf", output))
 }
 
 /// Convert using Chrome headless.
@@ -203,10 +197,7 @@ fn convert_with_chrome(
 
     let input_url = format!(
         "file://{}",
-        input
-            .canonicalize()
-            .unwrap_or_else(|_| input.to_path_buf())
-            .to_string_lossy()
+        input.canonicalize().unwrap_or_else(|_| input.to_path_buf()).to_string_lossy()
     );
 
     for chrome in chrome_names {
@@ -246,18 +237,12 @@ fn convert_with_weasyprint(input: &Path, output: &Path) -> Result<ToolOutput> {
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "weasyprint failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("weasyprint failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Converted HTML to PDF using weasyprint",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("Converted HTML to PDF using weasyprint", output))
 }
 
 /// Convert URL to PDF.
@@ -349,10 +334,7 @@ pub fn batch_html_to_pdf<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("document");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("document");
         let output_path = output_dir.join(format!("{}.pdf", file_stem));
 
         if html_to_pdf_with_options(input_path, &output_path, options.clone()).is_ok() {
@@ -360,10 +342,8 @@ pub fn batch_html_to_pdf<P: AsRef<Path>>(
         }
     }
 
-    Ok(
-        ToolOutput::success(format!("Converted {} HTML files to PDF", converted.len()))
-            .with_paths(converted),
-    )
+    Ok(ToolOutput::success(format!("Converted {} HTML files to PDF", converted.len()))
+        .with_paths(converted))
 }
 
 #[cfg(test)]

@@ -104,15 +104,15 @@ impl Provider for DiceBearProvider {
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
         let count = query.count.min(50);
         let seed_base = &query.query;
-        
+
         // Generate avatars using different styles and seeds
         let mut assets = Vec::with_capacity(count);
-        
+
         for i in 0..count {
             let style_idx = i % Self::STYLES.len();
             let style = Self::STYLES[style_idx];
             let seed = format!("{}_{}", seed_base, i);
-            
+
             // SVG URL (default, smaller)
             let svg_url = format!("{}/{}/svg?seed={}", self.base_url(), style, seed);
             // PNG URL (for preview)

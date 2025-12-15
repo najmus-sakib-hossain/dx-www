@@ -118,11 +118,7 @@ fn expand_grouping_into(s: &str, out: &mut AHashSet<String>, collector: &mut Gro
         Some(i) => &s[..i],
         None => s,
     };
-    if !s
-        .as_bytes()
-        .iter()
-        .any(|&b| matches!(b, b'(' | b')' | b'+'))
-    {
+    if !s.as_bytes().iter().any(|&b| matches!(b, b'(' | b')' | b'+')) {
         fast_split_whitespace_insert(s, out);
         return;
     }
@@ -439,10 +435,7 @@ pub fn rewrite_duplicate_classes(html_bytes: &[u8]) -> Option<AutoGroupRewrite> 
                 let token_start = cursor_local;
                 while cursor_local < value_bytes.len() && !is_space(value_bytes[cursor_local]) {
                     let b = value_bytes[cursor_local];
-                    if matches!(
-                        b,
-                        b'(' | b')' | b'{' | b'}' | b':' | b'@' | b'#' | b'[' | b']'
-                    ) {
+                    if matches!(b, b'(' | b')' | b'{' | b'}' | b':' | b'@' | b'#' | b'[' | b']') {
                         has_disqualifying_char = true;
                     }
                     cursor_local += 1;
@@ -729,9 +722,7 @@ pub fn rewrite_duplicate_classes(html_bytes: &[u8]) -> Option<AutoGroupRewrite> 
                             if found_close {
                                 inner_tokens.retain(|s| !s.is_empty());
                                 if !name.is_empty() && !inner_tokens.is_empty() {
-                                    manual_aliases
-                                        .entry(name.to_string())
-                                        .or_insert(inner_tokens);
+                                    manual_aliases.entry(name.to_string()).or_insert(inner_tokens);
                                 }
                                 ti = j;
                                 continue;
@@ -924,11 +915,8 @@ pub fn rewrite_duplicate_classes(html_bytes: &[u8]) -> Option<AutoGroupRewrite> 
             let mut j = 0;
             while j < remaining.len() {
                 let candidate_idx = remaining[j];
-                if classes_match(
-                    &occurrences[current_idx],
-                    &occurrences[candidate_idx],
-                    html_bytes,
-                ) {
+                if classes_match(&occurrences[current_idx], &occurrences[candidate_idx], html_bytes)
+                {
                     matches.push(candidate_idx);
                     remaining.swap_remove(j);
                 } else {
@@ -966,10 +954,7 @@ pub fn rewrite_duplicate_classes(html_bytes: &[u8]) -> Option<AutoGroupRewrite> 
             let alias = candidate;
             let tokens_join = tokens.join(" ");
             let first_range = first_occ.attr_range.clone();
-            replacements.push((
-                first_range,
-                format!("class=\"@{}({})\"", alias, tokens_join),
-            ));
+            replacements.push((first_range, format!("class=\"@{}({})\"", alias, tokens_join)));
             if let Some((range, replacement)) = first_occ.dx_group_cleanup.clone() {
                 replacements.push((range, replacement));
             }
@@ -1050,18 +1035,12 @@ mod tests {
             .iter()
             .find(|evt| evt.stack == vec!["card".to_string()] && evt.token == "text-yellow-500");
         assert!(alias_event.is_some(), "expected event for card group");
-        assert!(
-            alias_event.unwrap().had_plus,
-            "plus suffix should be recorded"
-        );
+        assert!(alias_event.unwrap().had_plus, "plus suffix should be recorded");
 
         let mut classes = extracted.classes.clone();
         let registry =
             crate::core::group::GroupRegistry::analyze(&extracted.group_events, &mut classes, None);
-        assert!(
-            classes.contains("card"),
-            "alias should be registered after analysis"
-        );
+        assert!(classes.contains("card"), "alias should be registered after analysis");
         assert!(classes.contains("bg-red-500"));
         assert!(classes.contains("h-50"));
         assert!(classes.contains("text-yellow-500"));
@@ -1089,10 +1068,7 @@ mod tests {
             rewritten.contains("class=\"bft\">World"),
             "expected second occurrence to use alias only"
         );
-        assert!(
-            !rewritten.contains("dx-group"),
-            "legacy dx-group attribute should be stripped"
-        );
+        assert!(!rewritten.contains("dx-group"), "legacy dx-group attribute should be stripped");
         assert_eq!(result.groups.len(), 1);
         assert_eq!(result.groups[0].alias, "bft");
         assert_eq!(
@@ -1112,10 +1088,7 @@ mod tests {
 <div class="border flex text-red-500">World</div>"#;
         let result = rewrite_duplicate_classes(html).expect("rewrite");
         let rewritten = String::from_utf8(result.html.clone()).unwrap();
-        assert!(
-            rewritten.contains("class=\"bft\">Existing"),
-            "untouched class should remain"
-        );
+        assert!(rewritten.contains("class=\"bft\">Existing"), "untouched class should remain");
         assert!(
             rewritten.contains("class=\"@bft1(border flex text-red-500)\""),
             "expected alias to avoid collision via numeric suffix"

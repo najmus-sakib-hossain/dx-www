@@ -378,9 +378,7 @@ mod tests {
         let client = QueryClient::new(QueryOptions::default());
         let key = QueryKey::new(1, b"test");
 
-        let result = client
-            .query(key, || async { Ok::<_, String>("data".to_string()) })
-            .await;
+        let result = client.query(key, || async { Ok::<_, String>("data".to_string()) }).await;
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "data");

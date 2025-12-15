@@ -124,11 +124,7 @@ pub fn change_speed_with_options<P: AsRef<Path>>(
     let audio_filter = build_atempo_filter(factor, options.maintain_pitch);
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-vf")
-        .arg(&video_filter);
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-vf").arg(&video_filter);
 
     if !audio_filter.is_empty() {
         cmd.arg("-af").arg(&audio_filter);
@@ -315,10 +311,7 @@ pub fn reverse_video<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> 
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Reversed video playback",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Reversed video playback", output_path))
 }
 
 /// Create boomerang effect (plays forward then backward).
@@ -360,10 +353,7 @@ pub fn boomerang<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Created boomerang effect",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Created boomerang effect", output_path))
 }
 
 /// Batch speed adjustment.
@@ -380,14 +370,8 @@ pub fn batch_speed<P: AsRef<Path>>(inputs: &[P], output_dir: P, factor: f32) -> 
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("video");
-        let extension = input_path
-            .extension()
-            .and_then(|s| s.to_str())
-            .unwrap_or("mp4");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("video");
+        let extension = input_path.extension().and_then(|s| s.to_str()).unwrap_or("mp4");
         let output_path = output_dir.join(format!("{}_{}.{}", file_stem, speed_label, extension));
 
         if change_speed(input_path, &output_path, factor).is_ok() {
@@ -395,10 +379,8 @@ pub fn batch_speed<P: AsRef<Path>>(inputs: &[P], output_dir: P, factor: f32) -> 
         }
     }
 
-    Ok(
-        ToolOutput::success(format!("Adjusted speed for {} videos", processed.len()))
-            .with_paths(processed),
-    )
+    Ok(ToolOutput::success(format!("Adjusted speed for {} videos", processed.len()))
+        .with_paths(processed))
 }
 
 #[cfg(test)]

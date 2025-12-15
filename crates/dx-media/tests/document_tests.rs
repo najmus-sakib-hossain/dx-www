@@ -165,7 +165,8 @@ fn test_pdf_page_to_image() {
     let pdf = fixture.create_test_text_file("document.pdf", "%PDF-1.4\nfake pdf");
     let output = fixture.path("page1.png");
 
-    let result = document::pdf_page_to_image(&pdf, &output, 1, document::PdfToImageOptions::default());
+    let result =
+        document::pdf_page_to_image(&pdf, &output, 1, document::PdfToImageOptions::default());
     let _ = result;
 }
 
@@ -226,7 +227,8 @@ fn test_html_to_pdf_options() {
 #[test]
 fn test_html_to_pdf() {
     let fixture = TestFixture::new();
-    let html = fixture.create_test_text_file("page.html", "<html><body><h1>Test</h1></body></html>");
+    let html =
+        fixture.create_test_text_file("page.html", "<html><body><h1>Test</h1></body></html>");
     let pdf = fixture.path("page.pdf");
 
     let result = document::html_to_pdf(&html, &pdf);

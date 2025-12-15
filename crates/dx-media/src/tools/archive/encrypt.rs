@@ -137,10 +137,7 @@ fn create_with_zip<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Created encrypted ZIP archive",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("Created encrypted ZIP archive", output))
 }
 
 /// Create encrypted 7z archive.
@@ -174,10 +171,7 @@ pub fn create_encrypted_7z<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Created encrypted 7z archive",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Created encrypted 7z archive", output_path))
 }
 
 /// Extract encrypted archive.
@@ -203,11 +197,7 @@ pub fn extract_encrypted<P: AsRef<Path>>(
         source: None,
     })?;
 
-    let ext = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("")
-        .to_lowercase();
+    let ext = input_path.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
 
     // Try 7z first
     if let Ok(result) = extract_with_7z(input_path, output_dir, password) {
@@ -248,21 +238,13 @@ fn extract_with_7z(input: &Path, output_dir: &Path, password: &str) -> Result<To
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Extracted encrypted archive",
-        output_dir,
-    ))
+    Ok(ToolOutput::success_with_path("Extracted encrypted archive", output_dir))
 }
 
 /// Extract using unzip.
 fn extract_with_unzip(input: &Path, output_dir: &Path, password: &str) -> Result<ToolOutput> {
     let mut cmd = Command::new("unzip");
-    cmd.arg("-o")
-        .arg("-P")
-        .arg(password)
-        .arg(input)
-        .arg("-d")
-        .arg(output_dir);
+    cmd.arg("-o").arg("-P").arg(password).arg(input).arg("-d").arg(output_dir);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run unzip: {}", e),
@@ -276,10 +258,7 @@ fn extract_with_unzip(input: &Path, output_dir: &Path, password: &str) -> Result
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Extracted encrypted ZIP",
-        output_dir,
-    ))
+    Ok(ToolOutput::success_with_path("Extracted encrypted ZIP", output_dir))
 }
 
 /// Check if archive is encrypted.
@@ -306,10 +285,7 @@ pub fn is_encrypted<P: AsRef<Path>>(input: P) -> Result<bool> {
     }
 
     // Try unzip test
-    let ext = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("");
+    let ext = input_path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
     if ext == "zip" {
         let mut cmd = Command::new("unzip");
@@ -362,10 +338,7 @@ pub fn change_password<P: AsRef<Path>>(
     // Cleanup
     let _ = std::fs::remove_dir_all(&temp_dir);
 
-    Ok(ToolOutput::success_with_path(
-        "Changed archive password",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Changed archive password", output_path))
 }
 
 #[cfg(test)]

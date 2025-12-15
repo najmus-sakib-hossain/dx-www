@@ -258,9 +258,7 @@ impl SubscriberSystem {
     /// Subscribe to state changes
     pub fn subscribe(&self, subscription: Subscription) {
         let mut subs = self.subscribers.write();
-        subs.entry(subscription.state_id)
-            .or_insert_with(Vec::new)
-            .push(subscription);
+        subs.entry(subscription.state_id).or_insert_with(Vec::new).push(subscription);
     }
 
     /// Notify subscribers of state change

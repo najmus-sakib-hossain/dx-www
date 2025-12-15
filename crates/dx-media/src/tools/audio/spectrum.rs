@@ -228,10 +228,7 @@ fn generate_frequency_bars(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Generated frequency bars visualization",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("Generated frequency bars visualization", output))
 }
 
 /// Generate audio histogram.
@@ -240,10 +237,7 @@ fn generate_histogram(
     output: &Path,
     options: &SpectrumOptions,
 ) -> Result<ToolOutput> {
-    let filter = format!(
-        "ahistogram=s={}x{}:scale=log",
-        options.width, options.height
-    );
+    let filter = format!("ahistogram=s={}x{}:scale=log", options.width, options.height);
 
     let mut cmd = Command::new("ffmpeg");
     cmd.arg("-y")
@@ -270,10 +264,7 @@ fn generate_histogram(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Generated audio histogram",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("Generated audio histogram", output))
 }
 
 /// Generate animated waveform video.
@@ -286,10 +277,8 @@ pub fn generate_animated_waveform<P: AsRef<Path>>(
     let input_path = input.as_ref();
     let output_path = output.as_ref();
 
-    let filter = format!(
-        "[0:a]showwaves=s={}x{}:mode=cline:rate=25:colors=#00ff00[v]",
-        width, height
-    );
+    let filter =
+        format!("[0:a]showwaves=s={}x{}:mode=cline:rate=25:colors=#00ff00[v]", width, height);
 
     let mut cmd = Command::new("ffmpeg");
     cmd.arg("-y")
@@ -322,10 +311,7 @@ pub fn generate_animated_waveform<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Generated animated waveform video",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Generated animated waveform video", output_path))
 }
 
 /// Generate audio visualizer video (for music videos).
@@ -377,10 +363,7 @@ pub fn generate_visualizer<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Generated audio visualizer video",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Generated audio visualizer video", output_path))
 }
 
 /// Batch generate waveforms.
@@ -402,10 +385,7 @@ pub fn batch_waveform<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("audio");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("audio");
         let output_path = output_dir.join(format!("{}_waveform.png", file_stem));
 
         if generate_spectrum(input_path, &output_path, options.clone()).is_ok() {
@@ -413,10 +393,8 @@ pub fn batch_waveform<P: AsRef<Path>>(
         }
     }
 
-    Ok(
-        ToolOutput::success(format!("Generated {} waveforms", generated.len()))
-            .with_paths(generated),
-    )
+    Ok(ToolOutput::success(format!("Generated {} waveforms", generated.len()))
+        .with_paths(generated))
 }
 
 #[cfg(test)]

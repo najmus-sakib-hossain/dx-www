@@ -86,10 +86,7 @@ pub mod interning {
     }
 
     pub fn try_resolve(id: &Spur) -> Option<String> {
-        INTERNER
-            .lock()
-            .ok()
-            .and_then(|i| i.try_resolve(id).map(|s| s.to_string()))
+        INTERNER.lock().ok().and_then(|i| i.try_resolve(id).map(|s| s.to_string()))
     }
 }
 

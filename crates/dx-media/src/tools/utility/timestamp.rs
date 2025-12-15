@@ -31,9 +31,7 @@ pub enum TimestampFormat {
 /// let ts = now(TimestampFormat::Unix).unwrap();
 /// ```
 pub fn now(format: TimestampFormat) -> Result<ToolOutput> {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
 
     let output = format_duration(now, format);
 
@@ -203,10 +201,7 @@ fn datetime_to_unix(year: u32, month: u32, day: u32, hour: u32, minute: u32, sec
 fn format_iso8601(duration: Duration) -> String {
     let secs = duration.as_secs();
     let (year, month, day, hour, minute, second) = unix_to_datetime(secs);
-    format!(
-        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
-        year, month, day, hour, minute, second
-    )
+    format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", year, month, day, hour, minute, second)
 }
 
 /// Format as RFC 2822.
@@ -334,9 +329,7 @@ pub fn diff(ts1: &str, ts2: &str, format: TimestampFormat) -> Result<ToolOutput>
 /// Get human-readable relative time.
 pub fn relative(timestamp: &str, format: TimestampFormat) -> Result<ToolOutput> {
     let then = parse_timestamp(timestamp, format)?;
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
 
     let (diff_secs, direction) = if now > then {
         ((now - then).as_secs(), "ago")

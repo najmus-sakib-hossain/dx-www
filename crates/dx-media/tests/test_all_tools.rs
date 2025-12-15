@@ -4,8 +4,8 @@
 //! downloaded to the playground/assets folder.
 
 use dx_media::tools::{
-    archive, audio, document, image, utility, video, ArchiveTools, AudioTools, DocumentTools,
-    ImageTools, UtilityTools, VideoTools,
+    ArchiveTools, AudioTools, DocumentTools, ImageTools, UtilityTools, VideoTools, archive, audio,
+    document, image, utility, video,
 };
 use std::fs;
 use std::path::PathBuf;
@@ -67,7 +67,7 @@ mod image_tools {
     fn test_01_image_convert() {
         let output_dir = setup_output_dir("image");
         let output = output_dir.join("converted.png");
-        
+
         let result = image::convert(&test_image(), &output);
         println!("Image convert: {:?}", result);
     }
@@ -76,7 +76,7 @@ mod image_tools {
     fn test_02_image_resize() {
         let output_dir = setup_output_dir("image");
         let output = output_dir.join("resized.jpg");
-        
+
         let result = image::resize(&test_image(), &output, 200, 200);
         println!("Image resize: {:?}", result);
     }
@@ -85,7 +85,7 @@ mod image_tools {
     fn test_03_image_compress() {
         let output_dir = setup_output_dir("image");
         let output = output_dir.join("compressed.jpg");
-        
+
         let result = image::compress(&test_image(), &output, 60);
         println!("Image compress: {:?}", result);
     }
@@ -94,7 +94,7 @@ mod image_tools {
     fn test_04_image_watermark() {
         let output_dir = setup_output_dir("image");
         let output = output_dir.join("watermarked.jpg");
-        
+
         let result = image::add_text_watermark(
             &test_image(),
             &output,
@@ -108,7 +108,7 @@ mod image_tools {
     fn test_05_image_exif_strip() {
         let output_dir = setup_output_dir("image");
         let output = output_dir.join("no_exif.jpg");
-        
+
         let result = image::strip_metadata(&test_image(), &output);
         println!("EXIF strip: {:?}", result);
     }
@@ -117,7 +117,7 @@ mod image_tools {
     fn test_06_image_qr_generate() {
         let output_dir = setup_output_dir("image");
         let output = output_dir.join("qrcode.png");
-        
+
         let result = image::generate_qr("https://example.com", &output, 256);
         println!("QR generate: {:?}", result);
     }
@@ -132,7 +132,7 @@ mod image_tools {
     fn test_08_image_filter_grayscale() {
         let output_dir = setup_output_dir("image");
         let output = output_dir.join("grayscale.jpg");
-        
+
         let result = image::grayscale(&test_image(), &output);
         println!("Grayscale filter: {:?}", result);
     }
@@ -147,7 +147,7 @@ mod image_tools {
     #[test]
     fn test_10_image_icons_generate() {
         let output_dir = setup_output_dir("image/icons");
-        
+
         let result = image::generate_favicon(&test_image(), &output_dir);
         println!("Icon generate: {:?}", result);
     }
@@ -164,7 +164,7 @@ mod video_tools {
     fn test_11_video_transcode() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("transcoded.webm");
-        
+
         let options = video::TranscodeOptions::default();
         let result = video::transcode_video(&test_video(), &output, options);
         println!("Video transcode: {:?}", result);
@@ -174,7 +174,7 @@ mod video_tools {
     fn test_12_video_extract_audio() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("extracted_audio.mp3");
-        
+
         let result = video::extract_audio(&test_video(), &output, video::AudioFormat::Mp3);
         println!("Extract audio: {:?}", result);
     }
@@ -183,7 +183,7 @@ mod video_tools {
     fn test_13_video_trim() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("trimmed.mp4");
-        
+
         let result = video::trim_video(&test_video(), &output, 0.0, 2.0);
         println!("Video trim: {:?}", result);
     }
@@ -192,7 +192,7 @@ mod video_tools {
     fn test_14_video_to_gif() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("video.gif");
-        
+
         let options = video::GifOptions::default();
         let result = video::video_to_gif(&test_video(), &output, options);
         println!("Video to GIF: {:?}", result);
@@ -202,7 +202,7 @@ mod video_tools {
     fn test_15_video_thumbnail() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("thumbnail.jpg");
-        
+
         let result = video::extract_thumbnail(&test_video(), &output, 1.0);
         println!("Video thumbnail: {:?}", result);
     }
@@ -211,7 +211,7 @@ mod video_tools {
     fn test_16_video_scale() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("scaled.mp4");
-        
+
         let result = video::scale_video(&test_video(), &output, 640, 480);
         println!("Video scale: {:?}", result);
     }
@@ -220,7 +220,7 @@ mod video_tools {
     fn test_17_video_concatenate() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("concatenated.mp4");
-        
+
         let result = video::concatenate_videos(&[&test_video(), &test_video()], &output);
         println!("Video concatenate: {:?}", result);
     }
@@ -229,7 +229,7 @@ mod video_tools {
     fn test_18_video_mute() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("muted.mp4");
-        
+
         let result = video::mute_video(&test_video(), &output);
         println!("Video mute: {:?}", result);
     }
@@ -238,7 +238,7 @@ mod video_tools {
     fn test_19_video_watermark() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("watermarked.mp4");
-        
+
         // video::add_text_watermark takes 3 args: input, output, text
         let result = video::add_text_watermark(&test_video(), &output, "DX-MEDIA");
         println!("Video watermark: {:?}", result);
@@ -248,7 +248,7 @@ mod video_tools {
     fn test_20_video_speed() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("fast.mp4");
-        
+
         let result = video::change_speed(&test_video(), &output, 2.0);
         println!("Video speed: {:?}", result);
     }
@@ -265,7 +265,7 @@ mod audio_tools {
     fn test_21_audio_convert() {
         let output_dir = setup_output_dir("audio");
         let output = output_dir.join("converted.wav");
-        
+
         let options = audio::ConvertOptions::default();
         let result = audio::convert_audio(&test_audio(), &output, options);
         println!("Audio convert: {:?}", result);
@@ -275,7 +275,7 @@ mod audio_tools {
     fn test_22_audio_normalize() {
         let output_dir = setup_output_dir("audio");
         let output = output_dir.join("normalized.mp3");
-        
+
         let options = audio::NormalizeOptions::default();
         let result = audio::normalize_audio(&test_audio(), &output, options);
         println!("Audio normalize: {:?}", result);
@@ -285,7 +285,7 @@ mod audio_tools {
     fn test_23_audio_trim() {
         let output_dir = setup_output_dir("audio");
         let output = output_dir.join("trimmed.mp3");
-        
+
         let result = audio::trim_audio(&test_audio(), &output, 0.0, 5.0);
         println!("Audio trim: {:?}", result);
     }
@@ -294,7 +294,7 @@ mod audio_tools {
     fn test_24_audio_merge() {
         let output_dir = setup_output_dir("audio");
         let output = output_dir.join("merged.mp3");
-        
+
         let result = audio::merge_audio(&[&test_audio(), &test_audio()], &output);
         println!("Audio merge: {:?}", result);
     }
@@ -303,7 +303,7 @@ mod audio_tools {
     fn test_25_audio_spectrum() {
         let output_dir = setup_output_dir("audio");
         let output = output_dir.join("spectrum.png");
-        
+
         let options = audio::SpectrumOptions::default();
         let result = audio::generate_spectrum(&test_audio(), &output, options);
         println!("Audio spectrum: {:?}", result);
@@ -319,7 +319,7 @@ mod audio_tools {
     fn test_27_audio_remove_silence() {
         let output_dir = setup_output_dir("audio");
         let output = output_dir.join("no_silence.mp3");
-        
+
         let options = audio::SilenceOptions::default();
         let result = audio::remove_silence(&test_audio(), &output, options);
         println!("Audio remove silence: {:?}", result);
@@ -329,7 +329,7 @@ mod audio_tools {
     fn test_28_audio_split() {
         let output_dir = setup_output_dir("audio/split");
         fs::create_dir_all(&output_dir).ok();
-        
+
         let options = audio::SplitOptions::default();
         let result = audio::split_audio(&test_audio(), &output_dir, options);
         println!("Audio split: {:?}", result);
@@ -339,7 +339,7 @@ mod audio_tools {
     fn test_29_audio_effects() {
         let output_dir = setup_output_dir("audio");
         let output = output_dir.join("with_effects.mp3");
-        
+
         // Use telephone effect as a simple test
         let result = audio::telephone_effect(&test_audio(), &output);
         println!("Audio effects: {:?}", result);
@@ -372,7 +372,9 @@ mod document_tools {
 
     #[test]
     fn test_33_document_pdf_compress() {
-        println!("PDF compress: API available - Quality variants: Screen, Ebook, Printer, Prepress, Default");
+        println!(
+            "PDF compress: API available - Quality variants: Screen, Ebook, Printer, Prepress, Default"
+        );
     }
 
     #[test]
@@ -384,7 +386,7 @@ mod document_tools {
     fn test_35_document_markdown_to_html() {
         let output_dir = setup_output_dir("document");
         let output = output_dir.join("from_md.html");
-        
+
         let result = document::markdown_to_html(&test_document_md(), &output);
         println!("Markdown to HTML: {:?}", result);
     }
@@ -393,7 +395,7 @@ mod document_tools {
     fn test_36_document_html_to_pdf() {
         let output_dir = setup_output_dir("document");
         let output = output_dir.join("from_html.pdf");
-        
+
         let result = document::html_to_pdf(&test_document_html(), &output);
         println!("HTML to PDF: {:?}", result);
     }
@@ -402,8 +404,9 @@ mod document_tools {
     fn test_37_document_convert() {
         let output_dir = setup_output_dir("document");
         let output = output_dir.join("converted.txt");
-        
-        let result = document::convert_document(&test_document_md(), &output, document::DocFormat::Txt);
+
+        let result =
+            document::convert_document(&test_document_md(), &output, document::DocFormat::Txt);
         println!("Document convert: {:?}", result);
     }
 
@@ -437,7 +440,7 @@ mod archive_tools {
         let output = output_dir.join("test.zip");
         let img = test_image();
         let txt = test_document_txt();
-        
+
         let result = archive::create_zip(&[&img, &txt], &output);
         println!("Create ZIP: {:?}", result);
     }
@@ -448,10 +451,10 @@ mod archive_tools {
         let zip_path = output_dir.join("extract_test.zip");
         let extract_dir = output_dir.join("extracted_zip");
         let img = test_image();
-        
+
         // First create a zip
         archive::create_zip(&[&img], &zip_path).ok();
-        
+
         if zip_path.exists() {
             let result = archive::extract_zip(&zip_path, &extract_dir);
             println!("Extract ZIP: {:?}", result);
@@ -466,7 +469,7 @@ mod archive_tools {
         let output = output_dir.join("test.tar");
         let img = test_image();
         let txt = test_document_txt();
-        
+
         let result = archive::create_tar(&[&img, &txt], &output);
         println!("Create TAR: {:?}", result);
     }
@@ -477,10 +480,10 @@ mod archive_tools {
         let tar_path = output_dir.join("extract_test.tar");
         let extract_dir = output_dir.join("extracted_tar");
         let img = test_image();
-        
+
         // First create a tar
         archive::create_tar(&[&img], &tar_path).ok();
-        
+
         if tar_path.exists() {
             let result = archive::extract_tar(&tar_path, &extract_dir);
             println!("Extract TAR: {:?}", result);
@@ -493,7 +496,7 @@ mod archive_tools {
     fn test_45_archive_gzip() {
         let output_dir = setup_output_dir("archive");
         let output = output_dir.join("test.txt.gz");
-        
+
         let result = archive::gzip(&test_document_txt(), &output);
         println!("GZIP compress: {:?}", result);
     }
@@ -503,10 +506,10 @@ mod archive_tools {
         let output_dir = setup_output_dir("archive");
         let gz_path = output_dir.join("gunzip_test.txt.gz");
         let output = output_dir.join("decompressed.txt");
-        
+
         // First create a gzip
         archive::gzip(&test_document_txt(), &gz_path).ok();
-        
+
         if gz_path.exists() {
             let result = archive::gunzip(&gz_path, &output);
             println!("GUNZIP: {:?}", result);
@@ -520,10 +523,10 @@ mod archive_tools {
         let output_dir = setup_output_dir("archive");
         let zip_path = output_dir.join("list_test.zip");
         let img = test_image();
-        
+
         // First create a zip
         archive::create_zip(&[&img], &zip_path).ok();
-        
+
         if zip_path.exists() {
             let result = archive::list_archive(&zip_path);
             println!("List archive: {:?}", result);
@@ -537,7 +540,7 @@ mod archive_tools {
         let output_dir = setup_output_dir("archive");
         let output = output_dir.join("encrypted.zip");
         let txt = test_document_txt();
-        
+
         let result = archive::create_encrypted_zip(&[&txt], &output, "password123");
         println!("Encrypted ZIP: {:?}", result);
     }
@@ -547,10 +550,10 @@ mod archive_tools {
         let output_dir = setup_output_dir("archive");
         let zip_path = output_dir.join("split_test.zip");
         let img = test_image();
-        
+
         // First create a zip with larger content
         archive::create_zip(&[&img], &zip_path).ok();
-        
+
         if zip_path.exists() {
             let result = archive::split_archive(&zip_path, &output_dir, 10 * 1024); // 10KB parts
             println!("Split archive: {:?}", result);
@@ -563,13 +566,13 @@ mod archive_tools {
     fn test_50_archive_merge() {
         let output_dir = setup_output_dir("archive");
         let output = output_dir.join("merged.bin");
-        
+
         // For merge test, we need split parts - skip if not available
         let parts: Vec<PathBuf> = (1..=3)
             .map(|i| output_dir.join(format!("split_test.zip.{:03}", i)))
             .filter(|p| p.exists())
             .collect();
-        
+
         if parts.len() > 1 {
             let part_refs: Vec<&PathBuf> = parts.iter().collect();
             let result = archive::merge_archives(&part_refs, &output);
@@ -604,11 +607,11 @@ mod utility_tools {
         let output_dir = setup_output_dir("utility");
         let encoded_path = output_dir.join("encoded.txt");
         let decoded_path = output_dir.join("decoded.txt");
-        
+
         // First encode
         if let Ok(output) = utility::encode_file(&test_document_txt()) {
             fs::write(&encoded_path, &output.message).ok();
-            
+
             let result = utility::decode_file(&encoded_path, &decoded_path);
             println!("Base64 decode: {:?}", result);
         } else {
@@ -633,10 +636,10 @@ mod utility_tools {
         let output_dir = setup_output_dir("utility");
         let json_input = output_dir.join("input.json");
         let json_output = output_dir.join("formatted.json");
-        
+
         // Create a test JSON file
         fs::write(&json_input, r#"{"name":"test","value":123}"#).ok();
-        
+
         let result = utility::format_json_file(&json_input, &json_output);
         println!("JSON format: {:?}", result);
     }
@@ -646,14 +649,14 @@ mod utility_tools {
         let output_dir = setup_output_dir("utility");
         let json_input = output_dir.join("data.json");
         let yaml_output = output_dir.join("data.yaml");
-        
+
         // Create a test JSON file
         fs::write(&json_input, r#"{"name": "test", "value": 123}"#).ok();
-        
+
         // File-based conversion
         let result = utility::json_to_yaml(&json_input, &yaml_output);
         println!("JSON to YAML (file): {:?}", result);
-        
+
         // String-based conversion
         let result2 = utility::json_string_to_yaml(r#"{"name": "test"}"#);
         println!("JSON to YAML (string): {:?}", result2);
@@ -664,10 +667,10 @@ mod utility_tools {
         let output_dir = setup_output_dir("utility");
         let csv_input = output_dir.join("data.csv");
         let json_output = output_dir.join("from_csv.json");
-        
+
         // Create a test CSV file
         fs::write(&csv_input, "name,age,city\nAlice,30,NYC\nBob,25,LA").ok();
-        
+
         let result = utility::csv_to_json(&csv_input, &json_output);
         println!("CSV to JSON: {:?}", result);
     }
@@ -677,10 +680,10 @@ mod utility_tools {
         let output_dir = setup_output_dir("utility");
         let file1 = output_dir.join("file1.txt");
         let file2 = output_dir.join("file2.txt");
-        
+
         fs::write(&file1, "Line 1\nLine 2\nLine 3").ok();
         fs::write(&file2, "Line 1\nLine 2 modified\nLine 3").ok();
-        
+
         let result = utility::diff_files(&file1, &file2);
         println!("Diff files: {:?}", result);
     }
@@ -690,7 +693,7 @@ mod utility_tools {
         // Test timestamp functions
         let result = utility::now(utility::TimestampFormat::Unix);
         println!("Timestamp now (Unix): {:?}", result);
-        
+
         let result2 = utility::now(utility::TimestampFormat::Iso8601);
         println!("Timestamp now (ISO8601): {:?}", result2);
     }
@@ -708,7 +711,7 @@ mod tool_collections {
         let tools = ImageTools::new();
         let output_dir = setup_output_dir("collections");
         let output = output_dir.join("via_struct.jpg");
-        
+
         let result = tools.resize(&test_image(), &output, 100, 100);
         println!("ImageTools::resize: {:?}", result);
     }
@@ -718,7 +721,7 @@ mod tool_collections {
         let tools = VideoTools::new();
         let output_dir = setup_output_dir("collections");
         let output = output_dir.join("via_struct.jpg");
-        
+
         let result = tools.thumbnail(&test_video(), &output, 0.5);
         println!("VideoTools::thumbnail: {:?}", result);
     }
@@ -726,7 +729,7 @@ mod tool_collections {
     #[test]
     fn test_audio_tools_collection() {
         let tools = AudioTools::new();
-        
+
         let result = tools.metadata(&test_audio());
         println!("AudioTools::metadata: {:?}", result);
     }
@@ -737,7 +740,7 @@ mod tool_collections {
         let output_dir = setup_output_dir("collections");
         let output = output_dir.join("via_struct.zip");
         let txt = test_document_txt();
-        
+
         let result = tools.create_zip(&[&txt], &output);
         println!("ArchiveTools::create_zip: {:?}", result);
     }
@@ -745,7 +748,7 @@ mod tool_collections {
     #[test]
     fn test_utility_tools_collection() {
         let tools = UtilityTools::new();
-        
+
         let result = tools.hash_file(&test_image(), utility::HashAlgorithm::Md5);
         println!("UtilityTools::hash_file: {:?}", result);
     }
@@ -753,7 +756,7 @@ mod tool_collections {
     #[test]
     fn test_document_tools_collection() {
         let tools = DocumentTools::new();
-        
+
         let result = tools.extract_text(&test_document_txt());
         println!("DocumentTools::extract_text: {:?}", result);
     }
@@ -778,7 +781,7 @@ mod additional_tests {
     fn test_random_generate() {
         let result = utility::string(16, utility::CharSet::Alphanumeric);
         println!("Random string: {:?}", result);
-        
+
         let result2 = utility::string(16, utility::CharSet::Hex);
         println!("Random hex: {:?}", result2);
     }
@@ -788,7 +791,7 @@ mod additional_tests {
         let output_dir = setup_output_dir("archive");
         let output = output_dir.join("test.7z");
         let txt = test_document_txt();
-        
+
         let result = archive::create_7z(&[&txt], &output);
         println!("Create 7z: {:?}", result);
     }
@@ -798,7 +801,7 @@ mod additional_tests {
         let output_dir = setup_output_dir("archive");
         let output = output_dir.join("test.tar.gz");
         let txt = test_document_txt();
-        
+
         let result = archive::create_tar_gz(&[&txt], &output);
         println!("Create TAR.GZ: {:?}", result);
     }
@@ -807,12 +810,9 @@ mod additional_tests {
     fn test_image_with_quality() {
         let output_dir = setup_output_dir("image");
         let output = output_dir.join("quality_test.jpg");
-        
-        let result = image::compress_with_level(
-            &test_image(),
-            &output,
-            image::CompressionQuality::High,
-        );
+
+        let result =
+            image::compress_with_level(&test_image(), &output, image::CompressionQuality::High);
         println!("Compress with level: {:?}", result);
     }
 
@@ -820,14 +820,14 @@ mod additional_tests {
     fn test_video_subtitle() {
         let output_dir = setup_output_dir("video");
         let output = output_dir.join("with_subtitles.mp4");
-        
+
         // Create a simple SRT file
         let srt_path = output_dir.join("test.srt");
         fs::write(
             &srt_path,
             "1\n00:00:00,000 --> 00:00:02,000\nHello World!\n\n2\n00:00:02,000 --> 00:00:04,000\nThis is a test.\n"
         ).ok();
-        
+
         let result = video::burn_subtitles(&test_video(), &srt_path, &output);
         println!("Burn subtitles: {:?}", result);
     }

@@ -54,18 +54,16 @@ impl GitHubProvider {
 
     /// Parse media type from file extension
     fn parse_media_type(filename: &str) -> MediaType {
-        let ext = filename
-            .rsplit('.')
-            .next()
-            .unwrap_or("")
-            .to_lowercase();
+        let ext = filename.rsplit('.').next().unwrap_or("").to_lowercase();
 
         match ext.as_str() {
             "json" | "csv" | "xml" | "yaml" | "yml" | "toml" => MediaType::Data,
             "pdf" | "xlsx" | "xls" | "doc" | "docx" => MediaType::Document,
             "md" | "txt" | "rst" => MediaType::Text,
             "svg" => MediaType::Vector,
-            "rs" | "py" | "js" | "ts" | "go" | "java" | "c" | "cpp" | "rb" | "sh" => MediaType::Code,
+            "rs" | "py" | "js" | "ts" | "go" | "java" | "c" | "cpp" | "rb" | "sh" => {
+                MediaType::Code
+            }
             _ => MediaType::Data,
         }
     }

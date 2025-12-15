@@ -237,13 +237,8 @@ pub fn derive_color_value(engine: &StyleEngine, name: &str) -> Option<String> {
 
 fn parse_oklch_value(value: &str) -> Option<Oklch> {
     let trimmed = value.trim();
-    let inner = trimmed
-        .strip_prefix("oklch(")?
-        .strip_suffix(')')?
-        .replace('/', " ");
-    let mut parts = inner
-        .split_whitespace()
-        .filter(|segment| !segment.is_empty());
+    let inner = trimmed.strip_prefix("oklch(")?.strip_suffix(')')?.replace('/', " ");
+    let mut parts = inner.split_whitespace().filter(|segment| !segment.is_empty());
     let l_raw = parts.next()?;
     let c_raw = parts.next()?;
     let h_raw = parts.next()?;
@@ -280,10 +275,7 @@ fn split_components(input: &str) -> Vec<&str> {
             .filter(|segment| !segment.is_empty())
             .collect()
     } else {
-        input
-            .split_whitespace()
-            .filter(|segment| !segment.is_empty())
-            .collect()
+        input.split_whitespace().filter(|segment| !segment.is_empty()).collect()
     }
 }
 

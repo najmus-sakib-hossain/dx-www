@@ -29,7 +29,7 @@ pub async fn handle_rpc(
     #[cfg(feature = "query")]
     if let Some(ref cache) = state.query_cache {
         let query_hash = hash_query(&req.query_id, &req.params);
-        
+
         if let Some(cached_data) = cache.get(query_hash) {
             return (
                 StatusCode::OK,
@@ -40,17 +40,17 @@ pub async fn handle_rpc(
             );
         }
     }
-    
+
     // Execute query
     let data = execute_query(&req.query_id, &req.params).await;
-    
+
     // Cache result
     #[cfg(feature = "query")]
     if let Some(ref cache) = state.query_cache {
         let query_hash = hash_query(&req.query_id, &req.params);
         cache.set(query_hash, data.clone(), 300); // 5 min TTL
     }
-    
+
     (
         StatusCode::OK,
         Json(RPCResponse {
@@ -70,7 +70,7 @@ async fn execute_query(query_id: &str, params: &[u8]) -> Vec<u8> {
 fn hash_query(query_id: &str, params: &[u8]) -> u32 {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
-    
+
     let mut hasher = DefaultHasher::new();
     query_id.hash(&mut hasher);
     params.hash(&mut hasher);
@@ -86,7 +86,7 @@ mod tests {
         let hash1 = hash_query("getUser", &[1, 2, 3]);
         let hash2 = hash_query("getUser", &[1, 2, 3]);
         let hash3 = hash_query("getUser", &[4, 5, 6]);
-        
+
         assert_eq!(hash1, hash2);
         assert_ne!(hash1, hash3);
     }

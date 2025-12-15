@@ -10,7 +10,7 @@ use std::path::PathBuf;
 pub enum EditorType {
     /// Visual Studio Code
     VSCode,
-    
+
     /// Other or unknown editor
     Other(String),
 }
@@ -20,10 +20,10 @@ pub enum EditorType {
 pub struct EditorInfo {
     /// Type of editor
     pub editor_type: EditorType,
-    
+
     /// Workspace/project path
     pub workspace_path: PathBuf,
-    
+
     /// Installed extensions
     pub extensions: Vec<String>,
 }
@@ -32,15 +32,11 @@ pub struct EditorInfo {
 #[derive(Debug, Clone)]
 pub enum OutputStrategy {
     /// Output to current editor's active directory
-    CurrentEditorDir {
-        path: PathBuf,
-    },
-    
+    CurrentEditorDir { path: PathBuf },
+
     /// Output to project root
-    ProjectRoot {
-        path: PathBuf,
-    },
-    
+    ProjectRoot { path: PathBuf },
+
     /// File watching only, no specific output directory
     FileWatchOnly,
 }
@@ -61,18 +57,20 @@ impl EditorIntegration {
             vscode_extension_present: false,
         }
     }
-    
+
     /// Detect the active editor
     pub fn detect_editor(&mut self) -> Option<EditorType> {
         // Check for VSCode via environment variables
-        if std::env::var("VSCODE_PID").is_ok() || std::env::var("TERM_PROGRAM").map_or(false, |t| t == "vscode") {
+        if std::env::var("VSCODE_PID").is_ok()
+            || std::env::var("TERM_PROGRAM").map_or(false, |t| t == "vscode")
+        {
             self.vscode_extension_present = self.check_vscode_extension();
             return Some(EditorType::VSCode);
         }
-        
+
         None
     }
-    
+
     /// Check if VSCode Forge extension is installed
     fn check_vscode_extension(&self) -> bool {
         // Check common VSCode extension directories
@@ -81,7 +79,7 @@ impl EditorIntegration {
                 home.join(".vscode").join("extensions"),
                 home.join(".vscode-server").join("extensions"),
             ];
-            
+
             for ext_dir in extension_dirs {
                 if ext_dir.exists() {
                     if let Ok(entries) = std::fs::read_dir(ext_dir) {
@@ -95,38 +93,38 @@ impl EditorIntegration {
                 }
             }
         }
-        
+
         false
     }
-    
+
     /// Get current editor directory (if available from extension)
     pub fn get_current_editor_dir(&self) -> Option<PathBuf> {
         // This would be populated by WebSocket communication from VSCode extension
         // For now, return None - will be implemented when WebSocket integration is added
         None
     }
-    
+
     /// Set the active editor
     pub fn set_active_editor(&mut self, editor_info: EditorInfo) {
         self.active_editor = Some(editor_info);
     }
-    
+
     /// Check if VSCode extension is present
     pub fn has_vscode_extension(&self) -> bool {
         self.vscode_extension_present
     }
-    
+
     /// Set output strategy
     pub fn set_output_strategy(&mut self, strategy: OutputStrategy) {
         tracing::info!("Output strategy changed to: {:?}", strategy);
         self.output_strategy = strategy;
     }
-    
+
     /// Get current output strategy
     pub fn output_strategy(&self) -> &OutputStrategy {
         &self.output_strategy
     }
-    
+
     /// Get output directory based on current strategy
     pub fn get_output_directory(&self) -> Option<PathBuf> {
         match &self.output_strategy {
@@ -135,7 +133,7 @@ impl EditorIntegration {
             OutputStrategy::FileWatchOnly => None,
         }
     }
-    
+
     /// Update current editor directory (called by extension via WebSocket)
     pub fn update_editor_directory(&mut self, path: PathBuf) {
         self.output_strategy = OutputStrategy::CurrentEditorDir { path: path.clone() };
@@ -152,13 +150,13 @@ impl Default for EditorIntegration {
 // Helper function to get home directory (cross-platform)
 mod dirs {
     use std::path::PathBuf;
-    
+
     pub fn home_dir() -> Option<PathBuf> {
         #[cfg(windows)]
         {
             std::env::var_os("USERPROFILE").map(PathBuf::from)
         }
-        
+
         #[cfg(not(windows))]
         {
             std::env::var_os("HOME").map(PathBuf::from)
@@ -169,32 +167,30 @@ mod dirs {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_editor_integration_creation() {
         let integration = EditorIntegration::new();
         assert!(matches!(integration.output_strategy, OutputStrategy::FileWatchOnly));
     }
-    
+
     #[test]
     fn test_set_output_strategy() {
         let mut integration = EditorIntegration::new();
-        
+
         let path = PathBuf::from("/test/path");
-        integration.set_output_strategy(OutputStrategy::CurrentEditorDir {
-            path: path.clone(),
-        });
-        
+        integration.set_output_strategy(OutputStrategy::CurrentEditorDir { path: path.clone() });
+
         assert_eq!(integration.get_output_directory(), Some(path));
     }
-    
+
     #[test]
     fn test_update_editor_directory() {
         let mut integration = EditorIntegration::new();
-        
+
         let path = PathBuf::from("/new/dir");
         integration.update_editor_directory(path.clone());
-        
+
         match integration.output_strategy() {
             OutputStrategy::CurrentEditorDir { path: p } => {
                 assert_eq!(p, &path);

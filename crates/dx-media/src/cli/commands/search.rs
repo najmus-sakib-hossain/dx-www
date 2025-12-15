@@ -22,12 +22,21 @@ pub async fn execute(args: SearchArgs, format: OutputFormat, quiet: bool) -> Res
                 .template("{spinner:.cyan} {msg}")
                 .unwrap(),
         );
-        let search_type = if args.all { "all providers & scrapers" } else { "providers" };
+        let search_type = if args.all {
+            "all providers & scrapers"
+        } else {
+            "providers"
+        };
         let mode_str = match args.mode {
             crate::cli::args::SearchModeArg::Quantity => "⚡ quantity",
             crate::cli::args::SearchModeArg::Quality => "🎯 quality",
         };
-        pb.set_message(format!("Searching {} for '{}' ({} mode)...", search_type, args.query_string(), mode_str));
+        pb.set_message(format!(
+            "Searching {} for '{}' ({} mode)...",
+            search_type,
+            args.query_string(),
+            mode_str
+        ));
         pb.enable_steady_tick(std::time::Duration::from_millis(80));
         Some(pb)
     } else {
@@ -50,7 +59,7 @@ pub async fn execute(args: SearchArgs, format: OutputFormat, quiet: bool) -> Res
         query.orientation = args.orientation.map(Into::into);
         query.color = args.color.clone();
         query.mode = search_mode;
-        
+
         dx.search_query(&query).await?
     };
 
@@ -72,8 +81,7 @@ pub async fn execute(args: SearchArgs, format: OutputFormat, quiet: bool) -> Res
 
         let asset = &result.assets[0];
         let path = if let Some(ref output_dir) = args.output {
-            dx.download_to(asset, std::path::Path::new(output_dir))
-                .await?
+            dx.download_to(asset, std::path::Path::new(output_dir)).await?
         } else {
             dx.download(asset).await?
         };

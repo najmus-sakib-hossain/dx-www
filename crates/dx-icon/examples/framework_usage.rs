@@ -12,7 +12,7 @@ fn main() {
         match SvgIcon::from_file(&svgl_path) {
             Ok(icon) => {
                 println!("   ✓ Loaded SVGL icon: {}", icon.filename);
-                
+
                 // React
                 let react = icon.to_react_component(true);
                 println!("\n   [React Component Preview]");
@@ -68,10 +68,10 @@ fn main() {
         match IconSetJson::from_file(&json_path) {
             Ok(iconset) => {
                 println!("   ✓ Loaded IconSet: {}", iconset.info.name);
-                
+
                 if let Some((name, data)) = iconset.icons.iter().next() {
                     println!("   ✓ Testing icon: {}", name);
-                    
+
                     // React
                     let react = data.to_react_component(name, 32, 32, true);
                     println!("\n   [React Component Preview]");

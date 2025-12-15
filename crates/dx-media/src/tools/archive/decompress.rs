@@ -57,11 +57,7 @@ pub fn unlz4<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
 /// ```
 pub fn auto_decompress<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
     let input_path = input.as_ref();
-    let ext = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("")
-        .to_lowercase();
+    let ext = input_path.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
 
     let command = match ext.as_str() {
         "gz" | "gzip" => "gzip",
@@ -110,11 +106,7 @@ fn decompress_file<P: AsRef<Path>>(input: P, output: P, command: &str) -> Result
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "{} failed: {}",
-                command,
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("{} failed: {}", command, String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -129,10 +121,7 @@ fn decompress_file<P: AsRef<Path>>(input: P, output: P, command: &str) -> Result
     let decompressed_size = result.stdout.len() as u64;
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Decompressed {} -> {} bytes",
-            compressed_size, decompressed_size
-        ),
+        format!("Decompressed {} -> {} bytes", compressed_size, decompressed_size),
         output_path,
     )
     .with_metadata("compressed_size", compressed_size.to_string())
@@ -151,11 +140,7 @@ pub fn decompress_in_place<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
         });
     }
 
-    let ext = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("")
-        .to_lowercase();
+    let ext = input_path.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
 
     let command = match ext.as_str() {
         "gz" | "gzip" => "gzip",
@@ -191,10 +176,7 @@ pub fn decompress_in_place<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
     // Output file has the extension removed
     let output_path = input_path.with_extension("");
 
-    Ok(ToolOutput::success_with_path(
-        "Decompressed in place",
-        &output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Decompressed in place", &output_path))
 }
 
 /// Batch decompress multiple files.
@@ -212,10 +194,7 @@ pub fn batch_decompress<P: AsRef<Path>>(inputs: &[P], output_dir: P) -> Result<T
         let input_path = input.as_ref();
 
         // Get output filename (remove compression extension)
-        let file_name = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("output");
+        let file_name = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("output");
         let output_path = output_dir.join(file_name);
 
         if auto_decompress(input_path, &output_path).is_ok() {
@@ -223,10 +202,8 @@ pub fn batch_decompress<P: AsRef<Path>>(inputs: &[P], output_dir: P) -> Result<T
         }
     }
 
-    Ok(
-        ToolOutput::success(format!("Decompressed {} files", decompressed.len()))
-            .with_paths(decompressed),
-    )
+    Ok(ToolOutput::success(format!("Decompressed {} files", decompressed.len()))
+        .with_paths(decompressed))
 }
 
 /// Test integrity of compressed file.
@@ -241,11 +218,7 @@ pub fn test_integrity<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
         });
     }
 
-    let ext = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("")
-        .to_lowercase();
+    let ext = input_path.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
 
     let command = match ext.as_str() {
         "gz" | "gzip" => "gzip",

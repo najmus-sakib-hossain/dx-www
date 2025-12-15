@@ -70,11 +70,7 @@ impl LanguageDetector {
     /// Detect from Accept-Language header
     pub fn from_accept_language(header: &str) -> TextDirection {
         // Parse first language from header
-        let first_lang = header
-            .split(',')
-            .next()
-            .and_then(|s| s.split(';').next())
-            .unwrap_or("en");
+        let first_lang = header.split(',').next().and_then(|s| s.split(';').next()).unwrap_or("en");
 
         Self::get_direction(first_lang.trim())
     }
@@ -131,10 +127,7 @@ impl CSSFlipper {
         let trimmed = line.trim();
         if let Some(colon_pos) = trimmed.find(':') {
             let prop = trimmed[..colon_pos].trim().to_string();
-            let val = trimmed[colon_pos + 1..]
-                .trim()
-                .trim_end_matches(';')
-                .to_string();
+            let val = trimmed[colon_pos + 1..].trim().trim_end_matches(';').to_string();
             Some((prop, val))
         } else {
             None
@@ -158,7 +151,8 @@ impl Default for RTLConfig {
             flip_css: true,
         }
     }
-} #[cfg(test)]
+}
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -173,14 +167,8 @@ mod tests {
 
     #[test]
     fn test_direction() {
-        assert_eq!(
-            LanguageDetector::get_direction("ar"),
-            TextDirection::RightToLeft
-        );
-        assert_eq!(
-            LanguageDetector::get_direction("en"),
-            TextDirection::LeftToRight
-        );
+        assert_eq!(LanguageDetector::get_direction("ar"), TextDirection::RightToLeft);
+        assert_eq!(LanguageDetector::get_direction("en"), TextDirection::LeftToRight);
     }
 
     #[test]
@@ -218,4 +206,3 @@ mod tests {
         assert_eq!(TextDirection::RightToLeft.as_str(), "rtl");
     }
 }
-

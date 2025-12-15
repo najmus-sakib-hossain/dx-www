@@ -63,10 +63,7 @@ impl Position {
 
     /// Create a stable identifier that survives code transformations
     pub fn stable_id(&self) -> String {
-        format!(
-            "{}:{}:{}",
-            self.actor_id, self.lamport_timestamp, self.offset
-        )
+        format!("{}:{}:{}", self.actor_id, self.lamport_timestamp, self.offset)
     }
 }
 
@@ -139,9 +136,7 @@ impl OperationBatch {
     pub fn optimize(&mut self) {
         // Simple optimization: remove redundant operations
         self.operations.dedup_by(|a, b| {
-            a.file_path == b.file_path && 
-            a.actor_id == b.actor_id &&
-            a.timestamp == b.timestamp
+            a.file_path == b.file_path && a.actor_id == b.actor_id && a.timestamp == b.timestamp
         });
     }
 

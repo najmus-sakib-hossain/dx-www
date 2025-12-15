@@ -78,15 +78,9 @@ async fn main() -> Result<()> {
         // Initialize repository with existing files
         println!("📝 Scanning and storing existing files...");
         initialize_repository(demo_path).await?;
-        println!(
-            "✅ Repository initialized with {} files",
-            count_files(demo_path).await?
-        );
+        println!("✅ Repository initialized with {} files", count_files(demo_path).await?);
     } else {
-        println!(
-            "📦 Using existing Forge storage at {}",
-            forge_path.display()
-        );
+        println!("📦 Using existing Forge storage at {}", forge_path.display());
     }
 
     let state = AppState {
@@ -137,11 +131,7 @@ fn build_file_tree<'a>(
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<FileNode>> + Send + 'a>> {
     Box::pin(async move {
         let metadata = fs::metadata(path).await?;
-        let name = std::path::Path::new(path)
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string();
+        let name = std::path::Path::new(path).file_name().unwrap().to_string_lossy().to_string();
 
         let relative_path = path.strip_prefix(root).unwrap_or(path);
         // Normalize path separators for URLs (Windows uses backslashes)
@@ -218,9 +208,7 @@ async fn get_file_content(
         StatusCode::NOT_FOUND
     })?;
 
-    let metadata = fs::metadata(&full_path)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let metadata = fs::metadata(&full_path).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Detect language from extension
     let language = detect_language(&clean_path);
@@ -251,20 +239,13 @@ async fn download_file(
         StatusCode::NOT_FOUND
     })?;
 
-    let filename = std::path::Path::new(&path)
-        .file_name()
-        .unwrap()
-        .to_string_lossy()
-        .to_string();
+    let filename = std::path::Path::new(&path).file_name().unwrap().to_string_lossy().to_string();
 
     Ok((
         StatusCode::OK,
         [
             (header::CONTENT_TYPE, "application/octet-stream"),
-            (
-                header::CONTENT_DISPOSITION,
-                &format!("attachment; filename=\"{}\"", filename),
-            ),
+            (header::CONTENT_DISPOSITION, &format!("attachment; filename=\"{}\"", filename)),
         ],
         content,
     )
@@ -285,8 +266,7 @@ async fn download_as_zip(State(state): State<AppState>) -> Result<Response, Stat
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    zip.finish()
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    zip.finish().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let zip_data = zip_buffer.into_inner();
 
@@ -294,10 +274,7 @@ async fn download_as_zip(State(state): State<AppState>) -> Result<Response, Stat
         StatusCode::OK,
         [
             (header::CONTENT_TYPE, "application/zip"),
-            (
-                header::CONTENT_DISPOSITION,
-                "attachment; filename=\"forge-demo.zip\"",
-            ),
+            (header::CONTENT_DISPOSITION, "attachment; filename=\"forge-demo.zip\""),
         ],
         zip_data,
     )
@@ -325,9 +302,7 @@ fn add_directory_to_zip<'a>(
             }
 
             let relative_path = entry_path_str.strip_prefix(root).unwrap_or(&entry_path_str);
-            let relative_path = relative_path
-                .trim_start_matches('/')
-                .trim_start_matches('\\');
+            let relative_path = relative_path.trim_start_matches('/').trim_start_matches('\\');
 
             if entry.file_type().await?.is_dir() {
                 // Add directory
@@ -349,10 +324,7 @@ fn add_directory_to_zip<'a>(
 
 /// Detect programming language from file extension
 fn detect_language(path: &str) -> String {
-    let ext = std::path::Path::new(path)
-        .extension()
-        .and_then(|s| s.to_str())
-        .unwrap_or("");
+    let ext = std::path::Path::new(path).extension().and_then(|s| s.to_str()).unwrap_or("");
 
     match ext {
         "rs" => "rust",
@@ -642,11 +614,8 @@ fn store_directory_blobs<'a>(
                 if !blob_path.exists() {
                     tokio::fs::write(&blob_path, &content).await?;
 
-                    let relative_path = path
-                        .strip_prefix(repo_root)
-                        .unwrap_or(&path)
-                        .display()
-                        .to_string();
+                    let relative_path =
+                        path.strip_prefix(repo_root).unwrap_or(&path).display().to_string();
 
                     println!("  📄 Stored: {} ({})", relative_path, &hash[..8]);
                 }

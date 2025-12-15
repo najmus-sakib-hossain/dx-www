@@ -16,9 +16,11 @@ use futures::{SinkExt, StreamExt};
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::crdt::Operation;
+use crate::server::authentication::{
+    AuthManager, ChangePasswordRequest, CreateUserRequest, LoginRequest, LoginResponse,
+};
 use crate::storage::{Blob, Database, OperationLog, R2Config, R2Storage};
 use crate::sync::{SyncManager, SyncMessage, GLOBAL_CLOCK};
-use crate::server::authentication::{AuthManager, LoginRequest, LoginResponse, CreateUserRequest, ChangePasswordRequest};
 use dashmap::DashSet;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -33,7 +35,7 @@ pub struct AppState {
     pub repo_id: String,
     pub seen: Arc<DashSet<Uuid>>,
     pub r2: Option<Arc<R2Storage>>, // R2 storage for blobs
-    pub auth: Arc<AuthManager>, // Authentication manager
+    pub auth: Arc<AuthManager>,     // Authentication manager
 }
 
 /// API error type
@@ -123,11 +125,7 @@ pub async fn serve(port: u16, path: PathBuf) -> Result<()> {
     // Try to load R2 config
     let r2 = match R2Config::from_env() {
         Ok(config) => {
-            println!(
-                "{} R2 Bucket: {}",
-                "✓".green(),
-                config.bucket_name.bright_white()
-            );
+            println!("{} R2 Bucket: {}", "✓".green(), config.bucket_name.bright_white());
             match R2Storage::new(config) {
                 Ok(storage) => {
                     println!("{} R2 Storage enabled", "✓".green());
@@ -140,10 +138,7 @@ pub async fn serve(port: u16, path: PathBuf) -> Result<()> {
             }
         }
         Err(_) => {
-            println!(
-                "{} R2 not configured (set R2_* in .env for blob storage)",
-                "ℹ".blue()
-            );
+            println!("{} R2 not configured (set R2_* in .env for blob storage)", "ℹ".blue());
             None
         }
     };
@@ -498,19 +493,11 @@ const STYLES_CSS: &str = include_str!("web_ui/styles.css");
 const APP_JS: &str = include_str!("web_ui/app.js");
 
 async fn serve_index() -> impl IntoResponse {
-    (
-        StatusCode::OK,
-        [("Content-Type", "text/html; charset=utf-8")],
-        INDEX_HTML,
-    )
+    (StatusCode::OK, [("Content-Type", "text/html; charset=utf-8")], INDEX_HTML)
 }
 
 async fn serve_styles() -> impl IntoResponse {
-    (
-        StatusCode::OK,
-        [("Content-Type", "text/css; charset=utf-8")],
-        STYLES_CSS,
-    )
+    (StatusCode::OK, [("Content-Type", "text/css; charset=utf-8")], STYLES_CSS)
 }
 
 async fn serve_app_js() -> impl IntoResponse {
@@ -528,7 +515,7 @@ async fn login(
     Json(req): Json<LoginRequest>,
 ) -> Result<Json<LoginResponse>, ApiError> {
     let session = state.auth.login(&req.username, &req.password)?;
-    
+
     Ok(Json(LoginResponse {
         token: session.token,
         username: session.username,
@@ -565,8 +552,10 @@ async fn change_password(
 ) -> Result<StatusCode, ApiError> {
     let token = extract_token(&headers)?;
     let session = state.auth.validate_token(&token)?;
-    
-    state.auth.update_password(&session.username, &req.old_password, &req.new_password)?;
+
+    state
+        .auth
+        .update_password(&session.username, &req.old_password, &req.new_password)?;
     Ok(StatusCode::OK)
 }
 
@@ -576,7 +565,7 @@ fn extract_token(headers: &axum::http::HeaderMap) -> Result<String, ApiError> {
         .ok_or_else(|| ApiError::BadRequest("Missing Authorization header".to_string()))?
         .to_str()
         .map_err(|_| ApiError::BadRequest("Invalid Authorization header".to_string()))?;
-    
+
     auth_header
         .strip_prefix("Bearer ")
         .map(|s| s.to_string())
@@ -591,22 +580,25 @@ async fn list_users(
 ) -> Result<Json<Vec<serde_json::Value>>, ApiError> {
     // let token = extract_token(&headers)?;
     // let session = state.auth.validate_token(&token)?;
-    
+
     // Only allow admins and developers to list users
     // if session.role != crate::server::authentication::Role::Admin {
     //     return Err(ApiError::BadRequest("Insufficient permissions".to_string()));
     // }
-    
+
     let users = state.auth.list_users();
-    let user_list: Vec<_> = users.into_iter().map(|u| {
-        serde_json::json!({
-            "username": u.username,
-            "email": u.email,
-            "role": u.role,
-            "created_at": u.created_at,
+    let user_list: Vec<_> = users
+        .into_iter()
+        .map(|u| {
+            serde_json::json!({
+                "username": u.username,
+                "email": u.email,
+                "role": u.role,
+                "created_at": u.created_at,
+            })
         })
-    }).collect();
-    
+        .collect();
+
     Ok(Json(user_list))
 }
 
@@ -617,12 +609,12 @@ async fn create_user(
 ) -> Result<StatusCode, ApiError> {
     let token = extract_token(&headers)?;
     let session = state.auth.validate_token(&token)?;
-    
+
     // Only admins can create users
     if session.role != crate::server::authentication::Role::Admin {
         return Err(ApiError::BadRequest("Insufficient permissions".to_string()));
     }
-    
+
     state.auth.register(req.username, &req.password, req.role)?;
     Ok(StatusCode::CREATED)
 }
@@ -634,17 +626,17 @@ async fn delete_user(
 ) -> Result<StatusCode, ApiError> {
     let token = extract_token(&headers)?;
     let session = state.auth.validate_token(&token)?;
-    
+
     // Only admins can delete users
     if session.role != crate::server::authentication::Role::Admin {
         return Err(ApiError::BadRequest("Insufficient permissions".to_string()));
     }
-    
+
     // Prevent self-deletion
     if username == session.username {
         return Err(ApiError::BadRequest("Cannot delete your own account".to_string()));
     }
-    
+
     state.auth.delete_user(&username)?;
     Ok(StatusCode::NO_CONTENT)
 }
@@ -664,36 +656,33 @@ async fn list_files(
     _headers: axum::http::HeaderMap,
 ) -> Result<Json<Vec<FileInfo>>, ApiError> {
     // No auth check needed
-    
-    // List files in current directory  
-    let current_dir = std::env::current_dir()
-        .map_err(|e| ApiError::Internal(e.into()))?;
-    
+
+    // List files in current directory
+    let current_dir = std::env::current_dir().map_err(|e| ApiError::Internal(e.into()))?;
+
     let mut files = Vec::new();
-    
+
     if let Ok(entries) = std::fs::read_dir(&current_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            let name = path.file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("Unknown")
-                .to_string();
-            
+            let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("Unknown").to_string();
+
             // Skip hidden files and forge directory
             if name.starts_with('.') {
                 continue;
             }
-            
+
             let is_dir = path.is_dir();
             let size = if is_dir {
                 None
             } else {
                 std::fs::metadata(&path).ok().map(|m| m.len())
             };
-            
+
             files.push(FileInfo {
                 name,
-                path: path.strip_prefix(&current_dir)
+                path: path
+                    .strip_prefix(&current_dir)
                     .ok()
                     .and_then(|p| p.to_str())
                     .unwrap_or("")
@@ -703,16 +692,14 @@ async fn list_files(
             });
         }
     }
-    
+
     // Sort: directories first, then by name
-    files.sort_by(|a, b| {
-        match (a.is_dir, b.is_dir) {
-            (true, false) => std::cmp::Ordering::Less,
-            (false, true) => std::cmp::Ordering::Greater,
-            _ => a.name.cmp(&b.name),
-        }
+    files.sort_by(|a, b| match (a.is_dir, b.is_dir) {
+        (true, false) => std::cmp::Ordering::Less,
+        (false, true) => std::cmp::Ordering::Greater,
+        _ => a.name.cmp(&b.name),
     });
-    
+
     Ok(Json(files))
 }
 
@@ -728,35 +715,30 @@ async fn get_file_content(
     AxumPath(path): AxumPath<String>,
 ) -> Result<Json<FileContentResponse>, ApiError> {
     // No auth check needed
-    
+
     println!("DEBUG: Requested file path: {}", path);
 
-    let current_dir = std::env::current_dir()
-        .map_err(|e| ApiError::Internal(e.into()))?;
-    
+    let current_dir = std::env::current_dir().map_err(|e| ApiError::Internal(e.into()))?;
+
     let file_path = current_dir.join(&path);
     println!("DEBUG: Resolved file path: {:?}", file_path);
-    
+
     // Security check: ensure path doesn't escape current directory
     if !file_path.starts_with(&current_dir) {
         return Err(ApiError::BadRequest("Invalid file path".to_string()));
     }
-    
+
     // Check if file exists and is not a directory
     if !file_path.exists() {
         return Err(ApiError::NotFound(format!("File not found: {}", path)));
     }
-    
+
     if file_path.is_dir() {
         return Err(ApiError::BadRequest("Path is a directory".to_string()));
     }
-    
+
     // Read file content
-    let content = std::fs::read_to_string(&file_path)
-        .map_err(|e| ApiError::Internal(e.into()))?;
-    
-    Ok(Json(FileContentResponse {
-        content,
-        path,
-    }))
+    let content = std::fs::read_to_string(&file_path).map_err(|e| ApiError::Internal(e.into()))?;
+
+    Ok(Json(FileContentResponse { content, path }))
 }

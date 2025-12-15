@@ -149,12 +149,8 @@ fn test_image_text_watermark() {
     let input = fixture.create_test_image("test.pgm");
     let output = fixture.path("watermarked.pgm");
 
-    let result = image::add_text_watermark(
-        &input,
-        &output,
-        "© 2025",
-        image::WatermarkPosition::BottomRight,
-    );
+    let result =
+        image::add_text_watermark(&input, &output, "© 2025", image::WatermarkPosition::BottomRight);
     let _ = result;
 }
 

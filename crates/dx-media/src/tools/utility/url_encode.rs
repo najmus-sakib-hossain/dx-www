@@ -118,8 +118,7 @@ pub fn encode_path(input: &str) -> Result<ToolOutput> {
 /// Encode query string value.
 pub fn encode_query_value(input: &str) -> Result<ToolOutput> {
     encode(input).map(|mut o| {
-        o.metadata
-            .insert("type".to_string(), "query-value".to_string());
+        o.metadata.insert("type".to_string(), "query-value".to_string());
         o
     })
 }

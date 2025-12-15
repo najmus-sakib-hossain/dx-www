@@ -39,10 +39,7 @@ pub fn json_to_yaml<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
         source: None,
     })?;
 
-    Ok(ToolOutput::success_with_path(
-        "Converted JSON to YAML",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Converted JSON to YAML", output_path))
 }
 
 /// Convert YAML to JSON.
@@ -77,10 +74,7 @@ pub fn yaml_to_json<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
         source: None,
     })?;
 
-    Ok(ToolOutput::success_with_path(
-        "Converted YAML to JSON",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Converted YAML to JSON", output_path))
 }
 
 /// Convert using yq.

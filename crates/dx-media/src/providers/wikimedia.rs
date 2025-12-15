@@ -121,10 +121,7 @@ impl Provider for WikimediaCommonsProvider {
             ("iiurlwidth", "640"),
         ];
 
-        let response = self
-            .client
-            .get_with_query(self.base_url(), &params, &[])
-            .await?;
+        let response = self.client.get_with_query(self.base_url(), &params, &[]).await?;
 
         let api_response: WikimediaSearchResponse = response.json_or_error().await?;
 
@@ -293,13 +290,7 @@ mod tests {
 
     #[test]
     fn test_title_cleaning() {
-        assert_eq!(
-            WikimediaCommonsProvider::clean_title("File:Test_Image.jpg"),
-            "Test Image"
-        );
-        assert_eq!(
-            WikimediaCommonsProvider::clean_title("File:My_Photo.png"),
-            "My Photo"
-        );
+        assert_eq!(WikimediaCommonsProvider::clean_title("File:Test_Image.jpg"), "Test Image");
+        assert_eq!(WikimediaCommonsProvider::clean_title("File:My_Photo.png"), "My Photo");
     }
 }

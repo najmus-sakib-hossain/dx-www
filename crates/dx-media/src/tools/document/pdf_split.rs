@@ -68,10 +68,7 @@ fn split_with_pdftk(input: &Path, output_dir: &Path) -> Result<ToolOutput> {
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "pdftk split failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("pdftk split failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -84,12 +81,7 @@ fn split_with_pdftk(input: &Path, output_dir: &Path) -> Result<ToolOutput> {
         .map(|entries| {
             entries
                 .filter_map(|e| e.ok())
-                .filter(|e| {
-                    e.path()
-                        .extension()
-                        .map(|ext| ext == "pdf")
-                        .unwrap_or(false)
-                })
+                .filter(|e| e.path().extension().map(|ext| ext == "pdf").unwrap_or(false))
                 .count()
         })
         .unwrap_or(0);
@@ -174,10 +166,7 @@ pub fn extract_pages<P: AsRef<Path>>(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Page extraction failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Page extraction failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -207,10 +196,8 @@ pub fn extract_nth_pages<P: AsRef<Path>>(
     let page_count = get_page_count(input_path)?;
 
     // Build page list
-    let pages: Vec<String> = (offset..=page_count)
-        .step_by(n as usize)
-        .map(|p| p.to_string())
-        .collect();
+    let pages: Vec<String> =
+        (offset..=page_count).step_by(n as usize).map(|p| p.to_string()).collect();
 
     if pages.is_empty() {
         return Err(DxError::Config {
@@ -237,10 +224,7 @@ pub fn extract_nth_pages<P: AsRef<Path>>(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Page extraction failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Page extraction failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -331,10 +315,7 @@ pub fn remove_pages<P: AsRef<Path>>(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Page removal failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Page removal failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }

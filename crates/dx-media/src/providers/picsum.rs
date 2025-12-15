@@ -96,13 +96,8 @@ impl Provider for LoremPicsumProvider {
             .into_iter()
             .map(|img| {
                 // Construct download URL with original dimensions
-                let download_url = format!(
-                    "{}/id/{}/{}/{}",
-                    self.base_url(),
-                    img.id,
-                    img.width,
-                    img.height
-                );
+                let download_url =
+                    format!("{}/id/{}/{}/{}", self.base_url(), img.id, img.width, img.height);
                 let preview_url = format!("{}/id/{}/400/300", self.base_url(), img.id);
 
                 MediaAsset::builder()

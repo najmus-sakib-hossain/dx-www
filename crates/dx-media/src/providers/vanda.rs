@@ -72,10 +72,10 @@ impl Provider for VandAMuseumProvider {
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
         let count = query.count.min(100);
         let page = query.page;
-        
+
         let count_str = count.to_string();
         let page_str = page.to_string();
-        
+
         let url = format!("{}/objects/search", self.base_url());
         let params = [
             ("q", query.query.as_str()),
@@ -103,7 +103,10 @@ impl Provider for VandAMuseumProvider {
                         .title(record._primary_title.unwrap_or_else(|| "Untitled".to_string()))
                         .download_url(image_url)
                         .preview_url(preview_url)
-                        .source_url(format!("https://collections.vam.ac.uk/item/{}", record.system_number))
+                        .source_url(format!(
+                            "https://collections.vam.ac.uk/item/{}",
+                            record.system_number
+                        ))
                         .license(License::Other("V&A - Educational Use".to_string()))
                         .tags(record.object_type.map(|t| vec![t]).unwrap_or_default())
                         .build(),

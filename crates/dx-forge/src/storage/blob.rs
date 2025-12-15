@@ -147,10 +147,7 @@ impl Blob {
 
         // Use the recorded original size when available to avoid
         // decompression errors due to missing size hints.
-        let original_size = self
-            .metadata
-            .original_size
-            .unwrap_or(self.metadata.size) as i32;
+        let original_size = self.metadata.original_size.unwrap_or(self.metadata.size) as i32;
 
         let decompressed = lz4::block::decompress(&self.content, Some(original_size))?;
         self.content = decompressed;
@@ -241,9 +238,7 @@ impl BlobRepository {
     /// Load blob from local cache
     pub async fn load_local(&self, hash: &str) -> Result<Blob> {
         let blob_path = self.get_blob_path(hash);
-        let binary = fs::read(&blob_path)
-            .await
-            .context("Blob not found in cache")?;
+        let binary = fs::read(&blob_path).await.context("Blob not found in cache")?;
 
         Blob::from_binary(&binary)
     }

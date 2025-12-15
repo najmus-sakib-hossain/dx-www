@@ -1,4 +1,4 @@
-﻿/// Cloudflare R2 Storage Backend
+/// Cloudflare R2 Storage Backend
 ///
 /// This module provides integration with Cloudflare R2 for blob storage.
 /// Zero egress fees make it perfect for code hosting platforms.
@@ -85,12 +85,7 @@ impl R2Storage {
         let content_hash = compute_sha256_hex(&binary);
         let date = chrono::Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
 
-        let url = format!(
-            "{}/{}/{}",
-            self.config.endpoint_url(),
-            self.config.bucket_name,
-            key
-        );
+        let url = format!("{}/{}/{}", self.config.endpoint_url(), self.config.bucket_name, key);
 
         // Create AWS Signature V4 (simplified - in production use aws-sigv4 crate)
         let authorization = self.create_auth_header("PUT", &key, &binary)?;
@@ -120,12 +115,7 @@ impl R2Storage {
         let key = format!("blobs/{}/{}", &hash[..2], &hash[2..]);
         let date = chrono::Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
 
-        let url = format!(
-            "{}/{}/{}",
-            self.config.endpoint_url(),
-            self.config.bucket_name,
-            key
-        );
+        let url = format!("{}/{}/{}", self.config.endpoint_url(), self.config.bucket_name, key);
 
         let authorization = self.create_auth_header("GET", &key, &[])?;
 
@@ -157,12 +147,7 @@ impl R2Storage {
         let key = format!("blobs/{}/{}", &hash[..2], &hash[2..]);
         let date = chrono::Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
 
-        let url = format!(
-            "{}/{}/{}",
-            self.config.endpoint_url(),
-            self.config.bucket_name,
-            key
-        );
+        let url = format!("{}/{}/{}", self.config.endpoint_url(), self.config.bucket_name, key);
 
         let authorization = self.create_auth_header("HEAD", &key, &[])?;
 
@@ -182,12 +167,7 @@ impl R2Storage {
         let key = format!("blobs/{}/{}", &hash[..2], &hash[2..]);
         let date = chrono::Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
 
-        let url = format!(
-            "{}/{}/{}",
-            self.config.endpoint_url(),
-            self.config.bucket_name,
-            key
-        );
+        let url = format!("{}/{}/{}", self.config.endpoint_url(), self.config.bucket_name, key);
 
         let authorization = self.create_auth_header("DELETE", &key, &[])?;
 
@@ -219,12 +199,7 @@ impl R2Storage {
         let key = format!("components/{}/{}/{}.tsx", tool, version, component);
         let date = chrono::Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
 
-        let url = format!(
-            "{}/{}/{}",
-            self.config.endpoint_url(),
-            self.config.bucket_name,
-            key
-        );
+        let url = format!("{}/{}/{}", self.config.endpoint_url(), self.config.bucket_name, key);
 
         let authorization = self.create_auth_header("GET", &key, &[])?;
 
@@ -264,12 +239,7 @@ impl R2Storage {
         let content_hash = compute_sha256_hex(binary);
         let date = chrono::Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
 
-        let url = format!(
-            "{}/{}/{}",
-            self.config.endpoint_url(),
-            self.config.bucket_name,
-            key
-        );
+        let url = format!("{}/{}/{}", self.config.endpoint_url(), self.config.bucket_name, key);
 
         let authorization = self.create_auth_header("PUT", &key, binary)?;
 
@@ -304,12 +274,7 @@ impl R2Storage {
         let key = format!("components/{}/{}/{}.tsx", tool, version, component);
         let date = chrono::Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
 
-        let url = format!(
-            "{}/{}/{}",
-            self.config.endpoint_url(),
-            self.config.bucket_name,
-            key
-        );
+        let url = format!("{}/{}/{}", self.config.endpoint_url(), self.config.bucket_name, key);
 
         let authorization = self.create_auth_header("HEAD", &key, &[])?;
 
@@ -335,7 +300,8 @@ impl R2Storage {
         );
 
         let date = chrono::Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
-        let authorization = self.create_auth_header("GET", &format!("?list-type=2&prefix={}", prefix), &[])?;
+        let authorization =
+            self.create_auth_header("GET", &format!("?list-type=2&prefix={}", prefix), &[])?;
 
         let response = self
             .client
@@ -355,7 +321,7 @@ impl R2Storage {
         // Parse XML response (simplified - in production use proper XML parser)
         let body = response.text().await?;
         let mut components = Vec::new();
-        
+
         for line in body.lines() {
             if line.contains("<Key>") {
                 let key = line.replace("<Key>", "").replace("</Key>", "").trim().to_string();
@@ -372,34 +338,39 @@ impl R2Storage {
 
     /// Sync components (bidirectional)
     pub async fn sync_components(
-        &self, 
-        tool: &str, 
+        &self,
+        tool: &str,
         local_components: &[String],
         on_download: impl Fn(&str),
-        on_upload: impl Fn(&str)
+        on_upload: impl Fn(&str),
     ) -> Result<()> {
         // 1. List remote components
         let remote_components = self.list_components(tool).await?;
-        
+
         // 2. Calculate sync actions
-        let (to_download, to_upload) = self.calculate_sync_actions(&remote_components, local_components);
-        
+        let (to_download, to_upload) =
+            self.calculate_sync_actions(&remote_components, local_components);
+
         // 3. Execute actions
         for remote in to_download {
             on_download(&remote);
         }
-        
+
         for local in to_upload {
             on_upload(&local);
         }
-        
+
         Ok(())
     }
 
     /// Calculate what needs to be downloaded and uploaded
     /// Returns (to_download, to_upload)
     #[cfg_attr(test, allow(dead_code))]
-    pub(crate) fn calculate_sync_actions(&self, remote_components: &[String], local_components: &[String]) -> (Vec<String>, Vec<String>) {
+    pub(crate) fn calculate_sync_actions(
+        &self,
+        remote_components: &[String],
+        local_components: &[String],
+    ) -> (Vec<String>, Vec<String>) {
         let mut to_download = Vec::new();
         let mut to_upload = Vec::new();
 
@@ -493,9 +464,9 @@ impl R2Storage {
         progress_callback: Option<impl Fn(usize, usize) + Send + Sync>,
     ) -> Result<SyncResult> {
         use futures::stream::{self, StreamExt};
-        
+
         tracing::info!("ðŸ”„ Starting R2 sync up: {} local blobs", local_blobs.len());
-        
+
         let mut uploaded = 0;
         let mut skipped = 0;
         let mut errors = Vec::new();
@@ -566,9 +537,9 @@ impl R2Storage {
         progress_callback: Option<impl Fn(usize, usize) + Send + Sync>,
     ) -> Result<Vec<Blob>> {
         use futures::stream::{self, StreamExt};
-        
+
         tracing::info!("ðŸ”„ Starting R2 sync down: {} remote blobs", remote_hashes.len());
-        
+
         let total = remote_hashes.len();
         let mut downloaded_blobs = Vec::new();
 
@@ -599,7 +570,8 @@ impl R2Storage {
         }
 
         tracing::info!(
-            "âœ… Sync down complete: {} downloaded, {} errors", downloaded_blobs.len(),
+            "âœ… Sync down complete: {} downloaded, {} errors",
+            downloaded_blobs.len(),
             errors.len()
         );
 
@@ -682,26 +654,26 @@ mod tests {
     fn test_sync_calculation() {
         let config = R2Config::default();
         let storage = R2Storage::new(config).unwrap();
-        
+
         let remote = vec!["comp1.tsx".to_string(), "comp2.tsx".to_string()];
         let local = vec!["comp2.tsx".to_string(), "comp3.tsx".to_string()];
-        
+
         let (download, upload) = storage.calculate_sync_actions(&remote, &local);
-        
+
         assert_eq!(download, vec!["comp1.tsx".to_string()]);
         assert_eq!(upload, vec!["comp3.tsx".to_string()]);
     }
-    
+
     #[test]
     fn test_sync_empty() {
         let config = R2Config::default();
         let storage = R2Storage::new(config).unwrap();
-        
+
         let remote = vec![];
         let local = vec![];
-        
+
         let (download, upload) = storage.calculate_sync_actions(&remote, &local);
-        
+
         assert!(download.is_empty());
         assert!(upload.is_empty());
     }

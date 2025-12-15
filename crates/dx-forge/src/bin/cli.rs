@@ -2,10 +2,10 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::*;
 use dx_forge::{context, server, storage, watcher_legacy};
-use tracing_subscriber::{EnvFilter};
-use tracing_subscriber::prelude::*;
-use tracing_appender::rolling;
 use std::path::PathBuf;
+use tracing_appender::rolling;
+use tracing_subscriber::prelude::*;
+use tracing_subscriber::EnvFilter;
 
 #[derive(Parser)]
 #[command(name = "forge")]
@@ -199,7 +199,7 @@ async fn main() -> Result<()> {
 
     let env_filter = match EnvFilter::try_from_default_env() {
         Ok(f) => f,
-        Err(_) => EnvFilter::new("warn"),  // Changed from 'info' to 'warn' to reduce log spam
+        Err(_) => EnvFilter::new("warn"), // Changed from 'info' to 'warn' to reduce log spam
     };
 
     tracing_subscriber::registry()
@@ -227,17 +227,11 @@ async fn main() -> Result<()> {
 
     match command {
         Commands::Init { path } => {
-            println!(
-                "{}",
-                "🚀 Initializing Forge DeltaDB repository...".cyan().bold()
-            );
+            println!("{}", "🚀 Initializing Forge DeltaDB repository...".cyan().bold());
             storage::init(&path).await?;
             println!("{}", "✓ Repository initialized successfully!".green());
             println!("\n{}", "Next steps:".yellow());
-            println!(
-                "  1. {} - Start tracking operations",
-                "forge watch".bright_white()
-            );
+            println!("  1. {} - Start tracking operations", "forge watch".bright_white());
             println!("  2. {} - View operation log", "forge oplog".bright_white());
             println!(
                 "  3. {} - Add context to code",
@@ -261,11 +255,7 @@ async fn main() -> Result<()> {
             message,
         } => {
             let anchor = context::create_anchor(&file, line, column, message).await?;
-            println!(
-                "{} Created anchor: {}",
-                "✓".green(),
-                anchor.id.to_string().bright_yellow()
-            );
+            println!("{} Created anchor: {}", "✓".green(), anchor.id.to_string().bright_yellow());
             println!("  Permalink: {}", anchor.permalink().bright_blue());
         }
 
@@ -300,12 +290,7 @@ async fn main() -> Result<()> {
         }
 
         Commands::Serve { port, path } => {
-            println!(
-                "{}",
-                format!("🌐 Starting server on port {}...", port)
-                    .cyan()
-                    .bold()
-            );
+            println!("{}", format!("🌐 Starting server on port {}...", port).cyan().bold());
             server::start(port, path).await?;
         }
 
@@ -341,15 +326,10 @@ async fn main() -> Result<()> {
                 } else {
                     println!(
                         "{}",
-                        format!("🔄 Updating component: {}...", comp_name)
-                            .cyan()
-                            .bold()
+                        format!("🔄 Updating component: {}...", comp_name).cyan().bold()
                     );
                     // In production, fetch remote version and apply update
-                    println!(
-                        "   {} (placeholder - would fetch and update)",
-                        "→".bright_black()
-                    );
+                    println!("   {} (placeholder - would fetch and update)", "→".bright_black());
                 }
             } else {
                 println!("{}", "Please specify a component name or 'all'".yellow());
@@ -399,9 +379,7 @@ async fn main() -> Result<()> {
                 println!("\n{}", "─".repeat(80).bright_black());
                 println!(
                     "{} {} | {} {}",
-                    format!("{} components", components.len())
-                        .bright_white()
-                        .bold(),
+                    format!("{} components", components.len()).bright_white().bold(),
                     "Use --verbose for details".bright_black(),
                     "forge update <name>".bright_white(),
                     "to update".bright_black()

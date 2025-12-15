@@ -145,10 +145,7 @@ pub fn markdown_to_html_with_options<P: AsRef<Path>>(
         ""
     };
 
-    let title = input_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("Document");
+    let title = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("Document");
 
     let html = format!(
         r#"<!DOCTYPE html>
@@ -172,10 +169,7 @@ pub fn markdown_to_html_with_options<P: AsRef<Path>>(
         source: None,
     })?;
 
-    Ok(ToolOutput::success_with_path(
-        "Converted markdown to HTML",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Converted markdown to HTML", output_path))
 }
 
 /// Simple markdown to HTML converter.
@@ -249,12 +243,7 @@ fn convert_markdown(markdown: &str) -> String {
             html.push_str(&format!("<li>{}</li>\n", process_inline(&line.trim()[2..])));
         }
         // Ordered list
-        else if line
-            .trim()
-            .chars()
-            .next()
-            .map(|c| c.is_ascii_digit())
-            .unwrap_or(false)
+        else if line.trim().chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false)
             && line.contains(". ")
         {
             if let Some(pos) = line.find(". ") {
@@ -283,9 +272,7 @@ fn process_inline(text: &str) -> String {
 
     // Bold
     let bold_re = regex::Regex::new(r"\*\*(.+?)\*\*").unwrap();
-    result = bold_re
-        .replace_all(&result, "<strong>$1</strong>")
-        .to_string();
+    result = bold_re.replace_all(&result, "<strong>$1</strong>").to_string();
 
     // Italic
     let italic_re = regex::Regex::new(r"\*(.+?)\*").unwrap();
@@ -297,15 +284,11 @@ fn process_inline(text: &str) -> String {
 
     // Links
     let link_re = regex::Regex::new(r"\[(.+?)\]\((.+?)\)").unwrap();
-    result = link_re
-        .replace_all(&result, "<a href=\"$2\">$1</a>")
-        .to_string();
+    result = link_re.replace_all(&result, "<a href=\"$2\">$1</a>").to_string();
 
     // Images
     let img_re = regex::Regex::new(r"!\[(.+?)\]\((.+?)\)").unwrap();
-    result = img_re
-        .replace_all(&result, "<img src=\"$2\" alt=\"$1\">")
-        .to_string();
+    result = img_re.replace_all(&result, "<img src=\"$2\" alt=\"$1\">").to_string();
 
     result
 }
@@ -361,10 +344,7 @@ pub fn batch_markdown_to_html<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("document");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("document");
         let output_path = output_dir.join(format!("{}.html", file_stem));
 
         if markdown_to_html_with_options(input_path, &output_path, options.clone()).is_ok() {
@@ -372,10 +352,8 @@ pub fn batch_markdown_to_html<P: AsRef<Path>>(
         }
     }
 
-    Ok(
-        ToolOutput::success(format!("Converted {} markdown files", converted.len()))
-            .with_paths(converted),
-    )
+    Ok(ToolOutput::success(format!("Converted {} markdown files", converted.len()))
+        .with_paths(converted))
 }
 
 #[cfg(test)]

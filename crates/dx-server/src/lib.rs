@@ -175,25 +175,25 @@ pub fn build_router(state: ServerState) -> Router {
         .route("/favicon.ico", get(handlers::serve_favicon))
         // Binary streaming endpoint (Day 16: The Binary Streamer)
         .route("/stream/:app_id", get(handlers::serve_binary_stream));
-    
+
     // Add ecosystem routes
     #[cfg(feature = "query")]
     {
         use axum::routing::post;
         router = router.route("/api/rpc", post(rpc_handler::handle_rpc));
     }
-    
+
     #[cfg(feature = "auth")]
     {
         use axum::routing::post;
         router = router.route("/api/auth/login", post(auth_middleware::handle_login));
     }
-    
+
     #[cfg(feature = "sync")]
     {
         router = router.route("/ws", get(ws_handler::handle_ws_upgrade));
     }
-    
+
     router
         // Add state
         .with_state(state)

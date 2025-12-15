@@ -75,20 +75,25 @@ impl DOMMonitor {
 
     /// Start monitoring
     pub fn start(&mut self, target: &web_sys::Element) -> Result<(), String> {
-        use wasm_bindgen::prelude::*;
         use wasm_bindgen::JsCast;
+        use wasm_bindgen::prelude::*;
 
         let mutation_count = self.mutation_count.clone();
-        
+
         // Create mutation callback
-        let callback = Closure::wrap(Box::new(move |mutations: js_sys::Array, _observer: web_sys::MutationObserver| {
-            let count = mutation_count.get();
-            mutation_count.set(count + mutations.length());
-            
-            // Log mutations in dev mode
-            #[cfg(debug_assertions)]
-            web_sys::console::log_1(&format!("Detected {} mutations", mutations.length()).into());
-        }) as Box<dyn FnMut(js_sys::Array, web_sys::MutationObserver)>);
+        let callback = Closure::wrap(Box::new(
+            move |mutations: js_sys::Array, _observer: web_sys::MutationObserver| {
+                let count = mutation_count.get();
+                mutation_count.set(count + mutations.length());
+
+                // Log mutations in dev mode
+                #[cfg(debug_assertions)]
+                web_sys::console::log_1(
+                    &format!("Detected {} mutations", mutations.length()).into(),
+                );
+            },
+        )
+            as Box<dyn FnMut(js_sys::Array, web_sys::MutationObserver)>);
 
         let observer = web_sys::MutationObserver::new(callback.as_ref().unchecked_ref())
             .map_err(|e| format!("Failed to create observer: {:?}", e))?;
@@ -148,7 +153,7 @@ impl DOMSignature {
         use std::hash::{Hash, Hasher};
 
         let element_id = element.id();
-        
+
         // Hash structure (tag name + child count)
         let mut structure_hasher = DefaultHasher::new();
         element.tag_name().hash(&mut structure_hasher);
@@ -244,17 +249,17 @@ mod tests {
     #[test]
     fn test_integrity_checker() {
         let mut checker = IntegrityChecker::new();
-        
+
         let sig = DOMSignature {
             element_id: "test".to_string(),
             structure_hash: 12345,
             attribute_hash: 67890,
         };
-        
+
         checker.register(sig);
-        
+
         assert_eq!(checker.registered_ids(), vec!["test"]);
-        
+
         checker.clear();
         assert_eq!(checker.registered_ids().len(), 0);
     }
@@ -269,9 +274,8 @@ mod tests {
             attribute_name: None,
             old_value: None,
         };
-        
+
         assert_eq!(record.mutation_type, MutationType::ChildList);
         assert_eq!(record.added_nodes, 2);
     }
 }
-

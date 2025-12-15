@@ -140,12 +140,10 @@ pub fn pdf_to_images_with_options<P: AsRef<Path>>(
     }
 
     if let Some((start, end)) = options.pages {
-        cmd.arg(format!("-dFirstPage={}", start))
-            .arg(format!("-dLastPage={}", end));
+        cmd.arg(format!("-dFirstPage={}", start)).arg(format!("-dLastPage={}", end));
     }
 
-    cmd.arg(format!("-sOutputFile={}", pattern.to_string_lossy()))
-        .arg(input_path);
+    cmd.arg(format!("-sOutputFile={}", pattern.to_string_lossy())).arg(input_path);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run Ghostscript: {}", e),
@@ -284,20 +282,14 @@ pub fn batch_pdf_to_images<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("pdf");
+        let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("pdf");
 
         let pdf_output_dir = output_dir.join(file_stem);
 
         if let Ok(result) = pdf_to_images_with_options(input_path, &pdf_output_dir, options.clone())
         {
-            total_images += result
-                .metadata
-                .get("count")
-                .and_then(|s| s.parse::<usize>().ok())
-                .unwrap_or(0);
+            total_images +=
+                result.metadata.get("count").and_then(|s| s.parse::<usize>().ok()).unwrap_or(0);
         }
     }
 

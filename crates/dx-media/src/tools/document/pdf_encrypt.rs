@@ -44,10 +44,7 @@ impl EncryptionStrength {
 
     /// Whether to use AES.
     fn is_aes(&self) -> bool {
-        matches!(
-            self,
-            EncryptionStrength::Aes128 | EncryptionStrength::Aes256
-        )
+        matches!(self, EncryptionStrength::Aes128 | EncryptionStrength::Aes256)
     }
 }
 
@@ -279,10 +276,7 @@ fn encrypt_with_pdftk(input: &Path, output: &Path, options: &EncryptOptions) -> 
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "PDF encrypted with pdftk",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("PDF encrypted with pdftk", output))
 }
 
 /// Encrypt using qpdf.
@@ -321,18 +315,12 @@ fn encrypt_with_qpdf(input: &Path, output: &Path, options: &EncryptOptions) -> R
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "qpdf encryption failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("qpdf encryption failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "PDF encrypted with qpdf",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("PDF encrypted with qpdf", output))
 }
 
 /// Decrypt a PDF.
@@ -391,28 +379,18 @@ fn decrypt_with_qpdf(input: &Path, output: &Path, password: &str) -> Result<Tool
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "qpdf decryption failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("qpdf decryption failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "PDF decrypted with qpdf",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("PDF decrypted with qpdf", output))
 }
 
 /// Decrypt using pdftk.
 fn decrypt_with_pdftk(input: &Path, output: &Path, password: &str) -> Result<ToolOutput> {
     let mut cmd = Command::new("pdftk");
-    cmd.arg(input)
-        .arg("input_pw")
-        .arg(password)
-        .arg("output")
-        .arg(output);
+    cmd.arg(input).arg("input_pw").arg(password).arg("output").arg(output);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run pdftk: {}", e),
@@ -429,10 +407,7 @@ fn decrypt_with_pdftk(input: &Path, output: &Path, password: &str) -> Result<Too
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "PDF decrypted with pdftk",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("PDF decrypted with pdftk", output))
 }
 
 /// Check if PDF is encrypted.
@@ -496,10 +471,7 @@ pub fn remove_restrictions<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "PDF restrictions removed",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("PDF restrictions removed", output_path))
 }
 
 /// Batch encrypt multiple PDFs.
@@ -519,10 +491,7 @@ pub fn batch_encrypt<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_name = input_path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("document.pdf");
+        let file_name = input_path.file_name().and_then(|s| s.to_str()).unwrap_or("document.pdf");
         let output_path = output_dir.join(file_name);
 
         if encrypt(input_path, &output_path, password).is_ok() {

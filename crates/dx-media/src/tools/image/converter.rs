@@ -100,11 +100,7 @@ pub fn convert<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
     }
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Converted {} to {}",
-            input_path.display(),
-            output_path.display()
-        ),
+        format!("Converted {} to {}", input_path.display(), output_path.display()),
         output_path,
     ))
 }
@@ -118,10 +114,7 @@ pub fn convert_to_format<P: AsRef<Path>>(
     let input_path = input.as_ref();
     let output_dir = output_dir.as_ref();
 
-    let stem = input_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("output");
+    let stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("output");
     let output_path = output_dir.join(format!("{}.{}", stem, format.extension()));
 
     convert(input_path, &output_path)
@@ -144,10 +137,7 @@ pub fn convert_batch<P: AsRef<Path>>(
     let mut converted = 0;
     for input in inputs {
         let input_path = input.as_ref();
-        let stem = input_path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("output");
+        let stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("output");
         let output_path = output_dir.join(format!("{}.{}", stem, format.extension()));
 
         convert(input_path, &output_path)?;

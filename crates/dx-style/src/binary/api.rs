@@ -1,7 +1,6 @@
 /// Unified Binary Style API
-/// 
+///
 /// High-level interface that automatically selects the best optimization level
-
 use crate::binary::*;
 
 /// Style encoding mode
@@ -24,15 +23,12 @@ pub enum EncodingMode {
 /// Generate CSS using the optimal encoding
 pub fn generate_css_optimized(class_names: &[&str], mode: EncodingMode) -> String {
     // Convert class names to IDs
-    let ids: Vec<StyleId> = class_names
-        .iter()
-        .filter_map(|name| style_name_to_id(name))
-        .collect();
-    
+    let ids: Vec<StyleId> = class_names.iter().filter_map(|name| style_name_to_id(name)).collect();
+
     if ids.is_empty() {
         return String::new();
     }
-    
+
     match mode {
         EncodingMode::BinaryIds => {
             // Level 1: Just use IDs directly
@@ -68,7 +64,7 @@ pub fn generate_css_optimized(class_names: &[&str], mode: EncodingMode) -> Strin
             if let Some(css) = try_apply_combo(&ids) {
                 return css.to_string();
             }
-            
+
             // 2. Use direct cssText (still very fast)
             apply_styles_direct(&ids)
         }
@@ -77,11 +73,8 @@ pub fn generate_css_optimized(class_names: &[&str], mode: EncodingMode) -> Strin
 
 /// Get binary representation for network transmission
 pub fn encode_for_transmission(class_names: &[&str]) -> Vec<u8> {
-    let ids: Vec<StyleId> = class_names
-        .iter()
-        .filter_map(|name| style_name_to_id(name))
-        .collect();
-    
+    let ids: Vec<StyleId> = class_names.iter().filter_map(|name| style_name_to_id(name)).collect();
+
     // Check if this is a common combo
     if let Some(combo_id) = is_common_combo(&ids) {
         // Send combo flag + combo ID (3 bytes total)
@@ -99,7 +92,7 @@ pub fn decode_and_generate(binary: &[u8]) -> String {
     if binary.is_empty() {
         return String::new();
     }
-    
+
     if binary[0] == 0xFF {
         // Combo mode
         if binary.len() >= 3 {
@@ -140,21 +133,21 @@ impl PerformanceStats {
 /// Benchmark all encoding modes
 pub fn benchmark_modes(class_names: &[&str]) -> Vec<PerformanceStats> {
     use std::time::Instant;
-    
+
     let modes = vec![
         EncodingMode::BinaryIds,
         EncodingMode::Combos,
         EncodingMode::VarintIds,
         EncodingMode::Auto,
     ];
-    
+
     let mut results = Vec::new();
-    
+
     for mode in modes {
         let start = Instant::now();
         let css = generate_css_optimized(class_names, mode);
         let elapsed = start.elapsed();
-        
+
         results.push(PerformanceStats {
             mode,
             input_classes: class_names.len(),
@@ -162,7 +155,7 @@ pub fn benchmark_modes(class_names: &[&str]) -> Vec<PerformanceStats> {
             generation_time_us: elapsed.as_micros(),
         });
     }
-    
+
     results
 }
 
@@ -174,7 +167,7 @@ mod tests {
     fn test_auto_mode() {
         let classes = vec!["flex", "items-center", "p-4"];
         let css = generate_css_optimized(&classes, EncodingMode::Auto);
-        
+
         // Should contain all styles
         assert!(css.contains("display:flex"));
         assert!(css.contains("align-items:center"));
@@ -185,7 +178,7 @@ mod tests {
     fn test_combo_detection() {
         let classes = vec!["flex", "items-center", "p-4"];
         let css = generate_css_optimized(&classes, EncodingMode::Combos);
-        
+
         // Should use combo
         assert!(css.contains("display:flex"));
     }
@@ -194,10 +187,10 @@ mod tests {
     fn test_transmission_encoding() {
         let classes = vec!["flex", "items-center", "p-4"];
         let binary = encode_for_transmission(&classes);
-        
+
         // Should detect as combo (starts with 0xFF)
         assert_eq!(binary[0], 0xFF);
-        
+
         // Decode should produce same CSS
         let decoded = decode_and_generate(&binary);
         assert!(decoded.contains("display:flex"));
@@ -207,10 +200,10 @@ mod tests {
     fn test_non_combo_transmission() {
         let classes = vec!["block", "text-center"];
         let binary = encode_for_transmission(&classes);
-        
+
         // Should use individual IDs (starts with 0x00)
         assert_eq!(binary[0], 0x00);
-        
+
         // Decode should work
         let decoded = decode_and_generate(&binary);
         assert!(decoded.contains("display:block"));
@@ -219,15 +212,15 @@ mod tests {
     #[test]
     fn test_size_comparison() {
         let classes = vec!["flex", "items-center", "p-4", "text-white", "bg-blue-500"];
-        
+
         // Original class names
         let original_size: usize = classes.iter().map(|s| s.len()).sum::<usize>();
-        
+
         // Binary transmission
         let binary = encode_for_transmission(&classes);
-        
+
         println!("Original: {} bytes, Binary: {} bytes", original_size, binary.len());
-        
+
         // Binary should be much smaller
         assert!(binary.len() < original_size);
     }
@@ -236,15 +229,15 @@ mod tests {
     fn test_benchmark_modes() {
         let classes = vec!["flex", "items-center", "p-4"];
         let stats = benchmark_modes(&classes);
-        
+
         assert!(!stats.is_empty());
-        
+
         for stat in &stats {
             println!(
                 "Mode: {:?}, Time: {}µs, Size: {} bytes",
                 stat.mode, stat.generation_time_us, stat.output_size
             );
-            
+
             // All should be fast (< 100µs)
             assert!(stat.generation_time_us < 100);
         }
@@ -268,7 +261,7 @@ mod tests {
     fn test_mixed_valid_invalid() {
         let classes = vec!["flex", "invalid-class", "items-center"];
         let css = generate_css_optimized(&classes, EncodingMode::Auto);
-        
+
         // Should contain valid classes
         assert!(css.contains("display:flex"));
         assert!(css.contains("align-items:center"));

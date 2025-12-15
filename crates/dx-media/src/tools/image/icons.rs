@@ -75,12 +75,9 @@ pub fn generate_favicon<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutpu
     }
     args.push(output_path.to_str().unwrap_or("").to_string());
 
-    let status = Command::new("magick")
-        .args(&args)
-        .status()
-        .map_err(|e| DxError::Internal {
-            message: format!("Failed to execute ImageMagick: {}", e),
-        })?;
+    let status = Command::new("magick").args(&args).status().map_err(|e| DxError::Internal {
+        message: format!("Failed to execute ImageMagick: {}", e),
+    })?;
 
     if !status.success() {
         return Err(DxError::Internal {
@@ -222,10 +219,7 @@ pub fn generate_all_icons<P: AsRef<Path>>(input: P, output_dir: P) -> Result<Too
     let pwa_dir = output_dir.join("pwa");
     generate_pwa_icons(input_path, &pwa_dir)?;
 
-    Ok(ToolOutput::success(format!(
-        "Generated all icons in {}",
-        output_dir.display()
-    )))
+    Ok(ToolOutput::success(format!("Generated all icons in {}", output_dir.display())))
 }
 
 /// Generate rounded icon.

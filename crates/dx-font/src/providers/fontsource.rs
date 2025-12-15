@@ -3,12 +3,15 @@
 //! Fontsource provides 1,562+ open-source fonts as NPM packages.
 //! API: https://api.fontsource.org/v1/fonts
 
+use super::FontProviderTrait;
+use crate::models::{
+    Font, FontCategory, FontFamily, FontLicense, FontProvider, FontStyle, FontVariant, FontWeight,
+    SearchQuery,
+};
+use anyhow::Result;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::Deserialize;
-use anyhow::Result;
-use crate::models::{Font, FontFamily, FontVariant, FontCategory, FontProvider, FontWeight, FontStyle, FontLicense, SearchQuery};
-use super::FontProviderTrait;
 
 /// Fontsource API font response
 #[derive(Debug, Deserialize)]
@@ -40,7 +43,7 @@ impl FontsourceProvider {
             api_url: "https://api.fontsource.org/v1/fonts".to_string(),
         }
     }
-    
+
     fn parse_category(category: &str) -> Option<FontCategory> {
         match category.to_lowercase().as_str() {
             "serif" => Some(FontCategory::Serif),
@@ -58,31 +61,27 @@ impl FontProviderTrait for FontsourceProvider {
     fn name(&self) -> &str {
         "Fontsource"
     }
-    
+
     fn base_url(&self) -> &str {
         "https://fontsource.org"
     }
-    
+
     async fn search(&self, query: &SearchQuery) -> Result<Vec<Font>> {
         let fonts = self.list_all().await?;
-        
+
         let query_lower = query.query.to_lowercase();
         let filtered: Vec<Font> = fonts
             .into_iter()
             .filter(|f| f.name.to_lowercase().contains(&query_lower))
             .collect();
-        
+
         Ok(filtered)
     }
-    
+
     async fn list_all(&self) -> Result<Vec<Font>> {
-        let response: Vec<FontsourceFont> = self.client
-            .get(&self.api_url)
-            .send()
-            .await?
-            .json()
-            .await?;
-        
+        let response: Vec<FontsourceFont> =
+            self.client.get(&self.api_url).send().await?.json().await?;
+
         let fonts: Vec<Font> = response
             .into_iter()
             .map(|f| {
@@ -94,10 +93,7 @@ impl FontProviderTrait for FontsourceProvider {
                     category: Self::parse_category(&f.category),
                     variant_count,
                     license: Some(FontLicense::OFL),
-                    preview_url: Some(format!(
-                        "https://fontsource.org/fonts/{}",
-                        f.id
-                    )),
+                    preview_url: Some(format!("https://fontsource.org/fonts/{}", f.id)),
                     download_url: Some(format!(
                         "https://cdn.jsdelivr.net/npm/@fontsource/{}/files",
                         f.id
@@ -105,19 +101,14 @@ impl FontProviderTrait for FontsourceProvider {
                 }
             })
             .collect();
-        
+
         Ok(fonts)
     }
-    
+
     async fn get_font_family(&self, font_id: &str) -> Result<FontFamily> {
         let url = format!("{}/{}", self.api_url, font_id);
-        let response: FontsourceFont = self.client
-            .get(&url)
-            .send()
-            .await?
-            .json()
-            .await?;
-        
+        let response: FontsourceFont = self.client.get(&url).send().await?.json().await?;
+
         let mut variants = Vec::new();
         for weight in &response.weights {
             for style in &response.styles {
@@ -127,7 +118,7 @@ impl FontProviderTrait for FontsourceProvider {
                 } else {
                     FontStyle::Normal
                 };
-                
+
                 variants.push(FontVariant {
                     weight: font_weight,
                     style: font_style,
@@ -139,7 +130,7 @@ impl FontProviderTrait for FontsourceProvider {
                 });
             }
         }
-        
+
         Ok(FontFamily {
             id: response.id.clone(),
             name: response.family.clone(),
@@ -149,10 +140,7 @@ impl FontProviderTrait for FontsourceProvider {
             license: Some(FontLicense::OFL),
             designer: None,
             description: None,
-            preview_url: Some(format!(
-                "https://fontsource.org/fonts/{}",
-                response.id
-            )),
+            preview_url: Some(format!("https://fontsource.org/fonts/{}", response.id)),
             download_url: Some(format!(
                 "https://cdn.jsdelivr.net/npm/@fontsource/{}/files",
                 response.id
@@ -163,20 +151,14 @@ impl FontProviderTrait for FontsourceProvider {
             last_modified: response.last_modified,
         })
     }
-    
+
     async fn get_download_url(&self, font_id: &str) -> Result<String> {
         // For Fontsource, we use jsdelivr CDN for direct file access
-        Ok(format!(
-            "https://cdn.jsdelivr.net/npm/@fontsource/{}/files",
-            font_id
-        ))
+        Ok(format!("https://cdn.jsdelivr.net/npm/@fontsource/{}/files", font_id))
     }
-    
+
     async fn health_check(&self) -> Result<bool> {
-        let response = self.client
-            .head(&self.api_url)
-            .send()
-            .await?;
+        let response = self.client.head(&self.api_url).send().await?;
         Ok(response.status().is_success())
     }
 }

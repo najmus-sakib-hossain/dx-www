@@ -85,9 +85,7 @@ pub fn create_7z_with_options<P: AsRef<Path>>(
     let output_path = output.as_ref();
 
     let mut cmd = Command::new("7z");
-    cmd.arg("a")
-        .arg("-t7z")
-        .arg(format!("-mx={}", options.level.level()));
+    cmd.arg("a").arg("-t7z").arg(format!("-mx={}", options.level.level()));
 
     if options.solid {
         cmd.arg("-ms=on");
@@ -168,9 +166,7 @@ pub fn extract_7z_with_password<P: AsRef<Path>>(
     })?;
 
     let mut cmd = Command::new("7z");
-    cmd.arg("x")
-        .arg("-y")
-        .arg(format!("-o{}", output_dir.to_string_lossy()));
+    cmd.arg("x").arg("-y").arg(format!("-o{}", output_dir.to_string_lossy()));
 
     if let Some(pwd) = password {
         cmd.arg(format!("-p{}", pwd));
@@ -185,18 +181,12 @@ pub fn extract_7z_with_password<P: AsRef<Path>>(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "7z extraction failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("7z extraction failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Extracted 7z archive",
-        output_dir,
-    ))
+    Ok(ToolOutput::success_with_path("Extracted 7z archive", output_dir))
 }
 
 /// Test 7z archive integrity.

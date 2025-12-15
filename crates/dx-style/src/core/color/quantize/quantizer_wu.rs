@@ -153,11 +153,7 @@ impl QuantizerWu {
         self.cubes[0] = Cube {
             pixels: [
                 Rgb::default(),
-                Rgb::new(
-                    SIDE_LENGTH as u8 - 1,
-                    SIDE_LENGTH as u8 - 1,
-                    SIDE_LENGTH as u8 - 1,
-                ),
+                Rgb::new(SIDE_LENGTH as u8 - 1, SIDE_LENGTH as u8 - 1, SIDE_LENGTH as u8 - 1),
             ],
             vol: 0,
         };

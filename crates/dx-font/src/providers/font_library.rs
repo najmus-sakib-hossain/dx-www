@@ -3,12 +3,15 @@
 //! Open Font Library provides 650+ open-source fonts.
 //! API: https://fontlibrary.org/en/catalogue
 
+use super::FontProviderTrait;
+use crate::models::{
+    Font, FontCategory, FontFamily, FontLicense, FontProvider, FontStyle, FontVariant, FontWeight,
+    SearchQuery,
+};
+use anyhow::Result;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::Deserialize;
-use anyhow::Result;
-use crate::models::{Font, FontFamily, FontVariant, FontCategory, FontProvider, FontWeight, FontStyle, FontLicense, SearchQuery};
-use super::FontProviderTrait;
 
 /// Font Library API font response
 #[derive(Debug, Deserialize)]
@@ -42,17 +45,15 @@ impl FontLibraryProvider {
             api_url: "https://fontlibrary.org/api/fonts".to_string(),
         }
     }
-    
+
     fn parse_category(category: &Option<String>) -> Option<FontCategory> {
-        category.as_ref().and_then(|c| {
-            match c.to_lowercase().as_str() {
-                "serif" => Some(FontCategory::Serif),
-                "sans-serif" | "sans" => Some(FontCategory::SansSerif),
-                "display" | "decorative" => Some(FontCategory::Display),
-                "handwriting" | "script" => Some(FontCategory::Handwriting),
-                "monospace" | "mono" => Some(FontCategory::Monospace),
-                _ => None,
-            }
+        category.as_ref().and_then(|c| match c.to_lowercase().as_str() {
+            "serif" => Some(FontCategory::Serif),
+            "sans-serif" | "sans" => Some(FontCategory::SansSerif),
+            "display" | "decorative" => Some(FontCategory::Display),
+            "handwriting" | "script" => Some(FontCategory::Handwriting),
+            "monospace" | "mono" => Some(FontCategory::Monospace),
+            _ => None,
         })
     }
 }
@@ -62,28 +63,28 @@ impl FontProviderTrait for FontLibraryProvider {
     fn name(&self) -> &str {
         "Font Library"
     }
-    
+
     fn base_url(&self) -> &str {
         "https://fontlibrary.org"
     }
-    
+
     async fn search(&self, query: &SearchQuery) -> Result<Vec<Font>> {
         let fonts = self.list_all().await?;
-        
+
         let query_lower = query.query.to_lowercase();
         let filtered: Vec<Font> = fonts
             .into_iter()
             .filter(|f| f.name.to_lowercase().contains(&query_lower))
             .collect();
-        
+
         Ok(filtered)
     }
-    
+
     async fn list_all(&self) -> Result<Vec<Font>> {
         // Font Library doesn't have a public JSON API, so we'll use pre-defined popular fonts
         // In production, this would scrape the catalogue or use their API if available
         let popular_fonts = get_font_library_fonts();
-        
+
         let fonts: Vec<Font> = popular_fonts
             .into_iter()
             .map(|(id, name, category)| Font {
@@ -93,39 +94,36 @@ impl FontProviderTrait for FontLibraryProvider {
                 category: Some(category),
                 variant_count: 4,
                 license: Some(FontLicense::OFL),
-                preview_url: Some(format!(
-                    "https://fontlibrary.org/en/font/{}",
-                    id
-                )),
+                preview_url: Some(format!("https://fontlibrary.org/en/font/{}", id)),
                 download_url: Some(format!(
                     "https://fontlibrary.org/assets/downloads/{}/{}-Regular.ttf",
-                    id, name.replace(' ', "")
+                    id,
+                    name.replace(' ', "")
                 )),
             })
             .collect();
-        
+
         Ok(fonts)
     }
-    
+
     async fn get_font_family(&self, font_id: &str) -> Result<FontFamily> {
         let fonts = self.list_all().await?;
-        let font = fonts.into_iter()
+        let font = fonts
+            .into_iter()
             .find(|f| f.id == font_id)
             .ok_or_else(|| anyhow::anyhow!("Font not found: {}", font_id))?;
-        
+
         Ok(FontFamily {
             id: font.id,
             name: font.name.clone(),
             provider: FontProvider::FontLibrary,
             category: font.category,
-            variants: vec![
-                FontVariant {
-                    weight: FontWeight::Regular,
-                    style: FontStyle::Normal,
-                    file_url: font.download_url.clone(),
-                    file_format: "ttf".to_string(),
-                },
-            ],
+            variants: vec![FontVariant {
+                weight: FontWeight::Regular,
+                style: FontStyle::Normal,
+                file_url: font.download_url.clone(),
+                file_format: "ttf".to_string(),
+            }],
             license: Some(FontLicense::OFL),
             designer: None,
             description: None,
@@ -137,19 +135,13 @@ impl FontProviderTrait for FontLibraryProvider {
             last_modified: None,
         })
     }
-    
+
     async fn get_download_url(&self, font_id: &str) -> Result<String> {
-        Ok(format!(
-            "https://fontlibrary.org/assets/downloads/{}/",
-            font_id
-        ))
+        Ok(format!("https://fontlibrary.org/assets/downloads/{}/", font_id))
     }
-    
+
     async fn health_check(&self) -> Result<bool> {
-        let response = self.client
-            .head("https://fontlibrary.org")
-            .send()
-            .await?;
+        let response = self.client.head("https://fontlibrary.org").send().await?;
         Ok(response.status().is_success())
     }
 }

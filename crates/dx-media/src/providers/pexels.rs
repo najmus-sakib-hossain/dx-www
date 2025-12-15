@@ -170,12 +170,7 @@ impl PexelsProvider {
                 let download_url = best_file.map(|f| f.link.clone()).unwrap_or_default();
 
                 let (width, height) = best_file
-                    .map(|f| {
-                        (
-                            f.width.unwrap_or(video.width),
-                            f.height.unwrap_or(video.height),
-                        )
-                    })
+                    .map(|f| (f.width.unwrap_or(video.width), f.height.unwrap_or(video.height)))
                     .unwrap_or((video.width, video.height));
 
                 // Use video picture as preview

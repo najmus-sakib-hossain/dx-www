@@ -15,13 +15,13 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 /// Tool execution context shared across all tools
-/// 
+///
 /// The execution context provides tools with access to repository state,
 /// file changes, shared data, and traffic branch analysis. It serves as
 /// the communication hub between tools and the orchestrator.
-/// 
+///
 /// # Fields
-/// 
+///
 /// - `repo_root`: Absolute path to the repository root
 /// - `forge_path`: Path to Forge data directory (.dx/forge)
 /// - `current_branch`: Git branch name (if in a git repo)
@@ -155,32 +155,32 @@ impl ToolOutput {
 }
 
 /// Main DX tool trait - all tools must implement this
-/// 
+///
 /// # Overview
-/// 
+///
 /// The `DxTool` trait provides the core interface for all DX tools in the Forge ecosystem.
 /// Tools are self-contained units that know what files to process, when to run, and how to
 /// integrate with the broader toolchain.
-/// 
+///
 /// # Lifecycle
-/// 
+///
 /// Tool execution follows this lifecycle:
 /// 1. `should_run()` - Check if tool should execute
 /// 2. `before_execute()` - Setup and validation
 /// 3. `execute()` - Main tool logic
 /// 4. `after_execute()` - Cleanup and reporting (on success)
 /// 5. `on_error()` - Error handling (on failure)
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust,no_run
 /// use dx_forge::{DxTool, ExecutionContext, ToolOutput};
 /// use anyhow::Result;
-/// 
+///
 /// struct MyCustomTool {
 ///     enabled: bool,
 /// }
-/// 
+///
 /// impl DxTool for MyCustomTool {
 ///     fn name(&self) -> &str { "my-custom-tool" }
 ///     fn version(&self) -> &str { "1.0.0" }
@@ -198,62 +198,62 @@ impl ToolOutput {
 /// ```
 pub trait DxTool: Send + Sync {
     /// Tool name (e.g., "dx-ui", "dx-style")
-    /// 
+    ///
     /// This should be a unique identifier for your tool. By convention,
     /// DX tools use the format "dx-{category}" (e.g., dx-ui, dx-icons, dx-style).
     fn name(&self) -> &str;
 
     /// Tool version using semantic versioning
-    /// 
+    ///
     /// The version should follow semver format (e.g., "1.2.3").
     /// This is used for dependency resolution and compatibility checking.
     fn version(&self) -> &str;
 
     /// Execution priority (lower number = executes earlier)
-    /// 
+    ///
     /// Tools are executed in priority order. Common priority values:
     /// - 0-20: Infrastructure tools (code generation, schema validation)
     /// - 21-50: Component tools (UI, icons, styles)
     /// - 51-100: Post-processing tools (optimization, bundling)
-    /// 
+    ///
     /// Default priority is typically 50 for most tools.
     fn priority(&self) -> u32;
 
     /// Execute the tool's main logic
-    /// 
+    ///
     /// This is where the core functionality of your tool should be implemented.
     /// The execution context provides access to repository state, file changes,
     /// and shared state between tools.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `context` - Execution context with repo info and shared state
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a `ToolOutput` containing execution results, modified files, and status.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Return an error if execution fails. The orchestrator will handle cleanup
     /// and invoke the `on_error` hook.
     fn execute(&mut self, context: &ExecutionContext) -> Result<ToolOutput>;
 
     /// Check if tool should run (optional pre-check)
-    /// 
+    ///
     /// Override this method to implement custom logic for determining whether
     /// the tool should execute. This is called before `before_execute()`.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `_context` - Execution context for checking conditions
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `true` if the tool should execute, `false` to skip execution
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```rust,no_run
     /// use dx_forge::{DxTool, ExecutionContext, ToolOutput};
     /// use anyhow::Result;
@@ -282,16 +282,16 @@ pub trait DxTool: Send + Sync {
     }
 
     /// Tool dependencies (must run after these tools)
-    /// 
+    ///
     /// Specify tools that must execute before this tool. Dependencies are validated
     /// before execution begins, and circular dependencies are detected.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Vector of tool names this tool depends on
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```rust,no_run
     /// use dx_forge::{DxTool, ExecutionContext, ToolOutput};
     /// use anyhow::Result;
@@ -320,58 +320,58 @@ pub trait DxTool: Send + Sync {
     }
 
     /// Before execution hook (setup, validation)
-    /// 
+    ///
     /// Called before `execute()`. Use this for:
     /// - Validating preconditions
     /// - Setting up temporary resources
     /// - Checking file permissions
     /// - Loading configuration
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Return an error to prevent execution and skip to `on_error`
     fn before_execute(&mut self, _context: &ExecutionContext) -> Result<()> {
         Ok(())
     }
 
     /// After execution hook (cleanup, reporting)
-    /// 
+    ///
     /// Called after successful `execute()`. Use this for:
     /// - Cleaning up temporary files
     /// - Generating reports
     /// - Updating shared state
     /// - Sending notifications
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `_output` - The output from successful execution
     fn after_execute(&mut self, _context: &ExecutionContext, _output: &ToolOutput) -> Result<()> {
         Ok(())
     }
 
     /// On error hook (rollback, cleanup)
-    /// 
+    ///
     /// Called when `execute()` or `before_execute()` fails. Use this for:
     /// - Rolling back partial changes
     /// - Cleaning up resources
     /// - Logging detailed error info
     /// - Sending error notifications
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `_error` - The error that occurred
     fn on_error(&mut self, _context: &ExecutionContext, _error: &anyhow::Error) -> Result<()> {
         Ok(())
     }
 
     /// Execution timeout in seconds (0 = no timeout)
-    /// 
+    ///
     /// Specifies the maximum time this tool should be allowed to run.
     /// Note: Timeout enforcement for synchronous tools is not yet implemented.
     /// Future versions will use thread-based timeouts or async execution.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Timeout duration in seconds, or 0 for no timeout
     fn timeout_seconds(&self) -> u64 {
         60
@@ -382,35 +382,35 @@ pub trait DxTool: Send + Sync {
 // Each tool knows what to do and when to run
 
 /// Traffic branch analysis result
-/// 
+///
 /// Forge uses a "traffic light" system to categorize file changes by risk level:
-/// 
+///
 /// - **🟢 Green**: Safe to auto-merge (docs, tests, styles, assets)
 /// - **🟡 Yellow**: Reviewable conflicts (code changes that may conflict)
 /// - **🔴 Red**: Manual resolution required (API changes, schemas, migrations)
-/// 
+///
 /// This system prevents breaking changes from being automatically merged while
 /// allowing safe updates to proceed without manual intervention.
-/// 
-    /// # Example
-    /// 
-    /// ```rust,no_run
-    /// use dx_forge::orchestrator::{TrafficBranch, TrafficAnalyzer, DefaultTrafficAnalyzer};
-    /// use std::path::Path;
-    /// 
-    /// let analyzer = DefaultTrafficAnalyzer;
-    /// let result = analyzer.analyze(Path::new("src/api/types.ts")).unwrap();
-    /// 
-    /// match result {
-    ///     TrafficBranch::Green => println!("Safe to auto-merge"),
-    ///     TrafficBranch::Yellow { conflicts } => {
-    ///         println!("Review {} potential conflicts", conflicts.len())
-    ///     }
-    ///     TrafficBranch::Red { conflicts } => {
-    ///         println!("Manual resolution required for {} conflicts", conflicts.len())
-    ///     }
-    /// }
-    /// ```
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use dx_forge::orchestrator::{TrafficBranch, TrafficAnalyzer, DefaultTrafficAnalyzer};
+/// use std::path::Path;
+///
+/// let analyzer = DefaultTrafficAnalyzer;
+/// let result = analyzer.analyze(Path::new("src/api/types.ts")).unwrap();
+///
+/// match result {
+///     TrafficBranch::Green => println!("Safe to auto-merge"),
+///     TrafficBranch::Yellow { conflicts } => {
+///         println!("Review {} potential conflicts", conflicts.len())
+///     }
+///     TrafficBranch::Red { conflicts } => {
+///         println!("Manual resolution required for {} conflicts", conflicts.len())
+///     }
+/// }
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub enum TrafficBranch {
     /// 🟢 Green: Safe to auto-update
@@ -442,10 +442,7 @@ pub struct DefaultTrafficAnalyzer;
 impl TrafficAnalyzer for DefaultTrafficAnalyzer {
     fn analyze(&self, file: &Path) -> Result<TrafficBranch> {
         // Analyze file to determine traffic branch
-        let extension = file
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
+        let extension = file.extension().and_then(|e| e.to_str()).unwrap_or("");
 
         // 🟢 Green: Auto-update (safe files that don't affect APIs or types)
         let green_patterns = [
@@ -505,15 +502,11 @@ impl TrafficAnalyzer for DefaultTrafficAnalyzer {
             }
 
             // Regular code file - Yellow (may have merge conflicts)
-            return Ok(TrafficBranch::Yellow {
-                conflicts: vec![],
-            });
+            return Ok(TrafficBranch::Yellow { conflicts: vec![] });
         }
 
         // Default to Yellow for unknown file types
-        Ok(TrafficBranch::Yellow {
-            conflicts: vec![],
-        })
+        Ok(TrafficBranch::Yellow { conflicts: vec![] })
     }
 
     fn can_auto_merge(&self, conflicts: &[Conflict]) -> bool {
@@ -549,9 +542,9 @@ impl Default for OrchestratorConfig {
 }
 
 /// Simple orchestrator - coordinates tool execution timing
-/// 
+///
 /// The Orchestrator manages the execution lifecycle of DX tools, handling:
-/// 
+///
 /// - **Tool Registration**: Register tools for execution
 /// - **Priority Ordering**: Execute tools in priority order (lower first)
 /// - **Dependency Resolution**: Validate and resolve tool dependencies
@@ -560,13 +553,13 @@ impl Default for OrchestratorConfig {
 /// - **Parallel Execution**: Support concurrent tool execution (optional)
 /// - **Traffic Branch Integration**: Analyze file changes for merge safety
 /// - **Error Handling**: Fail-fast or continue-on-error modes
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust,no_run
 /// use dx_forge::{Orchestrator, DxTool, ExecutionContext, ToolOutput};
 /// use anyhow::Result;
-/// 
+///
 /// struct MyTool;
 /// impl DxTool for MyTool {
 ///     fn name(&self) -> &str { "my-tool" }
@@ -576,7 +569,7 @@ impl Default for OrchestratorConfig {
 ///         Ok(ToolOutput::success())
 ///     }
 /// }
-/// 
+///
 /// fn main() -> Result<()> {
 ///     let mut orch = Orchestrator::new(".")?;
 ///     orch.register_tool(Box::new(MyTool))?;
@@ -714,10 +707,14 @@ impl Orchestrator {
                     } else {
                         failed += 1;
                         tracing::error!("❌ {} failed: {}", tool.name(), output.message);
-                        
+
                         if self.config.fail_fast {
                             tracing::error!("💥 Fail-fast enabled, stopping orchestration");
-                            return Err(anyhow::anyhow!("Tool {} failed: {}", tool.name(), output.message));
+                            return Err(anyhow::anyhow!(
+                                "Tool {} failed: {}",
+                                tool.name(),
+                                output.message
+                            ));
                         }
                     }
                     outputs.push(output);
@@ -725,12 +722,12 @@ impl Orchestrator {
                 Err(e) => {
                     failed += 1;
                     tracing::error!("💥 {} error: {}", tool.name(), e);
-                    
+
                     if self.config.fail_fast {
                         tracing::error!("💥 Fail-fast enabled, stopping orchestration");
                         return Err(e);
                     }
-                    
+
                     outputs.push(ToolOutput::failure(format!("Error: {}", e)));
                 }
             }
@@ -748,102 +745,116 @@ impl Orchestrator {
 
     /// Execute tools in parallel where possible, respecting dependencies
     fn execute_parallel(&mut self) -> Result<Vec<ToolOutput>> {
-        tracing::info!("🚀 Parallel execution mode (max {} concurrent)", self.config.max_concurrent);
-        
+        tracing::info!(
+            "🚀 Parallel execution mode (max {} concurrent)",
+            self.config.max_concurrent
+        );
+
         // Build dependency graph
         let dep_graph = self.build_dependency_graph();
-        
+
         // Group tools into execution waves (tools that can run concurrently)
         let waves = self.compute_execution_waves(&dep_graph)?;
-        
+
         tracing::debug!("📊 Execution waves: {}", waves.len());
         for (i, wave) in waves.iter().enumerate() {
             tracing::debug!("  Wave {}: {} tools", i + 1, wave.len());
         }
-        
+
         let mut all_outputs = Vec::new();
         let context = self.context.clone();
-        
+
         // Execute each wave in parallel
         for (wave_idx, wave_tools) in waves.into_iter().enumerate() {
             tracing::info!("🌊 Executing wave {} with {} tools", wave_idx + 1, wave_tools.len());
-            
+
             let mut wave_outputs = Vec::new();
-            
+
             // For now, execute wave tools sequentially (true parallel requires async DxTool trait)
             // Future enhancement: Use thread pool or async execution
             for tool_idx in wave_tools {
                 let tool = &mut self.tools[tool_idx];
-                
+
                 if !tool.should_run(&context) {
                     tracing::info!("⏭️  Skipping {}: pre-check failed", tool.name());
                     continue;
                 }
-                
+
                 tracing::info!("🚀 Executing: {} v{}", tool.name(), tool.version());
-                
+
                 match Self::execute_tool_with_hooks(tool, &context) {
                     Ok(output) => {
                         if output.success {
-                            tracing::info!("✅ {} completed in {}ms", tool.name(), output.duration_ms);
+                            tracing::info!(
+                                "✅ {} completed in {}ms",
+                                tool.name(),
+                                output.duration_ms
+                            );
                         } else {
                             tracing::error!("❌ {} failed: {}", tool.name(), output.message);
-                            
+
                             if self.config.fail_fast {
-                                return Err(anyhow::anyhow!("Tool {} failed: {}", tool.name(), output.message));
+                                return Err(anyhow::anyhow!(
+                                    "Tool {} failed: {}",
+                                    tool.name(),
+                                    output.message
+                                ));
                             }
                         }
                         wave_outputs.push(output);
                     }
                     Err(e) => {
                         tracing::error!("💥 {} error: {}", tool.name(), e);
-                        
+
                         if self.config.fail_fast {
                             return Err(e);
                         }
-                        
+
                         wave_outputs.push(ToolOutput::failure(format!("Error: {}", e)));
                     }
                 }
             }
-            
+
             all_outputs.extend(wave_outputs);
         }
-        
+
         Ok(all_outputs)
     }
-    
+
     /// Build a dependency graph for tools
     fn build_dependency_graph(&self) -> HashMap<String, HashSet<String>> {
         let mut graph = HashMap::new();
-        
+
         for tool in &self.tools {
             let deps: HashSet<String> = tool.dependencies().into_iter().collect();
             graph.insert(tool.name().to_string(), deps);
         }
-        
+
         graph
     }
-    
+
     /// Compute execution waves based on dependency graph
     /// Tools in the same wave have no dependencies on each other
-    fn compute_execution_waves(&self, dep_graph: &HashMap<String, HashSet<String>>) -> Result<Vec<Vec<usize>>> {
+    fn compute_execution_waves(
+        &self,
+        dep_graph: &HashMap<String, HashSet<String>>,
+    ) -> Result<Vec<Vec<usize>>> {
         let mut waves: Vec<Vec<usize>> = Vec::new();
         let mut completed: HashSet<String> = HashSet::new();
         let mut remaining: Vec<usize> = (0..self.tools.len()).collect();
-        
+
         while !remaining.is_empty() {
             let mut current_wave = Vec::new();
             let mut next_remaining = Vec::new();
-            
+
             for &idx in &remaining {
                 let tool = &self.tools[idx];
                 let tool_name = tool.name().to_string();
-                
+
                 // Check if all dependencies are completed
                 let deps = dep_graph.get(&tool_name).cloned().unwrap_or_default();
                 let all_deps_met = deps.iter().all(|dep| completed.contains(dep));
-                
+
                 if all_deps_met {
                     current_wave.push(idx);
                     completed.insert(tool_name);
@@ -851,30 +862,32 @@ impl Orchestrator {
                     next_remaining.push(idx);
                 }
             }
-            
+
             if current_wave.is_empty() && !remaining.is_empty() {
                 // No progress - likely a circular dependency or missing dependency
-                let unmet: Vec<String> = remaining.iter()
-                    .map(|&idx| self.tools[idx].name().to_string())
-                    .collect();
+                let unmet: Vec<String> =
+                    remaining.iter().map(|&idx| self.tools[idx].name().to_string()).collect();
                 return Err(anyhow::anyhow!(
                     "Cannot resolve dependencies for tools: {}",
                     unmet.join(", ")
                 ));
             }
-            
+
             if !current_wave.is_empty() {
                 waves.push(current_wave);
             }
-            
+
             remaining = next_remaining;
         }
-        
+
         Ok(waves)
     }
 
     /// Execute tool with lifecycle hooks and error handling
-    fn execute_tool_with_hooks(tool: &mut Box<dyn DxTool>, context: &ExecutionContext) -> Result<ToolOutput> {
+    fn execute_tool_with_hooks(
+        tool: &mut Box<dyn DxTool>,
+        context: &ExecutionContext,
+    ) -> Result<ToolOutput> {
         let start = std::time::Instant::now();
         let tool_name = tool.name().to_string();
 
@@ -903,13 +916,13 @@ impl Orchestrator {
             Ok(mut output) => {
                 let duration = start.elapsed();
                 output.duration_ms = duration.as_millis() as u64;
-                
+
                 tracing::info!(
                     "✅ {} completed successfully in {:.2}s",
                     tool_name,
                     duration.as_secs_f64()
                 );
-                
+
                 if !output.files_modified.is_empty() {
                     tracing::debug!("  📝 Modified {} files", output.files_modified.len());
                 }
@@ -919,11 +932,11 @@ impl Orchestrator {
                 if !output.files_deleted.is_empty() {
                     tracing::debug!("  🗑️  Deleted {} files", output.files_deleted.len());
                 }
-                
+
                 // After hook
                 tracing::debug!("📝 Running after_execute hook for {}", tool_name);
                 tool.after_execute(context, &output)?;
-                
+
                 Ok(output)
             }
             Err(e) => {
@@ -934,7 +947,7 @@ impl Orchestrator {
                     duration.as_secs_f64(),
                     e
                 );
-                
+
                 // Error hook
                 tracing::debug!("📝 Running on_error hook for {}", tool_name);
                 tool.on_error(context, &e)?;

@@ -109,9 +109,7 @@ impl ComponentStateManager {
 
     /// Analyze update strategy for a component
     pub fn analyze_update(&self, path: &Path, remote_content: &str) -> Result<TrafficBranch> {
-        let state = self
-            .get_component(path)
-            .context("Component not registered")?;
+        let state = self.get_component(path).context("Component not registered")?;
 
         // Read current local content
         let local_content = fs::read_to_string(path).context("Failed to read local component")?;
@@ -279,10 +277,7 @@ pub async fn apply_update(
                 path.display().to_string().bright_cyan(),
                 remote_version.bright_white()
             );
-            println!(
-                "   {} Update conflicts with your local changes:",
-                "│".bright_black()
-            );
+            println!("   {} Update conflicts with your local changes:", "│".bright_black());
             for conflict in &conflicts {
                 println!("   {} Conflict at {}", "│".bright_black(), conflict.red());
             }

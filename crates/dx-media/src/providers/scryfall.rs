@@ -93,22 +93,22 @@ impl ScryfallProvider {
     fn get_best_image(card: &ScryfallCard) -> Option<String> {
         // Try main image URIs first
         if let Some(ref uris) = card.image_uris {
-            return uris.large.clone()
-                .or_else(|| uris.png.clone())
-                .or_else(|| uris.normal.clone());
+            return uris.large.clone().or_else(|| uris.png.clone()).or_else(|| uris.normal.clone());
         }
-        
+
         // For double-faced cards, get the front face
         if let Some(ref faces) = card.card_faces {
             if let Some(face) = faces.first() {
                 if let Some(ref uris) = face.image_uris {
-                    return uris.large.clone()
+                    return uris
+                        .large
+                        .clone()
                         .or_else(|| uris.png.clone())
                         .or_else(|| uris.normal.clone());
                 }
             }
         }
-        
+
         None
     }
 
@@ -117,7 +117,7 @@ impl ScryfallProvider {
         if let Some(ref uris) = card.image_uris {
             return uris.normal.clone().or_else(|| uris.small.clone());
         }
-        
+
         if let Some(ref faces) = card.card_faces {
             if let Some(face) = faces.first() {
                 if let Some(ref uris) = face.image_uris {
@@ -125,7 +125,7 @@ impl ScryfallProvider {
                 }
             }
         }
-        
+
         None
     }
 
@@ -133,7 +133,7 @@ impl ScryfallProvider {
     fn card_to_asset(&self, card: ScryfallCard) -> Option<MediaAsset> {
         let download_url = Self::get_best_image(&card)?;
         let preview_url = Self::get_preview_image(&card).unwrap_or_else(|| download_url.clone());
-        
+
         let title = if card.set_name.is_empty() {
             card.name.clone()
         } else {
@@ -149,11 +149,11 @@ impl ScryfallProvider {
             .preview_url(preview_url)
             .source_url(card.scryfall_uri)
             .license(License::Other("Wizards of the Coast".to_string()));
-        
+
         if let Some(artist) = card.artist {
             builder = builder.author(artist);
         }
-        
+
         Some(builder.build())
     }
 }
@@ -197,27 +197,25 @@ impl Provider for ScryfallProvider {
             // Simple name search
             format!("name:{}", query.query)
         };
-        
+
         // URL encode the search query
         let encoded_query: String = search_query
             .chars()
-            .flat_map(|c| {
-                match c {
-                    'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' | '.' | ':' => vec![c],
-                    ' ' => vec!['+'],
-                    _ => format!("%{:02X}", c as u8).chars().collect(),
-                }
+            .flat_map(|c| match c {
+                'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' | '.' | ':' => vec![c],
+                ' ' => vec!['+'],
+                _ => format!("%{:02X}", c as u8).chars().collect(),
             })
             .collect();
-        
+
         let url = format!(
             "{}/cards/search?q={}&unique=art&order=released&dir=desc",
             self.base_url(),
             encoded_query
         );
-        
+
         let response = self.client.get(&url).await?;
-        
+
         // Handle 404 for no results
         if response.status().as_u16() == 404 {
             return Ok(SearchResult {
@@ -230,15 +228,16 @@ impl Provider for ScryfallProvider {
                 duration_ms: 0,
             });
         }
-        
+
         let search_result: SearchResponse = response.json_or_error().await?;
-        
-        let assets: Vec<MediaAsset> = search_result.data
+
+        let assets: Vec<MediaAsset> = search_result
+            .data
             .into_iter()
             .take(query.count)
             .filter_map(|card| self.card_to_asset(card))
             .collect();
-        
+
         Ok(SearchResult {
             query: query.query.clone(),
             media_type: query.media_type,

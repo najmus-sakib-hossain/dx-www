@@ -43,12 +43,12 @@ impl HttpClient {
         timeout: Duration,
     ) -> Result<Self> {
         use reqwest::header::{ACCEPT_LANGUAGE, HeaderMap, HeaderValue};
-        
+
         let mut headers = HeaderMap::new();
         // NOTE: Don't set Accept header globally - let each request specify it
         // API providers need application/json while scrapers need text/html
         headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("en-US,en;q=0.9"));
-        
+
         // PERFORMANCE OPTIMIZATIONS:
         // - pool_max_idle_per_host: Keep 10 connections warm per API host
         // - pool_idle_timeout: Keep connections alive for 30s between requests
@@ -169,11 +169,7 @@ impl HttpClient {
             self.rate_limiter.acquire().await;
 
             let request = build_request();
-            debug!(
-                "HTTP request attempt {}/{}",
-                attempt + 1,
-                self.max_retries + 1
-            );
+            debug!("HTTP request attempt {}/{}", attempt + 1, self.max_retries + 1);
 
             match request.send().await {
                 Ok(response) => {

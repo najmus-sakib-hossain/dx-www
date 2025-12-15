@@ -1,4 +1,6 @@
-use crate::{analyzer, codegen, codegen_macro, codegen_micro, dev_server, linker, packer, parser, splitter};
+use crate::{
+    analyzer, codegen, codegen_macro, codegen_micro, dev_server, linker, packer, parser, splitter,
+};
 use anyhow::{Context, Result};
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};

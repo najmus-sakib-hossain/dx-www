@@ -13,12 +13,12 @@ use std::sync::{Arc, Mutex as StdMutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use crate::crdt::{Operation, OperationType, Position};
-use tracing::{debug, error};
 use crate::storage::OperationLog;
 use crate::sync::{SyncManager, GLOBAL_CLOCK};
 use crate::watcher_legacy::cache_warmer;
 use dashmap::DashMap;
 use std::sync::Arc as StdArc;
+use tracing::{debug, error};
 use uuid::Uuid;
 
 // 🚀 PERFORMANCE OPTIMIZATION: Cache path->string conversions (Windows paths are slow to convert)
@@ -159,7 +159,9 @@ fn detect_quality_operations(
     if !report.ops.is_empty() {
         debug!(
             "⚡ [{} rapid+{}µs quality={}µs total] {} - {} ops",
-            rapid_time_us, quality_time, total_time,
+            rapid_time_us,
+            quality_time,
+            total_time,
             path_to_string(path).bright_green(),
             report.ops.len()
         );
@@ -252,16 +254,9 @@ async fn process_events_loop(
                     let start = Instant::now();
 
                     // Debug: log incoming event kind and path(s)
-                    let paths_list: Vec<String> = event
-                        .paths
-                        .iter()
-                        .map(|p| path_to_string(p))
-                        .collect();
-                    debug!(
-                        "Event received: kind={:?} paths={}",
-                        event.kind,
-                        paths_list.join(", ")
-                    );
+                    let paths_list: Vec<String> =
+                        event.paths.iter().map(|p| path_to_string(p)).collect();
+                    debug!("Event received: kind={:?} paths={}", event.kind, paths_list.join(", "));
 
                     match &event.kind {
                         EventKind::Modify(ModifyKind::Name(mode)) => match *mode {
@@ -632,13 +627,7 @@ fn detect_operations_with_content(
             },
             actor_id.to_string(),
         ));
-        return Ok(finalize_detection(
-            path,
-            detect_start,
-            timings,
-            vec![op],
-            suppress_logging,
-        ));
+        return Ok(finalize_detection(path, detect_start, timings, vec![op], suppress_logging));
     }
 
     let mut prev = previous_snapshot.unwrap();
@@ -694,13 +683,7 @@ fn detect_operations_with_content(
             ));
             extend_snapshot(&mut prev, &appended);
             update_prev_state(path, Some(prev));
-            return Ok(finalize_detection(
-                path,
-                detect_start,
-                timings,
-                vec![op],
-                suppress_logging,
-            ));
+            return Ok(finalize_detection(path, detect_start, timings, vec![op], suppress_logging));
         }
     }
 
@@ -708,24 +691,12 @@ fn detect_operations_with_content(
     let new_snapshot = build_snapshot_fast(&new_content);
     if new_snapshot.byte_len > MAX_TRACKED_FILE_BYTES {
         update_prev_state(path, None);
-        return Ok(finalize_detection(
-            path,
-            detect_start,
-            timings,
-            Vec::new(),
-            suppress_logging,
-        ));
+        return Ok(finalize_detection(path, detect_start, timings, Vec::new(), suppress_logging));
     }
 
     let ops = fast_diff_ops(path, actor_id, &prev, &new_snapshot);
     update_prev_state(path, Some(new_snapshot));
-    Ok(finalize_detection(
-        path,
-        detect_start,
-        timings,
-        ops,
-        suppress_logging,
-    ))
+    Ok(finalize_detection(path, detect_start, timings, ops, suppress_logging))
 }
 
 // 🚀 ULTRA-FAST snapshot building - defers expensive operations
@@ -810,11 +781,7 @@ fn profile_detect(path: &Path, timings: &DetectionTimings, has_ops: bool) {
     // When profiling is enabled, show all logs
     // When profiling is disabled, only show if operations were created
     if PROFILE_DETECT || has_ops {
-        debug!(
-            "⚙️ detect {} | total={}µs",
-            path.display(),
-            timings.total_us
-        );
+        debug!("⚙️ detect {} | total={}µs", path.display(), timings.total_us);
     }
 }
 
@@ -839,20 +806,14 @@ fn extend_snapshot(snapshot: &mut FileSnapshot, appended: &str) {
 
         if is_ascii {
             // Fast path for ASCII
-            snapshot
-                .char_to_byte
-                .extend((0..appended.len()).map(|i| base_byte + i));
+            snapshot.char_to_byte.extend((0..appended.len()).map(|i| base_byte + i));
         } else {
             // Slow path for multi-byte
-            snapshot.char_to_byte.extend(
-                appended
-                    .char_indices()
-                    .map(|(offset, _)| base_byte + offset),
-            );
+            snapshot
+                .char_to_byte
+                .extend(appended.char_indices().map(|(offset, _)| base_byte + offset));
         }
-        snapshot
-            .char_to_byte
-            .push(snapshot.content.len() + appended.len());
+        snapshot.char_to_byte.push(snapshot.content.len() + appended.len());
     }
 
     // Update line starts using memchr
@@ -1020,11 +981,7 @@ fn compute_change_range_fast(
                 let chunk_new = &new_bytes[start..end];
 
                 // Find first difference in this chunk
-                chunk_old
-                    .iter()
-                    .zip(chunk_new.iter())
-                    .take_while(|(a, b)| a == b)
-                    .count()
+                chunk_old.iter().zip(chunk_new.iter()).take_while(|(a, b)| a == b).count()
             })
             .enumerate()
             .find_first(|(_, prefix_len)| *prefix_len < chunk_size)
@@ -1032,11 +989,7 @@ fn compute_change_range_fast(
             .unwrap_or(min_len)
     } else {
         // Small files: simple linear scan (already very fast)
-        old_bytes
-            .iter()
-            .zip(new_bytes.iter())
-            .take_while(|(a, b)| a == b)
-            .count()
+        old_bytes.iter().zip(new_bytes.iter()).take_while(|(a, b)| a == b).count()
     };
 
     // Find common suffix at byte level
@@ -1095,12 +1048,7 @@ fn compute_change_range_fast(
         return None;
     }
 
-    Some((
-        prefix_chars,
-        old_suffix_chars,
-        prefix_chars,
-        new_suffix_chars,
-    ))
+    Some((prefix_chars, old_suffix_chars, prefix_chars, new_suffix_chars))
 }
 
 fn should_track(path: &Path) -> bool {
@@ -1142,14 +1090,20 @@ fn print_operation(op: &Operation, _total_us: u128, _detect_us: u128, _queue_us:
     }
 
     match &op.op_type {
-        OperationType::Insert { position, content, .. } => {
+        OperationType::Insert {
+            position, content, ..
+        } => {
             let preview = truncate_with_preview(content, 50);
             debug!("[+] {} L{}:{} {}", filename, position.line, position.column, preview);
         }
         OperationType::Delete { position, length } => {
             debug!("[-] {} L{}:{} ({} chars)", filename, position.line, position.column, length);
         }
-        OperationType::Replace { position, new_content, .. } => {
+        OperationType::Replace {
+            position,
+            new_content,
+            ..
+        } => {
             let preview = truncate_with_preview(new_content, 50);
             debug!("[~] {} L{}:{} {}", filename, position.line, position.column, preview);
         }
@@ -1160,8 +1114,14 @@ fn print_operation(op: &Operation, _total_us: u128, _detect_us: u128, _queue_us:
             debug!("[DEL] {}", filename);
         }
         OperationType::FileRename { old_path, new_path } => {
-            let old_name = std::path::Path::new(old_path).file_name().and_then(|n| n.to_str()).unwrap_or(old_path);
-            let new_name = std::path::Path::new(new_path).file_name().and_then(|n| n.to_str()).unwrap_or(new_path);
+            let old_name = std::path::Path::new(old_path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(old_path);
+            let new_name = std::path::Path::new(new_path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(new_path);
             debug!("[RENAME] {} -> {}", old_name, new_name);
         }
     }
@@ -1280,12 +1240,10 @@ fn move_cached_content(old: &Path, new: &Path) {
 }
 
 fn take_cached_content(path: &Path) -> Option<String> {
-    TEMP_CONTENT_CACHE
-        .remove(path)
-        .map(|(_, (arc, _))| match Arc::try_unwrap(arc) {
-            Ok(string) => string,
-            Err(shared) => shared.as_str().to_owned(),
-        })
+    TEMP_CONTENT_CACHE.remove(path).map(|(_, (arc, _))| match Arc::try_unwrap(arc) {
+        Ok(string) => string,
+        Err(shared) => shared.as_str().to_owned(),
+    })
 }
 
 fn enforce_temp_cache_limit() {
@@ -1331,9 +1289,7 @@ fn read_file_fast(path: &Path) -> Result<String> {
     let content = std::str::from_utf8(&mmap)?.to_string();
 
     // Add to pool for next time (write lock held briefly)
-    cache_warmer::FILE_POOL
-        .write()
-        .insert(path.to_path_buf(), Arc::new(file));
+    cache_warmer::FILE_POOL.write().insert(path.to_path_buf(), Arc::new(file));
 
     Ok(content)
 }

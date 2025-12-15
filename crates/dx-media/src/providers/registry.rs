@@ -284,11 +284,7 @@ impl ProviderRegistry {
     /// Get all available providers (with valid API keys).
     #[must_use]
     pub fn available(&self) -> Vec<Arc<dyn Provider>> {
-        self.providers
-            .values()
-            .filter(|p| p.is_available())
-            .cloned()
-            .collect()
+        self.providers.values().filter(|p| p.is_available()).cloned().collect()
     }
 
     /// Get providers that support a specific media type.
@@ -330,22 +326,21 @@ impl ProviderRegistry {
         query: &SearchQuery,
     ) -> Result<SearchResult> {
         let provider =
-            self.get(provider_name)
-                .ok_or_else(|| crate::error::DxError::ProviderApi {
-                    provider: provider_name.to_string(),
-                    message: "Provider not found".to_string(),
-                    status_code: 404,
-                })?;
+            self.get(provider_name).ok_or_else(|| crate::error::DxError::ProviderApi {
+                provider: provider_name.to_string(),
+                message: "Provider not found".to_string(),
+                status_code: 404,
+            })?;
 
         provider.search(query).await
     }
 
     /// Search all available providers and aggregate results.
-    /// 
+    ///
     /// This searches all providers **concurrently** with aggressive timeouts.
     /// Uses `FuturesUnordered` for optimal performance - results are processed
     /// as they arrive, and slow providers are timed out after 5 seconds.
-    /// 
+    ///
     /// # Search Modes
     /// - **Quantity** (default): Early exit after 3x results - FAST but may skip slow providers
     /// - **Quality**: Waits for ALL providers to respond - thorough but slower
@@ -353,7 +348,7 @@ impl ProviderRegistry {
         use crate::types::SearchMode;
         use futures::stream::{FuturesUnordered, StreamExt};
         use std::time::Duration;
-        
+
         let providers = match query.media_type {
             Some(media_type) => self.for_media_type(media_type),
             None => self.available(),
@@ -371,7 +366,7 @@ impl ProviderRegistry {
             SearchMode::Quantity => Duration::from_secs(5),
             SearchMode::Quality => Duration::from_secs(8),
         };
-        
+
         // Early exit threshold (only used in Quantity mode)
         let early_exit_threshold = query.count * 3;
         let use_early_exit = query.mode.is_quantity();
@@ -385,19 +380,21 @@ impl ProviderRegistry {
                 async move {
                     let name = provider.name().to_string();
                     // Wrap each provider search in a timeout
-                    let result = tokio::time::timeout(
-                        provider_timeout,
-                        provider.search(&query)
-                    ).await;
-                    
-                    let timeout_msg = format!("Provider timed out (>{}s)", provider_timeout.as_secs());
+                    let result =
+                        tokio::time::timeout(provider_timeout, provider.search(&query)).await;
+
+                    let timeout_msg =
+                        format!("Provider timed out (>{}s)", provider_timeout.as_secs());
                     match result {
                         Ok(search_result) => (name, search_result),
-                        Err(_) => (name.clone(), Err(crate::error::DxError::ProviderApi {
-                            provider: name,
-                            message: timeout_msg,
-                            status_code: 408,
-                        })),
+                        Err(_) => (
+                            name.clone(),
+                            Err(crate::error::DxError::ProviderApi {
+                                provider: name,
+                                message: timeout_msg,
+                                status_code: 408,
+                            }),
+                        ),
                     }
                 }
             })
@@ -422,7 +419,7 @@ impl ProviderRegistry {
                     provider_errors.push((provider_name, e.to_string()));
                 }
             }
-            
+
             // EARLY EXIT: Only in Quantity mode - if we have enough results, stop
             if use_early_exit && all_assets.len() >= early_exit_threshold && !futures.is_empty() {
                 skipped_slow_providers = futures.len();
@@ -431,11 +428,15 @@ impl ProviderRegistry {
                 break;
             }
         }
-        
+
         if skipped_slow_providers > 0 {
             provider_errors.push((
                 "early_exit".to_string(),
-                format!("Skipped {} slow providers (had {} results)", skipped_slow_providers, all_assets.len())
+                format!(
+                    "Skipped {} slow providers (had {} results)",
+                    skipped_slow_providers,
+                    all_assets.len()
+                ),
             ));
         }
 

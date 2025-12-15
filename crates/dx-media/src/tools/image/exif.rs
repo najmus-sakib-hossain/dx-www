@@ -124,10 +124,7 @@ pub fn strip_metadata<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput>
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Stripped all metadata",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Stripped all metadata", output_path))
 }
 
 /// Strip GPS data only.
@@ -159,10 +156,7 @@ pub fn strip_gps<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Stripped GPS metadata",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Stripped GPS metadata", output_path))
 }
 
 /// Set copyright metadata.
@@ -233,10 +227,7 @@ pub fn set_artist<P: AsRef<Path>>(input: P, output: P, artist: &str) -> Result<T
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        format!("Set artist to: {}", artist),
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path(format!("Set artist to: {}", artist), output_path))
 }
 
 /// Copy metadata from one image to another.
@@ -289,10 +280,8 @@ pub fn batch_strip_metadata<P: AsRef<Path>>(inputs: &[P], output_dir: P) -> Resu
         processed += 1;
     }
 
-    Ok(
-        ToolOutput::success(format!("Stripped metadata from {} files", processed))
-            .with_metadata("count", processed.to_string()),
-    )
+    Ok(ToolOutput::success(format!("Stripped metadata from {} files", processed))
+        .with_metadata("count", processed.to_string()))
 }
 
 #[cfg(test)]
@@ -308,8 +297,7 @@ mod tests {
     #[test]
     fn test_exif_info_has_gps() {
         let mut info = ExifInfo::default();
-        info.fields
-            .insert("GPSLatitude".to_string(), "40.7128".to_string());
+        info.fields.insert("GPSLatitude".to_string(), "40.7128".to_string());
         assert!(info.has_gps());
     }
 }

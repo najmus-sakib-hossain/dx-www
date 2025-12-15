@@ -605,10 +605,8 @@ impl HctSolver {
             let r_cscaled = Self::inverse_chromatic_adaptation(r_a);
             let g_cscaled = Self::inverse_chromatic_adaptation(g_a);
             let b_cscaled = Self::inverse_chromatic_adaptation(b_a);
-            let [red, green, blue] = matrix_multiply(
-                [r_cscaled, g_cscaled, b_cscaled],
-                LINRGB_FROM_SCALED_DISCOUNT,
-            );
+            let [red, green, blue] =
+                matrix_multiply([r_cscaled, g_cscaled, b_cscaled], LINRGB_FROM_SCALED_DISCOUNT);
 
             let linrgb = LinearRgb { red, green, blue };
             // ===========================================================

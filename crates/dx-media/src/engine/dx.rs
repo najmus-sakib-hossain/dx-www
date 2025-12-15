@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use crate::config::Config;
-use crate::engine::{Downloader, FileManager, SearchEngine, Scraper, ScrapeOptions};
+use crate::engine::{Downloader, FileManager, ScrapeOptions, Scraper, SearchEngine};
 use crate::error::Result;
 use crate::providers::ProviderRegistry;
 use crate::types::{MediaAsset, MediaType, SearchQuery, SearchResult};
@@ -133,10 +133,7 @@ impl DxMedia {
     /// Check if a specific provider is available.
     #[must_use]
     pub fn is_provider_available(&self, name: &str) -> bool {
-        self.registry
-            .get(name)
-            .map(|p| p.is_available())
-            .unwrap_or(false)
+        self.registry.get(name).map(|p| p.is_available()).unwrap_or(false)
     }
 
     /// Get the configuration.
@@ -164,21 +161,21 @@ impl DxMedia {
     }
 
     /// Search all providers AND scrapers concurrently.
-    /// 
+    ///
     /// This is the main unified search function that:
     /// 1. Searches all available API providers concurrently
     /// 2. Scrapes configured free image sites concurrently
     /// 3. Returns combined results from all sources
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```no_run
     /// # use dx_media::DxMedia;
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let dx = DxMedia::new()?;
     /// let results = dx.search_all("sunset mountains", 10).await?;
-    /// println!("Found {} total results from {} sources", 
-    ///     results.assets.len(), 
+    /// println!("Found {} total results from {} sources",
+    ///     results.assets.len(),
     ///     results.providers_searched.len()
     /// );
     /// # Ok(())
@@ -190,13 +187,13 @@ impl DxMedia {
     }
 
     /// Search all providers AND scrapers concurrently with explicit search mode.
-    /// 
+    ///
     /// # Search Modes
     /// - **Quantity** (default): Fast early-exit after 3x results. Skips slow sources.
     /// - **Quality**: Waits for ALL providers/scrapers to respond (or timeout).
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```no_run
     /// # use dx_media::{DxMedia, SearchMode};
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -207,17 +204,17 @@ impl DxMedia {
     /// # }
     /// ```
     pub async fn search_all_with_mode(
-        &self, 
-        query: &str, 
+        &self,
+        query: &str,
         count_per_source: usize,
         mode: crate::types::SearchMode,
     ) -> Result<SearchResult> {
         use crate::types::SearchMode;
-        use std::time::{Instant, Duration};
         use futures::stream::{FuturesUnordered, StreamExt};
-        
+        use std::time::{Duration, Instant};
+
         let start = Instant::now();
-        
+
         // Timeout varies by mode: Quantity=fast, Quality=patient
         let scraper_timeout = match mode {
             SearchMode::Quantity => Duration::from_secs(3),
@@ -226,13 +223,13 @@ impl DxMedia {
 
         // Build search query for providers with mode
         let search_query = SearchQuery::new(query).count(count_per_source).mode(mode);
-        
+
         // Create scraper for web scraping
         let scraper = Scraper::new()?;
-        
+
         // Define scraping targets (sites that work without Cloudflare protection)
         let scrape_urls = self.get_scrape_search_urls(query);
-        
+
         // Create FuturesUnordered for scraper searches with timeouts
         let mut scrape_futures: FuturesUnordered<_> = scrape_urls
             .into_iter()
@@ -245,18 +242,19 @@ impl DxMedia {
                     max_assets: count_per_source,
                 };
                 async move {
-                    let result = tokio::time::timeout(
-                        scraper_timeout,
-                        scraper.scrape(&url, &options)
-                    ).await;
-                    
+                    let result =
+                        tokio::time::timeout(scraper_timeout, scraper.scrape(&url, &options)).await;
+
                     match result {
                         Ok(r) => (name, r),
-                        Err(_) => (name.clone(), Err(crate::error::DxError::ProviderApi {
-                            provider: format!("scraper:{}", name),
-                            message: "Scraper timed out (>5s)".to_string(),
-                            status_code: 408,
-                        })),
+                        Err(_) => (
+                            name.clone(),
+                            Err(crate::error::DxError::ProviderApi {
+                                provider: format!("scraper:{}", name),
+                                message: "Scraper timed out (>5s)".to_string(),
+                                status_code: 408,
+                            }),
+                        ),
                     }
                 }
             })
@@ -264,7 +262,7 @@ impl DxMedia {
 
         // Execute provider search and scraper searches concurrently
         let provider_future = self.search_engine.search(&search_query);
-        
+
         // Start collecting scraper results in parallel
         let scraper_collector = async {
             let mut results = Vec::new();
@@ -275,14 +273,11 @@ impl DxMedia {
         };
 
         // Run both in parallel
-        let (provider_result, scrape_results) = tokio::join!(
-            provider_future,
-            scraper_collector
-        );
+        let (provider_result, scrape_results) = tokio::join!(provider_future, scraper_collector);
 
         // Start with provider results
         let mut result = provider_result.unwrap_or_else(|_| SearchResult::new(query));
-        
+
         // Add scraper results
         for (name, scrape_result) in scrape_results {
             match scrape_result {
@@ -302,7 +297,7 @@ impl DxMedia {
     }
 
     /// Get search URLs for scraping targets.
-    /// 
+    ///
     /// Returns a list of (name, url) pairs for sites that support search
     /// and don't have Cloudflare protection.
     fn get_scrape_search_urls(&self, _query: &str) -> Vec<(String, String)> {
@@ -314,7 +309,10 @@ impl DxMedia {
             // Flickr explore (no search, but popular images)
             ("flickr".to_string(), "https://www.flickr.com/explore".to_string()),
             // NASA image gallery
-            ("nasa-gallery".to_string(), "https://www.nasa.gov/multimedia/imagegallery/".to_string()),
+            (
+                "nasa-gallery".to_string(),
+                "https://www.nasa.gov/multimedia/imagegallery/".to_string(),
+            ),
         ]
     }
 }

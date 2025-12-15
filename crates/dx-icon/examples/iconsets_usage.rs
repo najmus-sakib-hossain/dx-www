@@ -1,12 +1,12 @@
 use dx_icon::converters::iconsets::IconSetJson;
-use walkdir::WalkDir;
 use std::path::PathBuf;
+use walkdir::WalkDir;
 
 fn main() {
     println!("=== Icon-Sets Example ===\n");
 
     let iconsets_path = PathBuf::from("inspirations/icon-sets/json");
-    
+
     println!("Loading icon-sets from: {}\n", iconsets_path.display());
 
     let mut total_sets = 0;
@@ -24,7 +24,7 @@ fn main() {
             Ok(iconset) => {
                 total_sets += 1;
                 total_icons += iconset.icons.len();
-                
+
                 if example_sets.len() < 5 {
                     example_sets.push((
                         iconset.info.name.clone(),
@@ -58,17 +58,17 @@ fn main() {
     // Show detailed example from one specific set
     println!("\n--- Detailed Example: ant-design.json ---");
     let antd_path = iconsets_path.join("ant-design.json");
-    
+
     if let Ok(iconset) = IconSetJson::from_file(&antd_path) {
         println!("Name: {}", iconset.info.name);
         println!("Prefix: {}", iconset.prefix);
         println!("Total Icons: {}", iconset.info.total);
         println!("Version: {}", iconset.info.version.as_deref().unwrap_or("N/A"));
-        
+
         if let Some(author) = &iconset.info.author {
             println!("Author: {}", author.name);
         }
-        
+
         if let Some(license) = &iconset.info.license {
             println!("License: {} ({})", license.title, license.spdx);
         }
@@ -77,7 +77,7 @@ fn main() {
         println!("\nFirst 5 icons:");
         let mut icon_names: Vec<_> = iconset.icons.keys().collect();
         icon_names.sort();
-        
+
         for (i, icon_name) in icon_names.iter().take(5).enumerate() {
             if let Some(icon_data) = iconset.icons.get(*icon_name) {
                 println!("  {}. {}", i + 1, icon_name);

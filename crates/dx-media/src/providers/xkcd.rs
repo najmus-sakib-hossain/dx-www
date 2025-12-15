@@ -124,11 +124,14 @@ impl Provider for XkcdProvider {
         // Get latest comic number
         let latest = self.get_latest_comic_num().await?;
         let count = query.count.min(10); // Limit to avoid too many requests
-        
+
         // Search strategy: get random comics or recent ones
         let query_lower = query.query.to_lowercase();
-        
-        let comic_nums: Vec<u32> = if query_lower.contains("latest") || query_lower.contains("recent") || query_lower.contains("new") {
+
+        let comic_nums: Vec<u32> = if query_lower.contains("latest")
+            || query_lower.contains("recent")
+            || query_lower.contains("new")
+        {
             // Get most recent comics
             (latest.saturating_sub(count as u32 - 1)..=latest).rev().collect()
         } else {
@@ -136,7 +139,7 @@ impl Provider for XkcdProvider {
             use std::collections::HashSet;
             let mut nums = HashSet::new();
             let mut rng_seed = query.query.bytes().fold(0u32, |acc, b| acc.wrapping_add(b as u32));
-            
+
             while nums.len() < count && nums.len() < latest as usize {
                 rng_seed = rng_seed.wrapping_mul(1103515245).wrapping_add(12345);
                 let num = (rng_seed % latest) + 1;
@@ -147,20 +150,19 @@ impl Provider for XkcdProvider {
             }
             nums.into_iter().collect()
         };
-        
+
         // Fetch comics CONCURRENTLY for speed
         use futures::future::join_all;
-        let futures: Vec<_> = comic_nums.into_iter()
-            .take(count)
-            .map(|num| self.get_comic(num))
-            .collect();
-        
+        let futures: Vec<_> =
+            comic_nums.into_iter().take(count).map(|num| self.get_comic(num)).collect();
+
         let results = join_all(futures).await;
-        let assets: Vec<_> = results.into_iter()
+        let assets: Vec<_> = results
+            .into_iter()
             .filter_map(|r| r.ok())
             .map(|comic| self.comic_to_asset(comic))
             .collect();
-        
+
         Ok(SearchResult {
             query: query.query.clone(),
             media_type: query.media_type,

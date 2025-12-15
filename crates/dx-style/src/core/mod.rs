@@ -422,10 +422,8 @@ pub fn rebuild_styles(
                         }
                         let mut tmp_html = html_out.clone();
                         for (full, classes_str) in iter_class_attributes(&html_out) {
-                            let mut items: Vec<String> = classes_str
-                                .split_whitespace()
-                                .map(|s| s.to_string())
-                                .collect();
+                            let mut items: Vec<String> =
+                                classes_str.split_whitespace().map(|s| s.to_string()).collect();
                             let mut replaced_any = false;
                             for it in items.iter_mut() {
                                 if it == old_name {
@@ -495,11 +493,7 @@ pub fn rebuild_styles(
             let mut html_string = String::from_utf8_lossy(&html_bytes).to_string();
             let mut modified = false;
             for (old_name, old_def) in prev_registry.definitions() {
-                if group_registry
-                    .definitions()
-                    .find(|(n, _)| *n == old_name)
-                    .is_some()
-                {
+                if group_registry.definitions().find(|(n, _)| *n == old_name).is_some() {
                     continue;
                 }
                 let mut prev_set: AHashSet<String> = AHashSet::default();
@@ -568,10 +562,8 @@ pub fn rebuild_styles(
                         let mut plain_html = html_string.clone();
                         let mut plain_modified = false;
                         for (full, classes_str) in iter_class_attributes(&html_string) {
-                            let mut items: Vec<String> = classes_str
-                                .split_whitespace()
-                                .map(|s| s.to_string())
-                                .collect();
+                            let mut items: Vec<String> =
+                                classes_str.split_whitespace().map(|s| s.to_string()).collect();
                             let mut replaced_any = false;
                             for it in items.iter_mut() {
                                 if it == old_name {
@@ -694,20 +686,14 @@ pub fn rebuild_styles(
         }
     }
     {
-        if std::env::var("DX_GROUP_REWRITE_PLAIN_ALIAS")
-            .ok()
-            .as_deref()
-            == Some("1")
-        {
+        if std::env::var("DX_GROUP_REWRITE_PLAIN_ALIAS").ok().as_deref() == Some("1") {
             let html_string = String::from_utf8_lossy(&html_bytes).to_string();
             let mut new_html = html_string.clone();
             let mut any_mod = false;
             for (name, _def) in group_registry.definitions() {
                 for (full, classes_str) in iter_class_attributes(&html_string) {
-                    let mut items: Vec<String> = classes_str
-                        .split_whitespace()
-                        .map(|s| s.to_string())
-                        .collect();
+                    let mut items: Vec<String> =
+                        classes_str.split_whitespace().map(|s| s.to_string()).collect();
                     let mut replaced = false;
                     for it in items.iter_mut() {
                         if it == name {
@@ -851,9 +837,7 @@ pub fn rebuild_styles(
                         if original_html_string
                             .find(&full)
                             .and_then(|i| {
-                                original_html_string
-                                    .get(i..i + full.len())
-                                    .map(|s| s.contains('@'))
+                                original_html_string.get(i..i + full.len()).map(|s| s.contains('@'))
                             })
                             .unwrap_or(false)
                         {
@@ -869,10 +853,8 @@ pub fn rebuild_styles(
                     let mut best_alias: Option<String> = None;
                     let mut best_match_count = 0usize;
                     for (alias, set) in &group_sets {
-                        let match_count = items
-                            .iter()
-                            .filter(|it| set.contains(&it.to_string()))
-                            .count();
+                        let match_count =
+                            items.iter().filter(|it| set.contains(&it.to_string())).count();
                         let score = (match_count as f64) / (total as f64);
                         if score > best_score {
                             best_score = score;
@@ -934,10 +916,8 @@ pub fn rebuild_styles(
     {
         let mut html_string = String::from_utf8_lossy(&html_bytes).to_string();
         let mut modified = false;
-        let alias_names: Vec<String> = group_registry
-            .definitions()
-            .map(|(n, _)| n.clone())
-            .collect();
+        let alias_names: Vec<String> =
+            group_registry.definitions().map(|(n, _)| n.clone()).collect();
         for alias in alias_names {
             let mut occurrences: Vec<(String, String)> = Vec::new();
             for (full, classes_str) in iter_class_attributes(&html_string) {
@@ -1101,9 +1081,8 @@ pub fn rebuild_styles(
         };
         let removed_has_color = removed.iter().any(|c| is_color(c));
         let added_has_color = added.iter().any(|c| is_color(c));
-        let missing_index_for_removed = removed
-            .iter()
-            .any(|c| !state_guard.css_index.contains_key(c));
+        let missing_index_for_removed =
+            removed.iter().any(|c| !state_guard.css_index.contains_key(c));
         let only_additions = !added.is_empty() && removed.is_empty();
         let only_removals = !removed.is_empty() && added.is_empty();
         let need_full = if force_full || is_initial_run {
@@ -1235,9 +1214,7 @@ pub fn rebuild_styles(
                 util_body.push_str(line);
                 util_body.push('\n');
             }
-            state_guard
-                .css_buffer
-                .extend_from_slice(b"@layer utilities {\n");
+            state_guard.css_buffer.extend_from_slice(b"@layer utilities {\n");
             state_guard.utilities_offset = state_guard.css_buffer.len();
             for line in util_body.lines() {
                 if line.is_empty() {
@@ -1251,15 +1228,12 @@ pub fn rebuild_styles(
             if let Ok(as_string) = String::from_utf8(state_guard.css_buffer.clone()) {
                 if let Some(formatted) = formatter::format_css_pretty(&as_string) {
                     state_guard.css_buffer.clear();
-                    state_guard
-                        .css_buffer
-                        .extend_from_slice(formatted.as_bytes());
+                    state_guard.css_buffer.extend_from_slice(formatted.as_bytes());
                     if let Some(layer_pos) =
                         twoway::find_bytes(&state_guard.css_buffer, b"@layer utilities")
                     {
-                        if let Some(rel_brace) = state_guard.css_buffer[layer_pos..]
-                            .iter()
-                            .position(|b| *b == b'{')
+                        if let Some(rel_brace) =
+                            state_guard.css_buffer[layer_pos..].iter().position(|b| *b == b'{')
                         {
                             let after_brace = layer_pos + rel_brace + 1;
                             if let Some(nl) = state_guard.css_buffer[after_brace..]

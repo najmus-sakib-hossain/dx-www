@@ -127,9 +127,7 @@ pub fn compress_to_size<P: AsRef<Path>>(input: P, output: P, target_kb: u64) -> 
         let temp_output = output_path.with_extension("temp.jpg");
         compress(input_path, &temp_output, mid)?;
 
-        let size = std::fs::metadata(&temp_output)
-            .map(|m| m.len())
-            .unwrap_or(0);
+        let size = std::fs::metadata(&temp_output).map(|m| m.len()).unwrap_or(0);
 
         let _ = std::fs::remove_file(&temp_output);
 

@@ -57,13 +57,11 @@ impl Downloader {
 
         // Ensure directory exists
         if let Some(parent) = filepath.parent() {
-            tokio::fs::create_dir_all(parent)
-                .await
-                .map_err(|e| DxError::FileIo {
-                    path: parent.to_path_buf(),
-                    message: format!("Failed to create directory: {}", e),
-                    source: Some(e),
-                })?;
+            tokio::fs::create_dir_all(parent).await.map_err(|e| DxError::FileIo {
+                path: parent.to_path_buf(),
+                message: format!("Failed to create directory: {}", e),
+                source: Some(e),
+            })?;
         }
 
         // Download the file
@@ -99,13 +97,11 @@ impl Downloader {
             message: format!("Failed to read response body: {}", e),
         })?;
 
-        tokio::fs::write(path, &bytes)
-            .await
-            .map_err(|e| DxError::FileIo {
-                path: path.to_path_buf(),
-                message: format!("Failed to write file: {}", e),
-                source: Some(e),
-            })?;
+        tokio::fs::write(path, &bytes).await.map_err(|e| DxError::FileIo {
+            path: path.to_path_buf(),
+            message: format!("Failed to write file: {}", e),
+            source: Some(e),
+        })?;
 
         Ok(())
     }
@@ -230,21 +226,9 @@ mod tests {
     fn test_extension_from_url() {
         let downloader = Downloader::default();
 
-        assert_eq!(
-            downloader.extension_from_url("https://example.com/image.jpg"),
-            Some("jpg")
-        );
-        assert_eq!(
-            downloader.extension_from_url("https://example.com/image.PNG"),
-            Some("png")
-        );
-        assert_eq!(
-            downloader.extension_from_url("https://example.com/video.mp4"),
-            Some("mp4")
-        );
-        assert_eq!(
-            downloader.extension_from_url("https://example.com/unknown"),
-            None
-        );
+        assert_eq!(downloader.extension_from_url("https://example.com/image.jpg"), Some("jpg"));
+        assert_eq!(downloader.extension_from_url("https://example.com/image.PNG"), Some("png"));
+        assert_eq!(downloader.extension_from_url("https://example.com/video.mp4"), Some("mp4"));
+        assert_eq!(downloader.extension_from_url("https://example.com/unknown"), None);
     }
 }

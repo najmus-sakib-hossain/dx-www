@@ -140,10 +140,8 @@ fn parse_ffprobe_json(json: &str) -> Result<AudioMetadata> {
                 .map(String::from);
 
             // Parse track number
-            if let Some(track_str) = tags
-                .get("track")
-                .or(tags.get("TRACK"))
-                .and_then(|v| v.as_str())
+            if let Some(track_str) =
+                tags.get("track").or(tags.get("TRACK")).and_then(|v| v.as_str())
             {
                 if let Some(num) = track_str.split('/').next() {
                     metadata.track = num.parse().ok();
@@ -163,10 +161,8 @@ fn parse_ffprobe_json(json: &str) -> Result<AudioMetadata> {
         }
 
         // Parse format info
-        metadata.duration = format
-            .get("duration")
-            .and_then(|v| v.as_str())
-            .and_then(|s| s.parse().ok());
+        metadata.duration =
+            format.get("duration").and_then(|v| v.as_str()).and_then(|s| s.parse().ok());
 
         metadata.bitrate = format
             .get("bit_rate")
@@ -179,20 +175,14 @@ fn parse_ffprobe_json(json: &str) -> Result<AudioMetadata> {
     if let Some(streams) = parsed.get("streams").and_then(|s| s.as_array()) {
         for stream in streams {
             if stream.get("codec_type").and_then(|v| v.as_str()) == Some("audio") {
-                metadata.sample_rate = stream
-                    .get("sample_rate")
-                    .and_then(|v| v.as_str())
-                    .and_then(|s| s.parse().ok());
+                metadata.sample_rate =
+                    stream.get("sample_rate").and_then(|v| v.as_str()).and_then(|s| s.parse().ok());
 
-                metadata.channels = stream
-                    .get("channels")
-                    .and_then(|v| v.as_u64())
-                    .map(|c| c as u8);
+                metadata.channels =
+                    stream.get("channels").and_then(|v| v.as_u64()).map(|c| c as u8);
 
-                metadata.codec = stream
-                    .get("codec_name")
-                    .and_then(|v| v.as_str())
-                    .map(String::from);
+                metadata.codec =
+                    stream.get("codec_name").and_then(|v| v.as_str()).map(String::from);
 
                 break;
             }
@@ -233,8 +223,7 @@ pub fn write_metadata<P: AsRef<Path>>(
         cmd.arg("-metadata").arg(format!("album={}", album));
     }
     if let Some(ref album_artist) = metadata.album_artist {
-        cmd.arg("-metadata")
-            .arg(format!("album_artist={}", album_artist));
+        cmd.arg("-metadata").arg(format!("album_artist={}", album_artist));
     }
     if let Some(track) = metadata.track {
         let track_str = if let Some(total) = metadata.total_tracks {
@@ -268,18 +257,12 @@ pub fn write_metadata<P: AsRef<Path>>(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Metadata write failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Metadata write failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Updated audio metadata",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Updated audio metadata", output_path))
 }
 
 /// Strip all metadata from audio file.
@@ -304,18 +287,12 @@ pub fn strip_metadata<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput>
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Metadata strip failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Metadata strip failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Stripped all metadata",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Stripped all metadata", output_path))
 }
 
 /// Copy metadata from one file to another.
@@ -383,10 +360,7 @@ pub fn add_cover_art<P: AsRef<Path>>(input: P, cover: P, output: P) -> Result<To
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Added cover art",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Added cover art", output_path))
 }
 
 /// Extract cover art from audio file.
@@ -418,10 +392,7 @@ pub fn extract_cover_art<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutp
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Extracted cover art",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Extracted cover art", output_path))
 }
 
 /// Format metadata as displayable string.

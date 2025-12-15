@@ -157,12 +157,9 @@ pub fn resize_with_options<P: AsRef<Path>>(
     args.push(size_arg);
     args.push(output_path.to_str().unwrap_or("").to_string());
 
-    let status = Command::new("magick")
-        .args(&args)
-        .status()
-        .map_err(|e| DxError::Internal {
-            message: format!("Failed to execute ImageMagick: {}", e),
-        })?;
+    let status = Command::new("magick").args(&args).status().map_err(|e| DxError::Internal {
+        message: format!("Failed to execute ImageMagick: {}", e),
+    })?;
 
     if !status.success() {
         return Err(DxError::Internal {
@@ -236,10 +233,7 @@ pub fn scale<P: AsRef<Path>>(input: P, output: P, percentage: u32) -> Result<Too
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        format!("Scaled to {}%", percentage),
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path(format!("Scaled to {}%", percentage), output_path))
 }
 
 /// Create thumbnail.

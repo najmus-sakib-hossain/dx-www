@@ -86,7 +86,8 @@ where
 
                 // Exponential backoff
                 delay = Duration::from_secs_f64(
-                    (delay.as_secs_f64() * policy.backoff_multiplier).min(policy.max_delay.as_secs_f64())
+                    (delay.as_secs_f64() * policy.backoff_multiplier)
+                        .min(policy.max_delay.as_secs_f64()),
                 );
             }
         }

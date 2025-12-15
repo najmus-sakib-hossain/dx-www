@@ -182,10 +182,7 @@ pub fn add_watermark_with_options<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Watermark added successfully",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Watermark added successfully", output_path))
 }
 
 /// Add image watermark.
@@ -239,10 +236,7 @@ pub fn add_tiled_watermark<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Tiled watermark added",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Tiled watermark added", output_path))
 }
 
 /// Batch add watermark to multiple images.
@@ -270,10 +264,8 @@ pub fn batch_watermark<P: AsRef<Path>>(
         processed += 1;
     }
 
-    Ok(
-        ToolOutput::success(format!("Added watermark to {} images", processed))
-            .with_metadata("count", processed.to_string()),
-    )
+    Ok(ToolOutput::success(format!("Added watermark to {} images", processed))
+        .with_metadata("count", processed.to_string()))
 }
 
 #[cfg(test)]

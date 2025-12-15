@@ -82,15 +82,12 @@ impl ForgeWatcher {
         let config_raw = tokio::fs::read_to_string(forge_dir.join("config.json")).await?;
         let config: serde_json::Value = serde_json::from_str(&config_raw)?;
         let actor_id = config["actor_id"].as_str().unwrap().to_string();
-        let repo_id = config["repo_id"]
-            .as_str()
-            .map(|s| s.to_string())
-            .unwrap_or_else(|| {
-                let mut hasher = Sha256::new();
-                let path_string = repo_root.to_string_lossy().into_owned();
-                hasher.update(path_string.as_bytes());
-                format!("local-{:x}", hasher.finalize())
-            });
+        let repo_id = config["repo_id"].as_str().map(|s| s.to_string()).unwrap_or_else(|| {
+            let mut hasher = Sha256::new();
+            let path_string = repo_root.to_string_lossy().into_owned();
+            hasher.update(path_string.as_bytes());
+            format!("local-{:x}", hasher.finalize())
+        });
 
         let sync_mgr = if enable_sync {
             Some(Arc::new(SyncManager::new()))
@@ -143,12 +140,12 @@ impl ForgeWatcher {
             )
             .await
         } else {
-                // Fall back to file system watching
-                tracing::info!(
-                    "{} {} mode (no LSP extension detected)",
-                    "👁️".bright_yellow(),
-                    "File watching".bright_cyan().bold()
-                );
+            // Fall back to file system watching
+            tracing::info!(
+                "{} {} mode (no LSP extension detected)",
+                "👁️".bright_yellow(),
+                "File watching".bright_cyan().bold()
+            );
             detector::start_watching(
                 self.repo_root,
                 self.oplog,

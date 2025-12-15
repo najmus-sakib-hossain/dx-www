@@ -128,14 +128,9 @@ pub fn generate_qr_with_options<P: AsRef<Path>>(
         });
     }
 
-    Ok(
-        ToolOutput::success_with_path("QR code generated successfully", output_path)
-            .with_metadata("data_length", data.len().to_string())
-            .with_metadata(
-                "error_correction",
-                options.error_correction.to_arg().to_string(),
-            ),
-    )
+    Ok(ToolOutput::success_with_path("QR code generated successfully", output_path)
+        .with_metadata("data_length", data.len().to_string())
+        .with_metadata("error_correction", options.error_correction.to_arg().to_string()))
 }
 
 /// Generate QR code to SVG format.
@@ -163,10 +158,7 @@ pub fn generate_qr_svg<P: AsRef<Path>>(data: &str, output: P, size: u32) -> Resu
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "QR code SVG generated successfully",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("QR code SVG generated successfully", output_path))
 }
 
 /// Decode a QR code from an image.
@@ -197,12 +189,11 @@ pub fn decode_qr<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
 
 /// Generate QR code with text encoding to terminal (ASCII art).
 pub fn generate_qr_ascii(data: &str) -> Result<ToolOutput> {
-    let output = Command::new("qrencode")
-        .args(["-t", "ANSIUTF8", data])
-        .output()
-        .map_err(|e| DxError::Internal {
+    let output = Command::new("qrencode").args(["-t", "ANSIUTF8", data]).output().map_err(|e| {
+        DxError::Internal {
             message: format!("Failed to execute qrencode: {}", e),
-        })?;
+        }
+    })?;
 
     if !output.status.success() {
         return Err(DxError::Internal {
@@ -236,12 +227,14 @@ pub fn generate_qr_batch<P: AsRef<Path>>(
         generated += 1;
     }
 
-    Ok(ToolOutput::success(format!(
-        "Generated {} QR codes in {}",
-        generated,
-        output_dir.display()
-    ))
-    .with_metadata("count", generated.to_string()))
+    Ok(
+        ToolOutput::success(format!(
+            "Generated {} QR codes in {}",
+            generated,
+            output_dir.display()
+        ))
+        .with_metadata("count", generated.to_string()),
+    )
 }
 
 #[cfg(test)]

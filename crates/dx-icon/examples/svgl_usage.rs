@@ -6,7 +6,7 @@ fn main() {
 
     // Load icons from the svgl directory
     let svgl_path = PathBuf::from("inspirations/svgl/static/library");
-    
+
     match SvglReader::from_directory(svgl_path) {
         Ok(reader) => {
             println!("✓ Loaded {} SVGL icons\n", reader.count());
@@ -15,7 +15,7 @@ fn main() {
             println!("First 10 icons:");
             let mut icons: Vec<_> = reader.list_icons();
             icons.sort();
-            
+
             for (i, icon_id) in icons.iter().take(10).enumerate() {
                 println!("  {}. {}", i + 1, icon_id);
             }
@@ -39,18 +39,18 @@ fn main() {
             // Show some statistics
             println!("\n--- Statistics ---");
             println!("Total icons: {}", reader.count());
-            
+
             let svg_sizes: Vec<usize> = icons
                 .iter()
                 .filter_map(|id| reader.get(id))
                 .map(|icon| icon.svg_content.len())
                 .collect();
-            
+
             if !svg_sizes.is_empty() {
                 let avg_size = svg_sizes.iter().sum::<usize>() / svg_sizes.len();
                 let min_size = svg_sizes.iter().min().unwrap();
                 let max_size = svg_sizes.iter().max().unwrap();
-                
+
                 println!("Average icon size: {} bytes", avg_size);
                 println!("Smallest icon: {} bytes", min_size);
                 println!("Largest icon: {} bytes", max_size);

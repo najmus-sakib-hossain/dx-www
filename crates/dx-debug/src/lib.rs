@@ -36,7 +36,8 @@ impl BinaryDecoder {
         let payload = &data[1..];
 
         // Try to decode payload as JSON (simplified)
-        let decoded_payload = serde_json::to_value(format!("{:?}", payload)).unwrap_or(serde_json::Value::Null);
+        let decoded_payload =
+            serde_json::to_value(format!("{:?}", payload)).unwrap_or(serde_json::Value::Null);
 
         Some(DebugMessage {
             timestamp: chrono::Utc::now().timestamp_millis(),
@@ -54,7 +55,7 @@ impl BinaryDecoder {
             0x60 => "VALIDATE_FIELD".to_string(),
             0x61 => "VALIDATION_RESULT".to_string(),
             0x62 => "FORM_VALID".to_string(),
-            
+
             // dx-query
             0x70 => "QUERY_REQUEST".to_string(),
             0x71 => "QUERY_RESPONSE".to_string(),
@@ -62,37 +63,37 @@ impl BinaryDecoder {
             0x73 => "QUERY_INVALIDATE".to_string(),
             0x74 => "QUERY_SUBSCRIBE".to_string(),
             0x75 => "QUERY_UPDATE".to_string(),
-            
+
             // dx-state
             0x80 => "STATE_INIT".to_string(),
             0x81 => "STATE_SET".to_string(),
             0x82 => "STATE_GET".to_string(),
             0x83 => "STATE_SUBSCRIBE".to_string(),
             0x84 => "STATE_NOTIFY".to_string(),
-            
+
             // dx-db
             0x90 => "DB_QUERY".to_string(),
             0x91 => "DB_RESULT".to_string(),
             0x92 => "DB_ROW".to_string(),
             0x93 => "DB_ERROR".to_string(),
             0x94 => "DB_TRANSACTION".to_string(),
-            
+
             // dx-sync
             0xA0 => "SYNC_SUBSCRIBE".to_string(),
             0xA1 => "SYNC_UNSUBSCRIBE".to_string(),
             0xA2 => "SYNC_MESSAGE".to_string(),
             0xA3 => "SYNC_DELTA".to_string(),
             0xA4 => "SYNC_ACK".to_string(),
-            
+
             // dx-error
             0xB0 => "ERROR_BOUNDARY".to_string(),
             0xB1 => "ERROR_RECOVER".to_string(),
             0xB2 => "ERROR_REPORT".to_string(),
-            
+
             // dx-interaction
             0xC0 => "INTERACTION_SAVE".to_string(),
             0xC1 => "INTERACTION_RESTORE".to_string(),
-            
+
             _ => format!("UNKNOWN_{:02X}", opcode),
         }
     }
@@ -101,10 +102,7 @@ impl BinaryDecoder {
     pub fn format_for_console(msg: &DebugMessage) -> String {
         format!(
             "[{:013}] {} (0x{:02X}) - {} bytes",
-            msg.timestamp,
-            msg.opcode_name,
-            msg.opcode,
-            msg.payload_size
+            msg.timestamp, msg.opcode_name, msg.opcode, msg.payload_size
         )
     }
 }
@@ -133,7 +131,7 @@ impl PerformanceMetrics {
     pub fn record(&mut self, msg: &DebugMessage) {
         self.total_messages += 1;
         self.total_bytes += msg.payload_size as u64;
-        
+
         *self.messages_by_opcode.entry(msg.opcode).or_insert(0) += 1;
     }
 
@@ -192,7 +190,7 @@ impl DebugLogger {
     pub fn log(&mut self, msg: DebugMessage) {
         self.metrics.record(&msg);
         self.messages.push(msg);
-        
+
         // Keep only last N messages
         if self.messages.len() > self.max_messages {
             self.messages.drain(0..self.messages.len() - self.max_messages);
@@ -237,7 +235,7 @@ mod tests {
     fn test_decode() {
         let data = vec![0x60, 1, 2, 3, 4];
         let msg = BinaryDecoder::decode(&data).unwrap();
-        
+
         assert_eq!(msg.opcode, 0x60);
         assert_eq!(msg.opcode_name, "VALIDATE_FIELD");
         assert_eq!(msg.payload_size, 4);
@@ -261,7 +259,7 @@ mod tests {
     #[test]
     fn test_performance_metrics() {
         let mut metrics = PerformanceMetrics::new();
-        
+
         let msg = DebugMessage {
             timestamp: 0,
             opcode: 0x70,
@@ -298,4 +296,3 @@ mod tests {
         assert_eq!(logger.metrics().total_messages, 15);
     }
 }
-

@@ -9,8 +9,8 @@
 //! - Bundle: 0 KB (server-side)
 
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
 use chrono::{DateTime, Duration, Utc};
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
@@ -145,12 +145,7 @@ impl TokenGenerator {
     }
 
     /// Generate token
-    pub fn generate(
-        &self,
-        user_id: u64,
-        roles: &[UserRole],
-        ttl: Duration,
-    ) -> BinaryToken {
+    pub fn generate(&self, user_id: u64, roles: &[UserRole], ttl: Duration) -> BinaryToken {
         let expiry = (Utc::now() + ttl).timestamp();
         let role_bits = roles.iter().fold(0u64, |acc, r| acc | r.bit());
         let session_id = rand::random();
@@ -236,12 +231,9 @@ impl PasswordHasher {
 
     /// Verify password
     pub fn verify(password: &str, hash: &str) -> Result<bool, String> {
-        let parsed_hash =
-            PasswordHash::new(hash).map_err(|e| format!("Invalid hash: {}", e))?;
+        let parsed_hash = PasswordHash::new(hash).map_err(|e| format!("Invalid hash: {}", e))?;
 
-        Ok(Argon2::default()
-            .verify_password(password.as_bytes(), &parsed_hash)
-            .is_ok())
+        Ok(Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok())
     }
 }
 
@@ -284,11 +276,8 @@ mod tests {
     #[test]
     fn test_token_generation_and_verification() {
         let generator = TokenGenerator::new();
-        let token = generator.generate(
-            12345,
-            &[UserRole::User, UserRole::Admin],
-            Duration::hours(1),
-        );
+        let token =
+            generator.generate(12345, &[UserRole::User, UserRole::Admin], Duration::hours(1));
 
         assert_eq!(token.user_id, 12345);
         assert!(token.has_role(UserRole::User));

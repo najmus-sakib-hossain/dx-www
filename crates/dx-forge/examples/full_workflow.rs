@@ -3,24 +3,21 @@
 //! Demonstrates the full Forge system with multiple tools, version control,
 //! file watching, and generated code tracking.
 
-use dx_forge::{
-    Forge, ForgeConfig, Orchestrator, OrchestratorConfig, 
-    DxTool, ExecutionContext, ToolOutput,
-    SnapshotManager, ToolState, Version,
-};
 use anyhow::Result;
+use dx_forge::{
+    DxTool, ExecutionContext, Forge, ForgeConfig, Orchestrator, OrchestratorConfig,
+    SnapshotManager, ToolOutput, ToolState, Version,
+};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 // Include example tools
 mod example_tools;
-use example_tools::{DxUiTool, DxCodegenTool, DxStyleTool, DxOptimizerTool};
+use example_tools::{DxCodegenTool, DxOptimizerTool, DxStyleTool, DxUiTool};
 
 fn main() -> Result<()> {
     // Initialize logging
-    tracing_subscriber::fmt()
-        .with_env_filter("debug")
-        .init();
+    tracing_subscriber::fmt().with_env_filter("debug").init();
 
     println!("🚀 Starting Complete DX Tools Workflow\n");
 
@@ -30,7 +27,7 @@ fn main() -> Result<()> {
     let config = ForgeConfig::new(&project_root)
         .without_auto_watch() // Manual control for this example
         .with_forge_dir(project_root.join(".dx/forge"));
-    
+
     let mut forge = Forge::with_config(config)?;
     println!("✅ Forge initialized at: {:?}\n", forge.project_root());
 
@@ -56,7 +53,7 @@ fn main() -> Result<()> {
     // Step 3: Execute All Tools
     println!("📦 Step 3: Executing tools (orchestrated)...");
     let outputs = orch.execute_all()?;
-    
+
     let success_count = outputs.iter().filter(|o| o.success).count();
     println!("✅ Execution complete: {}/{} tools succeeded\n", success_count, outputs.len());
 
@@ -66,12 +63,12 @@ fn main() -> Result<()> {
         for file in &output.files_created {
             let mut metadata = HashMap::new();
             metadata.insert("created_at".to_string(), chrono::Utc::now().to_string());
-            
+
             // Extract tool name from output (in real impl, tools would have names)
             forge.track_generated_file(file.clone(), "dx-tool", metadata)?;
         }
     }
-    
+
     let all_generated = forge.get_generated_files("dx-tool");
     println!("✅ Tracking {} generated files\n", all_generated.len());
 
@@ -81,32 +78,38 @@ fn main() -> Result<()> {
     let mut snapshot_mgr = SnapshotManager::new(&forge_dir)?;
 
     let mut tool_states = HashMap::new();
-    tool_states.insert("dx-codegen".to_string(), ToolState {
-        tool_name: "dx-codegen".to_string(),
-        version: Version::new(1, 0, 0),
-        config: HashMap::new(),
-        output_files: vec![generated_dir.join("generated_types.ts")],
-    });
-    tool_states.insert("dx-ui".to_string(), ToolState {
-        tool_name: "dx-ui".to_string(),
-        version: Version::new(1, 0, 0),
-        config: HashMap::new(),
-        output_files: vec![components_dir.join("Button.tsx")],
-    });
+    tool_states.insert(
+        "dx-codegen".to_string(),
+        ToolState {
+            tool_name: "dx-codegen".to_string(),
+            version: Version::new(1, 0, 0),
+            config: HashMap::new(),
+            output_files: vec![generated_dir.join("generated_types.ts")],
+        },
+    );
+    tool_states.insert(
+        "dx-ui".to_string(),
+        ToolState {
+            tool_name: "dx-ui".to_string(),
+            version: Version::new(1, 0, 0),
+            config: HashMap::new(),
+            output_files: vec![components_dir.join("Button.tsx")],
+        },
+    );
 
     let snapshot_id = snapshot_mgr.create_snapshot(
         "Initial DX tools generation",
         tool_states,
         all_generated.clone(),
     )?;
-    
+
     println!("✅ Created snapshot: {}\n", snapshot_id);
 
     // Step 6: Demonstrate Branching
     println!("📦 Step 6: Creating feature branch...");
     snapshot_mgr.create_branch("feature/new-components")?;
     snapshot_mgr.checkout_branch("feature/new-components")?;
-    
+
     println!("✅ On branch: {}\n", snapshot_mgr.current_branch());
 
     // Step 7: View History
@@ -128,21 +131,21 @@ fn main() -> Result<()> {
         max_concurrent: 4,
         traffic_branch_enabled: true,
     };
-    
+
     let mut parallel_orch = Orchestrator::with_config(&project_root, parallel_config)?;
     parallel_orch.register_tool(Box::new(DxCodegenTool::new(
         project_root.join("schemas"),
         generated_dir.clone(),
     )))?;
     parallel_orch.register_tool(Box::new(DxUiTool::new(components_dir.clone())))?;
-    
+
     let parallel_outputs = parallel_orch.execute_all()?;
     println!("✅ Parallel execution: {} tools completed\n", parallel_outputs.len());
 
     // Step 9: Traffic Branch Analysis
     println!("📦 Step 9: Traffic branch analysis...");
-    use dx_forge::{TrafficAnalyzer, TrafficBranch};
     use dx_forge::orchestrator::DefaultTrafficAnalyzer;
+    use dx_forge::{TrafficAnalyzer, TrafficBranch};
 
     let analyzer = DefaultTrafficAnalyzer;
     let test_files = vec![
@@ -151,7 +154,7 @@ fn main() -> Result<()> {
         "README.md",
         "package.json",
     ];
-    
+
     for file in test_files {
         let result = analyzer.analyze(std::path::Path::new(file))?;
         let status = match result {

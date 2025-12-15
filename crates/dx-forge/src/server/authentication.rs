@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
+use chrono::{DateTime, Duration, Utc};
+use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::sync::Arc;
-use parking_lot::RwLock;
 use uuid::Uuid;
-use chrono::{DateTime, Duration, Utc};
 
 /// User role for access control
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -100,7 +100,7 @@ impl AuthManager {
     /// Create a new authentication manager
     pub fn new() -> Self {
         let mut users = HashMap::new();
-        
+
         // Create default admin user
         let admin = User::new("admin".to_string(), "admin123", Role::Admin);
         users.insert(admin.username.clone(), admin);
@@ -114,24 +114,23 @@ impl AuthManager {
     /// Register a new user
     pub fn register(&self, username: String, password: &str, role: Role) -> Result<User> {
         let mut users = self.users.write();
-        
+
         if users.contains_key(&username) {
             return Err(anyhow!("Username already exists"));
         }
 
         let user = User::new(username.clone(), password, role);
         users.insert(username, user.clone());
-        
+
         Ok(user)
     }
 
     /// Authenticate user and create session
     pub fn login(&self, username: &str, password: &str) -> Result<Session> {
         let mut users = self.users.write();
-        
-        let user = users
-            .get_mut(username)
-            .ok_or_else(|| anyhow!("Invalid username or password"))?;
+
+        let user =
+            users.get_mut(username).ok_or_else(|| anyhow!("Invalid username or password"))?;
 
         if !user.verify_password(password) {
             return Err(anyhow!("Invalid username or password"));
@@ -142,7 +141,7 @@ impl AuthManager {
 
         // Create session (24 hour duration)
         let session = Session::new(user, 24);
-        
+
         let mut sessions = self.sessions.write();
         sessions.insert(session.token.clone(), session.clone());
 
@@ -152,10 +151,8 @@ impl AuthManager {
     /// Validate session token
     pub fn validate_token(&self, token: &str) -> Result<Session> {
         let mut sessions = self.sessions.write();
-        
-        let session = sessions
-            .get(token)
-            .ok_or_else(|| anyhow!("Invalid or expired session"))?;
+
+        let session = sessions.get(token).ok_or_else(|| anyhow!("Invalid or expired session"))?;
 
         if session.is_expired() {
             sessions.remove(token);
@@ -185,12 +182,15 @@ impl AuthManager {
     }
 
     /// Update user password
-    pub fn update_password(&self, username: &str, old_password: &str, new_password: &str) -> Result<()> {
+    pub fn update_password(
+        &self,
+        username: &str,
+        old_password: &str,
+        new_password: &str,
+    ) -> Result<()> {
         let mut users = self.users.write();
-        
-        let user = users
-            .get_mut(username)
-            .ok_or_else(|| anyhow!("User not found"))?;
+
+        let user = users.get_mut(username).ok_or_else(|| anyhow!("User not found"))?;
 
         if !user.verify_password(old_password) {
             return Err(anyhow!("Invalid current password"));

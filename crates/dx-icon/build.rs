@@ -38,7 +38,10 @@ fn main() {
             let generated_path = src_dir.join("icon_generated.rs");
             if let Ok(content) = fs::read_to_string(&generated_path) {
                 // Add allow warnings at the top
-                let new_content = format!("#![allow(unused_imports, dead_code, clippy::all, warnings)]\n{}", content);
+                let new_content = format!(
+                    "#![allow(unused_imports, dead_code, clippy::all, warnings)]\n{}",
+                    content
+                );
                 fs::write(&generated_path, new_content).expect("Failed to patch generated file");
             }
         }
@@ -93,7 +96,7 @@ fn main() {
                 }
             }
         }
-        
+
         if !icons.is_empty() {
             let data = converters::svgl::SvgIcon::build_collection(&icons);
             let out_path = icons_dir.join("svgl.bin");

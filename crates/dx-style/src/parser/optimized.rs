@@ -180,11 +180,7 @@ fn expand_grouping_into_optimized(
     };
 
     // Fast path: if no grouping characters, just split whitespace
-    if !s
-        .as_bytes()
-        .iter()
-        .any(|&b| matches!(b, b'(' | b')' | b'+'))
-    {
+    if !s.as_bytes().iter().any(|&b| matches!(b, b'(' | b')' | b'+')) {
         fast_split_whitespace_insert_optimized(s, out);
         return;
     }
@@ -238,9 +234,7 @@ fn expand_grouping_full(s: &str, out: &mut AHashSet<String>, collector: &mut Gro
 
     #[inline(always)]
     fn sanitize_group_token(raw: &str) -> &str {
-        raw.strip_prefix('@')
-            .filter(|s| !s.is_empty())
-            .unwrap_or(raw)
+        raw.strip_prefix('@').filter(|s| !s.is_empty()).unwrap_or(raw)
     }
 
     while i < n {

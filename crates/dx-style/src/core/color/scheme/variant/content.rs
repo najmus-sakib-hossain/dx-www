@@ -44,10 +44,9 @@ impl SchemeContent {
                     .unwrap(),
             )),
             Palette::Error => TonalPalette::of(25.0, 84.0),
-            Palette::Neutral => TonalPalette::of(
-                source_color_hct.get_hue(),
-                source_color_hct.get_chroma() / 8.0,
-            ),
+            Palette::Neutral => {
+                TonalPalette::of(source_color_hct.get_hue(), source_color_hct.get_chroma() / 8.0)
+            }
             Palette::NeutralVariant => TonalPalette::of(
                 source_color_hct.get_hue(),
                 source_color_hct.get_chroma() / 8.0 + 4.0,
@@ -65,22 +64,10 @@ mod tests {
     fn test_key_colors() {
         let scheme = SchemeContent::new(Argb::from_u32(0xff0000ff).into(), false, Some(0.0)).scheme;
 
-        assert_eq!(
-            scheme.primary_palette_key_color(),
-            Argb::from_u32(0xff080cff)
-        );
-        assert_eq!(
-            scheme.secondary_palette_key_color(),
-            Argb::from_u32(0xff656dd3)
-        );
-        assert_eq!(
-            scheme.tertiary_palette_key_color(),
-            Argb::from_u32(0xff81009f)
-        );
-        assert_eq!(
-            scheme.neutral_palette_key_color(),
-            Argb::from_u32(0xff767684)
-        );
+        assert_eq!(scheme.primary_palette_key_color(), Argb::from_u32(0xff080cff));
+        assert_eq!(scheme.secondary_palette_key_color(), Argb::from_u32(0xff656dd3));
+        assert_eq!(scheme.tertiary_palette_key_color(), Argb::from_u32(0xff81009f));
+        assert_eq!(scheme.neutral_palette_key_color(), Argb::from_u32(0xff767684));
         // assert_eq!(
         //     scheme.neutral_variant_palette_key_color(),
         //     Argb::from_u32(0xff757589)

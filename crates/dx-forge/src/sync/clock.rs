@@ -64,10 +64,7 @@ impl HybridLogicalClock {
 }
 
 fn current_millis() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as u64
+    SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64
 }
 
 fn encode(physical: u64, logical: u64) -> u64 {

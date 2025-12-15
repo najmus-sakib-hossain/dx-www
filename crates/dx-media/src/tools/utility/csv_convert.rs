@@ -76,10 +76,8 @@ pub fn csv_to_json_with_options<P: AsRef<Path>>(
         let data: Vec<String> = rows
             .iter()
             .map(|row| {
-                let values: Vec<String> = row
-                    .iter()
-                    .map(|v| format!("\"{}\"", escape_json(v)))
-                    .collect();
+                let values: Vec<String> =
+                    row.iter().map(|v| format!("\"{}\"", escape_json(v))).collect();
                 format!("[{}]", values.join(","))
             })
             .collect();
@@ -92,11 +90,13 @@ pub fn csv_to_json_with_options<P: AsRef<Path>>(
         source: None,
     })?;
 
-    Ok(ToolOutput::success_with_path(
-        format!("Converted {} rows to JSON", rows.len()),
-        output_path,
+    Ok(
+        ToolOutput::success_with_path(
+            format!("Converted {} rows to JSON", rows.len()),
+            output_path,
+        )
+        .with_metadata("row_count", rows.len().to_string()),
     )
-    .with_metadata("row_count", rows.len().to_string()))
 }
 
 /// Convert JSON to CSV.
@@ -118,10 +118,7 @@ pub fn json_to_csv<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
         source: None,
     })?;
 
-    Ok(ToolOutput::success_with_path(
-        "Converted JSON to CSV",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Converted JSON to CSV", output_path))
 }
 
 /// Convert CSV to Markdown table.
@@ -330,11 +327,9 @@ pub fn csv_stats<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
     let rows = parse_csv(&content, &CsvOptions::default())?;
     let column_count = rows.first().map(|r| r.len()).unwrap_or(0);
 
-    Ok(
-        ToolOutput::success(format!("Rows: {}\nColumns: {}", rows.len(), column_count))
-            .with_metadata("row_count", rows.len().to_string())
-            .with_metadata("column_count", column_count.to_string()),
-    )
+    Ok(ToolOutput::success(format!("Rows: {}\nColumns: {}", rows.len(), column_count))
+        .with_metadata("row_count", rows.len().to_string())
+        .with_metadata("column_count", column_count.to_string()))
 }
 
 #[cfg(test)]

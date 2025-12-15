@@ -14,9 +14,9 @@ use std::fmt;
 /// Accessibility severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum A11ySeverity {
-    Error,    // WCAG Level A violation
-    Warning,  // WCAG Level AA violation
-    Info,     // WCAG Level AAA or best practice
+    Error,   // WCAG Level A violation
+    Warning, // WCAG Level AA violation
+    Info,    // WCAG Level AAA or best practice
 }
 
 /// Accessibility issue
@@ -72,9 +72,7 @@ pub struct ASTAnalyzer {
 impl ASTAnalyzer {
     /// Create new analyzer
     pub fn new() -> Self {
-        Self {
-            issues: Vec::new(),
-        }
+        Self { issues: Vec::new() }
     }
 
     /// Analyze JSX/TSX code
@@ -95,7 +93,7 @@ impl ASTAnalyzer {
             let rest = &source[idx..];
             let end = rest.find('>').unwrap_or(rest.len());
             let tag = &rest[..end];
-            
+
             if !tag.contains("alt=") {
                 self.issues.push(
                     A11yIssue::new(
@@ -116,7 +114,7 @@ impl ASTAnalyzer {
             let rest = &source[idx..];
             let end = rest.find('>').unwrap_or(rest.len());
             let tag = &rest[..end];
-            
+
             // Check for aria-label or inner text
             if !tag.contains("aria-label=") && tag.ends_with("/>") {
                 self.issues.push(
@@ -150,7 +148,7 @@ impl ASTAnalyzer {
     /// Check heading order (h1, h2, h3 should be sequential)
     fn check_heading_order(&mut self, source: &str) {
         let mut last_level = 0;
-        
+
         for level in 1..=6 {
             let pattern = format!("<h{}", level);
             for (idx, _) in source.match_indices(&pattern) {
@@ -159,7 +157,10 @@ impl ASTAnalyzer {
                         A11yIssue::new(
                             "heading-order",
                             A11ySeverity::Warning,
-                            format!("Heading levels should increase by one (found h{} after h{})", level, last_level),
+                            format!(
+                                "Heading levels should increase by one (found h{} after h{})",
+                                level, last_level
+                            ),
                         )
                         .with_span(idx, idx + pattern.len()),
                     );
@@ -175,7 +176,7 @@ impl ASTAnalyzer {
             let rest = &source[idx..];
             let end = rest.find('>').unwrap_or(rest.len());
             let tag = &rest[..end];
-            
+
             // Check for id attribute for label association
             if !tag.contains("aria-label=") && !tag.contains("id=") {
                 self.issues.push(
@@ -185,7 +186,9 @@ impl ASTAnalyzer {
                         "Form inputs should have associated labels",
                     )
                     .with_span(idx, idx + end)
-                    .with_suggestion("Add id attribute and corresponding <label for=\"id\"> or aria-label"),
+                    .with_suggestion(
+                        "Add id attribute and corresponding <label for=\"id\"> or aria-label",
+                    ),
                 );
             }
         }
@@ -253,7 +256,7 @@ impl A11yReport {
         let errors = analyzer.error_count();
         let warnings = analyzer.warning_count();
         let infos = analyzer.issues().len() - errors - warnings;
-        
+
         Self {
             total_issues: analyzer.issues().len(),
             errors,
@@ -276,7 +279,7 @@ mod tests {
     fn test_img_alt() {
         let mut analyzer = ASTAnalyzer::new();
         analyzer.analyze("<img src=\"test.jpg\">");
-        
+
         assert_eq!(analyzer.error_count(), 1);
         assert_eq!(analyzer.issues()[0].rule, "img-alt");
     }
@@ -285,7 +288,7 @@ mod tests {
     fn test_img_alt_present() {
         let mut analyzer = ASTAnalyzer::new();
         analyzer.analyze("<img src=\"test.jpg\" alt=\"Test image\">");
-        
+
         assert_eq!(analyzer.error_count(), 0);
     }
 
@@ -293,7 +296,7 @@ mod tests {
     fn test_button_label() {
         let mut analyzer = ASTAnalyzer::new();
         analyzer.analyze("<button/>");
-        
+
         assert_eq!(analyzer.error_count(), 1);
         assert_eq!(analyzer.issues()[0].rule, "button-label");
     }
@@ -302,7 +305,7 @@ mod tests {
     fn test_aria_label_empty() {
         let mut analyzer = ASTAnalyzer::new();
         analyzer.analyze("<div aria-label=\"\">Content</div>");
-        
+
         assert_eq!(analyzer.warning_count(), 1);
     }
 
@@ -310,7 +313,7 @@ mod tests {
     fn test_heading_order() {
         let mut analyzer = ASTAnalyzer::new();
         analyzer.analyze("<h1>Title</h1><h3>Subtitle</h3>");
-        
+
         assert_eq!(analyzer.warning_count(), 1);
         assert!(analyzer.issues()[0].message.contains("h3 after h1"));
     }
@@ -319,7 +322,7 @@ mod tests {
     fn test_form_label() {
         let mut analyzer = ASTAnalyzer::new();
         analyzer.analyze("<input type=\"text\">");
-        
+
         assert_eq!(analyzer.error_count(), 1);
         assert_eq!(analyzer.issues()[0].rule, "form-label");
     }
@@ -328,11 +331,10 @@ mod tests {
     fn test_report() {
         let mut analyzer = ASTAnalyzer::new();
         analyzer.analyze("<img src=\"test.jpg\"><div aria-label=\"\"></div>");
-        
+
         let report = A11yReport::from_analyzer(&analyzer);
         assert_eq!(report.errors, 1);
         assert_eq!(report.warnings, 1);
         assert!(!report.passed());
     }
 }
-

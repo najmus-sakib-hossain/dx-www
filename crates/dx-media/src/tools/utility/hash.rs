@@ -151,11 +151,7 @@ fn hash_with_powershell(input: &Path, algorithm: HashAlgorithm) -> Result<ToolOu
         }
     };
 
-    let script = format!(
-        "(Get-FileHash '{}' -Algorithm {}).Hash",
-        input.to_string_lossy(),
-        algo
-    );
+    let script = format!("(Get-FileHash '{}' -Algorithm {}).Hash", input.to_string_lossy(), algo);
 
     let mut cmd = Command::new("powershell");
     cmd.arg("-Command").arg(&script);
@@ -172,9 +168,7 @@ fn hash_with_powershell(input: &Path, algorithm: HashAlgorithm) -> Result<ToolOu
         });
     }
 
-    let hash = String::from_utf8_lossy(&result.stdout)
-        .trim()
-        .to_lowercase();
+    let hash = String::from_utf8_lossy(&result.stdout).trim().to_lowercase();
 
     Ok(ToolOutput::success(hash.clone())
         .with_metadata("algorithm", algorithm.name().to_string())

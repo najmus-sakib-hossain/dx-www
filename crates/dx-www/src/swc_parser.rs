@@ -8,18 +8,18 @@
 //! 2. Visit nodes to extract components, state, JSX
 //! 3. Convert to our internal IR (Intermediate Representation)
 
-use anyhow::{Context, Result, anyhow};
-use std::path::Path;
+use anyhow::{anyhow, Context, Result};
 use oxc_allocator::Allocator;
-use oxc_parser::{Parser, ParserReturn};
-use oxc_span::SourceType;
 use oxc_ast::{
     ast::*,
     visit::walk::{walk_function, walk_variable_declarator},
     Visit,
 };
+use oxc_parser::{Parser, ParserReturn};
+use oxc_span::SourceType;
+use std::path::Path;
 
-use crate::parser::{Component, ParsedModule, PropDef, StateDef, HookCall};
+use crate::parser::{Component, HookCall, ParsedModule, PropDef, StateDef};
 
 /// Parse a TSX/JSX file using OXC
 pub fn parse_tsx_file(path: &Path, verbose: bool) -> Result<ParsedModule> {
@@ -35,22 +35,16 @@ pub fn parse_tsx_file(path: &Path, verbose: bool) -> Result<ParsedModule> {
 
     // Create allocator for the parser
     let allocator = Allocator::default();
-    
+
     // Determine source type (TSX for TypeScript with JSX)
     let source_type = SourceType::tsx();
-    
+
     // Parse the source code
     let parser_result = Parser::new(&allocator, &source_text, source_type).parse();
-    
+
     if !parser_result.errors.is_empty() {
-        let errors: Vec<String> = parser_result.errors.iter()
-            .map(|e| format!("{:?}", e))
-            .collect();
-        return Err(anyhow!(
-            "Parse errors in {}:\n{}",
-            path.display(),
-            errors.join("\n")
-        ));
+        let errors: Vec<String> = parser_result.errors.iter().map(|e| format!("{:?}", e)).collect();
+        return Err(anyhow!("Parse errors in {}:\n{}", path.display(), errors.join("\n")));
     }
 
     let program = parser_result.program;
@@ -98,7 +92,7 @@ impl<'a> Visit<'a> for ComponentVisitor {
     fn visit_function(&mut self, func: &Function<'a>) {
         if let Some(id) = &func.id {
             let name = id.name.to_string();
-            
+
             if Self::is_component_name(&name) {
                 // Create placeholder component
                 // Full extraction will be done by the splitter module
@@ -116,7 +110,7 @@ impl<'a> Visit<'a> for ComponentVisitor {
     fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
         if let oxc_ast::ast::BindingPatternKind::BindingIdentifier(id) = &decl.id.kind {
             let name = id.name.to_string();
-            
+
             if Self::is_component_name(&name) {
                 // Create placeholder component
                 self.components.push(Component {

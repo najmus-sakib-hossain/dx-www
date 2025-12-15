@@ -103,10 +103,7 @@ async fn main() -> Result<()> {
         let hash = &blob.metadata.hash;
         let short_hash = &hash[..8];
 
-        print!(
-            "   📤 Uploading {} ({}...)... ",
-            blob.metadata.path, short_hash
-        );
+        print!("   📤 Uploading {} ({}...)... ", blob.metadata.path, short_hash);
 
         match r2_storage.upload_blob(blob).await {
             Ok(_) => {
@@ -121,11 +118,7 @@ async fn main() -> Result<()> {
     }
 
     println!("\n   📊 Upload Statistics:");
-    println!(
-        "      Successfully uploaded: {}/{}",
-        upload_count,
-        blobs.len()
-    );
+    println!("      Successfully uploaded: {}/{}", upload_count, blobs.len());
 
     if !upload_errors.is_empty() {
         println!("      Errors:");
@@ -164,10 +157,7 @@ async fn main() -> Result<()> {
         }
 
         println!("\n   📊 Verification Statistics:");
-        println!(
-            "      Successfully verified: {}/{}",
-            verify_count, upload_count
-        );
+        println!("      Successfully verified: {}/{}", verify_count, upload_count);
         println!();
     }
 

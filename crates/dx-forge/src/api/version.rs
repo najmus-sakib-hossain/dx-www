@@ -1,7 +1,7 @@
 //! Version Governance & Package Identity APIs
 
-use anyhow::Result;
 use crate::version::Version;
+use anyhow::Result;
 use std::str::FromStr;
 
 /// Tool self-declares its exact semver (validated against manifest)
@@ -13,9 +13,10 @@ use std::str::FromStr;
 /// * `tool_name` - Name of the tool
 /// * `version` - Semantic version string (e.g., "1.2.3")
 pub fn declare_tool_version(tool_name: &str, version: &str) -> Result<()> {
-    let _parsed = Version::from_str(version)
-        .map_err(|e| anyhow::anyhow!("Invalid version '{}' for tool '{}': {}", version, tool_name, e))?;
-    
+    let _parsed = Version::from_str(version).map_err(|e| {
+        anyhow::anyhow!("Invalid version '{}' for tool '{}': {}", version, tool_name, e)
+    })?;
+
     tracing::info!("📌 Tool '{}' declares version: {}", tool_name, version);
     Ok(())
 }
@@ -54,7 +55,7 @@ pub fn enforce_exact_version(tool_name: &str, expected: &str, actual: &str) {
 /// Rust code snippet for build.rs validation
 pub fn require_forge_minimum(min_version: &str) -> Result<String> {
     let _min = Version::from_str(min_version)?;
-    
+
     let code = format!(
         r#"
 fn main() {{
@@ -70,7 +71,7 @@ fn main() {{
 "#,
         min_version, min_version
     );
-    
+
     Ok(code)
 }
 
@@ -79,8 +80,7 @@ fn main() {{
 /// # Returns
 /// Current forge version
 pub fn current_forge_version() -> Version {
-    Version::from_str(crate::VERSION)
-        .expect("Forge VERSION constant must be valid semver")
+    Version::from_str(crate::VERSION).expect("Forge VERSION constant must be valid semver")
 }
 
 /// Returns current variant ID (e.g. "shadcn-pro", "minimal-dark")
@@ -106,47 +106,50 @@ pub fn query_active_package_variant() -> Result<String> {
 ///
 /// # Returns
 /// List of files that would be modified
-pub fn activate_package_variant(variant_id: &str, preview_only: bool) -> Result<Vec<std::path::PathBuf>> {
+pub fn activate_package_variant(
+    variant_id: &str,
+    preview_only: bool,
+) -> Result<Vec<std::path::PathBuf>> {
     tracing::info!("🔄 Activating package variant: {} (preview: {})", variant_id, preview_only);
-    
+
     // TODO: Implement actual variant switching logic
     // This would:
     // 1. Load variant configuration
     // 2. Compute file diffs
     // 3. Run through branching engine
     // 4. Apply changes if not preview_only
-    
+
     if preview_only {
         tracing::info!("👁️  Preview mode - no changes applied");
     } else {
         tracing::info!("✅ Variant '{}' activated", variant_id);
     }
-    
+
     Ok(Vec::new())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_declare_tool_version() {
         assert!(declare_tool_version("my-tool", "1.0.0").is_ok());
         assert!(declare_tool_version("bad-tool", "not-a-version").is_err());
     }
-    
+
     #[test]
     fn test_current_forge_version() {
         let version = current_forge_version();
         assert!(version.major >= 0);
     }
-    
+
     #[test]
     fn test_query_active_variant() {
         let variant = query_active_package_variant().unwrap();
         assert_eq!(variant, "default");
     }
-    
+
     #[test]
     #[should_panic(expected = "VERSION MISMATCH")]
     fn test_enforce_exact_version_panic() {

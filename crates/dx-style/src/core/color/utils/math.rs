@@ -46,18 +46,9 @@ pub fn difference_degrees(a: f64, b: f64) -> f64 {
 
 pub fn matrix_multiply(row: [f64; 3], matrix: [[f64; 3]; 3]) -> [f64; 3] {
     [
-        row[2].mul_add(
-            matrix[0][2],
-            row[0].mul_add(matrix[0][0], row[1] * matrix[0][1]),
-        ),
-        row[2].mul_add(
-            matrix[1][2],
-            row[0].mul_add(matrix[1][0], row[1] * matrix[1][1]),
-        ),
-        row[2].mul_add(
-            matrix[2][2],
-            row[0].mul_add(matrix[2][0], row[1] * matrix[2][1]),
-        ),
+        row[2].mul_add(matrix[0][2], row[0].mul_add(matrix[0][0], row[1] * matrix[0][1])),
+        row[2].mul_add(matrix[1][2], row[0].mul_add(matrix[1][0], row[1] * matrix[1][1])),
+        row[2].mul_add(matrix[2][2], row[0].mul_add(matrix[2][0], row[1] * matrix[2][1])),
     ]
 }
 
@@ -167,14 +158,10 @@ mod tests {
 
     #[test]
     fn test_matrix_multiply() {
-        let result1 = matrix_multiply(
-            [0.0, 1.0, 2.0],
-            [[1.0, 2.0, 3.0], [2.0, 3.0, 4.0], [4.0, 5.0, 6.0]],
-        );
-        let result2 = matrix_multiply(
-            [3.0, 4.0, 5.0],
-            [[3.0, 7.0, 1.0], [5.0, 8.0, 2.0], [6.0, 9.0, 3.0]],
-        );
+        let result1 =
+            matrix_multiply([0.0, 1.0, 2.0], [[1.0, 2.0, 3.0], [2.0, 3.0, 4.0], [4.0, 5.0, 6.0]]);
+        let result2 =
+            matrix_multiply([3.0, 4.0, 5.0], [[3.0, 7.0, 1.0], [5.0, 8.0, 2.0], [6.0, 9.0, 3.0]]);
 
         assert_approx_eq!(&[f64], &result1, &[8.0, 11.0, 17.0]);
         assert_approx_eq!(&[f64], &result2, &[42.0, 57.0, 69.0]);

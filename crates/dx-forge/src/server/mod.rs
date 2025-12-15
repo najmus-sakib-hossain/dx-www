@@ -1,8 +1,7 @@
 pub mod api;
+pub mod authentication;
 pub mod lsp;
 pub mod semantic_analyzer;
-pub mod authentication;
-
 
 use anyhow::Result;
 use std::path::PathBuf;

@@ -85,11 +85,8 @@ pub async fn execute(args: ProvidersArgs, format: OutputFormat) -> Result<()> {
                     "✗".red()
                 };
 
-                let types: Vec<&str> = p
-                    .supported_media_types()
-                    .iter()
-                    .map(|t| t.as_str())
-                    .collect();
+                let types: Vec<&str> =
+                    p.supported_media_types().iter().map(|t| t.as_str()).collect();
 
                 println!(
                     "  {} {} {}",

@@ -20,12 +20,12 @@ pub struct InteractionState {
     /// Input element ID and cursor position
     pub focus_element_id: Option<String>,
     pub cursor_position: Option<u32>,
-    
+
     /// Text selection
     pub selection_start: Option<u32>,
     pub selection_end: Option<u32>,
     pub selection_element_id: Option<String>,
-    
+
     /// Scroll positions (element ID -> position)
     pub scroll_positions: Vec<(String, i32, i32)>, // (id, x, y)
 }
@@ -56,28 +56,28 @@ impl InteractionState {
 #[cfg(target_arch = "wasm32")]
 pub mod selection {
     use super::*;
-    use web_sys::{window, Selection};
+    use web_sys::{Selection, window};
 
     /// Save current selection
     pub fn save() -> Option<InteractionState> {
         let window = window()?;
         let selection = window.get_selection().ok()??;
-        
+
         if selection.range_count() == 0 {
             return None;
         }
-        
+
         let range = selection.get_range_at(0).ok()?;
         let start_container = range.start_container()?;
         let end_container = range.end_container()?;
-        
+
         // Get element ID if available
         let element_id = if let Some(element) = start_container.parent_element() {
             element.id().into()
         } else {
             return None;
         };
-        
+
         Some(InteractionState {
             selection_start: Some(range.start_offset() as u32),
             selection_end: Some(range.end_offset() as u32),
@@ -91,30 +91,30 @@ pub mod selection {
         if !state.has_selection() {
             return false;
         }
-        
+
         let window = window().expect("window not available");
         let document = window.document().expect("document not available");
-        
+
         let element_id = state.selection_element_id.as_ref().unwrap();
         let element = match document.get_element_by_id(element_id) {
             Some(el) => el,
             None => return false,
         };
-        
+
         let selection = match window.get_selection() {
             Ok(Some(sel)) => sel,
             _ => return false,
         };
-        
+
         selection.remove_all_ranges().ok()?;
-        
+
         let range = document.create_range().ok()?;
         if let Some(first_child) = element.first_child() {
             range.set_start(&first_child, state.selection_start.unwrap_or(0)).ok()?;
             range.set_end(&first_child, state.selection_end.unwrap_or(0)).ok()?;
             selection.add_range(&range).ok()?;
         }
-        
+
         Some(true).is_some()
     }
 }
@@ -123,19 +123,19 @@ pub mod selection {
 #[cfg(target_arch = "wasm32")]
 pub mod focus {
     use super::*;
-    use web_sys::{window, HtmlInputElement, HtmlTextAreaElement};
+    use web_sys::{HtmlInputElement, HtmlTextAreaElement, window};
 
     /// Save current focus and cursor position
     pub fn save() -> Option<InteractionState> {
         let window = window()?;
         let document = window.document()?;
         let active_element = document.active_element()?;
-        
+
         let element_id = active_element.id();
         if element_id.is_empty() {
             return None;
         }
-        
+
         // Get cursor position for input/textarea
         let cursor_position = if let Some(input) = active_element.dyn_ref::<HtmlInputElement>() {
             input.selection_start().ok()?
@@ -144,7 +144,7 @@ pub mod focus {
         } else {
             None
         };
-        
+
         Some(InteractionState {
             focus_element_id: Some(element_id),
             cursor_position,
@@ -157,16 +157,16 @@ pub mod focus {
         if !state.has_focus() {
             return false;
         }
-        
+
         let window = window().expect("window not available");
         let document = window.document().expect("document not available");
-        
+
         let element_id = state.focus_element_id.as_ref().unwrap();
         let element = match document.get_element_by_id(element_id) {
             Some(el) => el,
             None => return false,
         };
-        
+
         // Focus element
         if let Ok(_) = element.dyn_ref::<web_sys::HtmlElement>().unwrap().focus() {
             // Restore cursor position if applicable
@@ -188,23 +188,23 @@ pub mod focus {
 #[cfg(target_arch = "wasm32")]
 pub mod scroll {
     use super::*;
-    use web_sys::{window, Element};
+    use web_sys::{Element, window};
 
     /// Save scroll positions of all scrollable elements
     pub fn save() -> InteractionState {
         let window = window().expect("window not available");
         let document = window.document().expect("document not available");
-        
+
         let mut scroll_positions = Vec::new();
-        
+
         // Save window scroll
         if let (Some(x), Some(y)) = (window.scroll_x().ok(), window.scroll_y().ok()) {
             scroll_positions.push(("__window__".to_string(), x as i32, y as i32));
         }
-        
+
         // Find all scrollable elements (simplified - in production, would scan DOM)
         // For now, we'll just illustrate the concept
-        
+
         InteractionState {
             scroll_positions,
             ..Default::default()
@@ -216,10 +216,10 @@ pub mod scroll {
         if !state.has_scroll() {
             return false;
         }
-        
+
         let window = window().expect("window not available");
         let document = window.document().expect("document not available");
-        
+
         for (id, x, y) in &state.scroll_positions {
             if id == "__window__" {
                 let _ = window.scroll_to_with_x_and_y(*x as f64, *y as f64);
@@ -230,7 +230,7 @@ pub mod scroll {
                 }
             }
         }
-        
+
         true
     }
 }
@@ -252,24 +252,24 @@ impl InteractionManager {
     #[cfg(target_arch = "wasm32")]
     pub fn save(&mut self) {
         let mut state = InteractionState::new();
-        
+
         // Save focus
         if let Some(focus_state) = focus::save() {
             state.focus_element_id = focus_state.focus_element_id;
             state.cursor_position = focus_state.cursor_position;
         }
-        
+
         // Save selection
         if let Some(selection_state) = selection::save() {
             state.selection_start = selection_state.selection_start;
             state.selection_end = selection_state.selection_end;
             state.selection_element_id = selection_state.selection_element_id;
         }
-        
+
         // Save scroll
         let scroll_state = scroll::save();
         state.scroll_positions = scroll_state.scroll_positions;
-        
+
         self.current_state = Some(state);
     }
 
@@ -278,20 +278,20 @@ impl InteractionManager {
     pub fn restore(&self) -> bool {
         if let Some(ref state) = self.current_state {
             let mut success = true;
-            
+
             // Restore in order: scroll -> focus -> selection
             if state.has_scroll() {
                 success &= scroll::restore(state);
             }
-            
+
             if state.has_focus() {
                 success &= focus::restore(state);
             }
-            
+
             if state.has_selection() {
                 success &= selection::restore(state);
             }
-            
+
             success
         } else {
             false
@@ -322,14 +322,14 @@ mod tests {
     #[test]
     fn test_interaction_state() {
         let mut state = InteractionState::new();
-        
+
         assert!(!state.has_focus());
         assert!(!state.has_selection());
         assert!(!state.has_scroll());
-        
+
         state.focus_element_id = Some("input-1".to_string());
         state.cursor_position = Some(5);
-        
+
         assert!(state.has_focus());
         assert_eq!(state.cursor_position, Some(5));
     }
@@ -337,11 +337,10 @@ mod tests {
     #[test]
     fn test_manager() {
         let mut manager = InteractionManager::new();
-        
+
         assert!(manager.get_state().is_none());
-        
+
         manager.clear();
         assert!(manager.get_state().is_none());
     }
 }
-

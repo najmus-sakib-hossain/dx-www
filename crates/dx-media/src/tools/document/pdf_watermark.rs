@@ -204,11 +204,7 @@ fn stamp_with_pdftk(
     let watermark_pdf = create_watermark_pdf(text, options)?;
 
     let mut cmd = Command::new("pdftk");
-    cmd.arg(input)
-        .arg("stamp")
-        .arg(&watermark_pdf)
-        .arg("output")
-        .arg(output);
+    cmd.arg(input).arg("stamp").arg(&watermark_pdf).arg("output").arg(output);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run pdftk: {}", e),
@@ -241,11 +237,7 @@ fn watermark_with_qpdf(
     let watermark_pdf = create_watermark_pdf(text, options)?;
 
     let mut cmd = Command::new("qpdf");
-    cmd.arg("--overlay")
-        .arg(&watermark_pdf)
-        .arg("--")
-        .arg(input)
-        .arg(output);
+    cmd.arg("--overlay").arg(&watermark_pdf).arg("--").arg(input).arg(output);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run qpdf: {}", e),
@@ -444,10 +436,7 @@ pub fn batch_watermark<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_name = input_path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("document.pdf");
+        let file_name = input_path.file_name().and_then(|s| s.to_str()).unwrap_or("document.pdf");
         let output_path = output_dir.join(file_name);
 
         if text_watermark_with_options(input_path, &output_path, text, options.clone()).is_ok() {

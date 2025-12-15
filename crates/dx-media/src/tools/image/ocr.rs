@@ -107,10 +107,7 @@ pub fn extract_text<P: AsRef<Path>>(input: P, options: OcrOptions) -> Result<Too
 
     if !output.status.success() {
         return Err(DxError::Internal {
-            message: format!(
-                "Tesseract failed: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ),
+            message: format!("Tesseract failed: {}", String::from_utf8_lossy(&output.stderr)),
         });
     }
 
@@ -166,10 +163,7 @@ pub fn extract_text_to_file<P: AsRef<Path>>(
     // Tesseract adds .txt extension
     let actual_output = output_base.with_extension("txt");
 
-    Ok(ToolOutput::success_with_path(
-        "Text extracted to file",
-        &actual_output,
-    ))
+    Ok(ToolOutput::success_with_path("Text extracted to file", &actual_output))
 }
 
 /// Extract text as searchable PDF.
@@ -198,10 +192,7 @@ pub fn extract_text_to_pdf<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOu
 
     let actual_output = output_base.with_extension("pdf");
 
-    Ok(ToolOutput::success_with_path(
-        "Created searchable PDF",
-        &actual_output,
-    ))
+    Ok(ToolOutput::success_with_path("Created searchable PDF", &actual_output))
 }
 
 /// Extract text with HOCR output (includes position data).
@@ -263,10 +254,7 @@ pub fn preprocess_for_ocr<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOut
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Image preprocessed for OCR",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Image preprocessed for OCR", output_path))
 }
 
 /// Batch OCR multiple images.
@@ -293,20 +281,17 @@ pub fn batch_extract<P: AsRef<Path>>(
         processed += 1;
     }
 
-    Ok(
-        ToolOutput::success(format!("Extracted text from {} images", processed))
-            .with_metadata("count", processed.to_string()),
-    )
+    Ok(ToolOutput::success(format!("Extracted text from {} images", processed))
+        .with_metadata("count", processed.to_string()))
 }
 
 /// List available Tesseract languages.
 pub fn list_languages() -> Result<ToolOutput> {
-    let output = Command::new("tesseract")
-        .args(["--list-langs"])
-        .output()
-        .map_err(|e| DxError::Internal {
+    let output = Command::new("tesseract").args(["--list-langs"]).output().map_err(|e| {
+        DxError::Internal {
             message: format!("Failed to execute Tesseract: {}", e),
-        })?;
+        }
+    })?;
 
     let langs = String::from_utf8_lossy(&output.stdout).to_string();
 

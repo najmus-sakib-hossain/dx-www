@@ -125,9 +125,7 @@ impl Provider for SmithsonianProvider {
                     .and_then(|t| t.content)
                     .unwrap_or_else(|| "Smithsonian Item".to_string());
 
-                let guid = descriptive_non_repeating
-                    .guid
-                    .unwrap_or_else(|| row.id.clone());
+                let guid = descriptive_non_repeating.guid.unwrap_or_else(|| row.id.clone());
 
                 let asset = MediaAsset::builder()
                     .id(row.id)

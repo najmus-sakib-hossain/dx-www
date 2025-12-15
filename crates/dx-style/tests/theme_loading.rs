@@ -5,9 +5,7 @@ fn dx_default_themes_are_loaded() {
     let light = engine
         .theme_by_name("dx.light")
         .expect("dx.light theme is present in style.bin");
-    let dark = engine
-        .theme_by_name("dx.dark")
-        .expect("dx.dark theme is present in style.bin");
+    let dark = engine.theme_by_name("dx.dark").expect("dx.dark theme is present in style.bin");
 
     let light_background = light
         .tokens

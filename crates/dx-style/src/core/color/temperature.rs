@@ -62,10 +62,7 @@ impl TemperatureCache {
             }
         });
 
-        let temps_by_hct = hcts_by_hue
-            .iter()
-            .map(|e| (*e, Self::raw_temperature(e)))
-            .collect();
+        let temps_by_hct = hcts_by_hue.iter().map(|e| (*e, Self::raw_temperature(e))).collect();
 
         let mut hcts_by_temp = hcts_by_hue;
 
@@ -350,10 +347,8 @@ impl TemperatureCache {
 
         let chroma = lab.a.hypot(lab.b);
 
-        (0.02 * chroma.powf(1.07)).mul_add(
-            (sanitize_degrees_double(hue - 50.0).to_radians()).cos(),
-            -0.5,
-        )
+        (0.02 * chroma.powf(1.07))
+            .mul_add((sanitize_degrees_double(hue - 50.0).to_radians()).cos(), -0.5)
     }
 }
 
@@ -386,21 +381,16 @@ mod tests {
 
     #[test]
     fn test_complement() {
-        let blue_complement: Argb = TemperatureCache::new(Hct::new(Argb::from_u32(0xff0000ff)))
-            .complement()
-            .into();
-        let red_complement: Argb = TemperatureCache::new(Hct::new(Argb::from_u32(0xffff0000)))
-            .complement()
-            .into();
-        let green_complement: Argb = TemperatureCache::new(Hct::new(Argb::from_u32(0xff00ff00)))
-            .complement()
-            .into();
-        let white_complement: Argb = TemperatureCache::new(Hct::new(Argb::from_u32(0xffffffff)))
-            .complement()
-            .into();
-        let black_complement: Argb = TemperatureCache::new(Hct::new(Argb::from_u32(0xff000000)))
-            .complement()
-            .into();
+        let blue_complement: Argb =
+            TemperatureCache::new(Hct::new(Argb::from_u32(0xff0000ff))).complement().into();
+        let red_complement: Argb =
+            TemperatureCache::new(Hct::new(Argb::from_u32(0xffff0000))).complement().into();
+        let green_complement: Argb =
+            TemperatureCache::new(Hct::new(Argb::from_u32(0xff00ff00))).complement().into();
+        let white_complement: Argb =
+            TemperatureCache::new(Hct::new(Argb::from_u32(0xffffffff))).complement().into();
+        let black_complement: Argb =
+            TemperatureCache::new(Hct::new(Argb::from_u32(0xff000000))).complement().into();
 
         assert_eq!(Argb::from_u32(0xff9d0002), blue_complement);
         assert_eq!(Argb::from_u32(0xff007bfc), red_complement);

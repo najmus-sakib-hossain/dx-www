@@ -162,10 +162,7 @@ fn split_by_duration(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "Duration split failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("Duration split failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -202,11 +199,8 @@ fn split_by_silence(
     if silences.is_empty() {
         // No silence found, just copy the file
         let extension = input.extension().and_then(|e| e.to_str()).unwrap_or("mp3");
-        let output_path = output_dir.join(format!(
-            "{}.{}",
-            options.pattern.replace("{n}", "001"),
-            extension
-        ));
+        let output_path =
+            output_dir.join(format!("{}.{}", options.pattern.replace("{n}", "001"), extension));
         std::fs::copy(input, &output_path).map_err(|e| DxError::FileIo {
             path: output_path,
             message: format!("Failed to copy file: {}", e),
@@ -241,10 +235,9 @@ fn split_at_timestamps(
             continue;
         }
 
-        let output_name = options.pattern.replace(
-            "{n}",
-            &format!("{:0>width$}", i + 1, width = options.zero_pad as usize),
-        );
+        let output_name = options
+            .pattern
+            .replace("{n}", &format!("{:0>width$}", i + 1, width = options.zero_pad as usize));
         let output_path = output_dir.join(format!("{}.{}", output_name, extension));
 
         let mut cmd = Command::new("ffmpeg");
@@ -270,11 +263,7 @@ fn split_at_timestamps(
     if start < total_duration {
         let output_name = options.pattern.replace(
             "{n}",
-            &format!(
-                "{:0>width$}",
-                segments.len() + 1,
-                width = options.zero_pad as usize
-            ),
+            &format!("{:0>width$}", segments.len() + 1, width = options.zero_pad as usize),
         );
         let output_path = output_dir.join(format!("{}.{}", output_name, extension));
 
@@ -345,13 +334,14 @@ pub fn split_by_chapters<P: AsRef<Path>>(input: P, output_dir: P) -> Result<Tool
             source: None,
         })?;
 
-    let chapters = parsed
-        .get("chapters")
-        .and_then(|c| c.as_array())
-        .ok_or_else(|| DxError::Config {
-            message: "No chapters found in file".to_string(),
-            source: None,
-        })?;
+    let chapters =
+        parsed
+            .get("chapters")
+            .and_then(|c| c.as_array())
+            .ok_or_else(|| DxError::Config {
+                message: "No chapters found in file".to_string(),
+                source: None,
+            })?;
 
     if chapters.is_empty() {
         return Err(DxError::Config {
@@ -360,10 +350,7 @@ pub fn split_by_chapters<P: AsRef<Path>>(input: P, output_dir: P) -> Result<Tool
         });
     }
 
-    let extension = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("mp3");
+    let extension = input_path.extension().and_then(|e| e.to_str()).unwrap_or("mp3");
 
     let mut segments = Vec::new();
 

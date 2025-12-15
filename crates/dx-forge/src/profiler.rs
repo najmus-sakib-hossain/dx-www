@@ -2,11 +2,11 @@
 //!
 //! Provides performance profiling, metrics collection, and bottleneck detection.
 
+use parking_lot::RwLock;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use parking_lot::RwLock;
-use serde::{Deserialize, Serialize};
 
 /// Performance metric
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -109,19 +109,22 @@ impl Profiler {
     /// Print profiling summary
     pub fn print_summary(&self) {
         let metrics = self.get_metrics();
-        
+
         if metrics.is_empty() {
             println!("No profiling data collected");
             return;
         }
 
         println!("\n=== Performance Profile ===\n");
-        println!("{:<40} {:>10} {:>15} {:>15} {:>15}",
-            "Operation", "Count", "Total (ms)", "Avg (ms)", "Max (ms)");
+        println!(
+            "{:<40} {:>10} {:>15} {:>15} {:>15}",
+            "Operation", "Count", "Total (ms)", "Avg (ms)", "Max (ms)"
+        );
         println!("{:-<100}", "");
 
         for metric in metrics {
-            println!("{:<40} {:>10} {:>15.2} {:>15.2} {:>15.2}",
+            println!(
+                "{:<40} {:>10} {:>15.2} {:>15.2} {:>15.2}",
                 metric.name,
                 metric.count,
                 metric.total_duration.as_secs_f64() * 1000.0,
@@ -132,7 +135,8 @@ impl Profiler {
 
         println!("\n== Slowest Operations ==");
         for (i, metric) in self.get_slowest(5).iter().enumerate() {
-            println!("{}. {} - {:.2}ms average",
+            println!(
+                "{}. {} - {:.2}ms average",
                 i + 1,
                 metric.name,
                 metric.avg_duration.as_secs_f64() * 1000.0
@@ -141,11 +145,7 @@ impl Profiler {
 
         println!("\n== Hottest Operations ==");
         for (i, metric) in self.get_hottest(5).iter().enumerate() {
-            println!("{}. {} - {} calls",
-                i + 1,
-                metric.name,
-                metric.count
-            );
+            println!("{}. {} - {} calls", i + 1, metric.name, metric.count);
         }
         println!();
     }
@@ -157,9 +157,8 @@ impl Profiler {
         }
 
         let mut metrics = self.metrics.write();
-        let metric = metrics
-            .entry(name.to_string())
-            .or_insert_with(|| Metric::new(name.to_string()));
+        let metric =
+            metrics.entry(name.to_string()).or_insert_with(|| Metric::new(name.to_string()));
         metric.record(duration);
     }
 }
@@ -194,7 +193,7 @@ impl Drop for ProfileGuard {
 }
 
 /// Global profiler instance
-static GLOBAL_PROFILER: once_cell::sync::Lazy<Profiler> = 
+static GLOBAL_PROFILER: once_cell::sync::Lazy<Profiler> =
     once_cell::sync::Lazy::new(|| Profiler::new());
 
 /// Profile a code block

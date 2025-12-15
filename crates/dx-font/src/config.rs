@@ -8,22 +8,22 @@ use std::path::PathBuf;
 pub struct Config {
     /// Default output directory for downloaded fonts
     pub output_dir: PathBuf,
-    
+
     /// Preferred font formats in order of priority
     pub preferred_formats: Vec<String>,
-    
+
     /// Maximum concurrent downloads
     pub max_concurrent_downloads: usize,
-    
+
     /// Request timeout in seconds
     pub timeout_seconds: u64,
-    
+
     /// User agent for HTTP requests
     pub user_agent: String,
-    
+
     /// Cache directory for API responses
     pub cache_dir: PathBuf,
-    
+
     /// Cache TTL in seconds
     pub cache_ttl_seconds: u64,
 }
@@ -41,9 +41,7 @@ impl Default for Config {
             max_concurrent_downloads: 5,
             timeout_seconds: 30,
             user_agent: format!("dx-font/{}", env!("CARGO_PKG_VERSION")),
-            cache_dir: dirs::cache_dir()
-                .unwrap_or_else(|| PathBuf::from("."))
-                .join("dx-font"),
+            cache_dir: dirs::cache_dir().unwrap_or_else(|| PathBuf::from(".")).join("dx-font"),
             cache_ttl_seconds: 3600, // 1 hour
         }
     }
@@ -61,7 +59,7 @@ pub mod sources {
         pub const FONTSOURCE_API: &str = "https://api.fontsource.org/v1/fonts";
         pub const FONT_LIBRARY: &str = "https://fontlibrary.org";
     }
-    
+
     /// Tier 2: Major Free Font Sites
     pub mod major_sites {
         pub const FONT_SQUIRREL: &str = "https://www.fontsquirrel.com";
@@ -75,7 +73,7 @@ pub mod sources {
         pub const FONT_MEME: &str = "https://fontmeme.com/fonts";
         pub const FONT_RIVER: &str = "https://www.fontriver.com";
     }
-    
+
     /// Tier 3: Curated Foundries (High Quality)
     pub mod curated {
         pub const FONTSHARE: &str = "https://www.fontshare.com";
@@ -95,7 +93,7 @@ pub mod sources {
         pub const LOST_TYPE: &str = "https://www.losttype.com";
         pub const ATIPO_FOUNDRY: &str = "https://www.atipofoundry.com";
     }
-    
+
     /// Tier 4: GitHub Repositories
     pub mod github {
         pub const GOOGLE_FONTS_REPO: &str = "https://github.com/google/fonts";
@@ -117,14 +115,15 @@ pub mod sources {
         pub const WORK_SANS: &str = "https://github.com/weiweihuanghuang/Work-Sans";
         pub const OVERPASS: &str = "https://github.com/RedHatOfficial/Overpass";
         pub const LEXEND: &str = "https://github.com/googlefonts/lexend";
-        pub const ATKINSON_HYPERLEGIBLE: &str = "https://github.com/googlefonts/atkinson-hyperlegible";
+        pub const ATKINSON_HYPERLEGIBLE: &str =
+            "https://github.com/googlefonts/atkinson-hyperlegible";
         pub const MONONOKI: &str = "https://github.com/madmalik/mononoki";
         pub const FANTASQUE_SANS: &str = "https://github.com/belluzj/fantasque-sans";
         pub const MONOID: &str = "https://github.com/larsenwork/monoid";
         pub const HASKLIG: &str = "https://github.com/i-tu/Hasklig";
         pub const LIBERATION_FONTS: &str = "https://github.com/liberationfonts/liberation-fonts";
     }
-    
+
     /// Tier 5: International/Multi-Language
     pub mod international {
         pub const NOTO_FONTS: &str = "https://fonts.google.com/noto";
@@ -140,7 +139,7 @@ pub mod sources {
         pub const BENGALI_FONTS: &str = "https://banglafonts.net";
         pub const SMC_MALAYALAM: &str = "https://smc.org.in/fonts";
     }
-    
+
     /// CDN Direct Access URLs
     pub mod cdn {
         pub const JSDELIVR_FONTSOURCE: &str = "https://cdn.jsdelivr.net/npm/@fontsource";

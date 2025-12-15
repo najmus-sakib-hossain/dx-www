@@ -86,42 +86,22 @@ impl CompressionLevel {
 /// compress::gzip("file.txt", "file.txt.gz").unwrap();
 /// ```
 pub fn gzip<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
-    compress_file(
-        input,
-        output,
-        CompressionAlgorithm::Gzip,
-        CompressionLevel::Normal,
-    )
+    compress_file(input, output, CompressionAlgorithm::Gzip, CompressionLevel::Normal)
 }
 
 /// Compress file with bzip2.
 pub fn bzip2<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
-    compress_file(
-        input,
-        output,
-        CompressionAlgorithm::Bzip2,
-        CompressionLevel::Normal,
-    )
+    compress_file(input, output, CompressionAlgorithm::Bzip2, CompressionLevel::Normal)
 }
 
 /// Compress file with xz.
 pub fn xz<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
-    compress_file(
-        input,
-        output,
-        CompressionAlgorithm::Xz,
-        CompressionLevel::Normal,
-    )
+    compress_file(input, output, CompressionAlgorithm::Xz, CompressionLevel::Normal)
 }
 
 /// Compress file with zstd.
 pub fn zstd<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutput> {
-    compress_file(
-        input,
-        output,
-        CompressionAlgorithm::Zstd,
-        CompressionLevel::Normal,
-    )
+    compress_file(input, output, CompressionAlgorithm::Zstd, CompressionLevel::Normal)
 }
 
 /// Compress file with specified algorithm.
@@ -263,12 +243,9 @@ pub fn batch_compress<P: AsRef<Path>>(
         );
         let output_path = output_dir.join(file_name);
 
-        if let Ok(result) = compress_file(
-            input_path,
-            &output_path,
-            algorithm,
-            CompressionLevel::Normal,
-        ) {
+        if let Ok(result) =
+            compress_file(input_path, &output_path, algorithm, CompressionLevel::Normal)
+        {
             if let Some(orig) = result.metadata.get("original_size") {
                 total_original += orig.parse::<u64>().unwrap_or(0);
             }

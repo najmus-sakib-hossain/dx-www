@@ -107,16 +107,10 @@ impl Provider for GiphyProvider {
                 let download_url = original.url.clone().unwrap_or_default();
                 let preview_url = gif.images.fixed_height.url.clone().unwrap_or_default();
 
-                let width = original
-                    .width
-                    .as_ref()
-                    .and_then(|w| w.parse::<u32>().ok())
-                    .unwrap_or(0);
-                let height = original
-                    .height
-                    .as_ref()
-                    .and_then(|h| h.parse::<u32>().ok())
-                    .unwrap_or(0);
+                let width =
+                    original.width.as_ref().and_then(|w| w.parse::<u32>().ok()).unwrap_or(0);
+                let height =
+                    original.height.as_ref().and_then(|h| h.parse::<u32>().ok()).unwrap_or(0);
 
                 MediaAsset::builder()
                     .id(gif.id)

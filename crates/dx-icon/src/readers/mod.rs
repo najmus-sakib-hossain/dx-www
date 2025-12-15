@@ -1,6 +1,6 @@
-use walkdir::WalkDir;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use walkdir::WalkDir;
 
 /// Reader for icon-sets based icons (JSON sources)
 pub struct IconSetsReader {
@@ -61,9 +61,9 @@ impl SvglReader {
     /// Load icons from the svgl directory for testing/building
     pub fn from_directory(path: PathBuf) -> Result<Self, Box<dyn std::error::Error>> {
         use crate::converters::svgl::SvgIcon;
-        
+
         let mut icons = HashMap::new();
-        
+
         for entry in WalkDir::new(path)
             .into_iter()
             .filter_map(|e| e.ok())
@@ -86,7 +86,7 @@ impl SvglReader {
                 }
             }
         }
-        
+
         Ok(SvglReader { icons })
     }
 

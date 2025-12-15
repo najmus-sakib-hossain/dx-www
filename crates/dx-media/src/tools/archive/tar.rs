@@ -174,18 +174,12 @@ pub fn extract_tar<P: AsRef<Path>>(input: P, output_dir: P) -> Result<ToolOutput
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "tar extraction failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("tar extraction failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Extracted TAR archive",
-        output_dir,
-    ))
+    Ok(ToolOutput::success_with_path("Extracted TAR archive", output_dir))
 }
 
 /// List TAR archive contents.

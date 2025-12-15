@@ -433,7 +433,10 @@ fn test_audio_effect_enum() {
     };
     let _ = audio::AudioEffect::LowPass(3000);
     let _ = audio::AudioEffect::HighPass(100);
-    let _ = audio::AudioEffect::BandPass { low: 100, high: 3000 };
+    let _ = audio::AudioEffect::BandPass {
+        low: 100,
+        high: 3000,
+    };
     let _ = audio::AudioEffect::BassBoost(5.0);
     let _ = audio::AudioEffect::TrebleBoost(3.0);
     let _ = audio::AudioEffect::Compressor {

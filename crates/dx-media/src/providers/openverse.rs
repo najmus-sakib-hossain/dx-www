@@ -294,17 +294,8 @@ mod tests {
 
     #[test]
     fn test_license_parsing() {
-        assert!(matches!(
-            OpenverseProvider::parse_license("cc0", &None),
-            License::Cc0
-        ));
-        assert!(matches!(
-            OpenverseProvider::parse_license("by", &None),
-            License::CcBy
-        ));
-        assert!(matches!(
-            OpenverseProvider::parse_license("pdm", &None),
-            License::PublicDomain
-        ));
+        assert!(matches!(OpenverseProvider::parse_license("cc0", &None), License::Cc0));
+        assert!(matches!(OpenverseProvider::parse_license("by", &None), License::CcBy));
+        assert!(matches!(OpenverseProvider::parse_license("pdm", &None), License::PublicDomain));
     }
 }

@@ -72,10 +72,7 @@ pub fn diff_strings_with_format(s1: &str, s2: &str, format: DiffFormat) -> Resul
         DiffFormat::Context => format_context(&diff_result, &lines1, &lines2),
     };
 
-    let changes = diff_result
-        .iter()
-        .filter(|d| !matches!(d, DiffOp::Equal(_)))
-        .count();
+    let changes = diff_result.iter().filter(|d| !matches!(d, DiffOp::Equal(_))).count();
 
     Ok(ToolOutput::success(output)
         .with_metadata("changes", changes.to_string())
@@ -120,10 +117,7 @@ pub fn save_diff<P: AsRef<Path>>(file1: P, file2: P, output: P) -> Result<ToolOu
         source: None,
     })?;
 
-    Ok(ToolOutput::success_with_path(
-        "Diff saved to file",
-        output.as_ref(),
-    ))
+    Ok(ToolOutput::success_with_path("Diff saved to file", output.as_ref()))
 }
 
 /// Diff operation.
@@ -220,11 +214,7 @@ fn format_side_by_side(ops: &[DiffOp], lines1: &[&str], lines2: &[&str]) -> Stri
                 i1 += 1;
             }
             DiffOp::Insert(_) => {
-                output.push_str(&format!(
-                    "{:<width$} > {}\n",
-                    "",
-                    lines2.get(i2).unwrap_or(&"")
-                ));
+                output.push_str(&format!("{:<width$} > {}\n", "", lines2.get(i2).unwrap_or(&"")));
                 i2 += 1;
             }
         }
@@ -296,18 +286,9 @@ pub fn diff_stats<P: AsRef<Path>>(file1: P, file2: P) -> Result<ToolOutput> {
 
     let diff = compute_diff(&lines1, &lines2);
 
-    let additions = diff
-        .iter()
-        .filter(|d| matches!(d, DiffOp::Insert(_)))
-        .count();
-    let deletions = diff
-        .iter()
-        .filter(|d| matches!(d, DiffOp::Delete(_)))
-        .count();
-    let unchanged = diff
-        .iter()
-        .filter(|d| matches!(d, DiffOp::Equal(_)))
-        .count();
+    let additions = diff.iter().filter(|d| matches!(d, DiffOp::Insert(_))).count();
+    let deletions = diff.iter().filter(|d| matches!(d, DiffOp::Delete(_))).count();
+    let unchanged = diff.iter().filter(|d| matches!(d, DiffOp::Equal(_))).count();
 
     Ok(ToolOutput::success(format!(
         "Additions: {}\nDeletions: {}\nUnchanged: {}",

@@ -98,10 +98,7 @@ impl Provider for PixabayProvider {
             ("safesearch", "true"),
         ];
 
-        let response = self
-            .client
-            .get_with_query(self.base_url(), &params, &[])
-            .await?;
+        let response = self.client.get_with_query(self.base_url(), &params, &[]).await?;
 
         let api_response: PixabaySearchResponse = response.json_or_error().await?;
 
@@ -137,10 +134,7 @@ impl Provider for PixabayProvider {
                     .preview_url(hit.preview_url)
                     .source_url(hit.page_url)
                     .author(hit.user.clone())
-                    .author_url(format!(
-                        "https://pixabay.com/users/{}-{}/",
-                        hit.user, hit.user_id
-                    ))
+                    .author_url(format!("https://pixabay.com/users/{}-{}/", hit.user, hit.user_id))
                     .license(License::Pixabay)
                     .dimensions(hit.image_width, hit.image_height)
                     .tags(tags)
@@ -219,10 +213,7 @@ impl PixabayProvider {
                     .preview_url(preview_url.unwrap_or_default())
                     .source_url(hit.page_url)
                     .author(hit.user.clone())
-                    .author_url(format!(
-                        "https://pixabay.com/users/{}-{}/",
-                        hit.user, hit.user_id
-                    ))
+                    .author_url(format!("https://pixabay.com/users/{}-{}/", hit.user, hit.user_id))
                     .license(License::Pixabay)
                     .dimensions(width, height)
                     .tags(tags)

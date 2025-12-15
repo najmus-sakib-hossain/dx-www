@@ -173,20 +173,15 @@ fn create_with_7z<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Created ZIP archive with 7z",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("Created ZIP archive with 7z", output))
 }
 
 /// Create using PowerShell.
 #[cfg(windows)]
 fn create_with_powershell<P: AsRef<Path>>(inputs: &[P], output: &Path) -> Result<ToolOutput> {
     // Build file list
-    let files: Vec<String> = inputs
-        .iter()
-        .map(|p| p.as_ref().to_string_lossy().to_string())
-        .collect();
+    let files: Vec<String> =
+        inputs.iter().map(|p| p.as_ref().to_string_lossy().to_string()).collect();
 
     let script = format!(
         "Compress-Archive -Path '{}' -DestinationPath '{}'",
@@ -209,10 +204,7 @@ fn create_with_powershell<P: AsRef<Path>>(inputs: &[P], output: &Path) -> Result
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Created ZIP archive with PowerShell",
-        output,
-    ))
+    Ok(ToolOutput::success_with_path("Created ZIP archive with PowerShell", output))
 }
 
 /// Extract ZIP archive.
@@ -305,10 +297,7 @@ fn extract_with_unzip(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Extracted ZIP archive",
-        output_dir,
-    ))
+    Ok(ToolOutput::success_with_path("Extracted ZIP archive", output_dir))
 }
 
 /// Extract using 7z command.
@@ -320,8 +309,7 @@ fn extract_with_7z(input: &Path, output_dir: &Path, password: Option<&str>) -> R
         cmd.arg(format!("-p{}", pwd));
     }
 
-    cmd.arg(format!("-o{}", output_dir.to_string_lossy()))
-        .arg(input);
+    cmd.arg(format!("-o{}", output_dir.to_string_lossy())).arg(input);
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run 7z: {}", e),
@@ -335,10 +323,7 @@ fn extract_with_7z(input: &Path, output_dir: &Path, password: Option<&str>) -> R
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Extracted ZIP archive with 7z",
-        output_dir,
-    ))
+    Ok(ToolOutput::success_with_path("Extracted ZIP archive with 7z", output_dir))
 }
 
 /// Extract using PowerShell.

@@ -58,9 +58,7 @@ impl GroupRegistry {
 
     pub fn merge_preserve(&mut self, prev: &GroupRegistry) {
         for (name, def) in prev.definitions.iter() {
-            self.definitions
-                .entry(name.clone())
-                .or_insert_with(|| def.clone());
+            self.definitions.entry(name.clone()).or_insert_with(|| def.clone());
         }
 
         let mut current_alias_names: AHashSet<String> = AHashSet::default();
@@ -91,9 +89,7 @@ impl GroupRegistry {
             if let Some(current_def) = self.definitions.get(k) {
                 if let Some(prev_def) = prev.definitions.get(k) {
                     if current_def.utilities == prev_def.utilities {
-                        self.cached_css
-                            .entry(k.clone())
-                            .or_insert_with(|| v.clone());
+                        self.cached_css.entry(k.clone()).or_insert_with(|| v.clone());
                     } else {
                     }
                     continue;
@@ -135,18 +131,14 @@ impl GroupRegistry {
                         .unwrap_or(0.6);
                     if let Some(new_alias) = best_alias {
                         if best_score >= threshold {
-                            self.cached_css
-                                .entry(new_alias.clone())
-                                .or_insert_with(|| v.clone());
+                            self.cached_css.entry(new_alias.clone()).or_insert_with(|| v.clone());
                             continue;
                         }
                     }
                 }
             }
 
-            self.cached_css
-                .entry(k.clone())
-                .or_insert_with(|| v.clone());
+            self.cached_css.entry(k.clone()).or_insert_with(|| v.clone());
         }
         for tok in prev.utility_members.iter() {
             self.utility_members.insert(tok.clone());
@@ -242,15 +234,16 @@ impl GroupRegistry {
                 build_prefixed_class(recognized_prefixes, &event.token)
             };
 
-            let entry = registry
-                .definitions
-                .entry(alias_name.clone())
-                .or_insert_with(|| GroupDefinition {
-                    utilities: Vec::new(),
-                    allow_extend: false,
-                    raw_tokens: Vec::new(),
-                    dev_tokens: Vec::new(),
-                });
+            let entry =
+                registry
+                    .definitions
+                    .entry(alias_name.clone())
+                    .or_insert_with(|| GroupDefinition {
+                        utilities: Vec::new(),
+                        allow_extend: false,
+                        raw_tokens: Vec::new(),
+                        dev_tokens: Vec::new(),
+                    });
             if !entry.utilities.contains(&actual_class) {
                 entry.utilities.push(actual_class.clone());
             }
@@ -314,9 +307,8 @@ impl GroupRegistry {
             .dev_selectors
             .get(class)
             .and_then(|raw| parse_grouped_selector(raw, alias_selector.as_str()));
-        let combined_selector = dev_selector
-            .as_ref()
-            .map(|dev| format!("{},{}", alias_selector, dev));
+        let combined_selector =
+            dev_selector.as_ref().map(|dev| format!("{},{}", alias_selector, dev));
         let mut simple_bodies: Vec<String> = Vec::new();
         let mut extra_css = String::new();
         let mut missing_utils: Vec<String> = Vec::new();
@@ -355,9 +347,8 @@ impl GroupRegistry {
 
         let mut simple_block = String::new();
         if !simple_bodies.is_empty() {
-            let selector_output = combined_selector
-                .as_deref()
-                .unwrap_or_else(|| alias_selector.as_str());
+            let selector_output =
+                combined_selector.as_deref().unwrap_or_else(|| alias_selector.as_str());
             simple_block.push_str(selector_output);
             simple_block.push_str(" {\n");
             for body in &simple_bodies {
@@ -548,13 +539,10 @@ mod tests {
         unsafe {
             std::env::remove_var("DX_STYLE_BIN");
         }
-        engine.precompiled.insert(
-            "bg-red-500".to_string(),
-            "background-color: red;".to_string(),
-        );
         engine
             .precompiled
-            .insert("h-50".to_string(), "height: 12.5rem;".to_string());
+            .insert("bg-red-500".to_string(), "background-color: red;".to_string());
+        engine.precompiled.insert("h-50".to_string(), "height: 12.5rem;".to_string());
         let registry = GroupRegistry::analyze(&extracted.group_events, &mut classes, Some(&engine));
         assert!(classes.contains("card"));
         let mut registry = registry;

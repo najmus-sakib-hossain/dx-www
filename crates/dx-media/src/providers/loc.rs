@@ -111,10 +111,7 @@ impl Provider for LibraryOfCongressProvider {
                         .id(item.id.unwrap_or_default())
                         .provider("loc")
                         .media_type(MediaType::Image)
-                        .title(
-                            item.title
-                                .unwrap_or_else(|| "Library of Congress Item".to_string()),
-                        )
+                        .title(item.title.unwrap_or_else(|| "Library of Congress Item".to_string()))
                         .download_url(image_url.clone())
                         .preview_url(image_url)
                         .source_url(item.url.unwrap_or_default())

@@ -8,7 +8,7 @@
 //! - Link expansion
 //! - Color to grayscale conversion
 
-use lightningcss::stylesheet::{StyleSheet, ParserOptions, PrinterOptions};
+use lightningcss::stylesheet::{ParserOptions, PrinterOptions, StyleSheet};
 
 /// Print stylesheet configuration
 #[derive(Debug, Clone)]
@@ -226,4 +226,3 @@ mod tests {
         assert!(issues.iter().any(|i| i.rule == "missing-print-query"));
     }
 }
-

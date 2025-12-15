@@ -3,13 +3,16 @@
 //! Bunny Fonts is a privacy-friendly alternative to Google Fonts with 1,478+ fonts.
 //! API: https://fonts.bunny.net
 
+use super::FontProviderTrait;
+use crate::models::{
+    Font, FontCategory, FontFamily, FontLicense, FontProvider, FontStyle, FontVariant, FontWeight,
+    SearchQuery,
+};
+use anyhow::Result;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::Deserialize;
-use anyhow::Result;
 use std::collections::HashMap;
-use crate::models::{Font, FontFamily, FontVariant, FontCategory, FontProvider, FontWeight, FontStyle, FontLicense, SearchQuery};
-use super::FontProviderTrait;
 
 /// Bunny Fonts API response structure
 #[derive(Debug, Deserialize)]
@@ -45,7 +48,7 @@ impl BunnyFontsProvider {
             api_url: "https://fonts.bunny.net/list".to_string(),
         }
     }
-    
+
     fn parse_category(category: &str) -> Option<FontCategory> {
         match category.to_lowercase().as_str() {
             "serif" => Some(FontCategory::Serif),
@@ -56,7 +59,7 @@ impl BunnyFontsProvider {
             _ => None,
         }
     }
-    
+
     fn parse_weight(weight: &str) -> FontWeight {
         match weight {
             "100" => FontWeight::Thin,
@@ -78,32 +81,29 @@ impl FontProviderTrait for BunnyFontsProvider {
     fn name(&self) -> &str {
         "Bunny Fonts"
     }
-    
+
     fn base_url(&self) -> &str {
         "https://fonts.bunny.net"
     }
-    
+
     async fn search(&self, query: &SearchQuery) -> Result<Vec<Font>> {
         let fonts = self.list_all().await?;
-        
+
         let query_lower = query.query.to_lowercase();
         let filtered: Vec<Font> = fonts
             .into_iter()
             .filter(|f| f.name.to_lowercase().contains(&query_lower))
             .collect();
-        
+
         Ok(filtered)
     }
-    
+
     async fn list_all(&self) -> Result<Vec<Font>> {
-        let response: BunnyFontsResponse = self.client
-            .get(&self.api_url)
-            .send()
-            .await?
-            .json()
-            .await?;
-        
-        let fonts: Vec<Font> = response.0
+        let response: BunnyFontsResponse =
+            self.client.get(&self.api_url).send().await?.json().await?;
+
+        let fonts: Vec<Font> = response
+            .0
             .into_iter()
             .map(|(id, font)| Font {
                 id: id.clone(),
@@ -112,50 +112,50 @@ impl FontProviderTrait for BunnyFontsProvider {
                 category: Self::parse_category(&font.category),
                 variant_count: font.styles.len(),
                 license: Some(FontLicense::OFL),
-                preview_url: Some(format!(
-                    "https://fonts.bunny.net/family/{}",
-                    id
-                )),
+                preview_url: Some(format!("https://fonts.bunny.net/family/{}", id)),
                 download_url: Some(format!(
                     "https://fonts.bunny.net/css?family={}",
                     font.family_name.replace(' ', "+")
                 )),
             })
             .collect();
-        
+
         Ok(fonts)
     }
-    
+
     async fn get_font_family(&self, font_id: &str) -> Result<FontFamily> {
-        let response: BunnyFontsResponse = self.client
-            .get(&self.api_url)
-            .send()
-            .await?
-            .json()
-            .await?;
-        
-        let font = response.0.get(font_id)
+        let response: BunnyFontsResponse =
+            self.client.get(&self.api_url).send().await?.json().await?;
+
+        let font = response
+            .0
+            .get(font_id)
             .ok_or_else(|| anyhow::anyhow!("Font not found: {}", font_id))?;
-        
-        let variants: Vec<FontVariant> = font.styles
+
+        let variants: Vec<FontVariant> = font
+            .styles
             .iter()
             .map(|(style_key, style)| {
-                let weight = style.weight.as_ref()
+                let weight = style
+                    .weight
+                    .as_ref()
                     .map(|w| Self::parse_weight(w))
                     .unwrap_or(FontWeight::Regular);
-                let is_italic = style.style.as_ref()
-                    .map(|s| s == "italic")
-                    .unwrap_or(false);
-                
+                let is_italic = style.style.as_ref().map(|s| s == "italic").unwrap_or(false);
+
                 FontVariant {
                     weight,
-                    style: if is_italic { FontStyle::Italic } else { FontStyle::Normal },
+                    style: if is_italic {
+                        FontStyle::Italic
+                    } else {
+                        FontStyle::Normal
+                    },
                     file_url: None, // Bunny Fonts uses CSS delivery
                     file_format: "woff2".to_string(),
                 }
             })
             .collect();
-        
+
         Ok(FontFamily {
             id: font_id.to_string(),
             name: font.family_name.clone(),
@@ -165,10 +165,7 @@ impl FontProviderTrait for BunnyFontsProvider {
             license: Some(FontLicense::OFL),
             designer: None,
             description: None,
-            preview_url: Some(format!(
-                "https://fonts.bunny.net/family/{}",
-                font_id
-            )),
+            preview_url: Some(format!("https://fonts.bunny.net/family/{}", font_id)),
             download_url: Some(format!(
                 "https://fonts.bunny.net/css?family={}",
                 font.family_name.replace(' ', "+")
@@ -179,29 +176,24 @@ impl FontProviderTrait for BunnyFontsProvider {
             last_modified: None,
         })
     }
-    
+
     async fn get_download_url(&self, font_id: &str) -> Result<String> {
-        let response: BunnyFontsResponse = self.client
-            .get(&self.api_url)
-            .send()
-            .await?
-            .json()
-            .await?;
-        
-        let font = response.0.get(font_id)
+        let response: BunnyFontsResponse =
+            self.client.get(&self.api_url).send().await?.json().await?;
+
+        let font = response
+            .0
+            .get(font_id)
             .ok_or_else(|| anyhow::anyhow!("Font not found: {}", font_id))?;
-        
+
         Ok(format!(
             "https://fonts.bunny.net/css?family={}",
             font.family_name.replace(' ', "+")
         ))
     }
-    
+
     async fn health_check(&self) -> Result<bool> {
-        let response = self.client
-            .head(&self.api_url)
-            .send()
-            .await?;
+        let response = self.client.head(&self.api_url).send().await?;
         Ok(response.status().is_success())
     }
 }

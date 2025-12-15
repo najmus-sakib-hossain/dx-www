@@ -50,17 +50,17 @@ impl SearchEngine {
         use crate::types::SearchMode;
         use futures::stream::{FuturesUnordered, StreamExt};
         use std::time::Duration;
-        
+
         // Timeout varies by mode: Quantity=fast (5s), Quality=patient (8s)
         let provider_timeout = match query.mode {
             SearchMode::Quantity => Duration::from_secs(5),
             SearchMode::Quality => Duration::from_secs(8),
         };
-        
+
         // Early exit only in Quantity mode
         let early_exit_threshold = query.count * 3;
         let use_early_exit = query.mode.is_quantity();
-        
+
         // Create FuturesUnordered for concurrent execution
         let mut futures: FuturesUnordered<_> = query
             .providers
@@ -72,17 +72,22 @@ impl SearchEngine {
                 async move {
                     let result = tokio::time::timeout(
                         provider_timeout,
-                        registry.search_provider(&provider_name, &query)
-                    ).await;
-                    
-                    let timeout_msg = format!("Provider timed out (>{}s)", provider_timeout.as_secs());
+                        registry.search_provider(&provider_name, &query),
+                    )
+                    .await;
+
+                    let timeout_msg =
+                        format!("Provider timed out (>{}s)", provider_timeout.as_secs());
                     match result {
                         Ok(search_result) => (provider_name, search_result),
-                        Err(_) => (provider_name.clone(), Err(crate::error::DxError::ProviderApi {
-                            provider: provider_name,
-                            message: timeout_msg,
-                            status_code: 408,
-                        })),
+                        Err(_) => (
+                            provider_name.clone(),
+                            Err(crate::error::DxError::ProviderApi {
+                                provider: provider_name,
+                                message: timeout_msg,
+                                status_code: 408,
+                            }),
+                        ),
                     }
                 }
             })
@@ -107,7 +112,7 @@ impl SearchEngine {
                     provider_errors.push((provider_name, e.to_string()));
                 }
             }
-            
+
             // Early exit in Quantity mode
             if use_early_exit && all_assets.len() >= early_exit_threshold && !futures.is_empty() {
                 skipped_slow_providers = futures.len();
@@ -115,20 +120,22 @@ impl SearchEngine {
                 break;
             }
         }
-        
+
         if skipped_slow_providers > 0 {
             provider_errors.push((
                 "early_exit".to_string(),
-                format!("Skipped {} slow providers (had {} results)", skipped_slow_providers, all_assets.len())
+                format!(
+                    "Skipped {} slow providers (had {} results)",
+                    skipped_slow_providers,
+                    all_assets.len()
+                ),
             ));
         }
 
         if all_assets.is_empty() && !provider_errors.is_empty() {
             // All providers failed
-            let errors: Vec<String> = provider_errors
-                .iter()
-                .map(|(p, e)| format!("{}: {}", p, e))
-                .collect();
+            let errors: Vec<String> =
+                provider_errors.iter().map(|(p, e)| format!("{}: {}", p, e)).collect();
 
             return Err(crate::error::DxError::ProviderApi {
                 provider: "multiple".to_string(),

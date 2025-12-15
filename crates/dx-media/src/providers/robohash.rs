@@ -82,7 +82,7 @@ impl Provider for RoboHashProvider {
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
         let count = query.count.min(50);
         let seed_base = &query.query;
-        
+
         // Determine which set to use based on query
         let query_lower = query.query.to_lowercase();
         let set = if query_lower.contains("monster") {
@@ -99,10 +99,10 @@ impl Provider for RoboHashProvider {
 
         // Generate avatars with different seeds
         let mut assets = Vec::with_capacity(count);
-        
+
         for i in 0..count {
             let seed = format!("{}_{}", seed_base, i);
-            
+
             // Generate URLs with size
             let url_300 = format!("{}/{}?set={}&size=300x300", self.base_url(), seed, set);
             let url_preview = format!("{}/{}?set={}&size=150x150", self.base_url(), seed, set);

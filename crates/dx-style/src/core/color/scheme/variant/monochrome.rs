@@ -49,26 +49,11 @@ mod tests {
         let scheme =
             SchemeMonochrome::new(Argb::from_u32(0xff0000ff).into(), false, Some(0.0)).scheme;
 
-        assert_eq!(
-            scheme.primary_palette_key_color(),
-            Argb::from_u32(0xff777777)
-        );
-        assert_eq!(
-            scheme.secondary_palette_key_color(),
-            Argb::from_u32(0xff777777)
-        );
-        assert_eq!(
-            scheme.tertiary_palette_key_color(),
-            Argb::from_u32(0xff777777)
-        );
-        assert_eq!(
-            scheme.neutral_palette_key_color(),
-            Argb::from_u32(0xff777777)
-        );
-        assert_eq!(
-            scheme.neutral_variant_palette_key_color(),
-            Argb::from_u32(0xff777777)
-        );
+        assert_eq!(scheme.primary_palette_key_color(), Argb::from_u32(0xff777777));
+        assert_eq!(scheme.secondary_palette_key_color(), Argb::from_u32(0xff777777));
+        assert_eq!(scheme.tertiary_palette_key_color(), Argb::from_u32(0xff777777));
+        assert_eq!(scheme.neutral_palette_key_color(), Argb::from_u32(0xff777777));
+        assert_eq!(scheme.neutral_variant_palette_key_color(), Argb::from_u32(0xff777777));
     }
 
     #[test]
@@ -273,89 +258,67 @@ mod tests {
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_primary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_primary().get_hct(&scheme).get_tone(),
             10.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::primary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::primary_container().get_hct(&scheme).get_tone(),
             85.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_primary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_primary_container().get_hct(&scheme).get_tone(),
             0.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::secondary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::secondary().get_hct(&scheme).get_tone(),
             80.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_secondary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_secondary().get_hct(&scheme).get_tone(),
             10.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::secondary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::secondary_container().get_hct(&scheme).get_tone(),
             30.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_secondary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_secondary_container().get_hct(&scheme).get_tone(),
             90.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::tertiary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::tertiary().get_hct(&scheme).get_tone(),
             90.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_tertiary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_tertiary().get_hct(&scheme).get_tone(),
             10.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::tertiary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::tertiary_container().get_hct(&scheme).get_tone(),
             60.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_tertiary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_tertiary_container().get_hct(&scheme).get_tone(),
             0.0,
             epsilon = 0.3
         );
@@ -373,89 +336,67 @@ mod tests {
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_primary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_primary().get_hct(&scheme).get_tone(),
             90.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::primary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::primary_container().get_hct(&scheme).get_tone(),
             25.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_primary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_primary_container().get_hct(&scheme).get_tone(),
             100.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::secondary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::secondary().get_hct(&scheme).get_tone(),
             40.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_secondary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_secondary().get_hct(&scheme).get_tone(),
             100.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::secondary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::secondary_container().get_hct(&scheme).get_tone(),
             85.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_secondary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_secondary_container().get_hct(&scheme).get_tone(),
             10.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::tertiary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::tertiary().get_hct(&scheme).get_tone(),
             25.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_tertiary()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_tertiary().get_hct(&scheme).get_tone(),
             90.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::tertiary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::tertiary_container().get_hct(&scheme).get_tone(),
             49.0,
             epsilon = 0.3
         );
         assert_approx_eq!(
             f64,
-            MaterialDynamicColors::on_tertiary_container()
-                .get_hct(&scheme)
-                .get_tone(),
+            MaterialDynamicColors::on_tertiary_container().get_hct(&scheme).get_tone(),
             100.0,
             epsilon = 0.3
         );

@@ -92,10 +92,8 @@ impl QuantizerWsmeans {
 
         let cluster_count = max_colors.min(points.len());
 
-        let mut clusters = starting_clusters
-            .iter()
-            .map(PointProviderLab::lab_from_int)
-            .collect::<Vec<_>>();
+        let mut clusters =
+            starting_clusters.iter().map(PointProviderLab::lab_from_int).collect::<Vec<_>>();
         let additional_clusters_needed = cluster_count - clusters.len();
 
         if additional_clusters_needed > 0 {
@@ -317,9 +315,7 @@ impl QuantizerWsmeans {
         let time_elapsed = start_time.elapsed().as_millis();
 
         #[cfg(feature = "std")]
-        Self::debug_log(format!(
-            "took {time_elapsed} ms to create input to cluster map"
-        ));
+        Self::debug_log(format!("took {time_elapsed} ms to create input to cluster map"));
 
         let mut color_to_count: IndexMap<Argb, u32> = IndexMap::default();
 

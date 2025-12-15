@@ -136,12 +136,7 @@ pub fn trim_video_with_options<P: AsRef<Path>>(
         }
         TrimMode::Reencode => {
             // Use default codecs
-            cmd.arg("-c:v")
-                .arg("libx264")
-                .arg("-crf")
-                .arg("18")
-                .arg("-c:a")
-                .arg("aac");
+            cmd.arg("-c:v").arg("libx264").arg("-crf").arg("18").arg("-c:a").arg("aac");
         }
     }
 
@@ -170,10 +165,7 @@ pub fn trim_video_with_options<P: AsRef<Path>>(
         .unwrap_or(0.0);
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Trimmed {:.1}s from {:.1}s ({} bytes)",
-            duration, options.start, output_size
-        ),
+        format!("Trimmed {:.1}s from {:.1}s ({} bytes)", duration, options.start, output_size),
         output_path,
     )
     .with_metadata("start_time", options.start.to_string())
@@ -205,14 +197,8 @@ pub fn split_video<P: AsRef<Path>>(
         source: None,
     })?;
 
-    let file_stem = input_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("part");
-    let extension = input_path
-        .extension()
-        .and_then(|s| s.to_str())
-        .unwrap_or("mp4");
+    let file_stem = input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("part");
+    let extension = input_path.extension().and_then(|s| s.to_str()).unwrap_or("mp4");
 
     let mut parts = Vec::new();
     let mut points = vec![0.0];
@@ -230,12 +216,8 @@ pub fn split_video<P: AsRef<Path>>(
 
     // Handle last segment (from last split point to end)
     if let Some(&last_point) = split_points.last() {
-        let output_path = output_dir.join(format!(
-            "{}_{:03}.{}",
-            file_stem,
-            parts.len() + 1,
-            extension
-        ));
+        let output_path =
+            output_dir.join(format!("{}_{:03}.{}", file_stem, parts.len() + 1, extension));
 
         // Trim from last point to end (no end time)
         let options = TrimOptions {

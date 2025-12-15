@@ -152,10 +152,7 @@ pub fn decode_animation_if_pending(
                 filtered.push(p);
             }
             let value = filtered.join(" ");
-            out.push_str(&build_block(
-                base_selector,
-                &format!("animation: {}", value),
-            ));
+            out.push_str(&build_block(base_selector, &format!("animation: {}", value)));
         }
     }
 }

@@ -7,9 +7,7 @@
 //! Run with: cargo run --example orchestration
 
 use anyhow::{Context, Result};
-use dx_forge::{
-    DualWatcher, DxTool, ExecutionContext, FileChange, Orchestrator, ToolOutput,
-};
+use dx_forge::{DualWatcher, DxTool, ExecutionContext, FileChange, Orchestrator, ToolOutput};
 use dx_forge::{TrafficAnalyzer, TrafficBranch};
 use std::path::Path;
 use std::thread;
@@ -38,9 +36,7 @@ impl DxTool for DxStyleTool {
     fn should_run(&self, ctx: &ExecutionContext) -> bool {
         // Run if any CSS or style-related files changed
         ctx.changed_files.iter().any(|f| {
-            f.to_str()
-                .map(|s| s.ends_with(".css") || s.contains("style"))
-                .unwrap_or(false)
+            f.to_str().map(|s| s.ends_with(".css") || s.contains("style")).unwrap_or(false)
         })
     }
 
@@ -123,11 +119,9 @@ impl DxTool for DxIconsTool {
 
     fn should_run(&self, ctx: &ExecutionContext) -> bool {
         // Run if icon references detected in changes
-        ctx.changed_files.iter().any(|f| {
-            f.to_str()
-                .map(|s| s.contains("icon") || s.contains("dxi"))
-                .unwrap_or(false)
-        })
+        ctx.changed_files
+            .iter()
+            .any(|f| f.to_str().map(|s| s.contains("icon") || s.contains("dxi")).unwrap_or(false))
     }
 
     fn execute(&mut self, ctx: &ExecutionContext) -> Result<ToolOutput> {

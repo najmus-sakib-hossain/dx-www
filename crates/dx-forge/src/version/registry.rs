@@ -1,6 +1,6 @@
 //! Tool registry for managing installed DX tools
 
-use anyhow::{ Context, Result};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -44,8 +44,8 @@ impl ToolRegistry {
         let registry_path = forge_dir.join("tool_registry.json");
 
         let tools = if registry_path.exists() {
-            let content = std::fs::read_to_string(&registry_path)
-                .context("Failed to read tool registry")?;
+            let content =
+                std::fs::read_to_string(&registry_path).context("Failed to read tool registry")?;
             serde_json::from_str(&content).unwrap_or_default()
         } else {
             HashMap::new()

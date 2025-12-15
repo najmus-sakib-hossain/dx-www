@@ -138,9 +138,7 @@ impl Provider for EuropeanaProvider {
                         .source_url(item.guid.unwrap_or_default())
                         .author(item.dcCreator.unwrap_or_default().join(", "))
                         .license(Self::parse_license(
-                            item.rights
-                                .as_ref()
-                                .and_then(|v| v.first().map(|s| s.as_str())),
+                            item.rights.as_ref().and_then(|v| v.first().map(|s| s.as_str())),
                         ))
                         .build(),
                 )

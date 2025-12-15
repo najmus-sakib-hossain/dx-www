@@ -3,12 +3,15 @@
 //! Google Fonts provides 1,562+ free, open-source fonts.
 //! API: https://fonts.google.com
 
+use super::FontProviderTrait;
+use crate::models::{
+    Font, FontCategory, FontFamily, FontLicense, FontProvider, FontStyle, FontVariant, FontWeight,
+    SearchQuery,
+};
+use anyhow::Result;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::Deserialize;
-use anyhow::Result;
-use crate::models::{Font, FontFamily, FontVariant, FontCategory, FontProvider, FontWeight, FontStyle, FontLicense, SearchQuery};
-use super::FontProviderTrait;
 
 /// Google Webfonts Helper API response
 #[derive(Debug, Deserialize)]
@@ -39,11 +42,11 @@ impl GoogleFontsProvider {
             api_url: "https://gwfh.mranftl.com/api/fonts".to_string(),
         }
     }
-    
+
     fn parse_variant(variant: &str) -> (FontWeight, FontStyle) {
         let is_italic = variant.contains("italic");
         let weight_str = variant.replace("italic", "").replace("regular", "400");
-        
+
         let weight = match weight_str.trim() {
             "" | "400" => FontWeight::Regular,
             "100" => FontWeight::Thin,
@@ -56,12 +59,16 @@ impl GoogleFontsProvider {
             "900" => FontWeight::Black,
             _ => FontWeight::Regular,
         };
-        
-        let style = if is_italic { FontStyle::Italic } else { FontStyle::Normal };
-        
+
+        let style = if is_italic {
+            FontStyle::Italic
+        } else {
+            FontStyle::Normal
+        };
+
         (weight, style)
     }
-    
+
     fn parse_category(category: &str) -> Option<FontCategory> {
         match category.to_lowercase().as_str() {
             "serif" => Some(FontCategory::Serif),
@@ -79,31 +86,26 @@ impl FontProviderTrait for GoogleFontsProvider {
     fn name(&self) -> &str {
         "Google Fonts"
     }
-    
+
     fn base_url(&self) -> &str {
         "https://fonts.google.com"
     }
-    
+
     async fn search(&self, query: &SearchQuery) -> Result<Vec<Font>> {
         let fonts = self.list_all().await?;
-        
+
         let query_lower = query.query.to_lowercase();
         let filtered: Vec<Font> = fonts
             .into_iter()
             .filter(|f| f.name.to_lowercase().contains(&query_lower))
             .collect();
-        
+
         Ok(filtered)
     }
-    
+
     async fn list_all(&self) -> Result<Vec<Font>> {
-        let response: Vec<GwfhFont> = self.client
-            .get(&self.api_url)
-            .send()
-            .await?
-            .json()
-            .await?;
-        
+        let response: Vec<GwfhFont> = self.client.get(&self.api_url).send().await?.json().await?;
+
         let fonts: Vec<Font> = response
             .into_iter()
             .map(|f| Font {
@@ -123,20 +125,16 @@ impl FontProviderTrait for GoogleFontsProvider {
                 )),
             })
             .collect();
-        
+
         Ok(fonts)
     }
-    
+
     async fn get_font_family(&self, font_id: &str) -> Result<FontFamily> {
         let url = format!("{}/{}", self.api_url, font_id);
-        let response: GwfhFont = self.client
-            .get(&url)
-            .send()
-            .await?
-            .json()
-            .await?;
-        
-        let variants: Vec<FontVariant> = response.variants
+        let response: GwfhFont = self.client.get(&url).send().await?.json().await?;
+
+        let variants: Vec<FontVariant> = response
+            .variants
             .iter()
             .map(|v| {
                 let (weight, style) = Self::parse_variant(v);
@@ -151,7 +149,7 @@ impl FontProviderTrait for GoogleFontsProvider {
                 }
             })
             .collect();
-        
+
         Ok(FontFamily {
             id: response.id,
             name: response.family.clone(),
@@ -175,19 +173,16 @@ impl FontProviderTrait for GoogleFontsProvider {
             last_modified: response.last_modified,
         })
     }
-    
+
     async fn get_download_url(&self, font_id: &str) -> Result<String> {
         Ok(format!(
             "https://gwfh.mranftl.com/api/fonts/{}?download=zip&subsets=latin&formats=ttf,woff2",
             font_id
         ))
     }
-    
+
     async fn health_check(&self) -> Result<bool> {
-        let response = self.client
-            .head(&self.api_url)
-            .send()
-            .await?;
+        let response = self.client.head(&self.api_url).send().await?;
         Ok(response.status().is_success())
     }
 }

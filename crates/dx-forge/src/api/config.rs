@@ -1,9 +1,9 @@
 //! The One True Configuration System (dx.toml) APIs
 
 use anyhow::Result;
-use std::path::PathBuf;
 use serde::Deserialize;
 use std::fs;
+use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]
 pub struct DxConfig {
@@ -19,32 +19,32 @@ pub struct DxConfig {
 
 pub fn get_active_config_file_path() -> Result<PathBuf> {
     let candidates = vec!["dx.toml", "dx.ts", "dx.json", "dx.js"];
-    
+
     for name in candidates {
         let path = PathBuf::from(name);
         if path.exists() {
             return Ok(path);
         }
     }
-    
+
     Ok(PathBuf::from("dx.toml"))
 }
 
 pub fn reload_configuration_manifest() -> Result<()> {
     tracing::info!("🔄 Reloading configuration manifest");
-    
+
     let config_path = get_active_config_file_path()?;
     if config_path.exists() {
         let content = fs::read_to_string(&config_path)?;
         let config: DxConfig = toml::from_str(&content)?;
         tracing::info!("✅ Loaded configuration from {:?}", config_path);
         tracing::debug!("Config content: {:?}", config);
-        
+
         // TODO: Update global configuration state
     } else {
         tracing::warn!("⚠️  Configuration file not found: {:?}", config_path);
     }
-    
+
     Ok(())
 }
 
@@ -63,7 +63,7 @@ pub fn inject_full_config_section_at_cursor(section: &str) -> Result<String> {
         "media" => inject_media_pipeline_config()?,
         _ => inject_package_specific_config(section)?,
     };
-    
+
     crate::api::events::emit_magical_config_injection(section)?;
     Ok(template)
 }
@@ -75,7 +75,7 @@ pub fn expand_config_placeholder(placeholder: &str) -> Result<String> {
         "ui:" => inject_ui_framework_config()?,
         _ => format!("[{}]\n# Configuration for {}\n", placeholder, placeholder),
     };
-    
+
     Ok(expanded)
 }
 
@@ -98,10 +98,8 @@ pub fn provide_config_completion_suggestions(partial: &str) -> Result<Vec<String
         "font".to_string(),
         "media".to_string(),
     ];
-    
-    Ok(suggestions.into_iter()
-        .filter(|s| s.starts_with(partial))
-        .collect())
+
+    Ok(suggestions.into_iter().filter(|s| s.starts_with(partial)).collect())
 }
 
 pub fn auto_format_config_file() -> Result<()> {
@@ -126,7 +124,8 @@ minify = true
 [style.tailwind]
 config = "tailwind.config.js"
 content = ["./src/**/*.{js,ts,jsx,tsx}"]
-"#.to_string())
+"#
+    .to_string())
 }
 
 pub fn inject_authentication_config() -> Result<String> {
@@ -138,7 +137,8 @@ session_duration = 86400  # 24 hours
 [auth.clerk]
 publishable_key = "pk_test_..."
 secret_key = "sk_test_..."
-"#.to_string())
+"#
+    .to_string())
 }
 
 pub fn inject_ui_framework_config() -> Result<String> {
@@ -150,7 +150,8 @@ component_library = "shadcn"  # shadcn | chakra | material | custom
 [ui.shadcn]
 style = "default"  # default | new-york
 base_color = "slate"
-"#.to_string())
+"#
+    .to_string())
 }
 
 pub fn inject_icon_system_config() -> Result<String> {
@@ -159,7 +160,8 @@ pub fn inject_icon_system_config() -> Result<String> {
 library = "lucide"  # lucide | heroicons | fontawesome
 prefix = "Icon"
 tree_shaking = true
-"#.to_string())
+"#
+    .to_string())
 }
 
 pub fn inject_font_system_config() -> Result<String> {
@@ -168,7 +170,8 @@ pub fn inject_font_system_config() -> Result<String> {
 provider = "google"  # google | adobe | custom
 families = ["Inter", "Roboto Mono"]
 display = "swap"
-"#.to_string())
+"#
+    .to_string())
 }
 
 pub fn inject_media_pipeline_config() -> Result<String> {
@@ -181,12 +184,16 @@ quality = 85
 [media.upload]
 provider = "r2"  # r2 | s3 | cloudinary
 max_size_mb = 10
-"#.to_string())
+"#
+    .to_string())
 }
 
 pub fn inject_package_specific_config(package: &str) -> Result<String> {
-    Ok(format!(r#"[{}]
+    Ok(format!(
+        r#"[{}]
 # Configuration for {}
 enabled = true
-"#, package, package))
+"#,
+        package, package
+    ))
 }

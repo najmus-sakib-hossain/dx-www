@@ -116,10 +116,7 @@ pub fn normalize_audio<P: AsRef<Path>>(
             format!("volume={}:precision=double", level)
         }
         NormalizeMethod::Rms => {
-            format!(
-                "loudnorm=I={}:TP={}:LRA=11",
-                options.target_level, options.true_peak
-            )
+            format!("loudnorm=I={}:TP={}:LRA=11", options.target_level, options.true_peak)
         }
         NormalizeMethod::Loudness => {
             // EBU R128 loudness normalization
@@ -134,11 +131,7 @@ pub fn normalize_audio<P: AsRef<Path>>(
     };
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-af")
-        .arg(&filter);
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-af").arg(&filter);
 
     if options.limiter && matches!(options.method, NormalizeMethod::Peak) {
         // Add limiter for peak normalization
@@ -219,9 +212,7 @@ pub fn analyze_levels<P: AsRef<Path>>(input: P) -> Result<ToolOutput> {
                 } else {
                     "max_volume"
                 };
-                result
-                    .metadata
-                    .insert(key.to_string(), value.trim().to_string());
+                result.metadata.insert(key.to_string(), value.trim().to_string());
             }
         }
     }
@@ -237,12 +228,7 @@ pub fn adjust_volume<P: AsRef<Path>>(input: P, output: P, db: f32) -> Result<Too
     let filter = format!("volume={}dB", db);
 
     let mut cmd = Command::new("ffmpeg");
-    cmd.arg("-y")
-        .arg("-i")
-        .arg(input_path)
-        .arg("-af")
-        .arg(&filter)
-        .arg(output_path);
+    cmd.arg("-y").arg("-i").arg(input_path).arg("-af").arg(&filter).arg(output_path);
 
     let output_result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run FFmpeg: {}", e),
@@ -283,10 +269,7 @@ pub fn batch_normalize<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_name = input_path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("audio.mp3");
+        let file_name = input_path.file_name().and_then(|s| s.to_str()).unwrap_or("audio.mp3");
         let output_path = output_dir.join(format!("norm_{}", file_name));
 
         if normalize_audio(input_path, &output_path, options.clone()).is_ok() {

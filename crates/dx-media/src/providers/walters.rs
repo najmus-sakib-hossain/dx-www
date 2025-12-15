@@ -73,10 +73,10 @@ impl Provider for WaltersArtMuseumProvider {
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
         let count = query.count.min(100);
         let page = query.page;
-        
+
         let count_str = count.to_string();
         let page_str = page.to_string();
-        
+
         let url = format!("{}/objects", self.base_url());
         let params = [
             ("keyword", query.query.as_str()),
@@ -94,7 +94,8 @@ impl Provider for WaltersArtMuseumProvider {
             .into_iter()
             .filter_map(|item| {
                 let image_url = item.primary_image.large_thumb_path?;
-                let preview_url = item.primary_image.small_thumb_path.unwrap_or_else(|| image_url.clone());
+                let preview_url =
+                    item.primary_image.small_thumb_path.unwrap_or_else(|| image_url.clone());
 
                 Some(
                     MediaAsset::builder()
@@ -107,10 +108,15 @@ impl Provider for WaltersArtMuseumProvider {
                         .source_url(format!("https://art.thewalters.org/detail/{}", item.object_id))
                         .author(item.creator.unwrap_or_default())
                         .license(License::Cc0)
-                        .tags(vec![
-                            item.classification.unwrap_or_default(),
-                            item.medium.unwrap_or_default(),
-                        ].into_iter().filter(|s| !s.is_empty()).collect())
+                        .tags(
+                            vec![
+                                item.classification.unwrap_or_default(),
+                                item.medium.unwrap_or_default(),
+                            ]
+                            .into_iter()
+                            .filter(|s| !s.is_empty())
+                            .collect(),
+                        )
                         .build(),
                 )
             })

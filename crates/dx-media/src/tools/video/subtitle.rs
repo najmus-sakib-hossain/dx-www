@@ -124,10 +124,7 @@ pub fn burn_subtitles_with_style<P: AsRef<Path>>(
     }
 
     // Escape path for FFmpeg filter (Windows paths need special handling)
-    let sub_path_str = subtitles_path
-        .to_string_lossy()
-        .replace("\\", "/")
-        .replace(":", "\\:");
+    let sub_path_str = subtitles_path.to_string_lossy().replace("\\", "/").replace(":", "\\:");
 
     // Build subtitle filter
     let filter = format!(
@@ -172,10 +169,7 @@ pub fn burn_subtitles_with_style<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Burned subtitles into video",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Burned subtitles into video", output_path))
 }
 
 /// Add soft subtitles (as separate stream, can be toggled).
@@ -236,10 +230,7 @@ pub fn add_soft_subtitles<P: AsRef<Path>>(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Added soft subtitles",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Added soft subtitles", output_path))
 }
 
 /// Extract subtitles from video.
@@ -385,10 +376,7 @@ pub fn remove_subtitles<P: AsRef<Path>>(input: P, output: P) -> Result<ToolOutpu
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Removed subtitle streams",
-        output_path,
-    ))
+    Ok(ToolOutput::success_with_path("Removed subtitle streams", output_path))
 }
 
 /// Shift subtitle timing.
@@ -450,10 +438,7 @@ fn shift_srt_timestamps(content: &str, offset_ms: i64) -> String {
             let new_seconds = (total_ms % 60000) / 1000;
             let new_millis = total_ms % 1000;
 
-            format!(
-                "{:02}:{:02}:{:02},{:03}",
-                new_hours, new_minutes, new_seconds, new_millis
-            )
+            format!("{:02}:{:02}:{:02},{:03}", new_hours, new_minutes, new_seconds, new_millis)
         })
         .to_string()
 }
@@ -511,10 +496,7 @@ pub fn batch_burn_subtitles<P: AsRef<Path>>(
 
     for (video, subtitles) in videos {
         let video_path = video.as_ref();
-        let file_name = video_path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("output.mp4");
+        let file_name = video_path.file_name().and_then(|s| s.to_str()).unwrap_or("output.mp4");
         let output_path = output_dir.join(format!("sub_{}", file_name));
 
         if burn_subtitles(video_path, subtitles.as_ref(), &output_path).is_ok() {
@@ -532,10 +514,7 @@ mod tests {
     #[test]
     fn test_subtitle_format() {
         assert_eq!(SubtitleFormat::Srt.extension(), "srt");
-        assert_eq!(
-            SubtitleFormat::from_extension("vtt"),
-            Some(SubtitleFormat::Vtt)
-        );
+        assert_eq!(SubtitleFormat::from_extension("vtt"), Some(SubtitleFormat::Vtt));
         assert_eq!(SubtitleFormat::from_extension("unknown"), None);
     }
 

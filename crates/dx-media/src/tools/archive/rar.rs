@@ -77,8 +77,7 @@ fn extract_with_unrar(
         cmd.arg("-p-"); // No password
     }
 
-    cmd.arg(input)
-        .arg(format!("{}/", output_dir.to_string_lossy()));
+    cmd.arg(input).arg(format!("{}/", output_dir.to_string_lossy()));
 
     let result = cmd.output().map_err(|e| DxError::Config {
         message: format!("Failed to run unrar: {}", e),
@@ -92,18 +91,13 @@ fn extract_with_unrar(
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Extracted RAR archive",
-        output_dir,
-    ))
+    Ok(ToolOutput::success_with_path("Extracted RAR archive", output_dir))
 }
 
 /// Extract using 7z.
 fn extract_with_7z(input: &Path, output_dir: &Path, password: Option<&str>) -> Result<ToolOutput> {
     let mut cmd = Command::new("7z");
-    cmd.arg("x")
-        .arg("-y")
-        .arg(format!("-o{}", output_dir.to_string_lossy()));
+    cmd.arg("x").arg("-y").arg(format!("-o{}", output_dir.to_string_lossy()));
 
     if let Some(pwd) = password {
         cmd.arg(format!("-p{}", pwd));
@@ -123,10 +117,7 @@ fn extract_with_7z(input: &Path, output_dir: &Path, password: Option<&str>) -> R
         });
     }
 
-    Ok(ToolOutput::success_with_path(
-        "Extracted RAR archive with 7z",
-        output_dir,
-    ))
+    Ok(ToolOutput::success_with_path("Extracted RAR archive with 7z", output_dir))
 }
 
 /// List RAR archive contents.

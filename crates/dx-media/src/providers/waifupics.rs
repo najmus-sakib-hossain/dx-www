@@ -33,10 +33,9 @@ struct WaifuBulkResponse {
 
 /// SFW categories available.
 const SFW_CATEGORIES: &[&str] = &[
-    "waifu", "neko", "shinobu", "megumin", "bully", "cuddle", "cry", "hug",
-    "awoo", "kiss", "lick", "pat", "smug", "bonk", "yeet", "blush", "smile",
-    "wave", "highfive", "handhold", "nom", "bite", "glomp", "slap", "kill",
-    "kick", "happy", "wink", "poke", "dance", "cringe",
+    "waifu", "neko", "shinobu", "megumin", "bully", "cuddle", "cry", "hug", "awoo", "kiss", "lick",
+    "pat", "smug", "bonk", "yeet", "blush", "smile", "wave", "highfive", "handhold", "nom", "bite",
+    "glomp", "slap", "kill", "kick", "happy", "wink", "poke", "dance", "cringe",
 ];
 
 impl WaifuPicsProvider {
@@ -59,14 +58,14 @@ impl WaifuPicsProvider {
     /// Map search query to best matching category.
     fn map_query_to_category(query: &str) -> &'static str {
         let query_lower = query.to_lowercase();
-        
+
         // Direct category matches
         for &cat in SFW_CATEGORIES {
             if query_lower.contains(cat) {
                 return cat;
             }
         }
-        
+
         // Keyword mappings
         if query_lower.contains("cat") || query_lower.contains("kitty") {
             return "neko";
@@ -83,7 +82,7 @@ impl WaifuPicsProvider {
         if query_lower.contains("love") || query_lower.contains("heart") {
             return "hug";
         }
-        
+
         // Default
         "waifu"
     }
@@ -127,29 +126,32 @@ impl Provider for WaifuPicsProvider {
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
         let category = Self::map_query_to_category(&query.query);
         let count = query.count.min(30); // API limit
-        
+
         // Use bulk endpoint for multiple results
         let url = format!("{}/many/sfw/{}", self.base_url(), category);
-        
-        let response = self.client
-            .post_json(&url, &serde_json::json!({}))
-            .await?;
-        
+
+        let response = self.client.post_json(&url, &serde_json::json!({})).await?;
+
         let bulk: WaifuBulkResponse = response.json_or_error().await?;
-        
-        let assets: Vec<MediaAsset> = bulk.files
+
+        let assets: Vec<MediaAsset> = bulk
+            .files
             .into_iter()
             .take(count)
             .enumerate()
             .map(|(i, url)| {
                 let is_gif = Self::is_gif(&url);
                 let id = format!("waifupics_{}_{}", category, i);
-                
+
                 MediaAsset::builder()
                     .id(id.clone())
                     .provider(self.name().to_string())
                     .title(format!("{} anime {}", category, if is_gif { "GIF" } else { "image" }))
-                    .media_type(if is_gif { MediaType::Gif } else { MediaType::Image })
+                    .media_type(if is_gif {
+                        MediaType::Gif
+                    } else {
+                        MediaType::Image
+                    })
                     .download_url(url.clone())
                     .preview_url(url.clone())
                     .source_url(url)
@@ -157,9 +159,9 @@ impl Provider for WaifuPicsProvider {
                     .build()
             })
             .collect();
-        
+
         let total = assets.len();
-        
+
         Ok(SearchResult {
             query: query.query.clone(),
             media_type: query.media_type,

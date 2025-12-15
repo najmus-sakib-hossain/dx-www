@@ -16,7 +16,9 @@ use strum::{Display, EnumString};
 ///   enough are gathered (3x requested count). Ideal for quick searches.
 /// - **Quality**: Waits for ALL providers to respond (or timeout). Gathers the most
 ///   comprehensive results from all sources. Better for thorough searches.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Display, EnumString)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Display, EnumString,
+)]
 #[strum(serialize_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum SearchMode {
@@ -267,15 +269,9 @@ impl MediaAsset {
             .and_then(|e| e.split('?').next())
             .unwrap_or("bin");
 
-        format!(
-            "{}_{}_{}.{}",
-            title,
-            self.provider,
-            &self.id[..8.min(self.id.len())],
-            ext
-        )
-        .replace(' ', "_")
-        .to_lowercase()
+        format!("{}_{}_{}.{}", title, self.provider, &self.id[..8.min(self.id.len())], ext)
+            .replace(' ', "_")
+            .to_lowercase()
     }
 }
 

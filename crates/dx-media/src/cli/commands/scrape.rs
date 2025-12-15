@@ -43,11 +43,8 @@ pub async fn execute(args: ScrapeArgs, format: OutputFormat, quiet: bool) -> Res
     // Show progress
     let spinner = if !quiet {
         let spinner = ProgressBar::new_spinner();
-        spinner.set_style(
-            ProgressStyle::default_spinner()
-                .template("{spinner:.cyan} {msg}")
-                .unwrap(),
-        );
+        spinner
+            .set_style(ProgressStyle::default_spinner().template("{spinner:.cyan} {msg}").unwrap());
         spinner.set_message(format!("Scraping {}...", args.url));
         spinner.enable_steady_tick(std::time::Duration::from_millis(100));
         Some(spinner)
@@ -106,11 +103,7 @@ pub async fn execute(args: ScrapeArgs, format: OutputFormat, quiet: bool) -> Res
                 println!("  Pages scraped: {}", result.pages_scraped);
 
                 if !result.errors.is_empty() {
-                    println!(
-                        "\n{} {} errors encountered:",
-                        "⚠".yellow(),
-                        result.errors.len()
-                    );
+                    println!("\n{} {} errors encountered:", "⚠".yellow(), result.errors.len());
                     for err in &result.errors {
                         println!("  {} {}", "•".dimmed(), err.dimmed());
                     }
@@ -168,11 +161,7 @@ pub async fn execute(args: ScrapeArgs, format: OutputFormat, quiet: bool) -> Res
         let downloader = Downloader::new(&config).with_download_dir(&output_dir);
 
         if !quiet {
-            println!(
-                "\n{} Downloading {} assets...",
-                "↓".cyan(),
-                result.assets.len()
-            );
+            println!("\n{} Downloading {} assets...", "↓".cyan(), result.assets.len());
         }
 
         let pb = if !quiet {

@@ -23,7 +23,7 @@ pub async fn handle_ws_upgrade(
 async fn handle_socket(mut socket: WebSocket, state: Arc<EcosystemState>) {
     // Send welcome message
     let _ = socket.send(Message::Binary(vec![0xA0, 0x00])).await; // SYNC_SUBSCRIBE opcode
-    
+
     // Handle messages
     while let Some(msg) = socket.recv().await {
         match msg {
@@ -44,61 +44,60 @@ async fn handle_socket(mut socket: WebSocket, state: Arc<EcosystemState>) {
 }
 
 /// Handle binary message
-async fn handle_binary_message(
-    data: &[u8],
-    state: &Arc<EcosystemState>,
-    socket: &mut WebSocket,
-) {
+async fn handle_binary_message(data: &[u8], state: &Arc<EcosystemState>, socket: &mut WebSocket) {
     if data.is_empty() {
         return;
     }
-    
+
     let opcode = data[0];
-    
+
     match opcode {
-        0xA0 => { // SYNC_SUBSCRIBE
+        0xA0 => {
+            // SYNC_SUBSCRIBE
             if data.len() < 2 {
                 return;
             }
             let channel_id = data[1];
-            
+
             // Subscribe to channel
             #[cfg(feature = "sync")]
             if let Some(ref manager) = state.channel_manager {
                 manager.subscribe(channel_id, socket_id()).await;
             }
-            
+
             // Send ACK
             let _ = socket.send(Message::Binary(vec![0xA4, channel_id])).await;
         }
-        
-        0xA1 => { // SYNC_UNSUBSCRIBE
+
+        0xA1 => {
+            // SYNC_UNSUBSCRIBE
             if data.len() < 2 {
                 return;
             }
             let channel_id = data[1];
-            
+
             // Unsubscribe from channel
             #[cfg(feature = "sync")]
             if let Some(ref manager) = state.channel_manager {
                 manager.unsubscribe(channel_id, socket_id()).await;
             }
         }
-        
-        0xA2 => { // SYNC_MESSAGE
+
+        0xA2 => {
+            // SYNC_MESSAGE
             if data.len() < 3 {
                 return;
             }
             let channel_id = data[1];
             let message = &data[2..];
-            
+
             // Broadcast to channel
             #[cfg(feature = "sync")]
             if let Some(ref manager) = state.channel_manager {
                 manager.broadcast(channel_id, message).await;
             }
         }
-        
+
         _ => {
             // Unknown opcode
         }

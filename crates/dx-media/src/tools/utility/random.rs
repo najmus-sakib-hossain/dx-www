@@ -34,10 +34,8 @@ struct Rng {
 
 impl Rng {
     fn new() -> Self {
-        let seed = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos() as u64;
+        let seed =
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_nanos() as u64;
         Self { state: seed }
     }
 
@@ -47,10 +45,7 @@ impl Rng {
 
     fn next_u64(&mut self) -> u64 {
         // PCG algorithm
-        self.state = self
-            .state
-            .wrapping_mul(6364136223846793005)
-            .wrapping_add(1442695040888963407);
+        self.state = self.state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
         let xorshifted = (((self.state >> 18) ^ self.state) >> 27) as u32;
         let rot = (self.state >> 59) as u32;
         ((xorshifted >> rot) | (xorshifted << ((-(rot as i32)) & 31))) as u64

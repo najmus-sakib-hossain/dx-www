@@ -101,9 +101,7 @@ pub fn get_annotations(db: &Database, file: &Path, line: Option<usize>) -> Resul
             line: line as usize,
             content,
             author,
-            created_at: chrono::DateTime::parse_from_rfc3339(&created_at)
-                .unwrap()
-                .into(),
+            created_at: chrono::DateTime::parse_from_rfc3339(&created_at).unwrap().into(),
             is_ai,
         })
     })?;

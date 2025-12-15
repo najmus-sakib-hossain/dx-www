@@ -72,10 +72,10 @@ impl Provider for OpenLibraryProvider {
     async fn search(&self, query: &SearchQuery) -> Result<SearchResult> {
         let count = query.count.min(100);
         let page = query.page;
-        
+
         let count_str = count.to_string();
         let page_str = page.to_string();
-        
+
         let url = format!("{}/search.json", self.base_url());
         let params = [
             ("q", query.query.as_str()),
@@ -93,7 +93,7 @@ impl Provider for OpenLibraryProvider {
             .filter_map(|doc| {
                 // Need a cover ID to get cover image
                 let cover_id = doc.cover_i?;
-                
+
                 // Cover URLs
                 let large_url = format!("https://covers.openlibrary.org/b/id/{}-L.jpg", cover_id);
                 let medium_url = format!("https://covers.openlibrary.org/b/id/{}-M.jpg", cover_id);

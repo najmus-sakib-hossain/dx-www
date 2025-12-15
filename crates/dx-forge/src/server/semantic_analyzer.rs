@@ -4,10 +4,8 @@
 
 use anyhow::Result;
 use std::collections::HashMap;
-use tree_sitter::{Parser, Node};
 use std::path::Path;
-
-
+use tree_sitter::{Node, Parser};
 
 /// Symbol information
 #[derive(Debug, Clone)]
@@ -92,10 +90,8 @@ impl SemanticAnalyzer {
         };
 
         // Store in symbol table
-        self.symbol_table.insert(
-            file_path.to_string_lossy().to_string(),
-            symbols.clone()
-        );
+        self.symbol_table
+            .insert(file_path.to_string_lossy().to_string(), symbols.clone());
 
         Ok(symbols)
     }
@@ -231,7 +227,7 @@ impl SemanticAnalyzer {
     /// Convert tree-sitter node to symbol
     fn node_to_symbol(&self, node: Node, source: &str) -> Result<Option<Symbol>> {
         let kind_str = node.kind();
-        
+
         let kind = match kind_str {
             "function_item" => SymbolKind::Function,
             "struct_item" => SymbolKind::Struct,
@@ -247,7 +243,7 @@ impl SemanticAnalyzer {
 
         // Extract name
         let name = self.extract_name(node, source)?;
-        
+
         // Create range
         let range = Range {
             start_line: node.start_position().row + 1,
@@ -286,7 +282,7 @@ impl SemanticAnalyzer {
         &self,
         file_path: &Path,
         line: usize,
-        column: usize
+        column: usize,
     ) -> Option<&Symbol> {
         let symbols = self.symbol_table.get(&file_path.to_string_lossy().to_string())?;
         self.find_symbol_in_tree(symbols, line, column)
@@ -297,7 +293,7 @@ impl SemanticAnalyzer {
         &self,
         symbols: &'a [Symbol],
         line: usize,
-        column: usize
+        column: usize,
     ) -> Option<&'a Symbol> {
         for symbol in symbols {
             if self.contains_position(&symbol.range, line, column) {
@@ -376,7 +372,7 @@ impl SemanticAnalyzer {
         &self,
         node: Node,
         source: &str,
-        patterns: &mut Vec<DxPattern>
+        patterns: &mut Vec<DxPattern>,
     ) -> Result<()> {
         // Check if this node is a JSX element starting with "dx"
         if node.kind() == "jsx_element" || node.kind() == "jsx_self_closing_element" {
@@ -386,7 +382,7 @@ impl SemanticAnalyzer {
                     let start = child.start_byte();
                     let end = child.end_byte();
                     let text = &source[start..end];
-                    
+
                     if text.starts_with("dx") || text.contains("<dx") {
                         let component_name = text
                             .trim_start_matches('<')
@@ -450,7 +446,7 @@ mod tests {
 
         let path = Path::new("test.rs");
         let symbols = analyzer.analyze_file(path, source).unwrap();
-        
+
         assert!(!symbols.is_empty());
         assert!(symbols.iter().any(|s| s.kind == SymbolKind::Function));
         assert!(symbols.iter().any(|s| s.kind == SymbolKind::Struct));
@@ -473,12 +469,13 @@ mod tests {
 
         let path = Path::new("nested.rs");
         let symbols = analyzer.analyze_file(path, source).unwrap();
-        
+
         let mod_symbol = symbols.iter().find(|s| s.kind == SymbolKind::Mod).unwrap();
         assert_eq!(mod_symbol.name, "my_mod");
         assert!(!mod_symbol.children.is_empty());
-        
-        let struct_symbol = mod_symbol.children.iter().find(|s| s.kind == SymbolKind::Struct).unwrap();
+
+        let struct_symbol =
+            mod_symbol.children.iter().find(|s| s.kind == SymbolKind::Struct).unwrap();
         assert_eq!(struct_symbol.name, "Inner");
     }
 
@@ -490,15 +487,15 @@ mod tests {
                 // code
             }
         "#;
-        
+
         let path = Path::new("lookup.rs");
         analyzer.analyze_file(path, source).unwrap();
-        
+
         // Line 2 (1-indexed), column 15 should be inside the function
         let symbol = analyzer.find_symbol_at_position(path, 2, 15);
         assert!(symbol.is_some());
         assert_eq!(symbol.unwrap().name, "target_function");
-        
+
         // Line 10 should be None
         let symbol = analyzer.find_symbol_at_position(path, 10, 0);
         assert!(symbol.is_none());

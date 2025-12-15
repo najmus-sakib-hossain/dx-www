@@ -12,8 +12,8 @@ pub fn path_to_forge_manifest() -> Result<PathBuf> {
 }
 
 pub fn dx_global_cache_directory() -> Result<PathBuf> {
-    let home = dirs::home_dir()
-        .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
+    let home =
+        dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
     Ok(home.join(".dx").join("cache"))
 }
 
@@ -21,14 +21,18 @@ pub fn create_watcher_ignored_scratch_file(name: &str) -> Result<PathBuf> {
     let dx_dir = crate::api::dx_directory::get_dx_directory_path()?;
     let scratch_dir = dx_dir.join("scratch");
     std::fs::create_dir_all(&scratch_dir)?;
-    
+
     let path = scratch_dir.join(name);
     std::fs::write(&path, "")?;
-    
+
     Ok(path)
 }
 
-pub fn log_structured_tool_action(tool: &str, action: &str, metadata: serde_json::Value) -> Result<()> {
+pub fn log_structured_tool_action(
+    tool: &str,
+    action: &str,
+    metadata: serde_json::Value,
+) -> Result<()> {
     tracing::info!(
         target: "dx_tool_action",
         tool = tool,
@@ -39,7 +43,10 @@ pub fn log_structured_tool_action(tool: &str, action: &str, metadata: serde_json
     Ok(())
 }
 
-pub fn schedule_task_for_idle_time(task_id: &str, _task_fn: Box<dyn Fn() -> Result<()> + Send>) -> Result<()> {
+pub fn schedule_task_for_idle_time(
+    task_id: &str,
+    _task_fn: Box<dyn Fn() -> Result<()> + Send>,
+) -> Result<()> {
     tracing::debug!("📅 Scheduled task '{}' for idle time", task_id);
     // TODO: Implement actual idle scheduling
     Ok(())
@@ -60,7 +67,11 @@ pub fn open_file_and_reveal_location(file: &Path, line: usize, column: usize) ->
     Ok(())
 }
 
-pub fn display_inline_code_suggestion(file: &Path, line: usize, suggestion: &str) -> Result<String> {
+pub fn display_inline_code_suggestion(
+    file: &Path,
+    line: usize,
+    suggestion: &str,
+) -> Result<String> {
     tracing::debug!("💡 Suggesting at {:?}:{}: {}", file, line, suggestion);
     Ok(format!("suggestion-{}", uuid::Uuid::new_v4()))
 }
@@ -95,7 +106,7 @@ pub fn generate_comprehensive_project_report() -> Result<String> {
 ⚠️  1 minor linting issue
 
 "#;
-    
+
     Ok(report.to_string())
 }
 

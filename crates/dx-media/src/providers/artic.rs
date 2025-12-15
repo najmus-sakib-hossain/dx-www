@@ -82,10 +82,7 @@ impl Provider for ArtInstituteChicagoProvider {
             ("q", query.query.as_str()),
             ("limit", limit.as_str()),
             ("page", page.as_str()),
-            (
-                "fields",
-                "id,title,artist_title,image_id,thumbnail,dimensions",
-            ),
+            ("fields", "id,title,artist_title,image_id,thumbnail,dimensions"),
         ];
 
         let response = self.client.get_with_query(&url, &params, &[]).await?;

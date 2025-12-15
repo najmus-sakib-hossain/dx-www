@@ -15,11 +15,7 @@ fn test_parser_correctness() {
         let original = extract_classes_fast(html_bytes, 64);
         let optimized = extract_classes_optimized(html_bytes, 64);
 
-        assert_eq!(
-            original.classes, optimized.classes,
-            "Classes should match for HTML: {}",
-            html
-        );
+        assert_eq!(original.classes, optimized.classes, "Classes should match for HTML: {}", html);
 
         assert_eq!(
             original.group_events.len(),
@@ -62,17 +58,10 @@ fn test_performance_baseline() {
     let avg_micros = duration.as_micros() / iterations;
 
     println!("Average parse time: {}µs", avg_micros);
-    println!(
-        "Classes extracted: {}",
-        extract_classes_fast(html_bytes, 128).classes.len()
-    );
+    println!("Classes extracted: {}", extract_classes_fast(html_bytes, 128).classes.len());
 
     // Performance assertion - should be well under 100µs for 100 elements
-    assert!(
-        avg_micros < 100,
-        "Parser should take less than 100µs, got {}µs",
-        avg_micros
-    );
+    assert!(avg_micros < 100, "Parser should take less than 100µs, got {}µs", avg_micros);
 }
 
 #[test]

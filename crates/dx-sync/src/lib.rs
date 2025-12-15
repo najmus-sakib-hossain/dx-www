@@ -77,12 +77,9 @@ impl ChannelManager {
     /// Subscribe to a channel
     pub fn subscribe(&self, channel_id: ChannelId) -> Receiver<BinaryMessage> {
         let (tx, rx) = flume::unbounded();
-        
-        self.channels
-            .entry(channel_id)
-            .or_insert_with(Vec::new)
-            .push(tx);
-        
+
+        self.channels.entry(channel_id).or_insert_with(Vec::new).push(tx);
+
         rx
     }
 
@@ -98,17 +95,17 @@ impl ChannelManager {
     /// Publish message to channel
     pub fn publish(&self, message: BinaryMessage) {
         let channel_id = message.channel_id;
-        
+
         // Store in history
         let mut history = self.history.entry(channel_id).or_insert_with(Vec::new);
         history.push(message.clone());
-        
+
         // Keep history size bounded
         if history.len() > self.max_history {
             history.drain(0..history.len() - self.max_history);
         }
         drop(history);
-        
+
         // Send to all subscribers
         if let Some(subs) = self.channels.get(&channel_id) {
             for tx in subs.iter() {
@@ -120,20 +117,17 @@ impl ChannelManager {
     /// Generate delta update from history
     pub fn generate_delta(&self, channel_id: ChannelId, base_version: u32) -> Option<DeltaUpdate> {
         let history = self.history.get(&channel_id)?;
-        
+
         if base_version >= history.len() as u32 {
             return None;
         }
-        
+
         let base = &history[base_version as usize];
         let latest = history.last()?;
-        
+
         // XOR-based delta
-        let delta = base.data.iter()
-            .zip(latest.data.iter())
-            .map(|(a, b)| a ^ b)
-            .collect();
-        
+        let delta = base.data.iter().zip(latest.data.iter()).map(|(a, b)| a ^ b).collect();
+
         Some(DeltaUpdate {
             message_id: latest.message_id,
             channel_id,
@@ -271,18 +265,18 @@ mod tests {
     #[test]
     fn test_channel_manager() {
         let manager = ChannelManager::new(10);
-        
+
         let rx = manager.subscribe(1);
-        
+
         let message = BinaryMessage {
             message_id: 1,
             channel_id: 1,
             data: vec![1, 2, 3, 4],
             timestamp: 12345,
         };
-        
+
         manager.publish(message.clone());
-        
+
         let received = rx.recv().unwrap();
         assert_eq!(received.message_id, 1);
         assert_eq!(received.data, vec![1, 2, 3, 4]);
@@ -291,21 +285,21 @@ mod tests {
     #[test]
     fn test_delta_generation() {
         let manager = ChannelManager::new(10);
-        
+
         manager.publish(BinaryMessage {
             message_id: 1,
             channel_id: 1,
             data: vec![1, 2, 3, 4],
             timestamp: 100,
         });
-        
+
         manager.publish(BinaryMessage {
             message_id: 2,
             channel_id: 1,
             data: vec![1, 2, 5, 6],
             timestamp: 200,
         });
-        
+
         let delta = manager.generate_delta(1, 0).unwrap();
         assert_eq!(delta.base_version, 0);
         assert_eq!(delta.delta, vec![0, 0, 6, 2]); // XOR diff
@@ -319,10 +313,10 @@ mod tests {
             data: vec![10, 20, 30],
             timestamp: 999,
         };
-        
+
         let encoded = binary::encode_message(&message);
         assert_eq!(encoded[0], opcodes::SYNC_MESSAGE);
-        
+
         let ack = binary::encode_ack(123);
         assert_eq!(ack[0], opcodes::SYNC_ACK);
     }
@@ -331,17 +325,16 @@ mod tests {
     #[test]
     fn test_reconnect_handler() {
         let mut handler = ReconnectHandler::new(1, 5);
-        
+
         assert_eq!(handler.backoff_delay(), 100);
-        
+
         handler.increment_retry();
         assert_eq!(handler.backoff_delay(), 200);
-        
+
         handler.increment_retry();
         assert_eq!(handler.backoff_delay(), 400);
-        
+
         handler.reset();
         assert_eq!(handler.backoff_delay(), 100);
     }
 }
-

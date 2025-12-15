@@ -102,14 +102,8 @@ impl Provider for PolyHavenProvider {
                 }
                 id.to_lowercase().contains(&query_lower)
                     || asset.name.to_lowercase().contains(&query_lower)
-                    || asset
-                        .tags
-                        .iter()
-                        .any(|t| t.to_lowercase().contains(&query_lower))
-                    || asset
-                        .categories
-                        .iter()
-                        .any(|c| c.to_lowercase().contains(&query_lower))
+                    || asset.tags.iter().any(|t| t.to_lowercase().contains(&query_lower))
+                    || asset.categories.iter().any(|c| c.to_lowercase().contains(&query_lower))
             })
             .skip(start)
             .take(query.count)
@@ -121,10 +115,8 @@ impl Provider for PolyHavenProvider {
                     _ => MediaType::Image,
                 };
 
-                let preview_url = format!(
-                    "https://cdn.polyhaven.com/asset_img/thumbs/{}.png?height=256",
-                    id
-                );
+                let preview_url =
+                    format!("https://cdn.polyhaven.com/asset_img/thumbs/{}.png?height=256", id);
                 let download_url = format!("https://polyhaven.com/a/{}", id);
 
                 MediaAsset::builder()

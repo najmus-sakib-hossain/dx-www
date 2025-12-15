@@ -3444,10 +3444,7 @@ impl ScrapingRegistry {
 
     /// Get all image scraping targets (86 sites).
     pub fn all_images() -> Vec<&'static ScrapingTarget> {
-        BATCH_1_IMAGE_TARGETS
-            .iter()
-            .chain(BATCH_2_IMAGE_TARGETS.iter())
-            .collect()
+        BATCH_1_IMAGE_TARGETS.iter().chain(BATCH_2_IMAGE_TARGETS.iter()).collect()
     }
 
     /// Get all video scraping targets.
@@ -3499,10 +3496,7 @@ impl ScrapingRegistry {
 
     /// Get all targets for a category.
     pub fn by_category(category: ScrapingCategory) -> Vec<&'static ScrapingTarget> {
-        SCRAPING_TARGETS
-            .iter()
-            .filter(|t| t.category == category)
-            .collect()
+        SCRAPING_TARGETS.iter().filter(|t| t.category == category).collect()
     }
 
     /// Get total count of all targets.

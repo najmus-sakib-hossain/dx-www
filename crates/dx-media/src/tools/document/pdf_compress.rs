@@ -101,10 +101,7 @@ pub fn compress_pdf<P: AsRef<Path>>(
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "PDF compression failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("PDF compression failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -124,12 +121,8 @@ pub fn compress_pdf<P: AsRef<Path>>(
         ),
         output_path,
     );
-    result
-        .metadata
-        .insert("original_size".to_string(), input_size.to_string());
-    result
-        .metadata
-        .insert("compressed_size".to_string(), output_size.to_string());
+    result.metadata.insert("original_size".to_string(), input_size.to_string());
+    result.metadata.insert("compressed_size".to_string(), output_size.to_string());
     result
         .metadata
         .insert("reduction_percent".to_string(), format!("{:.1}", reduction));
@@ -176,10 +169,7 @@ pub fn compress_pdf_custom<P: AsRef<Path>>(input: P, output: P, dpi: u32) -> Res
 
     if !result.status.success() {
         return Err(DxError::Config {
-            message: format!(
-                "PDF compression failed: {}",
-                String::from_utf8_lossy(&result.stderr)
-            ),
+            message: format!("PDF compression failed: {}", String::from_utf8_lossy(&result.stderr)),
             source: None,
         });
     }
@@ -193,10 +183,7 @@ pub fn compress_pdf_custom<P: AsRef<Path>>(input: P, output: P, dpi: u32) -> Res
     };
 
     Ok(ToolOutput::success_with_path(
-        format!(
-            "Compressed PDF at {} DPI ({:.1}% reduction)",
-            dpi, reduction
-        ),
+        format!("Compressed PDF at {} DPI ({:.1}% reduction)", dpi, reduction),
         output_path,
     ))
 }
@@ -306,18 +293,13 @@ pub fn batch_compress<P: AsRef<Path>>(
 
     for input in inputs {
         let input_path = input.as_ref();
-        let file_name = input_path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("document.pdf");
+        let file_name = input_path.file_name().and_then(|s| s.to_str()).unwrap_or("document.pdf");
         let output_path = output_dir.join(format!("compressed_{}", file_name));
 
         let input_size = std::fs::metadata(input_path).map(|m| m.len()).unwrap_or(0);
 
         if compress_pdf(input_path, &output_path, quality).is_ok() {
-            let output_size = std::fs::metadata(&output_path)
-                .map(|m| m.len())
-                .unwrap_or(0);
+            let output_size = std::fs::metadata(&output_path).map(|m| m.len()).unwrap_or(0);
             total_saved += input_size.saturating_sub(output_size);
             compressed.push(output_path);
         }
@@ -328,9 +310,7 @@ pub fn batch_compress<P: AsRef<Path>>(
         compressed.len(),
         total_saved
     ));
-    result
-        .metadata
-        .insert("total_saved".to_string(), total_saved.to_string());
+    result.metadata.insert("total_saved".to_string(), total_saved.to_string());
 
     Ok(result.with_paths(compressed))
 }
