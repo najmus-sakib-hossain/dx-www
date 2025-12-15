@@ -1,0 +1,697 @@
+# Implementation Plan: 16-Crate dx-www Ecosystem Expansion
+
+## Goal
+
+Expand dx-www from 14 crates to 30 crates by adding 16 new ecosystem crates that replace 50+ npm packages. These crates will provide form validation, data fetching, state management, database access, caching, realtime sync, offline support, error handling, and more—all using binary protocols with zero npm dependencies.
+
+**Timeline:** 16 days (Dec 16-31, 2025)  
+**Bundle Size Target:** Keep dx-client < 15 KB  
+**Performance Target:** 10-2000× faster than npm equivalents
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Scope Confirmation**
+> 
+> This is a massive undertaking adding 16 new crates organized in 4 phases:
+> - **Phase 1 (Data Layer):** dx-form, dx-query, dx-db
+> - **Phase 2 (Logic Layer):** dx-state, dx-auth, enhanced dx-cache
+> - **Phase 3 (Resilience):** dx-sync, dx-offline, dx-error, dx-guard, dx-interaction
+> - **Phase 4 (Polish):** dx-fallback, dx-a11y, dx-print, dx-rtl, dx-debug
+>
+> Each crate requires:
+> 1. New crate structure in `crates/`
+> 2. Integration with `dx-compiler` for compile-time processing
+> 3. Runtime integration with `dx-client` (WASM) and/or `dx-server`
+> 4. Binary protocol definitions
+> 5. Documentation and examples
+>
+> **Should we proceed with all 16 crates, or would you like to prioritize a subset?**
+
+> [!WARNING]
+> **Breaking Changes**
+> 
+> - Updated [Cargo.toml](file:///f:/Code/dx-www/Cargo.toml) workspace will require full rebuild
+> - `dx-compiler` will gain significant new parsing capabilities (schema, query, state definitions)
+> - `dx-client` binary size may temporarily increase until optimization
+> - Some crates (dx-db, dx-auth, dx-sync) require server-side infrastructure
+>
+> **Migration Impact:** Existing dx-www apps will continue working, but to use new features, they'll need to adopt the new `.dx` syntax extensions
+
+---
+
+## Proposed Changes
+
+### Phase 1: Data Layer (Days 1-4)
+
+---
+
+#### dx-form (Binary Validation Engine)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-form/Cargo.toml)
+
+Create new crate with dependencies:
+- `regex-automata` 0.4 - Pre-compiled regex patterns
+- `bitflags` 2.4 - Error bitmask flags
+- `bincode` 2.0.0-rc.3 - Binary serialization
+- `once_cell` 1.19 - Lazy static validators
+- `dx-packet` (internal) - Binary protocol
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-form/src/lib.rs)
+
+Core validator types:
+- `ValidationRule` enum (Email, MinLength, MaxLength, Pattern, Custom)
+- `ValidationResult` struct with bitmask errors
+- `FieldValidator` trait
+- Binary opcodes: `VALIDATE_FIELD` (0x60), `VALIDATION_RESULT` (0x61), `FORM_VALID` (0x62)
+
+##### [MODIFY] [dx-compiler/src/lib.rs](file:///f:/Code/dx-www/crates/compiler/src/lib.rs)
+
+Add schema parser module:
+- Parse `schema { }` blocks from `.dx` files
+- Generate Rust validator functions at compile time
+- Emit validation metadata to `.dxb` binary
+
+##### [MODIFY] [dx-client/src/lib.rs](file:///f:/Code/dx-www/crates/client/src/lib.rs)
+
+Integrate form validation runtime:
+- Import `dx_form` validator functions
+- Add event handler for input validation
+- Decode error bitmasks to messages
+
+---
+
+#### dx-query (Binary RPC Data Fetching)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-query/Cargo.toml)
+
+Dependencies:
+- `reqwest` 0.12 - HTTP client (server)
+- `gloo-net` 0.6 - HTTP client (WASM)
+- `bincode` 2.0.0-rc.3 - Binary serialization
+- `dashmap` 6.0 - Concurrent cache
+- `xxhash-rust` 0.8 - Fast hashing
+- `tokio` 1.35 - Async runtime
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-query/src/lib.rs)
+
+Components:
+- `QueryCache` with TTL
+- `BinaryRPC` encoder/decoder
+- `LiveSubscription` for WebSocket streams
+- Binary opcodes: `QUERY_REQUEST` (0x70), `QUERY_RESPONSE` (0x71), `QUERY_ERROR` (0x72), `QUERY_INVALIDATE` (0x73), `QUERY_SUBSCRIBE` (0x74), `QUERY_UPDATE` (0x75)
+
+##### [MODIFY] [dx-compiler/src/lib.rs](file:///f:/Code/dx-www/crates/compiler/src/lib.rs)
+
+Add query extraction:
+- Parse `query` function calls
+- Generate typed RPC endpoint stubs
+- Emit query metadata
+
+##### [MODIFY] [dx-server/src/lib.rs](file:///f:/Code/dx-www/crates/server/src/lib.rs)
+
+Add RPC handler:
+- Register query endpoints
+- Binary request/response handling
+
+---
+
+#### dx-db (Zero-Copy Database)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-db/Cargo.toml)
+
+Dependencies:
+- `sqlx` 0.7 with `compile-time-checks` feature
+- `tokio-postgres` 0.7 - Raw Postgres protocol
+- `deadpool-postgres` 0.12 - Connection pooling
+- `bytes` 1.5 - Zero-copy buffers
+- `zerocopy` 0.7 - Safe transmutation
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-db/src/lib.rs)
+
+Components:
+- `Schema` parser for database definitions
+- `QueryBuilder` with compile-time SQL checks
+- `#[repr(C)]` row struct generator
+- `BinaryAdapter` for zero-copy Postgres → WASM
+- Binary opcodes: `DB_QUERY` (0x90), `DB_RESULT` (0x91), `DB_ROW` (0x92), `DB_ERROR` (0x93), `DB_TRANSACTION` (0x94)
+
+##### [MODIFY] [dx-compiler/src/lib.rs](file:///f:/Code/dx-www/crates/compiler/src/lib.rs)
+
+Add database schema parsing:
+- Parse `schema.dx` files
+- Generate typed row structs
+- Verify SQL at compile time via `sqlx::query!`
+
+##### [MODIFY] [dx-server/Cargo.toml](file:///f:/Code/dx-www/crates/server/Cargo.toml)
+
+Add database dependencies:
+- `dx-db` (internal)
+- Connection pool initialization
+
+---
+
+### Phase 2: Logic Layer (Days 5-8)
+
+---
+
+#### dx-state (Binary State Management)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-state/Cargo.toml)
+
+Dependencies:
+- `bytemuck` 1.14 - Zero-copy casting
+- `atomic` 0.6 - Atomic operations
+- `parking_lot` 0.12 - Fast mutexes
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-state/src/lib.rs)
+
+Components:
+- `StateRegistry` maps state IDs to memory offsets
+- `DirtyTracker` using 64-bit bitmask
+- `Subscriber` system for change notifications
+- Binary opcodes: `STATE_INIT` (0x80), `STATE_SET` (0x81), `STATE_GET` (0x82), `STATE_SUBSCRIBE` (0x83), `STATE_NOTIFY` (0x84)
+
+##### [MODIFY] [dx-compiler/src/lib.rs](file:///f:/Code/dx-www/crates/compiler/src/lib.rs)
+
+Add state schema generation:
+- Parse `state` declarations
+- Generate `#[repr(C)]` state structs
+- Compute memory layout
+
+---
+
+#### dx-auth (Binary Authentication)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-auth/Cargo.toml)
+
+Dependencies:
+- `ed25519-dalek` 2.1 - Digital signatures
+- `rand` 0.8 - Secure randomness
+- `argon2` 0.5 - Password hashing
+- `webauthn-rs` 0.5 - Passkey support
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-auth/src/lib.rs)
+
+Components:
+- 64-byte binary token format (User ID, Expiry, Role bitmask, Session ID, Ed25519 signature)
+- `TokenGenerator` (server-side)
+- `TokenVerifier` (client-side via SubtleCrypto)
+- `SessionManager`
+- OAuth bridge for external providers
+
+##### [MODIFY] [dx-server/src/lib.rs](file:///f:/Code/dx-www/crates/server/src/lib.rs)
+
+Add auth middleware:
+- Token generation endpoints
+- Token verification middleware
+- Session storage
+
+---
+
+#### Enhanced dx-cache
+
+##### [MODIFY] [dx-cache/Cargo.toml](file:///f:/Code/dx-www/crates/cache/Cargo.toml)
+
+Add new dependencies:
+- `indexed_db_futures` 0.5 - IndexedDB wrapper
+- `web-sys` 0.3 with `CacheStorage` feature
+- `xxhash-rust` 0.8 - Content hashing
+- `lz4_flex` 0.11 - Fast compression
+
+##### [MODIFY] [dx-cache/src/lib.rs](file:///f:/Code/dx-www/crates/cache/src/lib.rs)
+
+Enhance existing cache:
+- Add `BinaryStore` using IndexedDB
+- Implement `DeltaApplier` for XOR patches
+- Add Service Worker integration
+- Target: < 2 ms reads, 60-80% compression
+
+---
+
+### Phase 3: Resilience Layer (Days 9-12)
+
+---
+
+#### dx-sync (Realtime Binary Protocol)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-sync/Cargo.toml)
+
+Dependencies:
+- `tokio-tungstenite` 0.21 - WebSocket server
+- `gloo-net` 0.6 - WebSocket client (WASM)
+- `dashmap` 6.0 - Concurrent subscriptions
+- `flume` 0.11 - Fast MPSC channels
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-sync/src/lib.rs)
+
+Components:
+- `ChannelManager` routes messages to subscribers
+- `BinaryEncoder` creates delta updates
+- `ReconnectHandler` auto-reconnects with state sync
+- Binary opcodes: `SYNC_SUBSCRIBE` (0xA0), `SYNC_UNSUBSCRIBE` (0xA1), `SYNC_MESSAGE` (0xA2), `SYNC_DELTA` (0xA3), `SYNC_ACK` (0xA4)
+
+##### [MODIFY] [dx-server/src/lib.rs](file:///f:/Code/dx-www/crates/server/src/lib.rs)
+
+Add WebSocket handler:
+- Channel subscription management
+- Binary message routing
+
+---
+
+#### dx-offline (CRDT Offline Engine)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-offline/Cargo.toml)
+
+Dependencies:
+- `yrs` 0.18 - Yjs CRDT implementation
+- `indexed_db_futures` 0.5 - Persistent storage
+- `bincode` 2.0.0-rc.3 - Serialization
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-offline/src/lib.rs)
+
+Components:
+- `CRDTStore` using Yjs documents
+- `SyncEngine` merges local/remote changes
+- `ConflictUI` for manual resolution (optional)
+- `Persistence` layer via IndexedDB
+
+---
+
+#### dx-error (Binary Error Boundaries)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-error/Cargo.toml)
+
+Dependencies:
+- `console_error_panic_hook` 0.1
+- `bincode` 2.0.0-rc.3
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-error/src/lib.rs)
+
+Components:
+- Panic hook for WASM panics
+- Error boundary system
+- Fallback renderer
+- Binary error reporter
+- Opcodes: `ERROR_BOUNDARY` (0xB0), `ERROR_RECOVER` (0xB1), `ERROR_REPORT` (0xB2)
+
+##### [MODIFY] [dx-client/src/lib.rs](file:///f:/Code/dx-www/crates/client/src/lib.rs)
+
+Integrate error boundaries:
+- Set panic hook on initialization
+- Isolate failed components
+- Render fallback UI
+
+---
+
+#### dx-guard (Extension Protection)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-guard/Cargo.toml)
+
+Dependencies:
+- `web-sys` 0.3 with `MutationObserver` feature
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-guard/src/lib.rs)
+
+Components:
+- `DOMMonitor` using MutationObserver
+- `SignatureChecker` verifies element integrity
+- `RepairEngine` restores tampered elements
+- `ReportSystem` logs interference
+
+---
+
+#### dx-interaction (User Action Preservation)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-interaction/Cargo.toml)
+
+Dependencies:
+- `web-sys` 0.3 with selection/focus APIs
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-interaction/src/lib.rs)
+
+Components:
+- `SelectionSaver` captures text selection
+- `FocusTracker` tracks focused element
+- `ScrollRecorder` records scroll positions
+- `StateRestorer` restores after DOM update
+- Opcodes: `INTERACTION_SAVE` (0xC0), `INTERACTION_RESTORE` (0xC1)
+
+---
+
+### Phase 4: Polish Layer (Days 13-16)
+
+---
+
+#### dx-fallback (HTML Fallback Mode)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-fallback/Cargo.toml)
+
+Dependencies:
+- `maud` 0.26 - HTML templating
+- `axum` 0.7 - HTTP routing
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-fallback/src/lib.rs)
+
+Components:
+- `WASMDetector` checks Accept header
+- `HTMLGenerator` renders full HTML (SSR)
+- `ProgressiveEnhancer` (client-side JS) upgrades to WASM
+
+##### [MODIFY] [dx-server/src/lib.rs](file:///f:/Code/dx-www/crates/server/src/lib.rs)
+
+Add fallback routing:
+- Detect WASM support
+- Serve binary stream OR full HTML
+
+---
+
+#### dx-a11y (Compile-Time Accessibility)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-a11y/Cargo.toml)
+
+Dependencies:
+- `oxc_parser` 0.22 - Fast AST parsing
+- `miette` 7.0 - Beautiful error reporting
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-a11y/src/lib.rs)
+
+Components:
+- `ASTAnalyzer` scans `.dx` files
+- `RuleEngine` with 100+ WCAG rules
+- `AutoFixer` suggests/applies fixes
+- `ReportGenerator` creates a11y report
+
+##### [MODIFY] [dx-compiler/src/lib.rs](file:///f:/Code/dx-www/crates/compiler/src/lib.rs)
+
+Add accessibility checks:
+- Parse AST for a11y issues
+- Fail build on critical errors
+- Emit warnings for best practices
+
+---
+
+#### dx-print (Print Stylesheet Generation)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-print/Cargo.toml)
+
+Dependencies:
+- `lightningcss` 1.23 - CSS transformation
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-print/src/lib.rs)
+
+Components:
+- `PrintAnalyzer` identifies printable content
+- `CSSGenerator` creates `@media print` rules
+- `PageBreakLogic` inserts page breaks
+
+##### [MODIFY] [dx-compiler/src/lib.rs](file:///f:/Code/dx-www/crates/compiler/src/lib.rs)
+
+Add print CSS generation:
+- Extract `print:` modifiers
+- Generate print.css automatically
+
+---
+
+#### dx-rtl (Right-to-Left Detection)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-rtl/Cargo.toml)
+
+Dependencies:
+- `unic-langid` 0.9 - Language identification
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-rtl/src/lib.rs)
+
+Components:
+- `LanguageDetector` identifies RTL languages (ar, he, fa, ur, yi)
+- `CSSFlipper` generates RTL CSS variants
+- `RuntimeSwitcher` applies RTL at runtime
+
+##### [MODIFY] [dx-compiler/src/lib.rs](file:///f:/Code/dx-www/crates/compiler/src/lib.rs)
+
+Add RTL support:
+- Convert `left/right` to `start/end`
+- Generate RTL-aware CSS
+
+---
+
+#### dx-debug (DevTools Bridge)
+
+##### [NEW] [Cargo.toml](file:///f:/Code/dx-www/crates/dx-debug/Cargo.toml)
+
+Dependencies:
+- `serde_json` 1.0 - JSON output
+- `console_log` 1.0 - Browser console
+
+##### [NEW] [lib.rs](file:///f:/Code/dx-www/crates/dx-debug/src/lib.rs)
+
+Components (for browser extension):
+- `BinaryDecoder` decodes binary → readable
+- `ComponentTree` shows virtual DOM
+- `StateInspector` shows binary state as JSON
+- `NetworkTab` decodes binary requests
+
+##### [MODIFY] [dx-client/src/lib.rs](file:///f:/Code/dx-www/crates/client/src/lib.rs)
+
+Add debug hooks:
+- Expose `window.__DX__` global
+- Provide decode functions
+
+---
+
+### Workspace Integration
+
+---
+
+#### [MODIFY] [Cargo.toml](file:///f:/Code/dx-www/Cargo.toml)
+
+Add all new crates to workspace:
+
+```toml
+members = [
+    # ... existing crates ...
+    
+    # Phase 1: Data Layer
+    "crates/dx-form",
+    "crates/dx-query",
+    "crates/dx-db",
+    
+    # Phase 2: Logic Layer
+    "crates/dx-state",
+    "crates/dx-auth",
+    
+    # Phase 3: Resilience
+    "crates/dx-sync",
+    "crates/dx-offline",
+    "crates/dx-error",
+    "crates/dx-guard",
+    "crates/dx-interaction",
+    
+    # Phase 4: Polish
+    "crates/dx-fallback",
+    "crates/dx-a11y",
+    "crates/dx-print",
+    "crates/dx-rtl",
+    "crates/dx-debug",
+]
+
+[workspace.dependencies]
+# ... existing deps ...
+
+# New deps for ecosystem crates
+regex-automata = "0.4"
+bitflags = "2.4"
+reqwest = "0.12"
+gloo-net = "0.6"
+dashmap = "6.0"
+xxhash-rust = "0.8"
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-rustls"] }
+tokio-postgres = "0.7"
+deadpool-postgres = "0.12"
+zerocopy = "0.7"
+ed25519-dalek = "2.1"
+argon2 = "0.5"
+webauthn-rs = "0.5"
+indexed_db_futures = "0.5"
+lz4_flex = "0.11"
+tokio-tungstenite = "0.21"
+flume = "0.11"
+yrs = "0.18"
+maud = "0.26"
+oxc_parser = "0.22"
+miette = "7.0"
+lightningcss = "1.23"
+unic-langid = "0.9"
+
+# Internal crate paths
+dx-form = { path = "crates/dx-form" }
+dx-query = { path = "crates/dx-query" }
+dx-db = { path = "crates/dx-db" }
+dx-state = { path = "crates/dx-state" }
+dx-auth = { path = "crates/dx-auth" }
+dx-sync = { path = "crates/dx-sync" }
+dx-offline = { path = "crates/dx-offline" }
+dx-error = { path = "crates/dx-error" }
+dx-guard = { path = "crates/dx-guard" }
+dx-interaction = { path = "crates/dx-interaction" }
+dx-fallback = { path = "crates/dx-fallback" }
+dx-a11y = { path = "crates/dx-a11y" }
+dx-print = { path = "crates/dx-print" }
+dx-rtl = { path = "crates/dx-rtl" }
+dx-debug = { path = "crates/dx-debug" }
+```
+
+---
+
+## Verification Plan
+
+### Automated Tests
+
+#### 1. Workspace Build
+```bash
+# From project root
+cargo build --all
+```
+**Expected:** All 30 crates compile without errors
+
+#### 2. WASM Size Verification
+```bash
+cargo build --release --target wasm32-unknown-unknown -p dx-client
+ls -lh target/wasm32-unknown-unknown/release/dx_client.wasm
+wasm-opt target/wasm32-unknown-unknown/release/dx_client.wasm -O4 -o dx_client_opt.wasm
+ls -lh dx_client_opt.wasm
+```
+**Expected:** Optimized WASM < 15 KB
+
+#### 3. Per-Crate Unit Tests
+```bash
+# Test each new crate individually
+cargo test -p dx-form
+cargo test -p dx-query
+cargo test -p dx-db
+cargo test -p dx-state
+cargo test -p dx-auth
+cargo test -p dx-sync
+cargo test -p dx-offline
+cargo test -p dx-error
+cargo test -p dx-guard
+cargo test -p dx-interaction
+cargo test -p dx-fallback
+cargo test -p dx-a11y
+cargo test -p dx-print
+cargo test -p dx-rtl
+cargo test -p dx-debug
+```
+**Expected:** All tests pass
+
+#### 4. Compiler Integration Tests
+```bash
+cargo test -p dx-compiler -- --test-threads=1
+```
+**Expected:** Compiler successfully parses schema, query, state definitions
+
+#### 5. Example App Build
+Create test app `examples/full-stack-demo` using all new features:
+```bash
+cd examples/full-stack-demo
+dx build
+```
+**Expected:** Compiles to valid `.dxb` and WASM
+
+### Manual Verification
+
+#### 6. Form Validation Demo
+**Steps:**
+1. Create `examples/form-demo/src/app.dx` with schema definition
+2. Run `dx dev`
+3. Open browser to localhost:3000
+4. Test input validation triggers on keystroke
+5. Verify error messages appear instantly
+
+**Expected:** Validation runs < 1ms per field
+
+#### 7. Query Demo
+**Steps:**
+1. Create `examples/query-demo/src/app.dx` with query calls
+2. Run `dx dev` with dev server
+3. Open Network tab in browser DevTools
+4. Trigger query
+5. Verify binary payload sent (not JSON)
+
+**Expected:** Binary request/response, cache hit on second load
+
+#### 8. Database Demo
+**Steps:**
+1. Set up local Postgres database
+2. Create `examples/db-demo/schema.dx`
+3. Run `dx build`
+4. Verify generated row structs are `#[repr(C)]`
+5. Query database and inspect response size
+
+**Expected:** Zero-copy deserialization, no JSON overhead
+
+#### 9. State Management Demo
+**Steps:**
+1. Create `examples/state-demo/src/app.dx` with state declaration
+2. Run `dx dev`
+3. Open browser, interact with UI
+4. Inspect memory layout in DevTools
+
+**Expected:** State reads are direct memory access
+
+#### 10. Offline Demo
+**Steps:**
+1. Create `examples/offline-demo`
+2. Run `dx dev`, open app
+3. Make changes to state
+4. Disable network
+5. Continue making changes
+6. Re-enable network
+7. Verify changes sync without conflicts
+
+**Expected:** CRDT merge < 10ms
+
+### Performance Benchmarks
+
+#### 11. Benchmark Suite
+Create `benchmarks/ecosystem.rs` to measure:
+- Form validation speed (target: < 1 µs)
+- Query cache hit time (target: < 1 µs)
+- State read/write (target: 1-2 CPU instructions)
+- Database query overhead (target: < 0.5 ms)
+- Realtime message latency (target: < 5 ms)
+
+```bash
+cargo bench --bench ecosystem
+```
+
+**Expected:** All targets met or exceeded
+
+### Documentation
+
+#### 12. README for Each Crate
+Each new crate must have:
+- Purpose statement
+- Quick example
+- API documentation
+- Performance characteristics
+
+#### 13. Main Architecture Update
+Update [docs/architecture/ARCHITECTURE.md](file:///f:/Code/dx-www/docs/architecture/ARCHITECTURE.md) to include:
+- New crate dependency graph
+- Binary protocol opcode table (0x60-0xC1)
+- Integration points diagram
+
+---
+
+## Success Criteria
+
+- ✅ All 30 crates (14 existing + 16 new) compile without errors
+- ✅ dx-client WASM remains < 15 KB after optimization
+- ✅ All unit tests pass
+- ✅ Performance benchmarks meet or exceed targets
+- ✅ Example apps demonstrate each new feature
+- ✅ Documentation complete for all new crates
+- ✅ Zero npm dependencies required for any feature

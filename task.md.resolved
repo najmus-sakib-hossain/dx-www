@@ -1,0 +1,213 @@
+# dx-www Ecosystem Expansion - 16 New Crates
+
+## Overview
+Add 16 new crates to replace the entire npm ecosystem for frontend development. Target: completion by Dec 31, 2025.
+
+---
+
+## Phase 1: The Data Layer (16-19 Dec) ⚡ PRIORITY
+
+### [ ] 1. dx-form - Binary Validation Engine
+- [ ] Create crate structure at `crates/dx-form`
+- [ ] Add dependencies: `regex-automata`, `bitflags`, `bincode`
+- [ ] Implement schema parser in `dx-compiler`
+- [ ] Build runtime validator (WASM)
+- [ ] Add error bitmask decoder
+- [ ] Define binary protocol opcodes (0x60-0x62)
+- [ ] Target: < 1 µs validation per field
+
+### [ ] 2. dx-query - Binary RPC Data Fetching
+- [ ] Create crate structure at `crates/dx-query`
+- [ ] Add dependencies: `reqwest`, `gloo-net`, `bincode`, `dashmap`, `xxhash-rust`, `tokio`
+- [ ] Build query compiler in `dx-compiler`
+- [ ] Implement RPC generator
+- [ ] Create query cache with TTL
+- [ ] Add WebSocket subscription handler
+- [ ] Define binary protocol opcodes (0x70-0x75)
+- [ ] Target: < 0.1 ms query overhead
+
+### [ ] 3. dx-db - Zero-Copy Database
+- [ ] Create crate structure at `crates/dx-db`
+- [ ] Add dependencies: `sqlx`, `tokio-postgres`, `deadpool-postgres`, `bytes`, `zerocopy`
+- [ ] Build schema parser in `dx-compiler`
+- [ ] Implement compile-time SQL verification
+- [ ] Create #[repr(C)] row struct generator
+- [ ] Build binary adapter for Postgres
+- [ ] Add zero-copy reader (client-side)
+- [ ] Define binary protocol opcodes (0x90-0x94)
+- [ ] Target: < 0.5 ms query overhead, 500k rows/sec
+
+---
+
+## Phase 2: The Logic Layer (20-23 Dec)
+
+### [ ] 4. dx-state - Binary State Management
+- [ ] Create crate structure at `crates/dx-state`
+- [ ] Add dependencies: `bytemuck`, `atomic`, `parking_lot`
+- [ ] Build state schema generator in `dx-compiler`
+- [ ] Implement state registry
+- [ ] Create dirty tracker (64-bit bitmask)
+- [ ] Build subscriber system
+- [ ] Define binary protocol opcodes (0x80-0x84)
+- [ ] Target: 1-2 CPU instructions for read/write
+
+### [ ] 5. dx-auth - Binary Authentication
+- [ ] Create crate structure at `crates/dx-auth`
+- [ ] Add dependencies: `ed25519-dalek`, `rand`, `argon2`, `webauthn-rs`
+- [ ] Build token generator (server-side)
+- [ ] Implement token verifier (client-side via SubtleCrypto)
+- [ ] Create session manager
+- [ ] Add OAuth bridge
+- [ ] Design 64-byte token format
+
+### [ ] 6. dx-cache - Enhanced (building on existing)
+- [ ] Extend existing `crates/dx-cache`
+- [ ] Add dependencies: `indexed_db_futures`, `web-sys`, `xxhash-rust`, `lz4_flex`
+- [ ] Build cache manager
+- [ ] Implement binary store (IndexedDB)
+- [ ] Create delta applier (XOR patches)
+- [ ] Add service worker integration
+- [ ] Target: < 2 ms cache read, 60-80% compression
+
+---
+
+## Phase 3: The Resilience Layer (24-27 Dec)
+
+### [ ] 7. dx-sync - Realtime Binary Protocol
+- [ ] Create crate structure at `crates/dx-sync`
+- [ ] Add dependencies: `tokio-tungstenite`, `gloo-net`, `dashmap`, `flume`
+- [ ] Build channel manager (server-side)
+- [ ] Implement binary encoder
+- [ ] Create reconnect handler (client-side)
+- [ ] Add delta applier
+- [ ] Define binary protocol opcodes (0xA0-0xA4)
+- [ ] Target: < 5 ms latency, 1M concurrent connections
+
+### [ ] 8. dx-offline - CRDT Offline Engine
+- [ ] Create crate structure at `crates/dx-offline`
+- [ ] Add dependencies: `yrs`, `indexed_db_futures`, `bincode`
+- [ ] Build CRDT store
+- [ ] Implement sync engine
+- [ ] Create conflict UI
+- [ ] Add persistence layer
+- [ ] Target: < 10 ms merge time, 30+ day offline
+
+### [ ] 9. dx-error - Binary Error Boundaries
+- [ ] Create crate structure at `crates/dx-error`
+- [ ] Add dependencies: `console_error_panic_hook`, `bincode`
+- [ ] Implement panic hook
+- [ ] Build error boundary system
+- [ ] Create fallback renderer
+- [ ] Add error reporter
+- [ ] Define binary protocol opcodes (0xB0-0xB2)
+
+### [ ] 10. dx-guard - Extension Protection
+- [ ] Create crate structure at `crates/dx-guard`
+- [ ] Add dependencies: `web-sys`
+- [ ] Build DOM monitor (MutationObserver)
+- [ ] Implement signature checker
+- [ ] Create repair engine
+- [ ] Add report system
+
+### [ ] 11. dx-interaction - User Action Preservation
+- [ ] Create crate structure at `crates/dx-interaction`
+- [ ] Add dependencies: `web-sys`
+- [ ] Build selection saver
+- [ ] Implement focus tracker
+- [ ] Create scroll recorder
+- [ ] Add state restorer
+- [ ] Define binary protocol opcodes (0xC0-0xC1)
+
+---
+
+## Phase 4: The Polish Layer (28-31 Dec)
+
+### [ ] 12. dx-fallback - HTML Fallback Mode
+- [ ] Create crate structure at `crates/dx-fallback`
+- [ ] Add dependencies: `maud`, `axum`
+- [ ] Build WASM detector (server-side)
+- [ ] Implement HTML generator
+- [ ] Create progressive enhancer (client-side JS)
+
+### [ ] 13. dx-a11y - Compile-Time Accessibility
+- [ ] Create crate structure at `crates/dx-a11y`
+- [ ] Add dependencies: `oxc_parser`, `miette`
+- [ ] Build AST analyzer in `dx-compiler`
+- [ ] Implement rule engine (100+ WCAG rules)
+- [ ] Create auto-fixer
+- [ ] Add report generator
+
+### [ ] 14. dx-print - Print Stylesheet Generation
+- [ ] Create crate structure at `crates/dx-print`
+- [ ] Add dependencies: `lightningcss`
+- [ ] Build print analyzer in `dx-compiler`
+- [ ] Implement CSS generator
+- [ ] Create page break logic
+
+### [ ] 15. dx-rtl - Right-to-Left Detection
+- [ ] Create crate structure at `crates/dx-rtl`
+- [ ] Add dependencies: `unic-langid`
+- [ ] Build language detector in `dx-compiler`
+- [ ] Implement CSS flipper
+- [ ] Create runtime switcher
+- [ ] Support: Arabic, Hebrew, Persian, Urdu, Yiddish
+
+### [ ] 16. dx-debug - DevTools Bridge
+- [ ] Create crate structure at `crates/dx-debug`
+- [ ] Add dependencies: `serde_json`, `console_log`
+- [ ] Build binary decoder (browser extension)
+- [ ] Implement component tree viewer
+- [ ] Create state inspector
+- [ ] Add network tab integration
+
+---
+
+## Integration Tasks
+
+### [ ] Update workspace Cargo.toml
+- [ ] Add all 16 new crates to workspace members
+- [ ] Add new dependencies to workspace.dependencies
+- [ ] Add internal crate paths (dx-form, dx-query, etc.)
+
+### [ ] Update dx-compiler
+- [ ] Integrate schema parser (dx-form)
+- [ ] Add query extraction (dx-query)
+- [ ] Implement state schema generation (dx-state)
+- [ ] Add database schema parsing (dx-db)
+- [ ] Integrate accessibility checks (dx-a11y)
+- [ ] Add print CSS generation (dx-print)
+- [ ] Implement RTL detection (dx-rtl)
+
+### [ ] Update dx-client
+- [ ] Integrate form validator runtime
+- [ ] Add query cache
+- [ ] Implement state registry
+- [ ] Add error boundaries
+- [ ] Integrate interaction preservation
+- [ ] Add DOM guard
+- [ ] Include auth token verifier
+
+### [ ] Update dx-server
+- [ ] Add database connection pooling
+- [ ] Integrate auth token generation
+- [ ] Add WebSocket channel manager (dx-sync)
+- [ ] Implement fallback HTML generator
+- [ ] Add OAuth bridge
+
+### [ ] Documentation
+- [ ] Create README for each crate
+- [ ] Update main architecture docs
+- [ ] Add examples for each feature
+- [ ] Create comparison benchmarks
+- [ ] Write migration guide from npm packages
+
+---
+
+## Success Criteria
+
+- ✅ All 16 crates compile without errors
+- ✅ Binary size: dx-client remains < 15 KB
+- ✅ Performance targets met for each crate
+- ✅ All crates integrated with dx-compiler
+- ✅ Examples working for each feature
+- ✅ Zero npm dependencies required
