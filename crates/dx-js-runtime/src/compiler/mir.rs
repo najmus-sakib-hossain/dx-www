@@ -191,6 +191,105 @@ pub struct TypedGlobal {
     pub ty: Type,
 }
 
+/// Builder for a single function
+pub struct FunctionBuilder {
+    pub id: FunctionId,
+    pub name: String,
+    pub params: Vec<TypedParam>,
+    pub return_type: Type,
+    pub blocks: Vec<TypedBlock>,
+    pub locals: Vec<TypedLocal>,
+    pub current_block: BlockId,
+    next_local_id: u32,
+    next_block_id: u32,
+}
+
+impl FunctionBuilder {
+    pub fn new(id: FunctionId, name: String) -> Self {
+        Self {
+            id,
+            name,
+            params: Vec::new(),
+            return_type: Type::Primitive(PrimitiveType::F64),
+            blocks: vec![TypedBlock {
+                id: BlockId(0),
+                instructions: Vec::new(),
+                terminator: Terminator::Return(None),
+            }],
+            locals: Vec::new(),
+            current_block: BlockId(0),
+            next_local_id: 0,
+            next_block_id: 1,
+        }
+    }
+
+    pub fn add_local(&mut self, name: String, ty: Type) -> LocalId {
+        let id = LocalId(self.next_local_id);
+        self.next_local_id += 1;
+        self.locals.push(TypedLocal {
+            name,
+            ty,
+            index: id.0,
+        });
+        id
+    }
+
+    pub fn add_param(&mut self, name: String, ty: Type) -> LocalId {
+        let id = LocalId(self.next_local_id);
+        self.next_local_id += 1;
+        self.params.push(TypedParam {
+            name: name.clone(),
+            ty: ty.clone(),
+            index: id.0,
+        });
+        self.locals.push(TypedLocal {
+            name,
+            ty,
+            index: id.0,
+        });
+        id
+    }
+
+    pub fn emit(&mut self, inst: TypedInstruction) {
+        if let Some(block) = self.blocks.iter_mut().find(|b| b.id == self.current_block) {
+            block.instructions.push(inst);
+        }
+    }
+
+    pub fn new_block(&mut self) -> BlockId {
+        let id = BlockId(self.next_block_id);
+        self.next_block_id += 1;
+        self.blocks.push(TypedBlock {
+            id,
+            instructions: Vec::new(),
+            terminator: Terminator::Unreachable,
+        });
+        id
+    }
+
+    pub fn set_terminator(&mut self, term: Terminator) {
+        if let Some(block) = self.blocks.iter_mut().find(|b| b.id == self.current_block) {
+            block.terminator = term;
+        }
+    }
+
+    pub fn switch_to_block(&mut self, id: BlockId) {
+        self.current_block = id;
+    }
+
+    pub fn build(self) -> TypedFunction {
+        TypedFunction {
+            id: self.id,
+            name: self.name,
+            params: self.params,
+            return_type: self.return_type,
+            blocks: self.blocks,
+            locals: self.locals,
+            is_pure: false,
+        }
+    }
+}
+
 /// Lower typed AST to MIR
 pub fn lower_to_mir(_typed_ast: &TypedAST) -> DxResult<TypedMIR> {
     // Create a simple entry point for now

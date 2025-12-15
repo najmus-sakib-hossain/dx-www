@@ -2,9 +2,11 @@
 
 pub mod ast_lowering;
 pub mod codegen;
+pub mod expressions;
 pub mod mir;
 pub mod optimize;
 pub mod parser;
+pub mod statements;
 pub mod type_solver;
 
 use crate::error::DxResult;

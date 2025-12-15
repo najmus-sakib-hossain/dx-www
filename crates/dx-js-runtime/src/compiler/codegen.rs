@@ -1,6 +1,9 @@
 //! Cranelift code generation with built-in function support
 
-use crate::compiler::mir::*;
+use crate::compiler::mir::{
+    BinOpKind, BlockId, Constant, FunctionId, LocalId, PrimitiveType, Terminator,
+    Type, TypedFunction, TypedInstruction, TypedMIR,
+};
 use crate::compiler::OptLevel;
 use crate::error::{DxError, DxResult};
 use crate::value::Value;
@@ -9,6 +12,9 @@ use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{FuncId, Linkage, Module};
 use cranelift_codegen::ir::FuncRef;
 use std::collections::HashMap;
+
+// Alias to avoid name collision with our mir::FunctionBuilder
+use cranelift::prelude::FunctionBuilder as CraneliftFunctionBuilder;
 
 /// A compiled module ready for execution
 pub struct CompiledModule {
@@ -252,7 +258,7 @@ impl CodeGenerator {
         func: &TypedFunction,
         func_refs: &HashMap<u32, FuncRef>,
     ) -> DxResult<()> {
-        let mut builder = FunctionBuilder::new(&mut ctx.func, func_ctx);
+        let mut builder = CraneliftFunctionBuilder::new(&mut ctx.func, func_ctx);
 
         // Create block map
         let mut block_map: HashMap<BlockId, Block> = HashMap::new();
@@ -300,7 +306,7 @@ impl CodeGenerator {
 
     fn compile_instruction(
         &self,
-        builder: &mut FunctionBuilder,
+        builder: &mut CraneliftFunctionBuilder,
         inst: &TypedInstruction,
         locals: &mut HashMap<LocalId, cranelift::prelude::Value>,
         func_refs: &HashMap<u32, FuncRef>,
@@ -456,7 +462,7 @@ impl CodeGenerator {
 
     fn compile_terminator(
         &self,
-        builder: &mut FunctionBuilder,
+        builder: &mut CraneliftFunctionBuilder,
         term: &Terminator,
         locals: &HashMap<LocalId, cranelift::prelude::Value>,
         block_map: &HashMap<BlockId, Block>,
