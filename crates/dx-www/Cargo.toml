@@ -1,5 +1,5 @@
 [package]
-name = "dx-compiler"
+name = "dx-www"
 version = "0.1.0"
 edition = "2021"
 authors = ["Dx-WWW Team"]
@@ -10,10 +10,6 @@ license = "MIT OR Apache-2.0"
 name = "dx_compiler"
 path = "src/lib.rs"
 
-[[bin]]
-name = "dx"
-path = "src/main.rs"
-
 [dependencies]
 # CLI & Terminal
 clap = { version = "4.5", features = ["derive", "cargo"] }
@@ -21,8 +17,6 @@ console = "0.15"
 indicatif = "0.17"  # Loading bars
 
 # Parsing (The Heavy Lifting)
-# Using regex-based parser for MVP speed
-# Production will use OXC once API is stable
 regex = "1.10"
 
 # Serialization
@@ -66,5 +60,4 @@ dx-rtl = { path = "../dx-rtl"}
 
 
 [dev-dependencies]
-tempfile = "3.8"
-
+# tempfile = "3.8"

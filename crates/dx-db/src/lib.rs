@@ -140,7 +140,7 @@ impl QueryResult {
 
     /// Get rows as slices (zero-copy)
     #[inline]
-    pub fn rows<T: FromBytes>(&self) -> impl Iterator<Item = &T> {
+    pub fn rows<'a, T: FromBytes + 'a>(&'a self) -> impl Iterator<Item = &'a T> {
         let row_size = core::mem::size_of::<T>();
         (0..self.row_count as usize).filter_map(move |i| {
             let start = i * row_size;
@@ -212,8 +212,8 @@ pub mod binary {
         buf.extend_from_slice(&(sql_bytes.len() as u32).to_le_bytes());
         buf.extend_from_slice(sql_bytes);
 
-        // Encode params (simplified - would use bincode in production)
-        let param_bytes = bincode::serialize(params).unwrap_or_default();
+        // Encode params (simplified - using serde_json as fallback since bincode 2.x has different API)
+        let param_bytes = serde_json::to_vec(params).unwrap_or_default();
         buf.extend_from_slice(&(param_bytes.len() as u32).to_le_bytes());
         buf.extend_from_slice(&param_bytes);
 

@@ -35,7 +35,7 @@ pub mod opcodes {
 
 bitflags! {
     /// Validation error bitmask (up to 16 error types per field)
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct ValidationErrors: u16 {
         const REQUIRED = 1 << 0;
         const EMAIL_INVALID = 1 << 1;
@@ -53,6 +53,26 @@ bitflags! {
         const CUSTOM_4 = 1 << 13;
         const CUSTOM_5 = 1 << 14;
         const CUSTOM_6 = 1 << 15;
+    }
+}
+
+// Manual serde implementation for ValidationErrors
+impl Serialize for ValidationErrors {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_u16(self.bits())
+    }
+}
+
+impl<'de> Deserialize<'de> for ValidationErrors {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let bits = u16::deserialize(deserializer)?;
+        Ok(ValidationErrors::from_bits_truncate(bits))
     }
 }
 

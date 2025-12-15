@@ -1,129 +1,16 @@
-//! # Dx Compiler - The Factory
-//!
-//! The Transpiler-to-Binary Pipeline that converts `.tsx` into machine-executable `.dxb` and `.wasm`.
-//!
-//! ## Philosophy
-//! "Separate Structure from Logic."
-//! - Input: Developer writes `App.tsx`
-//! - Parse: Use `swc` to parse the AST
-//! - Split: Separate Static HTML from Dynamic Expressions
-//! - Gen A: Serialize Static HTML to `layout.bin` (bincode)
-//! - Gen B: Transpile Dynamic Logic to Rust (`generated.rs`)
-//! - Compile: Invoke `rustc` to compile `generated.rs` into `logic.wasm`
-//!
-//! This gives you the performance of Rust WASM with the syntax of TypeScript.
-
+use crate::{analyzer, codegen, codegen_macro, codegen_micro, dev_server, linker, packer, parser, splitter};
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-mod analyzer;
-mod codegen;
-mod codegen_macro;
-mod codegen_micro;
-mod config;
-mod dev_server;
-mod linker;
-mod loader;
-mod packer;
-mod parser;
-mod pwa;
-mod rpc;
-mod splitter;
-
-#[derive(Parser)]
-#[command(name = "dx")]
-#[command(about = "Dx Compiler - Transpiler-to-Binary Pipeline", long_about = None)]
-#[command(version)]
-struct Cli {
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Build the project into optimized .dxb artifacts
-    Build {
-        /// Entry point directory (default: pages)
-        #[arg(short, long, default_value = "pages")]
-        entry: PathBuf,
-
-        /// Output directory (default: dist)
-        #[arg(short, long, default_value = "dist")]
-        output: PathBuf,
-
-        /// Enable verbose logging
-        #[arg(short, long)]
-        verbose: bool,
-
-        /// Skip WASM optimization (faster builds)
-        #[arg(long)]
-        skip_optimize: bool,
-    },
-
-    /// Start development mode with hot-swap
-    Dev {
-        /// Entry point directory (default: pages)
-        #[arg(short, long, default_value = "pages")]
-        entry: PathBuf,
-
-        /// Port for dev server (default: 3000)
-        #[arg(short, long, default_value = "3000")]
-        port: u16,
-
-        /// Enable verbose logging
-        #[arg(short, long)]
-        verbose: bool,
-    },
-
-    /// Create a new Dx project
-    New {
-        /// Project name
-        name: String,
-
-        /// Use template (minimal, counter, todomvc)
-        #[arg(short, long, default_value = "minimal")]
-        template: String,
-    },
-}
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    let cli = Cli::parse();
-
-    match cli.command {
-        Commands::Build {
-            entry,
-            output,
-            verbose,
-            skip_optimize,
-        } => {
-            build_project(entry, output, verbose, skip_optimize).await?;
-        }
-        Commands::Dev {
-            entry,
-            port,
-            verbose,
-        } => {
-            run_dev_server(entry, port, verbose).await?;
-        }
-        Commands::New { name, template } => {
-            create_new_project(name, template)?;
-        }
-    }
-
-    Ok(())
-}
-
-/// Build the project into optimized artifacts
-async fn build_project(
+/// Build the project into optimized artifacts (CLI version with progress bars)
+pub async fn build(
     entry: PathBuf,
     output: PathBuf,
     verbose: bool,
-    skip_optimize: bool,
+    _skip_optimize: bool,
 ) -> Result<()> {
     let start_time = Instant::now();
 
@@ -141,9 +28,6 @@ async fn build_project(
             .unwrap()
             .progress_chars("##-"),
     );
-
-    // Silence unused warning for now
-    let _ = skip_optimize;
 
     // Step 0: Linker Scan (The Omni-Linker)
     pb.set_message("Linking project symbols...");
@@ -258,6 +142,18 @@ async fn build_project(
     Ok(())
 }
 
+/// Run development server with hot-swap
+pub async fn dev(entry: PathBuf, port: u16, verbose: bool) -> Result<()> {
+    println!("{}", style("🔥 Dx Dev Server - Hot Module Replacement").bold().cyan());
+    println!();
+    println!("  {} http://localhost:{}", style("Local:").dim(), port);
+    println!();
+
+    dev_server::start(entry, port, verbose).await?;
+
+    Ok(())
+}
+
 /// Copy the appropriate runtime WASM based on variant selection
 fn copy_runtime_wasm(
     output: &Path,
@@ -303,31 +199,6 @@ fn copy_runtime_wasm(
 
     fs::copy(&runtime_src, &runtime_dest)
         .with_context(|| format!("Failed to copy runtime from {}", runtime_src.display()))?;
-
-    Ok(())
-}
-
-/// Run development server with hot-swap
-async fn run_dev_server(entry: PathBuf, port: u16, verbose: bool) -> Result<()> {
-    println!("{}", style("🔥 Dx Dev Server - Hot Module Replacement").bold().cyan());
-    println!();
-    println!("  {} http://localhost:{}", style("Local:").dim(), port);
-    println!();
-
-    dev_server::start(entry, port, verbose).await?;
-
-    Ok(())
-}
-
-/// Create a new Dx project from template
-fn create_new_project(name: String, template: String) -> Result<()> {
-    println!("{}", style(format!("📦 Creating new project: {}", name)).bold().cyan());
-    println!("  Template: {}", template);
-    println!();
-
-    // TODO: Implement project scaffolding
-    println!("{}", style("⚠️  Project creation not yet implemented").yellow());
-    println!("For now, copy the examples/hello-world template manually.");
 
     Ok(())
 }

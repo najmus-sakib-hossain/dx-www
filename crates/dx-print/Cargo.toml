@@ -10,4 +10,4 @@ description = "Print stylesheet generator"
 path = "src/lib.rs"
 
 [dependencies]
-lightningcss = "1.23"
+lightningcss = "1.0.0-alpha.68"

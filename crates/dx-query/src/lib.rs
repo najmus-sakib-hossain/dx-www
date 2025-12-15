@@ -238,9 +238,9 @@ impl<T: Clone> QueryClient<T> {
     }
 
     /// Execute a query with caching
-    pub async fn query<F, Fut>(&self, key: QueryKey, fetcher: F) -> Result<T, String>
+    pub async fn query<F, Fut>(&self, key: QueryKey, mut fetcher: F) -> Result<T, String>
     where
-        F: FnOnce() -> Fut,
+        F: FnMut() -> Fut,
         Fut: std::future::Future<Output = Result<T, String>>,
     {
         // Check cache first

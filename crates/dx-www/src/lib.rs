@@ -24,6 +24,7 @@ pub mod dev_server;
 
 // Ecosystem integrations
 pub mod ecosystem;
+pub mod cmd;
 
 pub use analyzer::*;
 pub use linker::*;

@@ -25,17 +25,15 @@ dashmap = "6.0"
 # async runtime
 tokio = { version = "1.35", features = ["sync", "time"], optional = true }
 
-# For WASM (client-side)
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-gloo-net = "0.6"
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
-js-sys = "0.3"
-web-sys = { version = "0.3", features = ["Headers", "Request", "RequestInit", "RequestMode", "Response", "Window"] }
+# HTTP client (server)
+reqwest = { version = "0.12", features = ["json"], optional = true }
 
-# For native (server-side)
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-reqwest = { version = "0.12", features = ["json"] }
+# WASM (client)
+gloo-net = { version = "0.6", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
+wasm-bindgen-futures = { version = "0.4", optional = true }
+js-sys = { version = "0.3", optional = true }
+web-sys = { version = "0.3", features = ["Headers", "Request", "RequestInit", "RequestMode", "Response", "Window"], optional = true }
 
 # Internal dependencies
 dx-packet = { workspace = true, features = ["std"], optional = true }
@@ -44,7 +42,7 @@ dx-packet = { workspace = true, features = ["std"], optional = true }
 default = ["std", "tokio"]
 std = ["dx-packet"]
 server = ["tokio", "reqwest"]
-wasm = ["gloo-net"]
+wasm = ["gloo-net", "wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys"]
 
 [dev-dependencies]
 tokio = { version = "1.35", features = ["full", "test-util"] }
