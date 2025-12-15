@@ -245,3 +245,44 @@ The web allows it.
 **dx reigns.**
 
 **Forever.** 🔥
+
+
+The most beautiful thing about dx-www and dx is that it has tools and all tools perfectly work together and not only that its has designed in a way that they also work standalone too have backups if they ever fail.
+
+dx-www is not only like react what has virtual DOM with some similar thing around that concpet, as I 7+ years experienced reactsjs and nextjs developer I know its has some more stuffs but its only the most cool concept there and they just call it a day. But dx-www is way more than that because it has been designed to work in the real world with all the messiness that comes with it. If a dinosour browser don't have wasm then dx-www can fallback to html mode, if some browser extension messes with the dom then dx-guard will take care of it, if user is selecting text and some data update comes in then dx-interaction will make sure user experience is not broken, if some firewall blocks binary data then dx-stealth will make sure it fallbacks to json mode. But its really just of the the many things that dx-www can do as what about the concept of dx-www stlye what uese u16 numbers to represent classnames and also group similar classnames for to make only one class out of it? And the fact that dx-www has first class support for wasm means other compiled languages like pythong, go, c, cpp - yeah you can use it in using yet another npm packages but its not safe like dx-www and its not built-in support. And the list goes on and on. As you can see dx-www is not only a framework its a whole ecosystem of tools that work together to make the best possible experience for both developers and users.
+
+Please study this codebase and please crate a drizzle-orm killer - As in dx-www we control everything unlike drizzle-orm which is a our competitor so please make sure to take this advantage of controlling everything in the codebase and then make dx-orm with best unique game changing features which will replace drizzle-orm and make it the best ORM for the world. And in dx-www you just have to control the envs from our one and only "dx" config file and if no configs are available then we will use the default sqlite database of the db!!!
+
+Now, for dx-www we have 15 tools and all of them are built-in and we control everything and we can make it the best possible experience for both developers and users. So, please list if we create all these dx-www tools then what will be replacing in this current reactjs, nextjs and nodejs world? And how much it will be better than the current reactjs, nextjs and nodejs world?
+form
+query
+state
+db
+orm
+cache
+sync
+offline
+error
+fallback
+interaction
+guard
+debug
+a11y
+print
+rtl
+
+dx-form	Binary validation (replaces RHF + Zod)
+dx-query	Binary RPC data fetching (replaces TanStack)
+dx-state	Binary state management (replaces Zustand)
+dx-fallback	HTML mode for no-WASM browsers
+dx-error	Binary error boundaries
+dx-guard	Extension protection
+dx-interaction	User action preservation
+dx-debug DevTools extension
+dx-db	Zero-copy database
+dx-stealth	Firewall bypass (JSON fallback)
+dx-offline	30-day offline + CRDT sync
+dx-test	Testing framework
+dx-a11y	Accessibility auditor
+dx-print	Print stylesheet generation
+dx-rtl	RTL auto-detection
