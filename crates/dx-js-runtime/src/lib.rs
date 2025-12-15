@@ -24,10 +24,18 @@
 
 pub mod compiler;
 pub mod debugger;
+pub mod deploy;
+pub mod distributed;
 pub mod error;
+pub mod gpu;
+pub mod io;
+pub mod profiler;
 pub mod runtime;
+pub mod simd;
 pub mod snapshot;
 pub mod value;
+pub mod wasm;
+pub mod workers;
 
 pub use compiler::{CompiledModule, Compiler, CompilerConfig};
 pub use error::{DxError, DxResult};
