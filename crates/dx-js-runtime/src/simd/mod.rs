@@ -1,5 +1,9 @@
 //! SIMD operations for vectorized computation
 
+pub mod console;
+
+pub use console::{BatchConsole, console_log_number, console_flush};
+
 use crate::error::{DxError, DxResult};
 
 #[derive(Debug, Clone)]

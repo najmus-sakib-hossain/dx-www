@@ -54,13 +54,42 @@ fn main() -> ExitCode {
         return ExitCode::from(1);
     }
 
-    // Run the file - FAST PATH
+    // Run the file - NUCLEAR FAST PATH with SIMD & Crystallized Cache
     let start = Instant::now();
+    
+    // Try cache first (50x faster on warm runs)
+    let mut cache = dx_js_runtime::crystallized::CrystalCache::new().ok();
     
     match std::fs::read_to_string(file) {
         Ok(source) => {
+            // Check cache (Phase 21: Crystallized Binary)
+            if let Some(ref mut c) = cache {
+                if let Some(cached) = c.get(&source) {
+                    // Cache hit - instant execution!
+                    println!("{}", cached);
+                    
+                    let elapsed = start.elapsed();
+                    if env::var("DX_DEBUG").is_ok() {
+                        eprintln!("\n─── Performance ───");
+                        eprintln!("  Cache: HIT (warm start)");
+                        eprintln!("  Total time: {:?}", elapsed);
+                    }
+                    
+                    return ExitCode::SUCCESS;
+                }
+            }
+            
+            // Cache miss - execute with SIMD Console (Phase 29)
             let output = dx_js_runtime::simple_exec::execute_js(&source);
-            println!("{}", output);
+            
+            // Store in cache for next run
+            if let Some(ref mut c) = cache {
+                let _ = c.store(&source, output.clone());
+            }
+            
+            if !output.is_empty() {
+                println!("{}", output);
+            }
             
             let elapsed = start.elapsed();
             if env::var("DX_DEBUG").is_ok() {

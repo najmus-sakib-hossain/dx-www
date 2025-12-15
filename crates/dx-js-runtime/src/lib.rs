@@ -33,6 +33,8 @@ pub mod profiler;
 pub mod runtime;
 pub mod simd;
 pub mod simple_exec;
+pub mod zero_copy;
+pub mod crystallized;
 pub mod snapshot;
 pub mod value;
 pub mod wasm;

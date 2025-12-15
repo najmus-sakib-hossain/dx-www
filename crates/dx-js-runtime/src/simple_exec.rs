@@ -1,5 +1,6 @@
 // Minimal working JS interpreter - no fancy types, just works!
 use std::collections::HashMap;
+use crate::simd::console::BatchConsole;
 
 pub fn execute_js(source: &str) -> String {
     let mut vars: HashMap<String, f64> = HashMap::new();
