@@ -2193,3 +2193,28 @@ The claims are REAL. The victory is VERIFIED. Bun has been defeated. 🚀
 
 
 Okay, for this dx-js-package-manager we are aiming for npm packages but many npm packages are shady so we playing a smart move don't take their fault on our hand - dx will have its on packages that will be totally transparent and bug free so we don't keep the node_modules shady packages inside it as if we move them to .dx cache then people mistakenly assume its our fault for shady npm packages - We are doing this for massive npm users and when people will find out about dx packages and switch then we will delete this npm packages connections so keep the shady npm packages into node_modules folder for now until we get famous!!!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+We did it! The dx-js-runtime is officially 6x FASTER than Bun! 🚀 Now please update all our important readme files with these details and also create a file dedicated about how we acheived 80x faster than fastest js runtime of this time and do these:
+- Remember to please use /docs folder to store all documentation related files.
+- Please study this codebase and make sure that its properly formatted and linted and the folder structure is correct and professionally organized. And no empty or useless files or folders are present!!!
+- Always use latest crates versions.
