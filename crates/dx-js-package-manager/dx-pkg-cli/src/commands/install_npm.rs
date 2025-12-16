@@ -25,10 +25,10 @@ use tokio::sync::mpsc;
 // Internal crates
 use crate::background::{ConversionJob, Priority, init_background_converter, queue_conversions};
 use dx_pkg_converter::{PackageConverter, format::DxpFile};
+use dx_pkg_install::instant::{CacheStatus, InstantInstaller, format_speedup};
+use dx_pkg_layout::{LayoutCache, ResolvedPackage, compute_packages_hash};
 use dx_pkg_npm::NpmClient;
 use dx_pkg_resolve::LocalResolver;
-use dx_pkg_layout::{LayoutCache, ResolvedPackage, compute_packages_hash};
-use dx_pkg_install::instant::{InstantInstaller, CacheStatus, format_speedup};
 
 /// Optimized install - streaming resolution + parallel download + cache-first
 pub async fn install(frozen: bool, production: bool) -> Result<()> {
@@ -54,14 +54,14 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
     // ═══════════════════════════════════════════════════════════
     // BREAKTHROUGH: Try O(1) instant install FIRST!
     // ═══════════════════════════════════════════════════════════
-    
+
     // Check if we have a lock file with resolved packages
     if let Ok(lock_content) = tokio::fs::read("dx.lock.json").await {
         // Parse lock file to get resolved packages
         if let Ok(lock_json) = serde_json::from_slice::<serde_json::Value>(&lock_content) {
             if let Some(packages_array) = lock_json.get("packages").and_then(|p| p.as_array()) {
                 let mut resolved_packages = Vec::new();
-                
+
                 for pkg_obj in packages_array {
                     if let (Some(name), Some(version), Some(url)) = (
                         pkg_obj.get("name").and_then(|n| n.as_str()),
@@ -75,66 +75,84 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
                         });
                     }
                 }
-                
+
                 if !resolved_packages.is_empty() {
                     let mut instant_installer = InstantInstaller::new()?;
-                    
+
                     // Try instant install
                     if let Some(result) = instant_installer.try_install(&resolved_packages)? {
                         let elapsed = start.elapsed();
-                        
+
                         println!("{}", style("✅ Done!").green().bold());
                         println!("   Total time:    {:.2}ms", elapsed.as_secs_f64() * 1000.0);
-                        
+
                         match result.cache_status {
                             CacheStatus::LayoutHit => {
-                                println!("   Install time:  {:.2}ms (O(1) symlink!)", result.duration.as_secs_f64() * 1000.0);
+                                println!(
+                                    "   Install time:  {:.2}ms (O(1) symlink!)",
+                                    result.duration.as_secs_f64() * 1000.0
+                                );
                             }
                             CacheStatus::LayoutBuilt => {
-                                println!("   Install time:  {:.2}ms (built layout)", result.duration.as_secs_f64() * 1000.0);
+                                println!(
+                                    "   Install time:  {:.2}ms (built layout)",
+                                    result.duration.as_secs_f64() * 1000.0
+                                );
                             }
                             _ => {}
                         }
-                        
+
                         println!("   Packages:      {}", result.package_count);
                         println!();
-                        
+
                         // Calculate speedup vs Bun baseline (345ms for lodash)
                         let bun_baseline = std::time::Duration::from_millis(345);
                         let speedup_str = format_speedup(elapsed, bun_baseline);
-                        println!("{}", style(format!("🚀 {} faster than Bun (warm)!", speedup_str)).cyan().bold());
-                        
+                        println!(
+                            "{}",
+                            style(format!("🚀 {} faster than Bun (warm)!", speedup_str))
+                                .cyan()
+                                .bold()
+                        );
+
                         return Ok(());
                     }
-                    
+
                     // Check if we can extract from tarball cache
                     let cache_dir = get_cache_dir();
                     let all_cached = resolved_packages.iter().all(|pkg| {
-                        let tarball_name = format!("{}-{}.tgz", pkg.name.replace('/', "-"), pkg.version);
+                        let tarball_name =
+                            format!("{}-{}.tgz", pkg.name.replace('/', "-"), pkg.version);
                         cache_dir.join(tarball_name).exists()
                     });
-                    
+
                     if all_cached {
                         println!("📦 Extracting and building layout...");
                         let extract_start = Instant::now();
-                        
+
                         let layout_cache = instant_installer.layout_cache_mut();
-                        
+
                         // Extract all packages in parallel
                         use rayon::prelude::*;
                         resolved_packages.par_iter().try_for_each(|pkg| {
-                            let tarball_name = format!("{}-{}.tgz", pkg.name.replace('/', "-"), pkg.version);
+                            let tarball_name =
+                                format!("{}-{}.tgz", pkg.name.replace('/', "-"), pkg.version);
                             let tarball_path = cache_dir.join(tarball_name);
-                            layout_cache.ensure_extracted(&pkg.name, &pkg.version, &tarball_path)?;
+                            layout_cache.ensure_extracted(
+                                &pkg.name,
+                                &pkg.version,
+                                &tarball_path,
+                            )?;
                             Ok::<_, anyhow::Error>(())
                         })?;
-                        
+
                         let extract_time = extract_start.elapsed();
-                        
+
                         // Build layout and install
                         let project_hash = compute_packages_hash(&resolved_packages);
-                        let layout_path = layout_cache.build_layout(project_hash, &resolved_packages)?;
-                        
+                        let layout_path =
+                            layout_cache.build_layout(project_hash, &resolved_packages)?;
+
                         let node_modules = std::env::current_dir()?.join("node_modules");
                         if node_modules.exists() {
                             #[cfg(windows)]
@@ -143,7 +161,7 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
                                 let _ = junction::delete(&node_modules);
                                 let _ = tokio::fs::remove_dir_all(&node_modules).await;
                             }
-                            
+
                             #[cfg(unix)]
                             {
                                 if node_modules.is_symlink() || node_modules.read_link().is_ok() {
@@ -153,34 +171,37 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
                                 }
                             }
                         }
-                        
+
                         // Create symlink/junction to layout
                         #[cfg(unix)]
                         std::os::unix::fs::symlink(&layout_path, &node_modules)?;
-                        
+
                         #[cfg(windows)]
                         junction::create(&layout_path, &node_modules)?;
-                        
+
                         let elapsed = start.elapsed();
-                        
+
                         println!();
                         println!("{}", style("✅ Done!").green().bold());
                         println!("   Total time:    {:.2}ms", elapsed.as_secs_f64() * 1000.0);
                         println!("   Extract:       {:.2}ms", extract_time.as_secs_f64() * 1000.0);
                         println!("   Packages:      {}", resolved_packages.len());
                         println!();
-                        
+
                         let bun_baseline = std::time::Duration::from_millis(345);
                         let speedup_str = format_speedup(elapsed, bun_baseline);
-                        println!("{}", style(format!("🚀 {} faster than Bun!", speedup_str)).cyan().bold());
-                        
+                        println!(
+                            "{}",
+                            style(format!("🚀 {} faster than Bun!", speedup_str)).cyan().bold()
+                        );
+
                         return Ok(());
                     }
                 }
             }
         }
     }
-    
+
     // Fall through to cold install if warm install not possible
     println!("🔧 Cold install (will be instant next time)...");
     println!();
@@ -425,7 +446,7 @@ async fn install_packages_threetier(
         .unwrap_or(&project_root)
         .join(".dx-cache")
         .join("extracted");
-    
+
     // Fallback: use home directory if can't create project-level cache
     let extracted_dir = if tokio::fs::create_dir_all(&extracted_dir).await.is_ok() {
         extracted_dir
@@ -478,8 +499,8 @@ async fn install_packages_threetier(
 /// Falls back to copy if hardlink fails (cross-drive)
 /// OPTIMIZED: Batch directory creation + fast hardlinking
 async fn hardlink_directory(source: &PathBuf, target: &PathBuf) -> Result<()> {
-    use std::fs;
     use std::collections::HashSet;
+    use std::fs;
     use walkdir::WalkDir;
 
     let source = source.clone();
@@ -495,7 +516,7 @@ async fn hardlink_directory(source: &PathBuf, target: &PathBuf) -> Result<()> {
         for entry in WalkDir::new(&source).min_depth(1).into_iter().filter_map(|e| e.ok()) {
             let path = entry.path();
             let relative = path.strip_prefix(&source)?;
-            
+
             if entry.file_type().is_dir() {
                 dirs.insert(target.join(relative));
             } else if entry.file_type().is_file() {
@@ -533,7 +554,7 @@ async fn hardlink_directory(source: &PathBuf, target: &PathBuf) -> Result<()> {
 async fn install_from_binary(binary_path: &PathBuf, target_dir: &PathBuf) -> Result<()> {
     let binary_path = binary_path.clone();
     let target_dir = target_dir.clone();
-    
+
     // Do all I/O in blocking thread for maximum performance
     tokio::task::spawn_blocking(move || {
         // Read and deserialize binary file
@@ -556,7 +577,8 @@ async fn install_from_binary(binary_path: &PathBuf, target_dir: &PathBuf) -> Res
         }
 
         Ok::<(), anyhow::Error>(())
-    }).await??;
+    })
+    .await??;
 
     Ok(())
 }
@@ -752,10 +774,7 @@ async fn write_lock_file_with_resolved(
         .iter()
         .map(|(name, version, path, cached)| {
             let key = format!("{}@{}", name, version);
-            let tarball = resolved_map
-                .get(&key)
-                .map(|p| p.tarball_url.clone())
-                .unwrap_or_default();
+            let tarball = resolved_map.get(&key).map(|p| p.tarball_url.clone()).unwrap_or_default();
 
             serde_json::json!({
                 "name": name,

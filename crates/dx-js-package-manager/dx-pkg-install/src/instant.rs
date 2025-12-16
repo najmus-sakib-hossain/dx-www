@@ -4,9 +4,9 @@
 //! we do O(1) - just symlink to a pre-built layout.
 
 use dx_pkg_layout::{LayoutCache, ResolvedPackage, compute_packages_hash};
+use std::io;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
-use std::io;
 
 /// Installation result
 #[derive(Debug)]
@@ -45,7 +45,10 @@ impl InstantInstaller {
     }
 
     /// Try instant install (returns None if cold install needed)
-    pub fn try_install(&mut self, packages: &[ResolvedPackage]) -> io::Result<Option<InstantInstallResult>> {
+    pub fn try_install(
+        &mut self,
+        packages: &[ResolvedPackage],
+    ) -> io::Result<Option<InstantInstallResult>> {
         let start = Instant::now();
 
         // Compute project hash
@@ -80,7 +83,7 @@ impl InstantInstaller {
                     let _ = junction::delete(&node_modules);
                     let _ = std::fs::remove_dir_all(&node_modules);
                 }
-                
+
                 #[cfg(unix)]
                 {
                     if node_modules.is_symlink() || node_modules.read_link().is_ok() {
@@ -121,7 +124,7 @@ impl InstantInstaller {
                     let _ = junction::delete(&node_modules);
                     let _ = std::fs::remove_dir_all(&node_modules);
                 }
-                
+
                 #[cfg(unix)]
                 {
                     if node_modules.is_symlink() || node_modules.read_link().is_ok() {
@@ -160,8 +163,7 @@ impl InstantInstaller {
                 let tarball_path = tarball_cache_dir.join(tarball_name);
 
                 if tarball_path.exists() {
-                    self.layout_cache
-                        .ensure_extracted(&pkg.name, &pkg.version, &tarball_path)?;
+                    self.layout_cache.ensure_extracted(&pkg.name, &pkg.version, &tarball_path)?;
                 } else {
                     // Tarball not cached - need full download
                     return Err(io::Error::new(
@@ -185,7 +187,7 @@ impl InstantInstaller {
                 let _ = junction::delete(&node_modules);
                 let _ = std::fs::remove_dir_all(&node_modules);
             }
-            
+
             #[cfg(unix)]
             {
                 if node_modules.is_symlink() || node_modules.read_link().is_ok() {
@@ -215,8 +217,7 @@ impl InstantInstaller {
         #[cfg(windows)]
         {
             // Use junction on Windows (no admin rights needed)
-            junction::create(target, link)
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            junction::create(target, link).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         }
 
         Ok(())

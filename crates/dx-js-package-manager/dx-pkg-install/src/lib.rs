@@ -6,9 +6,9 @@
 use dx_pkg_cache::IntelligentCache;
 use dx_pkg_core::{Result, hash::ContentHash};
 use dx_pkg_fetch::{DownloadRequest, ParallelFetcher, Priority};
+use dx_pkg_layout::LayoutCache;
 use dx_pkg_link::{LinkStats, PackageLinker};
 use dx_pkg_lock::{DxlBuilder, DxlLock};
-use dx_pkg_layout::LayoutCache;
 use dx_pkg_registry::DxrpClient;
 use dx_pkg_resolve::{Dependency, PackageId}; // Removed DependencyResolver
 use dx_pkg_store::DxpStore;

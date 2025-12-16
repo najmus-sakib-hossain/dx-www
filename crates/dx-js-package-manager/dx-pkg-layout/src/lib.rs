@@ -113,8 +113,11 @@ impl LayoutIndex {
                 }
             }
 
+            // Drop mmap immediately to avoid file locking issues on Windows
+            drop(mmap);
+
             Ok(Self {
-                mmap: Some(mmap),
+                mmap: None,
                 path: path.to_path_buf(),
                 entries,
             })
@@ -132,10 +135,7 @@ impl LayoutIndex {
     }
 
     pub fn add(&mut self, project_hash: u128, package_count: u32) -> io::Result<()> {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
         let entry = LayoutEntry {
             project_hash,
@@ -151,11 +151,8 @@ impl LayoutIndex {
     }
 
     fn save(&self) -> io::Result<()> {
-        let mut file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open(&self.path)?;
+        let mut file =
+            OpenOptions::new().create(true).write(true).truncate(true).open(&self.path)?;
 
         let header = LayoutIndexHeader {
             magic: *b"DXLC",
@@ -189,9 +186,7 @@ pub struct ResolvedPackage {
 
 impl LayoutCache {
     pub fn new() -> io::Result<Self> {
-        let root = dirs::cache_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join("dx");
+        let root = dirs::cache_dir().unwrap_or_else(|| PathBuf::from(".")).join("dx");
 
         let extracted_dir = root.join("extracted");
         let layouts_dir = root.join("layouts");
@@ -232,12 +227,16 @@ impl LayoutCache {
     /// Get path to extracted package
     pub fn extracted_path(&self, name: &str, version: &str) -> PathBuf {
         let safe_name = name.replace('/', "-");
-        self.extracted_dir
-            .join(format!("{}-{}", safe_name, version))
+        self.extracted_dir.join(format!("{}-{}", safe_name, version))
     }
 
     /// Extract a package (if not already extracted)
-    pub fn ensure_extracted(&self, name: &str, version: &str, tarball_path: &Path) -> io::Result<PathBuf> {
+    pub fn ensure_extracted(
+        &self,
+        name: &str,
+        version: &str,
+        tarball_path: &Path,
+    ) -> io::Result<PathBuf> {
         let path = self.extracted_path(name, version);
 
         if path.exists() {
@@ -246,9 +245,12 @@ impl LayoutCache {
 
         // Extract to temp, then atomic rename
         let safe_name = name.replace('/', "-");
-        let temp_path = self
-            .extracted_dir
-            .join(format!(".tmp-{}-{}-{}", safe_name, version, std::process::id()));
+        let temp_path = self.extracted_dir.join(format!(
+            ".tmp-{}-{}-{}",
+            safe_name,
+            version,
+            std::process::id()
+        ));
 
         // Create temp directory
         std::fs::create_dir_all(&temp_path)?;
@@ -304,9 +306,27 @@ impl LayoutCache {
         }
 
         // Build in temp directory first
-        let temp_path = self
-            .layouts_dir
-            .join(format!(".tmp-{:032x}-{}", project_hash, std::process::id()));
+        let temp_path =
+            self.layouts_dir
+                .join(format!(".tmp-{:032x}-{}", project_hash, std::process::id()));
+
+        // Clean up any existing temp directory
+        if temp_path.exists() {
+            #[cfg(windows)]
+            {
+                // Clean up any junctions in temp dir
+                if let Ok(entries) = std::fs::read_dir(&temp_path) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            let _ = junction::delete(&path);
+                        }
+                    }
+                }
+            }
+            let _ = std::fs::remove_dir_all(&temp_path);
+        }
+
         std::fs::create_dir_all(&temp_path)?;
 
         // Create symlinks to extracted packages
@@ -333,6 +353,12 @@ impl LayoutCache {
             #[cfg(windows)]
             {
                 // Create directory junction on Windows (no admin rights needed)
+                // Clean up first if exists
+                if link_path.exists() {
+                    let _ = junction::delete(&link_path);
+                    let _ = std::fs::remove_dir_all(&link_path);
+                }
+
                 junction::create(&extracted, &link_path)
                     .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
             }
@@ -341,7 +367,19 @@ impl LayoutCache {
         // Atomic rename
         if let Err(e) = std::fs::rename(&temp_path, &layout_path) {
             // If rename failed (maybe another process created it), clean up temp
+            #[cfg(windows)]
+            {
+                if let Ok(entries) = std::fs::read_dir(&temp_path) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            let _ = junction::delete(&path);
+                        }
+                    }
+                }
+            }
             let _ = std::fs::remove_dir_all(&temp_path);
+
             if layout_path.exists() {
                 self.index.add(project_hash, packages.len() as u32)?;
                 return Ok(layout_path);
