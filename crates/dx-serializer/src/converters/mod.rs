@@ -12,6 +12,7 @@ pub mod json;
 pub mod toml;
 pub mod toon;
 pub mod yaml;
+pub mod dx_ultra;
 
 pub use json::json_to_dx;
 pub use toml::toml_to_dx;
