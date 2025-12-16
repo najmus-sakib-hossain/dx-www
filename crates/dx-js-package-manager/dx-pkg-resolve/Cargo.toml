@@ -11,6 +11,7 @@ dx-pkg-npm = { path = "../dx-pkg-npm" }
 
 # Async
 tokio = { version = "1.42", features = ["full"] }
+futures = "0.3"
 
 # Semver
 semver = "1.0"

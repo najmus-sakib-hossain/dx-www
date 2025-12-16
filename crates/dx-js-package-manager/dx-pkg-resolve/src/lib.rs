@@ -64,8 +64,10 @@ impl LocalResolver {
         }
     }
 
-    /// Resolve all dependencies from package.json manifest
+    /// Resolve all dependencies from package.json manifest (PARALLEL!)
     pub async fn resolve(&mut self, dependencies: &HashMap<String, String>) -> Result<ResolvedGraph> {
+        use futures::stream::{self, StreamExt};
+        
         let mut resolved = ResolvedGraph::new();
         let mut queue: VecDeque<(String, String)> = VecDeque::new();
         let mut seen: HashSet<String> = HashSet::new();
@@ -75,36 +77,61 @@ impl LocalResolver {
             queue.push_back((name.clone(), version.clone()));
         }
 
-        // BFS resolution
-        while let Some((name, constraint)) = queue.pop_front() {
-            let key = format!("{}@{}", name, constraint);
-            if seen.contains(&key) {
-                continue;
-            }
-            seen.insert(key);
-
-            // Fetch abbreviated metadata from npm (faster than full)
-            let metadata = self.npm.get_abbreviated(&name).await
-                .with_context(|| format!("Failed to fetch metadata for {}", name))?;
-
-            // Find best matching version
-            let version = Self::find_best_version(&metadata, &constraint)?;
-            let version_info = metadata.versions.get(&version)
-                .ok_or_else(|| anyhow::anyhow!("Version {} not found for {}", version, name))?;
-
-            // Add to resolved graph
-            let package = ResolvedPackage {
-                name: name.clone(),
-                version: version.clone(),
-                tarball_url: version_info.dist.tarball.clone(),
-                dependencies: version_info.dependencies.clone(),
-            };
+        // Parallel BFS resolution (process 32 at a time)
+        while !queue.is_empty() {
+            let batch_size = queue.len().min(32);
+            let batch: Vec<_> = queue.drain(..batch_size).collect();
             
-            resolved.add(package.clone());
-
-            // Queue transitive dependencies
-            for (dep_name, dep_constraint) in &package.dependencies {
-                queue.push_back((dep_name.clone(), dep_constraint.clone()));
+            // Mark as seen BEFORE fetching (prevents duplicate fetches)
+            for (name, constraint) in &batch {
+                let key = format!("{}@{}", name, constraint);
+                seen.insert(key);
+            }
+            
+            // Fetch all in parallel!
+            let results: Vec<_> = stream::iter(batch)
+                .map(|(name, constraint)| {
+                    let npm = &self.npm;
+                    let name_owned = name.clone();
+                    let constraint_owned = constraint.clone();
+                    async move {
+                        // Fetch metadata
+                        let metadata = npm.get_abbreviated(&name_owned).await
+                            .with_context(|| format!("Failed to fetch metadata for {}", name_owned))?;
+                        
+                        // Find best version
+                        let version = Self::find_best_version(&metadata, &constraint_owned)?;
+                        let version_info = metadata.versions.get(&version)
+                            .ok_or_else(|| anyhow::anyhow!("Version {} not found for {}", version, name_owned))?;
+                        
+                        // Return package + its deps
+                        let package = ResolvedPackage {
+                            name: name_owned,
+                            version,
+                            tarball_url: version_info.dist.tarball.clone(),
+                            dependencies: version_info.dependencies.clone(),
+                        };
+                        
+                        Ok::<_, anyhow::Error>(package)
+                    }
+                })
+                .buffer_unordered(32) // 32 concurrent requests!
+                .collect()
+                .await;
+            
+            // Process results
+            for result in results {
+                let package = result?;
+                
+                // Queue transitive dependencies
+                for (dep_name, dep_constraint) in &package.dependencies {
+                    let key = format!("{}@{}", dep_name, dep_constraint);
+                    if !seen.contains(&key) {
+                        queue.push_back((dep_name.clone(), dep_constraint.clone()));
+                    }
+                }
+                
+                resolved.add(package);
             }
         }
 

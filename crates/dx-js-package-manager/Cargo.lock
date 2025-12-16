@@ -808,6 +808,7 @@ dependencies = [
  "anyhow",
  "dx-pkg-core",
  "dx-pkg-npm",
+ "futures",
  "petgraph",
  "semver",
  "serde",
