@@ -4,6 +4,8 @@ members = [
     "dx-pkg-core",
     "dx-pkg-format",
     "dx-pkg-registry",
+    "dx-pkg-registry-server",
+    "dx-pkg-converter",
     "dx-pkg-store",
     "dx-pkg-resolve",
     "dx-pkg-lock",
@@ -14,6 +16,11 @@ members = [
     "dx-pkg-workspace",
     "dx-pkg-compat",
     "dx-pkg-cli",
+    "dx-pkg-cache",
+    "dx-pkg-install",
+    "dx-pkg-security",
+    "dx-pkg-integration-tests",
+    "dx-pkg-vite-plugin",
 ]
 
 [workspace.package]
