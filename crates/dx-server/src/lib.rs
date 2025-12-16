@@ -34,6 +34,7 @@ pub mod delta;
 mod handlers;
 mod ssr;
 pub mod stream;
+pub mod memory_optimized;
 
 // Ecosystem integrations
 pub mod ecosystem;

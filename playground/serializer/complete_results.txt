@@ -1,0 +1,122 @@
+   Compiling serde_derive v1.0.228
+   Compiling zerocopy-derive v0.8.31
+   Compiling ptr_meta_derive v0.3.1
+   Compiling bytecheck_derive v0.8.2
+   Compiling munge_macro v0.4.7
+   Compiling bytemuck_derive v1.10.2
+   Compiling thiserror-impl v2.0.17
+   Compiling prost-derive v0.13.5
+   Compiling serializer-benchmark v0.1.0 (F:\Code\dx\playground\serializer)
+   Compiling rkyv_derive v0.8.12
+   Compiling ptr_meta v0.3.1
+   Compiling rancor v0.1.1
+   Compiling munge v0.4.7
+   Compiling bytecheck v0.8.2
+   Compiling rend v0.5.3
+   Compiling bytemuck v1.24.0
+   Compiling zerocopy v0.8.31
+   Compiling thiserror v2.0.17
+   Compiling prost v0.13.5
+   Compiling serde v1.0.228
+   Compiling half v2.7.1
+   Compiling toml_datetime v0.6.11
+   Compiling serde_spanned v0.6.9
+   Compiling tinytemplate v1.2.1
+   Compiling serde_yaml v0.9.34+deprecated
+   Compiling bincode v1.3.3
+   Compiling ciborium-ll v0.2.2
+   Compiling toml_edit v0.22.27
+   Compiling ciborium v0.2.2
+   Compiling criterion v0.5.1
+   Compiling rkyv v0.8.12
+   Compiling toml v0.8.23
+   Compiling dx-serializer v0.1.0 (F:\Code\dx\crates\dx-serializer)
+warning: unused import: `format_array`
+ --> F:\Code\dx\crates\dx-serializer\src\converters\toon.rs:4:24
+  |
+4 | use crate::optimizer::{format_array, optimize_key};
+  |                        ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::optimizer`
+  --> F:\Code\dx\crates\dx-serializer\src\converters\mod.rs:21:5
+   |
+21 | use crate::optimizer;
+   |     ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::io::Write`
+  --> F:\Code\dx\crates\dx-serializer\src\converters\mod.rs:22:5
+   |
+22 | use std::io::Write;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `FLAG_HAS_HEAP`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:3:35
+  |
+3 | use super::header::{DxZeroHeader, FLAG_HAS_HEAP};
+  |                                   ^^^^^^^^^^^^^
+
+warning: unused import: `super::types::Result`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:5:5
+  |
+5 | use super::types::Result;
+  |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `DxZeroError` and `Result as ZeroResult`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\format.rs:6:26
+  |
+6 | use crate::zero::types::{DxZeroError, Result as ZeroResult};
+  |                          ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::zero::MAGIC as DX_ZERO_MAGIC`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\format.rs:7:5
+  |
+7 | use crate::zero::MAGIC as DX_ZERO_MAGIC;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:154:17
+    |
+154 |             let mut slot = DxZeroSlot::heap_reference(offset, bytes.len() as u32);
+    |                 ----^^^^
+    |                 |
+    |                 help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:178:19
+    |
+178 |     pub fn finish(mut self) -> usize {
+    |                   ----^^^^
+    |                   |
+    |                   help: remove this `mut`
+
+warning: unexpected `cfg` condition value: `capnproto`
+  --> src\lib.rs:79:7
+   |
+79 | #[cfg(feature = "capnproto")]
+   |       ^^^^^^^^^^^^^^^^^^^^^ help: remove the condition
+   |
+   = note: no expected values for `feature`
+   = help: consider adding `capnproto` as a feature in `Cargo.toml`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: `serializer-benchmark` (lib) generated 1 warning
+warning: `dx-serializer` (lib) generated 9 warnings (run `cargo fix --lib -p dx-serializer` to apply 9 suggestions)
+warning: associated items `HEAP_OFFSET` and `age` are never used
+  --> benches\all_serializers.rs:27:11
+   |
+24 | impl UserDxZero {
+   | --------------- associated items in this implementation
+...
+27 |     const HEAP_OFFSET: usize = 73;
+   |           ^^^^^^^^^^^
+...
+43 |     fn age(&self) -> u32 {
+   |        ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+

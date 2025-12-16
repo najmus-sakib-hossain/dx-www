@@ -1,0 +1,19 @@
+[package]
+name = "dx-benchmark-json"
+version = "0.1.0"
+edition = "2021"
+description = "JSON serialization benchmarks comparing dx-serializer vs serde_json"
+publish = false
+
+[workspace]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dx-serializer = { path = "../../crates/dx-serializer" }
+criterion = "0.5"
+rand = "0.8"
+
+[[bench]]
+name = "json_benchmark"
+harness = false
