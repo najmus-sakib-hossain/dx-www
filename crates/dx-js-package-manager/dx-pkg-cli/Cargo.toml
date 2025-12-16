@@ -19,6 +19,7 @@ dx-pkg-fetch = { path = "../dx-pkg-fetch" }
 dx-pkg-store = { path = "../dx-pkg-store" }
 dx-pkg-link = { path = "../dx-pkg-link" }
 dx-pkg-lock = { path = "../dx-pkg-lock" }
+dx-pkg-layout = { path = "../dx-pkg-layout" }
 dx-pkg-registry = { path = "../dx-pkg-registry" }
 dx-pkg-cache = { path = "../dx-pkg-cache" }
 dx-pkg-install = { path = "../dx-pkg-install" }
@@ -53,6 +54,12 @@ console = "0.15"
 # Tarball extraction (for three-tier caching)
 flate2 = "1.0"
 tar = "0.4"
+walkdir = "2.4"
+rayon = "1.10"
+
+# Windows junction points (symlinks without admin)
+[target.'cfg(windows)'.dependencies]
+junction = "1.1"
 
 # Time
 chrono = "0.4"

@@ -15,6 +15,10 @@ dx-pkg-verify = { path = "../dx-pkg-verify" }
 dx-pkg-store = { path = "../dx-pkg-store" }
 dx-pkg-link = { path = "../dx-pkg-link" }
 dx-pkg-lock = { path = "../dx-pkg-lock" }
+dx-pkg-layout = { path = "../dx-pkg-layout" }
 dx-pkg-registry = { path = "../dx-pkg-registry" }
 tokio = { version = "1.35", features = ["full"] }
 thiserror = "2.0"
+
+[target.'cfg(windows)'.dependencies]
+junction = "1.1"

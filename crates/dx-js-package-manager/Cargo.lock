@@ -687,6 +687,7 @@ dependencies = [
  "dx-pkg-extract",
  "dx-pkg-fetch",
  "dx-pkg-install",
+ "dx-pkg-layout",
  "dx-pkg-link",
  "dx-pkg-lock",
  "dx-pkg-npm",
@@ -698,13 +699,16 @@ dependencies = [
  "flate2",
  "futures",
  "indicatif",
+ "junction",
  "lz4_flex",
  "once_cell",
+ "rayon",
  "serde",
  "serde_json",
  "tar",
  "tokio",
  "tracing",
+ "walkdir",
 ]
 
 [[package]]
@@ -795,12 +799,14 @@ dependencies = [
  "dx-pkg-compat",
  "dx-pkg-core",
  "dx-pkg-fetch",
+ "dx-pkg-layout",
  "dx-pkg-link",
  "dx-pkg-lock",
  "dx-pkg-registry",
  "dx-pkg-resolve",
  "dx-pkg-store",
  "dx-pkg-verify",
+ "junction",
  "thiserror 2.0.17",
  "tokio",
 ]
@@ -816,6 +822,25 @@ dependencies = [
  "dx-pkg-resolve",
  "tempfile",
  "tokio",
+]
+
+[[package]]
+name = "dx-pkg-layout"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "dirs",
+ "dx-pkg-core",
+ "flate2",
+ "junction",
+ "memmap2",
+ "pathdiff",
+ "rayon",
+ "tar",
+ "tempfile",
+ "thiserror 2.0.17",
+ "walkdir",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -1700,6 +1725,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "junction"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c52f6e1bf39a7894f618c9d378904a11dbd7e10fe3ec20d1173600e79b1408d8"
+dependencies = [
+ "scopeguard",
+ "windows-sys 0.60.2",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1896,6 +1931,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pathdiff"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2038,7 +2079,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls 0.23.35",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "thiserror 2.0.17",
  "tokio",
  "tracing",
@@ -2075,9 +2116,9 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]

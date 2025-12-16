@@ -8,12 +8,15 @@ use dx_pkg_core::{Result, hash::ContentHash};
 use dx_pkg_fetch::{DownloadRequest, ParallelFetcher, Priority};
 use dx_pkg_link::{LinkStats, PackageLinker};
 use dx_pkg_lock::{DxlBuilder, DxlLock};
+use dx_pkg_layout::LayoutCache;
 use dx_pkg_registry::DxrpClient;
 use dx_pkg_resolve::{Dependency, PackageId}; // Removed DependencyResolver
 use dx_pkg_store::DxpStore;
 use dx_pkg_verify::PackageVerifier;
 use std::path::Path;
 use std::time::{Duration, Instant};
+
+pub mod instant;
 
 /// Installation report
 #[derive(Debug, Clone)]
