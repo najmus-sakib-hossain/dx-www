@@ -6,7 +6,8 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::path::PathBuf;
 
 pub mod error;
 pub use error::{Error, Result};
@@ -16,6 +17,7 @@ pub use error::{Error, Result};
 pub struct NpmClient {
     client: Client,
     registry_url: String,
+    cache_dir: PathBuf,
 }
 
 /// Full package metadata from npm registry
@@ -51,7 +53,7 @@ pub struct NpmVersionInfo {
 }
 
 /// Distribution information (tarball URL and checksums)
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NpmDist {
     pub tarball: String,
     pub shasum: String,
@@ -63,7 +65,7 @@ pub struct NpmDist {
 }
 
 /// Abbreviated metadata (faster, smaller response)
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AbbreviatedMetadata {
     pub name: String,
     pub modified: String,
@@ -73,7 +75,7 @@ pub struct AbbreviatedMetadata {
 }
 
 /// Abbreviated version info
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AbbreviatedVersion {
     pub name: String,
     pub version: String,
@@ -97,9 +99,17 @@ impl NpmClient {
             .build()
             .expect("Failed to build HTTP client");
 
+        // Setup metadata cache directory
+        let cache_dir = dirs::home_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join(".dx")
+            .join("metadata-cache");
+        std::fs::create_dir_all(&cache_dir).ok();
+
         Self {
             client,
             registry_url: url.into(),
+            cache_dir,
         }
     }
 
@@ -127,7 +137,16 @@ impl NpmClient {
 
     /// Fetch abbreviated metadata (faster, for resolution)
     /// Uses npm's install-v1 format which is much smaller
+    /// NOW WITH DISK CACHE! (24-hour expiration)
     pub async fn get_abbreviated(&self, name: &str) -> Result<AbbreviatedMetadata> {
+        // Check cache first
+        let cache_path = self.cache_dir.join(format!("{}.json", name.replace('/', "_")));
+        
+        if let Ok(cached) = self.load_cached_metadata(&cache_path) {
+            return Ok(cached);
+        }
+        
+        // Cache miss - fetch from npm
         let url = format!("{}/{}", self.registry_url, name);
         
         let response = self.client
@@ -146,7 +165,49 @@ impl NpmClient {
             .await
             .map_err(|e| Error::ParseError(e.to_string()))?;
 
+        // Save to cache (ignore errors)
+        self.save_cached_metadata(&cache_path, &metadata).ok();
+
         Ok(metadata)
+    }
+
+    /// Load cached metadata if it exists and is fresh (< 24 hours)
+    fn load_cached_metadata(&self, path: &PathBuf) -> Result<AbbreviatedMetadata> {
+        if !path.exists() {
+            return Err(Error::PackageNotFound("cache miss".into()));
+        }
+
+        // Check age
+        let metadata = std::fs::metadata(path)
+            .map_err(|_| Error::PackageNotFound("cache read error".into()))?;
+        let modified = metadata.modified()
+            .map_err(|_| Error::PackageNotFound("cache time error".into()))?;
+        let age = SystemTime::now()
+            .duration_since(modified)
+            .unwrap_or(Duration::from_secs(0));
+
+        // Expire after 24 hours
+        if age > Duration::from_secs(24 * 60 * 60) {
+            std::fs::remove_file(path).ok();
+            return Err(Error::PackageNotFound("cache expired".into()));
+        }
+
+        // Load from disk
+        let data = std::fs::read_to_string(path)
+            .map_err(|_| Error::PackageNotFound("cache read error".into()))?;
+        let metadata: AbbreviatedMetadata = serde_json::from_str(&data)
+            .map_err(|_| Error::ParseError("cache parse error".into()))?;
+
+        Ok(metadata)
+    }
+
+    /// Save metadata to cache
+    fn save_cached_metadata(&self, path: &PathBuf, metadata: &AbbreviatedMetadata) -> Result<()> {
+        let json = serde_json::to_string(metadata)
+            .map_err(|e| Error::ParseError(e.to_string()))?;
+        std::fs::write(path, json)
+            .map_err(|e| Error::NetworkError(e.to_string()))?;
+        Ok(())
     }
 
     /// Download tarball from npm CDN

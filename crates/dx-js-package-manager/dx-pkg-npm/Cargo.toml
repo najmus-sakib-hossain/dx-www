@@ -25,6 +25,9 @@ thiserror = "2.0"
 # Hashing
 xxhash-rust = { version = "0.8", features = ["xxh3", "xxh64"] }
 
+# Home directory
+dirs = "5.0"
+
 # Internal deps
 dx-pkg-core = { path = "../dx-pkg-core" }
 
