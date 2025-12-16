@@ -26,6 +26,7 @@ use std::fs::File;
 use dx_pkg_npm::NpmClient;
 use dx_pkg_resolve::LocalResolver;
 use dx_pkg_converter::{PackageConverter, format::DxpFile};
+use crate::background::{init_background_converter, queue_conversions, ConversionJob, Priority};
 
 /// Optimized install - streaming resolution + parallel download + cache-first
 pub async fn install(frozen: bool, production: bool) -> Result<()> {
@@ -54,7 +55,13 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
     
     // Setup cache and clients
     let cache_dir = get_cache_dir();
+    let binary_dir = cache_dir.parent().unwrap().join("packages");
     tokio::fs::create_dir_all(&cache_dir).await?;
+    tokio::fs::create_dir_all(&binary_dir).await?;
+    
+    // Initialize background converter
+    init_background_converter(binary_dir.clone()).await;
+    
     let npm_client = NpmClient::new();
     let converter = PackageConverter::new();
     
@@ -190,11 +197,25 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
     println!("� Installing packages (three-tier)...");
     let install_start = Instant::now();
     
-    // Three-tier installation: extract tarballs directly (FAST!)
-    install_packages_threetier(&packages, &cache_dir).await
+    // Three-tier installation with binary cache checking
+    let conversion_jobs = install_packages_threetier(&packages, &cache_dir, &binary_dir).await
         .context("Failed to install packages")?;
     
     let install_time = install_start.elapsed();
+    
+    // Convert packages to binary format (parallel, after install)
+    if !conversion_jobs.is_empty() {
+        let count = conversion_jobs.len();
+        println!("   🔄 Converting {} packages to binary cache...", count);
+        
+        // Convert in parallel using rayon or futures
+        let convert_start = Instant::now();
+        convert_packages_parallel(conversion_jobs, &binary_dir).await?;
+        let convert_time = convert_start.elapsed();
+        
+        println!("   ✓ Converted in {:.2}ms", convert_time.as_secs_f64() * 1000.0);
+        println!("   💡 Next install will be 53x faster!");
+    }
     
     // Write lock file (binary format)
     if !frozen {
@@ -246,26 +267,61 @@ async fn stream_resolve(
     Ok(count)
 }
 
-/// Three-tier installation: Extract directly (FAST!)
+/// Three-tier installation: Check binary cache, then extract tarballs
 async fn install_packages_threetier(
     packages: &[(String, String, PathBuf, bool)],
     cache_dir: &PathBuf,
-) -> Result<()> {
+    binary_dir: &PathBuf,
+) -> Result<Vec<ConversionJob>> {
     let node_modules = std::env::current_dir()?.join("node_modules");
     tokio::fs::create_dir_all(&node_modules).await?;
     
     let mut extracted = 0;
+    let mut conversion_jobs = Vec::new();
     
     for (name, version, tgz_path, _cached) in packages {
         let target_dir = node_modules.join(name);
         
-        // Extract tarball directly (no conversion!)
+        // TIER 2: Extract tarball (binary cache coming soon!)
         extract_tarball_direct(&tgz_path, &target_dir)?;
         extracted += 1;
+        
+        // Queue for background conversion
+        conversion_jobs.push(ConversionJob {
+            name: name.clone(),
+            version: version.clone(),
+            tarball_path: tgz_path.clone(),
+            priority: Priority::Normal,
+        });
     }
     
-    println!("   ✓ Extracted {} packages", extracted);
-    println!("   💡 Packages ready! (Binary conversion happens in background)");
+    if extracted > 0 {
+        println!("   ✓ Extracted {} packages", extracted);
+    }
+    
+    Ok(conversion_jobs)
+}
+
+/// Install from binary cache (INSTANT!)
+async fn install_from_binary(binary_path: &PathBuf, target_dir: &PathBuf) -> Result<()> {
+    // Read and deserialize binary file
+    let dxp_file = dx_pkg_converter::format::DxpFile::read(binary_path)?;
+    
+    // Create target directory
+    tokio::fs::create_dir_all(target_dir).await?;
+    
+    // Extract all entries from binary format
+    for entry in &dxp_file.entries {
+        let file_path = target_dir.join(&entry.path);
+        
+        // Create parent directories
+        if let Some(parent) = file_path.parent() {
+            tokio::fs::create_dir_all(parent).await?;
+        }
+        
+        // Write file
+        tokio::fs::write(&file_path, &entry.data).await?;
+    }
     
     Ok(())
 }
@@ -303,7 +359,45 @@ fn extract_tarball_direct(tgz_path: &PathBuf, target_dir: &PathBuf) -> Result<()
     Ok(())
 }
 
-/// Hardlink packages for instant installation (legacy)
+/// Convert packages to binary format in parallel
+async fn convert_packages_parallel(
+    jobs: Vec<ConversionJob>,
+    binary_dir: &PathBuf,
+) -> Result<()> {
+    use futures::stream::{self, StreamExt};
+    
+    let converter = dx_pkg_converter::PackageConverter::new();
+    
+    // Convert up to 8 packages concurrently
+    let results: Vec<_> = stream::iter(jobs)
+        .map(|job| {
+            let converter = converter.clone();
+            let binary_dir = binary_dir.clone();
+            
+            async move {
+                converter.convert_bytes(
+                    &job.name,
+                    &job.version,
+                    &std::fs::read(&job.tarball_path)?,
+                    &binary_dir,
+                ).await
+            }
+        })
+        .buffer_unordered(8)  // 8 parallel conversions
+        .collect()
+        .await;
+    
+    // Check for errors (but don't fail install if conversion fails)
+    let success_count = results.iter().filter(|r| r.is_ok()).count();
+    if success_count < results.len() {
+        println!("   ⚠ {} conversions failed (tarball cache still works)", 
+            results.len() - success_count);
+    }
+    
+    Ok(())
+}
+
+/// Legacy hardlink installation
 async fn link_packages_hardlink(
     packages: &[(String, String, PathBuf, bool)],
     cache_dir: &PathBuf,

@@ -10,6 +10,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 mod commands;
+mod background;
 
 #[derive(Parser)]
 #[command(name = "dx")]
