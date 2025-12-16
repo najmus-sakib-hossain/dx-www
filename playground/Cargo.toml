@@ -28,4 +28,4 @@ name = "infinity-comparison"
 path = "benchmarks/infinity-comparison.rs"
 
 [dependencies]
-dx-serializer = { path = "../crates/serializer" }
+dx-serializer = { path = "../crates/dx-serializer" }

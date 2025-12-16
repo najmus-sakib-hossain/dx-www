@@ -12,7 +12,7 @@ members = [
     "crates/packet",
     
     # DX Serializer (ultra-efficient format)
-    "crates/serializer",
+    "crates/dx-serializer",
     
     # Client runtimes (WASM)
     "crates/dx-client",
