@@ -23,6 +23,11 @@ dx-pkg-registry = { path = "../dx-pkg-registry" }
 dx-pkg-cache = { path = "../dx-pkg-cache" }
 dx-pkg-install = { path = "../dx-pkg-install" }
 
+# v3.0 - Binary Dawn innovations
+dx-pkg-registry-index = { path = "../dx-pkg-registry-index" }
+dx-pkg-pipeline = { path = "../dx-pkg-pipeline" }
+dx-pkg-extract = { path = "../dx-pkg-extract" }
+
 # CLI
 clap = { version = "4.5", features = ["derive"] }
 

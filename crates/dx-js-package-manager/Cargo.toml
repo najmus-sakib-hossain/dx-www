@@ -22,6 +22,10 @@ members = [
     "dx-pkg-security",
     "dx-pkg-integration-tests",
     "dx-pkg-vite-plugin",
+    "dx-pkg-extract",
+    # v3.0 Binary Dawn innovations
+    "dx-pkg-registry-index",  # Innovation #1: CPRI (Local registry)
+    "dx-pkg-pipeline",        # Innovation #2: Speculative pipeline
 ]
 
 [workspace.package]

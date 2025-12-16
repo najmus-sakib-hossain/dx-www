@@ -6,9 +6,13 @@
 //! - Windows: ReFS CoW (CopyFileEx with flags)
 //! - Fallback: hardlinks (instant, 0 bytes)
 
+pub mod reflink;
+
 use dx_pkg_core::Result;
 use std::path::Path;
 use std::fs;
+
+pub use reflink::ReflinkLinker;
 
 /// Link strategy (fastest to slowest)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
