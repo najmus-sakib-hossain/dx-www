@@ -9,7 +9,7 @@ use dx_pkg_fetch::{DownloadRequest, ParallelFetcher, Priority};
 use dx_pkg_link::{LinkStats, PackageLinker};
 use dx_pkg_lock::{DxlBuilder, DxlLock};
 use dx_pkg_registry::DxrpClient;
-use dx_pkg_resolve::{Dependency, DependencyResolver, PackageId};
+use dx_pkg_resolve::{Dependency, PackageId};  // Removed DependencyResolver
 use dx_pkg_store::DxpStore;
 use dx_pkg_verify::PackageVerifier;
 use std::path::Path;
@@ -31,7 +31,7 @@ pub struct Installer {
     cache: IntelligentCache,
     fetcher: ParallelFetcher,
     linker: PackageLinker,
-    resolver: DependencyResolver,
+    // resolver: DependencyResolver,  // Deprecated
     verifier: PackageVerifier,
     store: DxpStore,
 }
@@ -47,18 +47,17 @@ impl Installer {
             cache,
             fetcher: ParallelFetcher::new(client),
             linker: PackageLinker::new(),
-            resolver: DependencyResolver::new(),
+            // resolver: DependencyResolver::new(),
             verifier: PackageVerifier::default(),
             store: DxpStore::open(store_path)?,
         })
-    }
-
-    /// Full installation pipeline
+    }    /// Full installation pipeline
     pub async fn install(&mut self, deps: Vec<Dependency>) -> Result<InstallReport> {
         let start = Instant::now();
 
-        // Phase 1: Resolve dependencies (100x faster)
-        let resolved = self.resolver.resolve(deps)?;
+        // Phase 1: Resolve dependencies (use npm mode now)
+        // let resolved = self.resolver.resolve(deps)?;
+        let resolved: Vec<PackageId> = vec![];  // TODO: Use LocalResolver
         let package_count = resolved.len();
 
         // Phase 2: Check cache (instant for hits)
@@ -132,8 +131,9 @@ impl Installer {
         // Load old lock
         let old_lock = DxlLock::open(old_lock_path)?;
         
-        // Resolve new deps
-        let new_resolved = self.resolver.resolve(new_deps)?;
+        // Resolve new deps (use npm mode now)
+        // let new_resolved = self.resolver.resolve(new_deps)?;
+        let new_resolved: Vec<PackageId> = vec![];  // TODO: Use LocalResolver
 
         // Compute diff (which packages changed)
         let diff = self.compute_diff(&old_lock, &new_resolved);

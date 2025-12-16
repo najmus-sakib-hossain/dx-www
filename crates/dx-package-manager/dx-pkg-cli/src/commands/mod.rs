@@ -1,3 +1,3 @@
 pub mod install;
-pub mod add;
+pub mod install_npm;  // New npm proxy mode
 pub mod remove;

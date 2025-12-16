@@ -595,18 +595,22 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
- "colored",
  "dx-pkg-cache",
  "dx-pkg-compat",
+ "dx-pkg-converter",
  "dx-pkg-core",
  "dx-pkg-fetch",
  "dx-pkg-install",
  "dx-pkg-link",
  "dx-pkg-lock",
+ "dx-pkg-npm",
  "dx-pkg-registry",
  "dx-pkg-resolve",
  "dx-pkg-store",
- "indicatif",
+ "futures",
+ "lz4_flex",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
@@ -729,6 +733,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "dx-pkg-npm"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dx-pkg-core",
+ "futures",
+ "reqwest",
+ "semver",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
+ "tokio",
+ "tokio-test",
+ "xxhash-rust",
+]
+
+[[package]]
 name = "dx-pkg-registry"
 version = "0.1.0"
 dependencies = [
@@ -759,9 +780,14 @@ dependencies = [
 name = "dx-pkg-resolve"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "dx-pkg-core",
+ "dx-pkg-npm",
  "petgraph",
+ "semver",
  "thiserror 2.0.17",
+ "tokio",
+ "tokio-test",
 ]
 
 [[package]]

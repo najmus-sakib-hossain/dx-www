@@ -1,7 +1,9 @@
 //! DXP File Format
+//! Binary package format with LZ4 compression and metadata
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -10,6 +12,7 @@ use std::path::Path;
 #[derive(Debug, Serialize, Deserialize, bincode::Encode, bincode::Decode)]
 pub struct DxpFile {
     pub version: u32,
+    pub metadata: HashMap<String, String>,
     pub entries: Vec<DxpFileEntry>,
 }
 
@@ -28,19 +31,18 @@ impl DxpFile {
     pub fn write(&self, path: &Path) -> Result<()> {
         let mut file = File::create(path)?;
         
-        // Write magic
+        // Write magic bytes
         file.write_all(b"DXPK")?;
         
         // Write version
         file.write_all(&self.version.to_le_bytes())?;
         
-        // Write entry count
-        file.write_all(&(self.entries.len() as u32).to_le_bytes())?;
+        // Serialize entire structure with bincode
+        let encoded = bincode::encode_to_vec(&self, bincode::config::standard())?;
         
-        // Write entries (using bincode for simplicity)
-        let entries_data = bincode::encode_to_vec(&self.entries, bincode::config::standard())?;
-        file.write_all(&(entries_data.len() as u64).to_le_bytes())?;
-        file.write_all(&entries_data)?;
+        // Write length + data
+        file.write_all(&(encoded.len() as u64).to_le_bytes())?;
+        file.write_all(&encoded)?;
         
         Ok(())
     }
@@ -71,14 +73,13 @@ impl DxpFile {
         // Read entries
         let mut size_bytes = [0u8; 8];
         file.read_exact(&mut size_bytes)?;
-        let entries_size = u64::from_le_bytes(size_bytes);
+        let data_size = u64::from_le_bytes(size_bytes);
         
-        let mut entries_data = vec![0u8; entries_size as usize];
-        file.read_exact(&mut entries_data)?;
+        let mut data = vec![0u8; data_size as usize];
+        file.read_exact(&mut data)?;
         
-        let (entries, _): (Vec<DxpFileEntry>, _) = 
-            bincode::decode_from_slice(&entries_data, bincode::config::standard())?;
+        let (dxp, _): (DxpFile, _) = 
+            bincode::decode_from_slice(&data, bincode::config::standard())?;
         
-        Ok(Self { version, entries })
-    }
-}
+        Ok(dxp)
+    }}

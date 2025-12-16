@@ -29,6 +29,18 @@ enum Commands {
     Install {
         /// Specific packages to install
         packages: Vec<String>,
+        
+        /// Use frozen lockfile (CI mode)
+        #[arg(long)]
+        frozen: bool,
+        
+        /// Install production dependencies only
+        #[arg(long)]
+        production: bool,
+        
+        /// Use npm proxy mode (zero infrastructure)
+        #[arg(long, default_value = "true")]
+        npm_mode: bool,
     },
     /// Add a package to dependencies
     Add {
@@ -53,8 +65,14 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Install { packages } => {
-            commands::install::run(packages, cli.verbose).await?;
+        Commands::Install { packages, frozen, production, npm_mode } => {
+            if npm_mode && packages.is_empty() {
+                // Use new npm proxy mode for full installs
+                commands::install_npm::install(frozen, production).await?;
+            } else {
+                // Use old mode for specific packages or when npm_mode=false
+                commands::install::run(packages, cli.verbose).await?;
+            }
         }
         Commands::Add { package, dev } => {
             commands::add::run(&package, dev, cli.verbose).await?;

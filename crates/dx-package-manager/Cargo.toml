@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "dx-pkg-core",
     "dx-pkg-format",
+    "dx-pkg-npm",           # NEW: npm registry client
     "dx-pkg-registry",
     "dx-pkg-registry-server",
     "dx-pkg-converter",

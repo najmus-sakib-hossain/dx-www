@@ -7,5 +7,20 @@ repository.workspace = true
 
 [dependencies]
 dx-pkg-core = { path = "../dx-pkg-core" }
-petgraph = "0.6"
+dx-pkg-npm = { path = "../dx-pkg-npm" }
+
+# Async
+tokio = { version = "1.42", features = ["full"] }
+
+# Semver
+semver = "1.0"
+
+# Error handling
+anyhow = "1.0"
 thiserror = "2.0"
+
+# For old compatibility (will remove later)
+petgraph = "0.6"
+
+[dev-dependencies]
+tokio-test = "0.4"

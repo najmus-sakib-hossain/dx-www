@@ -3,6 +3,10 @@ name = "dx-pkg-converter"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "dx_pkg_converter"
+path = "src/lib.rs"
+
 [[bin]]
 name = "dx-convert"
 path = "src/main.rs"
