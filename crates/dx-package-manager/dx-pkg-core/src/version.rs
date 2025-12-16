@@ -2,7 +2,7 @@ use crate::error::{Error, Result};
 use std::fmt;
 
 /// Semantic version
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Version {
     pub major: u32,
     pub minor: u32,

@@ -2126,3 +2126,6 @@ Wait did really did the impossible - Are we really 6x faster than bun runtime in
 
 bun is fastest js runtime and package manager but in their website they also say they are fastest test-runner and builder - so based on real benchmarks how much they are faster - please list all 4 of these and how much they are true with correct details!!!
 
+And alonside the test for dx-js-runtime and bun runtime - there please also test dx-js-package-manager against bun package manager and see how much faster it is - please give detailed report on that too!!!
+
+And do the next phases of dx-js-package-manager to make it 50x faster than bun package manager - please give detailed plan and code snippets for that too!!!

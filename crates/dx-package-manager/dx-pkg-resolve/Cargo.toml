@@ -7,3 +7,5 @@ repository.workspace = true
 
 [dependencies]
 dx-pkg-core = { path = "../dx-pkg-core" }
+petgraph = "0.6"
+thiserror = "2.0"
