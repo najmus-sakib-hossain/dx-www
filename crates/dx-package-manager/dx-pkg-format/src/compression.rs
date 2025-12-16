@@ -7,8 +7,7 @@ pub const COMPRESSION_ZSTD: u8 = 2;
 
 /// Compress data using LZ4 (ultra-fast)
 pub fn compress_lz4(data: &[u8]) -> Result<Vec<u8>> {
-    lz4_flex::compress_prepend_size(data)
-        .map_err(|e| Error::Compression(e.to_string()))
+    Ok(lz4_flex::compress_prepend_size(data))
 }
 
 /// Compress data using Zstd (high compression, moderate speed)
@@ -18,7 +17,7 @@ pub fn compress_zstd(data: &[u8], level: i32) -> Result<Vec<u8>> {
 }
 
 /// Decompress data based on flags
-pub fn decompress(data: &[u8], expected_size: usize, compression_flags: u8) -> Result<Vec<u8>> {
+pub fn decompress(data: &[u8], _expected_size: usize, compression_flags: u8) -> Result<Vec<u8>> {
     match compression_flags & 0x03 {
         COMPRESSION_NONE => Ok(data.to_vec()),
         COMPRESSION_LZ4 => {

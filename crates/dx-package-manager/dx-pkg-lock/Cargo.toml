@@ -7,3 +7,9 @@ repository.workspace = true
 
 [dependencies]
 dx-pkg-core = { path = "../dx-pkg-core" }
+memmap2 = "0.9"
+bytemuck = { version = "1.14", features = ["derive"] }
+thiserror = "2.0"
+
+[dev-dependencies]
+tempfile = "3.8"

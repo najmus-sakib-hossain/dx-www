@@ -61,9 +61,9 @@ impl FileIndex {
 
             // Quadratic probing
             probes += 1;
-            idx = ((path_hash as usize + probes * probes) % self.table_size as usize);
+            idx = (path_hash as usize + probes * probes) % self.table_size as usize;
             
-            if probes > self.table_size {
+            if probes > self.table_size as usize {
                 return Err(Error::FileNotFound(format!("hash: {}", path_hash)));
             }
         }
@@ -74,7 +74,10 @@ impl FileIndex {
         self.entries
             .iter()
             .filter(|e| e.path_hash != 0)
-            .map(|e| format!("file_{:016x}", e.path_hash))
+            .map(|e| {
+                let hash = e.path_hash;
+                format!("file_{:016x}", hash)
+            })
             .collect()
     }
 

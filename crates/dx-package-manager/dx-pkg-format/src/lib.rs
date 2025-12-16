@@ -11,7 +11,7 @@ use std::path::Path;
 mod compression;
 mod index;
 
-use compression::{compress_lz4, compress_zstd, decompress};
+use compression::decompress;
 use index::FileIndex;
 
 /// DXP Package (memory-mapped)
@@ -109,7 +109,7 @@ impl DxpBuilder {
         self.files.insert(path.into(), content);
     }
 
-    pub fn build<P: AsRef<Path>>(self, output: P) -> Result<()> {
+    pub fn build<P: AsRef<Path>>(self, _output: P) -> Result<()> {
         // TODO: Implement DXP package creation
         // This is a complex task that will be completed in the next iteration
         todo!("DXP package creation not yet implemented")

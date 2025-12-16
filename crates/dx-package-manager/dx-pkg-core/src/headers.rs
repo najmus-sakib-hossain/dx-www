@@ -1,5 +1,5 @@
 #[repr(C, packed)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct DxpHeader {
     pub magic: [u8; 4], pub version: u16, pub flags: u16,
     pub name_hash: u64, pub version_num: u64, pub total_size: u64,
