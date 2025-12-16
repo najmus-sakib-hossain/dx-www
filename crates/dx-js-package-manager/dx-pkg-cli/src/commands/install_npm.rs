@@ -9,6 +9,8 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Instant;
 use tokio::fs;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use console::style;
 
 // Internal crates
 use dx_pkg_npm::NpmClient;
@@ -113,9 +115,9 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
     // Report failures
     if !failed.is_empty() {
         println!();
-        println!("{}", "⚠️  Some packages failed:".yellow());
+        println!("{}", style("⚠️  Some packages failed:").yellow());
         for (name, err) in &failed {
-            println!("  {} {}: {}", "✗".red(), name, err);
+            println!("  {} {}: {}", style("✗").red(), name, err);
         }
         return Err(anyhow::anyhow!("{} packages failed to install", failed.len()));
     }
@@ -140,7 +142,7 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
     
     // Success summary
     println!();
-    println!("{}", "✅ Done!".green().bold());
+    println!("{}", style("✅ Done!").green().bold());
     println!("   Total time:  {:.2}s", elapsed.as_secs_f64());
     println!("   Link time:   {:.2}ms (instant!)", link_time.as_secs_f64() * 1000.0);
     println!("   Packages:    {}", succeeded);
@@ -148,7 +150,7 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
     
     // Show comparison hint
     if elapsed.as_secs_f64() < 5.0 {
-        println!("{}", "💡 Try comparing: time bun install".dimmed());
+        println!("{}", style("💡 Try comparing: time bun install").dim());
     }
     
     Ok(())

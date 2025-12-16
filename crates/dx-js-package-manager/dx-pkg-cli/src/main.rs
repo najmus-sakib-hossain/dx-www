@@ -75,10 +75,12 @@ async fn main() -> Result<()> {
             }
         }
         Commands::Add { package, dev } => {
-            commands::add::run(&package, dev, cli.verbose).await?;
+            println!("⚠️  'add' command not yet implemented in npm proxy mode");
+            println!("   Please add '{}' to package.json manually and run 'dx install'", package);
         }
         Commands::Remove { package } => {
-            commands::remove::run(&package, cli.verbose).await?;
+            println!("⚠️  'remove' command not yet implemented in npm proxy mode");
+            println!("   Please remove '{}' from package.json manually and run 'dx install'", package);
         }
         Commands::Version => {
             println!("dx v0.1.0 (binary-first package manager)");

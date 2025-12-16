@@ -595,6 +595,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "console",
  "dx-pkg-cache",
  "dx-pkg-compat",
  "dx-pkg-converter",
@@ -608,6 +609,7 @@ dependencies = [
  "dx-pkg-resolve",
  "dx-pkg-store",
  "futures",
+ "indicatif",
  "lz4_flex",
  "serde",
  "serde_json",
@@ -785,6 +787,7 @@ dependencies = [
  "dx-pkg-npm",
  "petgraph",
  "semver",
+ "serde",
  "thiserror 2.0.17",
  "tokio",
  "tokio-test",

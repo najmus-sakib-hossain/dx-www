@@ -18,7 +18,7 @@ pub struct PackageId {
 }
 
 /// Package resolution result
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct ResolvedPackage {
     pub name: String,
     pub version: String,

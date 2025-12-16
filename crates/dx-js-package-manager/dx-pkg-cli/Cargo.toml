@@ -41,3 +41,5 @@ lz4_flex = "0.11"
 anyhow = "1.0"
 
 # UI
+indicatif = "0.17"
+console = "0.15"
