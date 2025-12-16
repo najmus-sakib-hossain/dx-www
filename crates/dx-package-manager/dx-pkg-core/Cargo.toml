@@ -1,0 +1,15 @@
+[package]
+name = "dx-pkg-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+bytemuck = { workspace = true }
+xxhash-rust = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
