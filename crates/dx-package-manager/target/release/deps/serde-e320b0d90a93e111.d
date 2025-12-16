@@ -1,0 +1,14 @@
+F:\Code\dx\crates\dx-package-manager\target\release\deps\serde-e320b0d90a93e111.d: C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs F:\Code\dx\crates\dx-package-manager\target\release\build\serde-61dd1a266867dcef\out/private.rs
+
+F:\Code\dx\crates\dx-package-manager\target\release\deps\libserde-e320b0d90a93e111.rlib: C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs F:\Code\dx\crates\dx-package-manager\target\release\build\serde-61dd1a266867dcef\out/private.rs
+
+F:\Code\dx\crates\dx-package-manager\target\release\deps\libserde-e320b0d90a93e111.rmeta: C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs F:\Code\dx\crates\dx-package-manager\target\release\build\serde-61dd1a266867dcef\out/private.rs
+
+C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\Computer\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+F:\Code\dx\crates\dx-package-manager\target\release\build\serde-61dd1a266867dcef\out/private.rs:
+
+# env-dep:OUT_DIR=F:\\Code\\dx\\crates\\dx-package-manager\\target\\release\\build\\serde-61dd1a266867dcef\\out

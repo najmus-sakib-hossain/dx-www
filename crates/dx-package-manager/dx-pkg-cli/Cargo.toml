@@ -5,5 +5,19 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[[bin]]
+name = "dx"
+path = "src/main.rs"
+
 [dependencies]
 dx-pkg-core = { path = "../dx-pkg-core" }
+dx-pkg-compat = { path = "../dx-pkg-compat" }
+dx-pkg-resolve = { path = "../dx-pkg-resolve" }
+dx-pkg-fetch = { path = "../dx-pkg-fetch" }
+dx-pkg-store = { path = "../dx-pkg-store" }
+dx-pkg-link = { path = "../dx-pkg-link" }
+dx-pkg-lock = { path = "../dx-pkg-lock" }
+dx-pkg-registry = { path = "../dx-pkg-registry" }
+clap = { version = "4.5", features = ["derive"] }
+tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"
