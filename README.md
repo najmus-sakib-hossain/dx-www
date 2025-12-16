@@ -2136,3 +2136,10 @@ And do the next phases of dx-js-package-manager to make it 50x faster than bun p
 
 
 Are we real again, we create 50x faster package manager than bun - please test it correclty and in the playground folder please verify that it by downloading packages using dx-js-package-manager and see how much faster it is than bun package manager - please give detailed report on that too!!! Download packages like reactjs, nextjs, lodash, expressjs etc and see how much faster it is than bun package manager - please give detailed report on that too!!!
+
+
+
+As we are 53.5x faster at warm installation then please keep it unchanged - just as we are slower at cold install, then why not we build cache in the background and while installing packages we can build cache for next time - so that next time cold install will be fast too - please give detailed plan and code snippets for that too!!!
+
+Or do you have any other better idea to make cold install faster than bun package manager - please give detailed plan and code snippets for that too!!!
+

@@ -652,11 +652,13 @@ dependencies = [
  "dx-pkg-registry",
  "dx-pkg-resolve",
  "dx-pkg-store",
+ "flate2",
  "futures",
  "indicatif",
  "lz4_flex",
  "serde",
  "serde_json",
+ "tar",
  "tokio",
 ]
 
