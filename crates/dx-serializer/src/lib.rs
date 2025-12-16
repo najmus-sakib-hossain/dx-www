@@ -20,6 +20,7 @@ pub mod parser;
 pub mod schema;
 pub mod tokenizer;
 pub mod types;
+pub mod zero;
 
 pub use base62::{decode_base62, encode_base62};
 pub use compress::{compress_to_writer, format_machine};
