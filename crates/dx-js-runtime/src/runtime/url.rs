@@ -77,7 +77,7 @@ impl URLSearchParams {
     pub fn new(search: &str) -> Self {
         let mut params = HashMap::new();
         let query = search.trim_start_matches('?');
-        
+
         for pair in query.split('&') {
             if let Some(pos) = pair.find('=') {
                 let key = &pair[..pos];

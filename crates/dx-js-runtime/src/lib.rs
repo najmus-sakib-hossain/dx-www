@@ -23,6 +23,7 @@
 #![allow(unused_variables)]
 
 pub mod compiler;
+pub mod crystallized;
 pub mod debugger;
 pub mod deploy;
 pub mod distributed;
@@ -34,12 +35,11 @@ pub mod runtime;
 pub mod simd;
 pub mod simple_exec;
 pub mod simple_exec_ultra;
-pub mod zero_copy;
-pub mod crystallized;
 pub mod snapshot;
 pub mod value;
 pub mod wasm;
 pub mod workers;
+pub mod zero_copy;
 
 pub use compiler::{CompiledModule, Compiler, CompilerConfig};
 pub use error::{DxError, DxResult};

@@ -247,10 +247,7 @@ fn builtin_math_pow(args: &[Value]) -> Value {
 
 fn builtin_math_random(_args: &[Value]) -> Value {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
+    let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
     let random = ((nanos % 1_000_000) as f64) / 1_000_000.0;
     Value::Number(random)
 }

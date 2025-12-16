@@ -14,7 +14,7 @@
 //! - Block statements
 //! - Expression statements
 
-use crate::compiler::expressions::{lower_expr, ExprContext, FunctionBuilder};
+use crate::compiler::expressions::{ExprContext, FunctionBuilder, lower_expr};
 use crate::compiler::mir::*;
 use crate::error::DxResult;
 use oxc_ast::ast::*;
@@ -47,9 +47,7 @@ impl StatementLowerer {
 
     pub fn lower_statement(&mut self, stmt: &Statement) -> DxResult<Option<LocalId>> {
         match stmt {
-            Statement::ExpressionStatement(expr_stmt) => {
-                self.lower_expression_statement(expr_stmt)
-            }
+            Statement::ExpressionStatement(expr_stmt) => self.lower_expression_statement(expr_stmt),
             Statement::BlockStatement(block) => self.lower_block_statement(block),
             Statement::VariableDeclaration(var_decl) => self.lower_variable_declaration(var_decl),
             Statement::FunctionDeclaration(func_decl) => self.lower_function_declaration(func_decl),
@@ -132,10 +130,7 @@ impl StatementLowerer {
         Ok(last)
     }
 
-    fn lower_function_declaration(
-        &mut self,
-        _func_decl: &Function,
-    ) -> DxResult<Option<LocalId>> {
+    fn lower_function_declaration(&mut self, _func_decl: &Function) -> DxResult<Option<LocalId>> {
         // TODO: Lower function to a separate TypedFunction
         // For now, just return undefined
         Ok(None)
@@ -408,10 +403,7 @@ impl StatementLowerer {
         Ok(None)
     }
 
-    fn lower_labeled_statement(
-        &mut self,
-        labeled: &LabeledStatement,
-    ) -> DxResult<Option<LocalId>> {
+    fn lower_labeled_statement(&mut self, labeled: &LabeledStatement) -> DxResult<Option<LocalId>> {
         // label: statement
         let label = labeled.label.name.to_string();
         self.labels.push(label);

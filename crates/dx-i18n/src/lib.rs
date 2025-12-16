@@ -6,8 +6,8 @@
 //! - `locale`: Translation functionality supporting multiple providers
 //! - `tts`: Text-to-speech functionality supporting Microsoft Edge TTS and Google TTS
 
+pub mod error;
 pub mod locale;
 pub mod tts;
-pub mod error;
 
 pub use error::{I18nError, Result};

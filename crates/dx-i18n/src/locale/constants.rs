@@ -1,5 +1,4 @@
 /// Language constants for translation services
-
 use std::collections::HashMap;
 
 lazy_static::lazy_static! {
@@ -260,4 +259,5 @@ lazy_static::lazy_static! {
 }
 
 pub const GOOGLE_TRANSLATE_URL: &str = "https://translate.google.com/m";
-pub const MICROSOFT_TRANSLATE_URL: &str = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0";
+pub const MICROSOFT_TRANSLATE_URL: &str =
+    "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0";

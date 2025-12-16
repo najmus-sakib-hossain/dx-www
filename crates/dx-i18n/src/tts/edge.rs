@@ -89,7 +89,9 @@ impl EdgeTTS {
 
     /// Generate JavaScript-style date string
     fn date_to_string() -> String {
-        Utc::now().format("%a %b %d %Y %H:%M:%S GMT+0000 (Coordinated Universal Time)").to_string()
+        Utc::now()
+            .format("%a %b %d %Y %H:%M:%S GMT+0000 (Coordinated Universal Time)")
+            .to_string()
     }
 
     /// Generate SSML headers and data
@@ -162,10 +164,9 @@ impl TextToSpeech for EdgeTTS {
 
     fn get_supported_languages(&self) -> Vec<&'static str> {
         vec![
-            "en-US", "en-GB", "en-AU", "en-CA", "en-IN",
-            "es-ES", "es-MX", "fr-FR", "fr-CA", "de-DE",
-            "it-IT", "pt-BR", "pt-PT", "ru-RU", "ja-JP",
-            "ko-KR", "zh-CN", "zh-TW", "ar-SA", "hi-IN",
+            "en-US", "en-GB", "en-AU", "en-CA", "en-IN", "es-ES", "es-MX", "fr-FR", "fr-CA",
+            "de-DE", "it-IT", "pt-BR", "pt-PT", "ru-RU", "ja-JP", "ko-KR", "zh-CN", "zh-TW",
+            "ar-SA", "hi-IN",
         ]
     }
 }
@@ -185,7 +186,8 @@ impl EdgeTTS {
             sec_ms_gec_version
         );
 
-        let (ws_stream, _) = connect_async(&wss_url).await
+        let (ws_stream, _) = connect_async(&wss_url)
+            .await
             .map_err(|e| I18nError::Other(format!("WebSocket connection failed: {}", e)))?;
 
         let (mut write, mut read) = ws_stream.split();
@@ -197,7 +199,9 @@ impl EdgeTTS {
             r#"{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"true","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}"#
         );
 
-        write.send(Message::Text(config_message)).await
+        write
+            .send(Message::Text(config_message))
+            .await
             .map_err(|e| I18nError::Other(format!("Failed to send config: {}", e)))?;
 
         // Send SSML
@@ -206,7 +210,9 @@ impl EdgeTTS {
         let ssml = self.mkssml(text);
         let ssml_message = self.ssml_headers_plus_data(&request_id, &timestamp, &ssml);
 
-        write.send(Message::Text(ssml_message)).await
+        write
+            .send(Message::Text(ssml_message))
+            .await
             .map_err(|e| I18nError::Other(format!("Failed to send SSML: {}", e)))?;
 
         let mut audio_received = false;
@@ -241,7 +247,10 @@ impl EdgeTTS {
                                     // Continue
                                 }
                                 _ => {
-                                    return Err(I18nError::Other(format!("Unknown path: {}", path)));
+                                    return Err(I18nError::Other(format!(
+                                        "Unknown path: {}",
+                                        path
+                                    )));
                                 }
                             }
                         }

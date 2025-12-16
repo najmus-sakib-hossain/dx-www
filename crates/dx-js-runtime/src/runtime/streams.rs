@@ -5,15 +5,21 @@ use std::collections::VecDeque;
 
 pub trait Readable {
     fn read(&mut self, size: Option<usize>) -> DxResult<Vec<u8>>;
-    fn on_data<F>(&mut self, callback: F) where F: FnMut(&[u8]) + 'static;
-    fn on_end<F>(&mut self, callback: F) where F: FnOnce() + 'static;
+    fn on_data<F>(&mut self, callback: F)
+    where
+        F: FnMut(&[u8]) + 'static;
+    fn on_end<F>(&mut self, callback: F)
+    where
+        F: FnOnce() + 'static;
     fn pipe<W: Writable>(&mut self, dest: &mut W) -> DxResult<()>;
 }
 
 pub trait Writable {
     fn write(&mut self, chunk: &[u8]) -> DxResult<()>;
     fn end(&mut self) -> DxResult<()>;
-    fn on_finish<F>(&mut self, callback: F) where F: FnOnce() + 'static;
+    fn on_finish<F>(&mut self, callback: F)
+    where
+        F: FnOnce() + 'static;
 }
 
 pub struct ReadableStream {
@@ -23,7 +29,10 @@ pub struct ReadableStream {
 
 impl ReadableStream {
     pub fn new() -> Self {
-        Self { buffer: VecDeque::new(), ended: false }
+        Self {
+            buffer: VecDeque::new(),
+            ended: false,
+        }
     }
 
     pub fn push(&mut self, data: &[u8]) {
@@ -41,15 +50,23 @@ impl Readable for ReadableStream {
         Ok(self.buffer.drain(..len).collect())
     }
 
-    fn on_data<F>(&mut self, mut callback: F) where F: FnMut(&[u8]) + 'static {
+    fn on_data<F>(&mut self, mut callback: F)
+    where
+        F: FnMut(&[u8]) + 'static,
+    {
         while !self.buffer.is_empty() {
             let chunk: Vec<u8> = self.buffer.drain(..).collect();
             callback(&chunk);
         }
     }
 
-    fn on_end<F>(&mut self, callback: F) where F: FnOnce() + 'static {
-        if self.ended { callback(); }
+    fn on_end<F>(&mut self, callback: F)
+    where
+        F: FnOnce() + 'static,
+    {
+        if self.ended {
+            callback();
+        }
     }
 
     fn pipe<W: Writable>(&mut self, dest: &mut W) -> DxResult<()> {
@@ -57,7 +74,9 @@ impl Readable for ReadableStream {
             let chunk: Vec<u8> = self.buffer.drain(..).collect();
             dest.write(&chunk)?;
         }
-        if self.ended { dest.end()?; }
+        if self.ended {
+            dest.end()?;
+        }
         Ok(())
     }
 }
@@ -67,8 +86,12 @@ pub struct WritableStream {
 }
 
 impl WritableStream {
-    pub fn new() -> Self { Self { buffer: Vec::new() } }
-    pub fn get_buffer(&self) -> &[u8] { &self.buffer }
+    pub fn new() -> Self {
+        Self { buffer: Vec::new() }
+    }
+    pub fn get_buffer(&self) -> &[u8] {
+        &self.buffer
+    }
 }
 
 impl Writable for WritableStream {
@@ -77,17 +100,28 @@ impl Writable for WritableStream {
         Ok(())
     }
 
-    fn end(&mut self) -> DxResult<()> { Ok(()) }
-    fn on_finish<F>(&mut self, _callback: F) where F: FnOnce() + 'static {}
+    fn end(&mut self) -> DxResult<()> {
+        Ok(())
+    }
+    fn on_finish<F>(&mut self, _callback: F)
+    where
+        F: FnOnce() + 'static,
+    {
+    }
 }
 
 pub struct Transform<F> {
     transform_fn: F,
 }
 
-impl<F> Transform<F> where F: FnMut(&[u8]) -> Vec<u8> {
-    pub fn new(transform_fn: F) -> Self { Self { transform_fn } }
-    
+impl<F> Transform<F>
+where
+    F: FnMut(&[u8]) -> Vec<u8>,
+{
+    pub fn new(transform_fn: F) -> Self {
+        Self { transform_fn }
+    }
+
     pub fn process(&mut self, input: &[u8]) -> Vec<u8> {
         (self.transform_fn)(input)
     }

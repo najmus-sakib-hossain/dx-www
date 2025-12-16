@@ -104,8 +104,7 @@ mod integration_tests {
         let mut handles = vec![];
 
         for i in 0..5 {
-            let cache = IntelligentCache::new(&env.cache_dir.join(format!("cache{}", i)))
-                .unwrap();
+            let cache = IntelligentCache::new(&env.cache_dir.join(format!("cache{}", i))).unwrap();
             let client = DxrpClient::new("localhost", 9001);
             let mut installer = Installer::new(cache, client, &env.store_dir).unwrap();
 

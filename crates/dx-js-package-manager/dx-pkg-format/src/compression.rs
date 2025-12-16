@@ -12,8 +12,7 @@ pub fn compress_lz4(data: &[u8]) -> Result<Vec<u8>> {
 
 /// Compress data using Zstd (high compression, moderate speed)
 pub fn compress_zstd(data: &[u8], level: i32) -> Result<Vec<u8>> {
-    zstd::encode_all(data, level)
-        .map_err(|e| Error::Compression(e.to_string()))
+    zstd::encode_all(data, level).map_err(|e| Error::Compression(e.to_string()))
 }
 
 /// Decompress data based on flags
@@ -21,13 +20,9 @@ pub fn decompress(data: &[u8], _expected_size: usize, compression_flags: u8) -> 
     match compression_flags & 0x03 {
         COMPRESSION_NONE => Ok(data.to_vec()),
         COMPRESSION_LZ4 => {
-            lz4_flex::decompress_size_prepended(data)
-                .map_err(|e| Error::Compression(e.to_string()))
+            lz4_flex::decompress_size_prepended(data).map_err(|e| Error::Compression(e.to_string()))
         }
-        COMPRESSION_ZSTD => {
-            zstd::decode_all(data)
-                .map_err(|e| Error::Compression(e.to_string()))
-        }
+        COMPRESSION_ZSTD => zstd::decode_all(data).map_err(|e| Error::Compression(e.to_string())),
         _ => Err(Error::Compression("Unknown compression type".into())),
     }
 }

@@ -44,10 +44,7 @@ impl ModuleResolver {
     pub fn new() -> Self {
         Self {
             modules: HashMap::new(),
-            search_paths: vec![
-                PathBuf::from("node_modules"),
-                PathBuf::from("."),
-            ],
+            search_paths: vec![PathBuf::from("node_modules"), PathBuf::from(".")],
         }
     }
 
@@ -101,7 +98,7 @@ impl ModuleResolver {
     fn resolve_package(&self, name: &str) -> DxResult<PathBuf> {
         for search_path in &self.search_paths {
             let package_path = search_path.join(name);
-            
+
             // Try package.json
             let package_json = package_path.join("package.json");
             if package_json.exists() {
@@ -124,9 +121,8 @@ impl ModuleResolver {
 
     /// Read package.json main field
     fn read_package_main(&self, path: &Path) -> DxResult<String> {
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| DxError::IoError(e.to_string()))?;
-        
+        let content = std::fs::read_to_string(path).map_err(|e| DxError::IoError(e.to_string()))?;
+
         // Simple JSON parsing for main field
         // TODO: Use proper JSON parser
         if let Some(start) = content.find("\"main\"") {
@@ -155,8 +151,7 @@ impl ModuleResolver {
 
     /// Compile a module
     fn compile_module(&self, path: &PathBuf) -> DxResult<Module> {
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| DxError::IoError(e.to_string()))?;
+        let content = std::fs::read_to_string(path).map_err(|e| DxError::IoError(e.to_string()))?;
 
         // Detect module type
         let module_type = if path.extension().and_then(|s| s.to_str()) == Some("json") {
@@ -187,7 +182,7 @@ impl ESModuleParser {
     /// Extract imports from source
     pub fn extract_imports(source: &str) -> Vec<ImportStatement> {
         let mut imports = Vec::new();
-        
+
         // Simple regex-like parsing
         for line in source.lines() {
             let trimmed = line.trim();
@@ -204,14 +199,14 @@ impl ESModuleParser {
                 }
             }
         }
-        
+
         imports
     }
 
     /// Extract exports from source
     pub fn extract_exports(source: &str) -> Vec<ExportStatement> {
         let mut exports = Vec::new();
-        
+
         for line in source.lines() {
             let trimmed = line.trim();
             if trimmed.starts_with("export ") {
@@ -221,7 +216,7 @@ impl ESModuleParser {
                 });
             }
         }
-        
+
         exports
     }
 }
@@ -245,7 +240,7 @@ impl CommonJSParser {
     /// Extract requires from source
     pub fn extract_requires(source: &str) -> Vec<String> {
         let mut requires = Vec::new();
-        
+
         for line in source.lines() {
             if let Some(pos) = line.find("require(") {
                 let after = &line[pos + 8..];
@@ -258,7 +253,7 @@ impl CommonJSParser {
                 }
             }
         }
-        
+
         requires
     }
 }

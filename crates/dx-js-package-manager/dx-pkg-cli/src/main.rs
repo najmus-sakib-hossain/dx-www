@@ -9,8 +9,8 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-mod commands;
 mod background;
+mod commands;
 
 #[derive(Parser)]
 #[command(name = "dx")]
@@ -30,19 +30,19 @@ enum Commands {
     Install {
         /// Specific packages to install
         packages: Vec<String>,
-        
+
         /// Use frozen lockfile (CI mode)
         #[arg(long)]
         frozen: bool,
-        
+
         /// Install production dependencies only
         #[arg(long)]
         production: bool,
-        
+
         /// Use npm proxy mode (zero infrastructure)
         #[arg(long, default_value = "true")]
         npm_mode: bool,
-        
+
         /// Use v3 Binary Dawn mode (5 innovations)
         #[arg(long)]
         v3: bool,
@@ -51,7 +51,7 @@ enum Commands {
     Add {
         /// Package name (e.g., react, lodash@^4.17.0)
         package: String,
-        
+
         /// Add to devDependencies
         #[arg(short = 'D', long)]
         dev: bool,
@@ -66,7 +66,7 @@ enum Commands {
         /// Number of runs
         #[arg(short, long, default_value = "3")]
         runs: usize,
-        
+
         /// Use v3 mode
         #[arg(long)]
         v3: bool,
@@ -80,7 +80,13 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Install { packages, frozen, production, npm_mode, v3 } => {
+        Commands::Install {
+            packages,
+            frozen,
+            production,
+            npm_mode,
+            v3,
+        } => {
             if v3 {
                 // Use new v3.0 Binary Dawn mode
                 commands::install_v3::install_v3(frozen, production).await?;
@@ -106,7 +112,10 @@ async fn main() -> Result<()> {
         }
         Commands::Remove { package } => {
             println!("⚠️  'remove' command not yet implemented in npm proxy mode");
-            println!("   Please remove '{}' from package.json manually and run 'dx install'", package);
+            println!(
+                "   Please remove '{}' from package.json manually and run 'dx install'",
+                package
+            );
         }
         Commands::Version => {
             println!("dx v3.0.0 (Binary Dawn Edition)");

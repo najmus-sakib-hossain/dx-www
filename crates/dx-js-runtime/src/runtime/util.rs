@@ -20,10 +20,22 @@ impl Util {
         format!("{:#?}", value)
     }
 
-    pub fn is_array<T>(_value: &[T]) -> bool { true }
-    pub fn is_boolean(value: bool) -> bool { true }
-    pub fn is_null<T>(value: Option<T>) -> bool { value.is_none() }
-    pub fn is_number(_value: f64) -> bool { true }
-    pub fn is_string(_value: &str) -> bool { true }
-    pub fn is_undefined<T>(value: Option<T>) -> bool { value.is_none() }
+    pub fn is_array<T>(_value: &[T]) -> bool {
+        true
+    }
+    pub fn is_boolean(value: bool) -> bool {
+        true
+    }
+    pub fn is_null<T>(value: Option<T>) -> bool {
+        value.is_none()
+    }
+    pub fn is_number(_value: f64) -> bool {
+        true
+    }
+    pub fn is_string(_value: &str) -> bool {
+        true
+    }
+    pub fn is_undefined<T>(value: Option<T>) -> bool {
+        value.is_none()
+    }
 }

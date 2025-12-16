@@ -157,7 +157,7 @@ impl EventLoop {
                     let timer = self.timers.remove(i);
                     // Execute timer callback
                     // TODO: Call the actual function
-                    
+
                     // Re-schedule if interval
                     if let Some(interval) = timer.interval {
                         self.timers.push(TimerTask {

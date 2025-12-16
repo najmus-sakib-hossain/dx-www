@@ -4,7 +4,7 @@
 //! Can be optimized with platform-specific mmap/VirtualAlloc later.
 
 use crate::error::DxResult;
-use std::alloc::{alloc, dealloc, Layout};
+use std::alloc::{Layout, alloc, dealloc};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Arena allocator for zero-allocation execution
@@ -27,9 +27,7 @@ impl Arena {
         let base = unsafe { alloc(layout) };
 
         if base.is_null() {
-            return Err(crate::error::DxError::RuntimeError(
-                "Failed to allocate arena".into(),
-            ));
+            return Err(crate::error::DxError::RuntimeError("Failed to allocate arena".into()));
         }
 
         Ok(Self {

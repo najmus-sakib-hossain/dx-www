@@ -175,7 +175,8 @@ impl ClassCompiler {
                 }
                 ClassElement::MethodDefinition(method) => {
                     // Compile method as a function
-                    let method_name = format!("{}::{}", class_name, self.extract_property_name(&method.key));
+                    let method_name =
+                        format!("{}::{}", class_name, self.extract_property_name(&method.key));
                     let func_id = FunctionId(self.next_func_id);
                     self.next_func_id += 1;
 

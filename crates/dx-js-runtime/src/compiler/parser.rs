@@ -31,7 +31,8 @@ pub fn parse(source: &str, filename: &str) -> DxResult<ParsedAST> {
 
     // Check for parse errors
     if !parser_result.errors.is_empty() {
-        let error_messages: Vec<String> = parser_result.errors.iter().map(|e| e.to_string()).collect();
+        let error_messages: Vec<String> =
+            parser_result.errors.iter().map(|e| e.to_string()).collect();
         return Err(DxError::ParseError(error_messages.join("\n")));
     }
 

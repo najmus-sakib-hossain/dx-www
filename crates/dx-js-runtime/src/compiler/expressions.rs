@@ -117,9 +117,7 @@ pub fn lower_expr(ctx: &mut ExprContext, expr: &Expression) -> DxResult<LocalId>
 }
 
 fn lower_numeric_literal(ctx: &mut ExprContext, lit: &NumericLiteral) -> DxResult<LocalId> {
-    let dest = ctx
-        .builder
-        .add_local("_lit".to_string(), Type::Primitive(PrimitiveType::F64));
+    let dest = ctx.builder.add_local("_lit".to_string(), Type::Primitive(PrimitiveType::F64));
     ctx.builder.emit(TypedInstruction::Const {
         dest,
         value: Constant::F64(lit.value),
@@ -128,9 +126,7 @@ fn lower_numeric_literal(ctx: &mut ExprContext, lit: &NumericLiteral) -> DxResul
 }
 
 fn lower_boolean_literal(ctx: &mut ExprContext, lit: &BooleanLiteral) -> DxResult<LocalId> {
-    let dest = ctx
-        .builder
-        .add_local("_bool".to_string(), Type::Primitive(PrimitiveType::Bool));
+    let dest = ctx.builder.add_local("_bool".to_string(), Type::Primitive(PrimitiveType::Bool));
     ctx.builder.emit(TypedInstruction::Const {
         dest,
         value: Constant::Bool(lit.value),
@@ -150,9 +146,7 @@ fn lower_string_literal(ctx: &mut ExprContext, lit: &StringLiteral) -> DxResult<
 }
 
 fn lower_null_literal(ctx: &mut ExprContext) -> DxResult<LocalId> {
-    let dest = ctx
-        .builder
-        .add_local("_null".to_string(), Type::Primitive(PrimitiveType::Null));
+    let dest = ctx.builder.add_local("_null".to_string(), Type::Primitive(PrimitiveType::Null));
     ctx.builder.emit(TypedInstruction::Const {
         dest,
         value: Constant::Null,
@@ -199,9 +193,7 @@ fn lower_binary_expression(ctx: &mut ExprContext, bin: &BinaryExpression) -> DxR
         }
     };
 
-    let dest = ctx
-        .builder
-        .add_local("_binop".to_string(), Type::Primitive(PrimitiveType::F64));
+    let dest = ctx.builder.add_local("_binop".to_string(), Type::Primitive(PrimitiveType::F64));
     ctx.builder.emit(TypedInstruction::BinOp {
         dest,
         op: op_kind,
@@ -218,17 +210,15 @@ fn lower_unary_expression(ctx: &mut ExprContext, unary: &UnaryExpression) -> DxR
     match unary.operator {
         UnaryOperator::UnaryNegation => {
             // -x => 0 - x
-            let zero = ctx
-                .builder
-                .add_local("_zero".to_string(), Type::Primitive(PrimitiveType::F64));
+            let zero =
+                ctx.builder.add_local("_zero".to_string(), Type::Primitive(PrimitiveType::F64));
             ctx.builder.emit(TypedInstruction::Const {
                 dest: zero,
                 value: Constant::F64(0.0),
             });
 
-            let dest = ctx
-                .builder
-                .add_local("_neg".to_string(), Type::Primitive(PrimitiveType::F64));
+            let dest =
+                ctx.builder.add_local("_neg".to_string(), Type::Primitive(PrimitiveType::F64));
             ctx.builder.emit(TypedInstruction::BinOp {
                 dest,
                 op: BinOpKind::Sub,
@@ -252,9 +242,8 @@ fn lower_unary_expression(ctx: &mut ExprContext, unary: &UnaryExpression) -> DxR
                 value: Constant::Bool(false),
             });
 
-            let dest = ctx
-                .builder
-                .add_local("_not".to_string(), Type::Primitive(PrimitiveType::Bool));
+            let dest =
+                ctx.builder.add_local("_not".to_string(), Type::Primitive(PrimitiveType::Bool));
             ctx.builder.emit(TypedInstruction::BinOp {
                 dest,
                 op: BinOpKind::Eq,
@@ -302,9 +291,8 @@ fn lower_logical_expression(
         LogicalOperator::And => {
             // left && right
             let right = lower_expr(ctx, &logical.right)?;
-            let dest = ctx
-                .builder
-                .add_local("_and".to_string(), Type::Primitive(PrimitiveType::Bool));
+            let dest =
+                ctx.builder.add_local("_and".to_string(), Type::Primitive(PrimitiveType::Bool));
             ctx.builder.emit(TypedInstruction::BinOp {
                 dest,
                 op: BinOpKind::And,
@@ -317,9 +305,8 @@ fn lower_logical_expression(
         LogicalOperator::Or => {
             // left || right
             let right = lower_expr(ctx, &logical.right)?;
-            let dest = ctx
-                .builder
-                .add_local("_or".to_string(), Type::Primitive(PrimitiveType::Bool));
+            let dest =
+                ctx.builder.add_local("_or".to_string(), Type::Primitive(PrimitiveType::Bool));
             ctx.builder.emit(TypedInstruction::BinOp {
                 dest,
                 op: BinOpKind::Or,
@@ -369,29 +356,24 @@ fn lower_assignment_expression(
     }
 }
 
-fn lower_update_expression(
-    ctx: &mut ExprContext,
-    update: &UpdateExpression,
-) -> DxResult<LocalId> {
+fn lower_update_expression(ctx: &mut ExprContext, update: &UpdateExpression) -> DxResult<LocalId> {
     // ++x or x++ or --x or x--
     // The argument is now a SimpleAssignmentTarget, not Expression
     // For now, just return a dummy value
     let _operand_name = match &update.argument {
-        SimpleAssignmentTarget::AssignmentTargetIdentifier(ident) => {
-            ident.name.to_string()
-        }
+        SimpleAssignmentTarget::AssignmentTargetIdentifier(ident) => ident.name.to_string(),
         _ => "unknown".to_string(),
     };
-    
-    let operand = ctx.builder.add_local("_update".to_string(), Type::Primitive(PrimitiveType::F64));
+
+    let operand = ctx
+        .builder
+        .add_local("_update".to_string(), Type::Primitive(PrimitiveType::F64));
     ctx.builder.emit(TypedInstruction::Const {
         dest: operand,
         value: Constant::F64(0.0),
     });
 
-    let one = ctx
-        .builder
-        .add_local("_one".to_string(), Type::Primitive(PrimitiveType::F64));
+    let one = ctx.builder.add_local("_one".to_string(), Type::Primitive(PrimitiveType::F64));
     ctx.builder.emit(TypedInstruction::Const {
         dest: one,
         value: Constant::F64(1.0),
@@ -430,7 +412,8 @@ fn lower_update_expression(
 
 fn lower_call_expression(ctx: &mut ExprContext, call: &CallExpression) -> DxResult<LocalId> {
     // Lower arguments
-    let _args: Result<Vec<_>, _> = call.arguments.iter().map(|arg| lower_argument(ctx, arg)).collect();
+    let _args: Result<Vec<_>, _> =
+        call.arguments.iter().map(|arg| lower_argument(ctx, arg)).collect();
 
     // For now, return undefined
     let dest = ctx.builder.add_local("_call_result".to_string(), Type::Any);
@@ -447,7 +430,7 @@ fn lower_argument(ctx: &mut ExprContext, arg: &Argument) -> DxResult<LocalId> {
     if let Argument::SpreadElement(spread) = arg {
         return lower_expr(ctx, &spread.argument);
     }
-    
+
     // Otherwise, treat it as an expression
     // We need to convert Argument to Expression
     // For now, return a dummy value (TODO: proper conversion)
@@ -459,10 +442,7 @@ fn lower_argument(ctx: &mut ExprContext, arg: &Argument) -> DxResult<LocalId> {
     Ok(dest)
 }
 
-fn lower_member_expression(
-    ctx: &mut ExprContext,
-    _member: &MemberExpression,
-) -> DxResult<LocalId> {
+fn lower_member_expression(ctx: &mut ExprContext, _member: &MemberExpression) -> DxResult<LocalId> {
     // obj.prop or obj[expr]
     // For now, return undefined
     let dest = ctx.builder.add_local("_member".to_string(), Type::Any);

@@ -2,7 +2,7 @@
 //!
 //! Provides zero-copy memory-mapped access to DXP packages with O(1) file lookups.
 
-use dx_pkg_core::{DxpHeader, Error, Result, xxhash64, xxhash128, DXP_MAGIC};
+use dx_pkg_core::{DXP_MAGIC, DxpHeader, Error, Result, xxhash64, xxhash128};
 use memmap2::Mmap;
 use std::collections::HashMap;
 use std::fs::File;
@@ -52,7 +52,11 @@ impl DxpPackage {
         // Load file index
         let index = FileIndex::from_mmap(&mmap, &header)?;
 
-        Ok(Self { mmap, header, index })
+        Ok(Self {
+            mmap,
+            header,
+            index,
+        })
     }
 
     /// Get file content by path (zero-copy or decompressed)

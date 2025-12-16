@@ -9,7 +9,12 @@ fn benchmark<F: Fn()>(name: &str, iterations: usize, f: F) -> f64 {
     }
     let elapsed = start.elapsed().as_secs_f64();
     let ops_per_sec = iterations as f64 / elapsed;
-    println!("{}: {:.2} ops/sec ({:.2}ms per op)", name, ops_per_sec, elapsed * 1000.0 / iterations as f64);
+    println!(
+        "{}: {:.2} ops/sec ({:.2}ms per op)",
+        name,
+        ops_per_sec,
+        elapsed * 1000.0 / iterations as f64
+    );
     ops_per_sec
 }
 

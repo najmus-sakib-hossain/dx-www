@@ -5,7 +5,7 @@
 //! - npm registry proxy
 //! - Semver resolution
 
-use dx_pkg_core::{version::Version, Result};
+use dx_pkg_core::{Result, version::Version};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -127,11 +127,7 @@ impl PackageConverter {
         Ok(DxPackageMetadata {
             name: pkg.name.clone(),
             version: pkg.parse_version()?,
-            dependencies: pkg
-                .dependencies
-                .iter()
-                .map(|(k, v)| (k.clone(), v.clone()))
-                .collect(),
+            dependencies: pkg.dependencies.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
         })
     }
 }
@@ -150,32 +146,17 @@ mod tests {
 
     #[test]
     fn test_parse_npm_version() {
-        assert_eq!(
-            parse_npm_version("1.2.3").unwrap(),
-            Version::new(1, 2, 3)
-        );
-        assert_eq!(
-            parse_npm_version("^1.2.3").unwrap(),
-            Version::new(1, 2, 3)
-        );
-        assert_eq!(
-            parse_npm_version("~1.2.3").unwrap(),
-            Version::new(1, 2, 3)
-        );
-        assert_eq!(
-            parse_npm_version("v1.2.3").unwrap(),
-            Version::new(1, 2, 3)
-        );
+        assert_eq!(parse_npm_version("1.2.3").unwrap(), Version::new(1, 2, 3));
+        assert_eq!(parse_npm_version("^1.2.3").unwrap(), Version::new(1, 2, 3));
+        assert_eq!(parse_npm_version("~1.2.3").unwrap(), Version::new(1, 2, 3));
+        assert_eq!(parse_npm_version("v1.2.3").unwrap(), Version::new(1, 2, 3));
     }
 
     #[test]
     fn test_npm_registry() {
         let registry = NpmRegistry::new();
-        
-        assert_eq!(
-            registry.package_url("react"),
-            "https://registry.npmjs.org/react"
-        );
+
+        assert_eq!(registry.package_url("react"), "https://registry.npmjs.org/react");
         assert_eq!(
             registry.tarball_url("react", "18.0.0"),
             "https://registry.npmjs.org/react/-/react-18.0.0.tgz"

@@ -1,8 +1,8 @@
 //! Persistent code cache
 
+use crate::CacheStats;
 use crate::compiler::CompiledModule;
 use crate::error::DxResult;
-use crate::CacheStats;
 use blake3::Hasher;
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -102,7 +102,7 @@ impl ImmortalCache {
     /// Store compiled module to cache
     pub fn store(&mut self, hash: &SourceHash, _module: &CompiledModule) -> DxResult<()> {
         let path = self.cache_path(hash);
-        
+
         // Write a cache marker file
         let mut file = File::create(&path)?;
         file.write_all(b"DXCACHE\x00")?;
@@ -110,13 +110,7 @@ impl ImmortalCache {
         // TODO: Serialize the actual compiled code
 
         let size = file.metadata().map(|m| m.len()).unwrap_or(0);
-        self.index.insert(
-            *hash,
-            CacheEntry {
-                path,
-                size,
-            },
-        );
+        self.index.insert(*hash, CacheEntry { path, size });
 
         Ok(())
     }

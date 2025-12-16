@@ -7,7 +7,7 @@
 //! - Escape analysis
 //! - Dead code elimination
 
-use crate::compiler::mir::{Type, TypedInstruction, TypedMIR, PrimitiveType};
+use crate::compiler::mir::{PrimitiveType, Type, TypedInstruction, TypedMIR};
 use crate::error::DxResult;
 use std::collections::HashMap;
 
@@ -33,19 +33,19 @@ impl OptimizationPipeline {
     /// Run all optimizations on MIR
     pub fn optimize(&mut self, mir: TypedMIR) -> DxResult<TypedMIR> {
         let mut optimized = mir;
-        
+
         // Phase 1: Dead code elimination
         optimized = self.eliminate_dead_code(optimized)?;
-        
+
         // Phase 2: Escape analysis (stack allocate when possible)
         optimized = self.escape_analyzer.analyze(optimized)?;
-        
+
         // Phase 3: Inline caching (hot method lookups)
         optimized = self.inline_cache.optimize(optimized)?;
-        
+
         // Phase 4: SIMD vectorization
         optimized = self.simd_optimizer.vectorize(optimized)?;
-        
+
         Ok(optimized)
     }
 
@@ -178,10 +178,7 @@ impl SimdOptimizer {
         match instr {
             TypedInstruction::BinOp { op_type, .. } => {
                 // Numeric operations on primitives can be vectorized
-                matches!(
-                    op_type,
-                    PrimitiveType::I32 | PrimitiveType::F64 | PrimitiveType::I64
-                )
+                matches!(op_type, PrimitiveType::I32 | PrimitiveType::F64 | PrimitiveType::I64)
             }
             _ => false,
         }
@@ -193,7 +190,7 @@ impl SimdOptimizer {
             Type::Primitive(PrimitiveType::I32) => 4, // 128-bit = 4x i32
             Type::Primitive(PrimitiveType::F64) => 2, // 128-bit = 2x f64
             Type::Primitive(PrimitiveType::I64) => 2, // 128-bit = 2x i64
-            _ => 1, // No vectorization
+            _ => 1,                                   // No vectorization
         }
     }
 }
@@ -223,13 +220,9 @@ impl Monomorphizer {
         let specialized_name = format!(
             "{}_{}",
             func_name,
-            type_args
-                .iter()
-                .map(|t| format!("{:?}", t))
-                .collect::<Vec<_>>()
-                .join("_")
+            type_args.iter().map(|t| format!("{:?}", t)).collect::<Vec<_>>().join("_")
         );
-        
+
         // TODO: Clone and specialize the generic function
         // For now, just return the specialized name
         Ok(specialized_name)
@@ -240,11 +233,7 @@ impl Monomorphizer {
         let key = format!(
             "{}_{}",
             func_name,
-            type_args
-                .iter()
-                .map(|t| format!("{:?}", t))
-                .collect::<Vec<_>>()
-                .join("_")
+            type_args.iter().map(|t| format!("{:?}", t)).collect::<Vec<_>>().join("_")
         );
         self.specialized_functions.contains_key(&key)
     }
@@ -335,12 +324,12 @@ mod tests {
     fn test_inline_cache() {
         let mut cache = InlineCache::new();
         let ty = Type::Primitive(PrimitiveType::I32);
-        
+
         // Record calls
         for _ in 0..150 {
             cache.record_call("add", &ty);
         }
-        
+
         // Should be hot after 150 calls
         assert!(cache.is_hot("add", &ty));
     }
@@ -348,25 +337,19 @@ mod tests {
     #[test]
     fn test_simd_optimizer() {
         let optimizer = SimdOptimizer::new();
-        
+
         // Check vector widths
-        assert_eq!(
-            optimizer.get_vector_width(&Type::Primitive(PrimitiveType::I32)),
-            4
-        );
-        assert_eq!(
-            optimizer.get_vector_width(&Type::Primitive(PrimitiveType::F64)),
-            2
-        );
+        assert_eq!(optimizer.get_vector_width(&Type::Primitive(PrimitiveType::I32)), 4);
+        assert_eq!(optimizer.get_vector_width(&Type::Primitive(PrimitiveType::F64)), 2);
     }
 
     #[test]
     fn test_escape_analyzer() {
         let mut analyzer = EscapeAnalyzer::new();
-        
+
         // Initially doesn't escape
         assert!(!analyzer.escapes("x"));
-        
+
         // Mark as escaped
         analyzer.mark_escaped("x".to_string());
         assert!(analyzer.escapes("x"));

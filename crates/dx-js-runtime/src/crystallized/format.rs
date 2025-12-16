@@ -21,24 +21,24 @@ impl CrystallizedCode {
             output,
         }
     }
-    
+
     pub fn hash_source(source: &str) -> [u8; 32] {
-        use std::hash::{Hash, Hasher};
         use std::collections::hash_map::DefaultHasher;
-        
+        use std::hash::{Hash, Hasher};
+
         let mut hasher = DefaultHasher::new();
         source.hash(&mut hasher);
         let hash = hasher.finish();
-        
+
         let mut result = [0u8; 32];
         result[..8].copy_from_slice(&hash.to_le_bytes());
         result
     }
-    
+
     pub fn is_valid(&self) -> bool {
         self.magic == DXB_MAGIC && self.version == DXB_VERSION
     }
-    
+
     pub fn matches_source(&self, source: &str) -> bool {
         self.source_hash == Self::hash_source(source)
     }

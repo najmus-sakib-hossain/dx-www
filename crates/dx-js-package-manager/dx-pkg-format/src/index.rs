@@ -1,5 +1,5 @@
-use dx_pkg_core::{DxpHeader, Error, Result};
 use bytemuck::{Pod, Zeroable};
+use dx_pkg_core::{DxpHeader, Error, Result};
 use memmap2::Mmap;
 use std::collections::HashMap;
 
@@ -7,12 +7,12 @@ use std::collections::HashMap;
 #[repr(C, packed)]
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct FileIndexEntry {
-    pub path_hash: u64,      // Hash of file path
-    pub offset: u64,         // Offset in file data section
-    pub size: u32,           // Uncompressed size
+    pub path_hash: u64,       // Hash of file path
+    pub offset: u64,          // Offset in file data section
+    pub size: u32,            // Uncompressed size
     pub compressed_size: u32, // Compressed size (0 if uncompressed)
-    pub flags: u8,           // Flags (compression type, etc.)
-    pub _reserved: [u8; 3],  // Alignment padding
+    pub flags: u8,            // Flags (compression type, etc.)
+    pub _reserved: [u8; 3],   // Alignment padding
 }
 
 /// File index (hash table for O(1) lookups)
@@ -40,7 +40,10 @@ impl FileIndex {
             })
             .collect();
 
-        Ok(Self { entries, table_size })
+        Ok(Self {
+            entries,
+            table_size,
+        })
     }
 
     /// Find file entry by path hash (O(1) with open addressing)
@@ -50,11 +53,11 @@ impl FileIndex {
 
         loop {
             let entry = &self.entries[idx];
-            
+
             if entry.path_hash == path_hash {
                 return Ok(entry);
             }
-            
+
             if entry.path_hash == 0 {
                 return Err(Error::FileNotFound(format!("hash: {}", path_hash)));
             }
@@ -62,7 +65,7 @@ impl FileIndex {
             // Quadratic probing
             probes += 1;
             idx = (path_hash as usize + probes * probes) % self.table_size as usize;
-            
+
             if probes > self.table_size as usize {
                 return Err(Error::FileNotFound(format!("hash: {}", path_hash)));
             }

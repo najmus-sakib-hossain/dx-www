@@ -1,7 +1,7 @@
 //! Benchmarks for dx-js-runtime
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use dx_js_runtime::{compiler::OptLevel, Compiler, CompilerConfig, DxRuntime};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
+use dx_js_runtime::{Compiler, CompilerConfig, DxRuntime, compiler::OptLevel};
 
 fn bench_cold_start(c: &mut Criterion) {
     c.bench_function("cold_start", |b| {

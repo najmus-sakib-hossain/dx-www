@@ -52,32 +52,32 @@ export default function dxPlugin(options = {{}}) {{
 
   return {{
     name: 'dx-package-manager',
-    
+
     configResolved(resolvedConfig) {{
       console.log('⚡ Dx Package Manager: Binary-first dependency resolution enabled');
     }},
-    
+
     resolveId(source, importer) {{
       if (!config.useDxResolver) return null;
-      
+
       // Let Dx resolve package locations
       if (!source.startsWith('.') && !source.startsWith('/')) {{
         const dxPath = join(process.cwd(), '.dx-store', source);
         return dxPath;
       }}
-      
+
       return null;
     }},
-    
+
     load(id) {{
       if (config.useBinaryPackages && id.endsWith('.dxp')) {{
         // Load binary package format
         return '/* Binary package loaded via Dx */';
       }}
-      
+
       return null;
     }},
-    
+
     transform(code, id) {{
       // Future: Transform for binary optimization
       return null;
@@ -85,9 +85,7 @@ export default function dxPlugin(options = {{}}) {{
   }};
 }}
 "#,
-            self.config.use_dx_resolver,
-            self.config.use_binary_packages,
-            self.config.cache_dir
+            self.config.use_dx_resolver, self.config.use_binary_packages, self.config.cache_dir
         )
     }
 
@@ -100,7 +98,7 @@ declare module 'dx-vite-plugin' {
     useBinaryPackages?: boolean;
     cacheDir?: string;
   }
-  
+
   export default function dxPlugin(options?: DxPluginOptions): any;
 }
 "#
@@ -116,11 +114,11 @@ mod tests {
     fn test_plugin_generation() {
         let config = VitePluginConfig::default();
         let plugin = DxVitePlugin::new(config);
-        
+
         let js = plugin.generate_plugin_js();
         assert!(js.contains("dx-package-manager"));
         assert!(js.contains("useDxResolver"));
-        
+
         let types = plugin.generate_types();
         assert!(types.contains("DxPluginOptions"));
     }

@@ -1,8 +1,8 @@
 //! Production deployment and optimization tools
 
 use crate::error::{DxError, DxResult};
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 
 pub struct DeploymentConfig {
     pub output_dir: PathBuf,
@@ -138,5 +138,7 @@ impl ProductionOptimizer {
 }
 
 impl Default for ProductionOptimizer {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

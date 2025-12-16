@@ -5,4 +5,3 @@ pub mod simd;
 
 pub use direct::DirectExtractor;
 pub use simd::{FastExtractor, ParallelExtractor, SimdGzipDecompressor};
-

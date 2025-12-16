@@ -11,7 +11,9 @@ pub struct AsyncIO {
 
 impl AsyncIO {
     pub fn new() -> Self {
-        Self { io_uring_available: cfg!(target_os = "linux") }
+        Self {
+            io_uring_available: cfg!(target_os = "linux"),
+        }
     }
 
     pub fn is_io_uring_available(&self) -> bool {
@@ -45,7 +47,9 @@ impl AsyncIO {
 }
 
 impl Default for AsyncIO {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 pub struct IOQueue {
@@ -65,7 +69,9 @@ pub enum IOOperation {
 
 impl IOQueue {
     pub fn new() -> Self {
-        Self { pending: Vec::new() }
+        Self {
+            pending: Vec::new(),
+        }
     }
 
     pub fn submit(&mut self, request: IORequest) {
@@ -74,23 +80,25 @@ impl IOQueue {
 
     pub fn process_batch(&mut self) -> Vec<(u64, DxResult<Vec<u8>>)> {
         let requests = std::mem::take(&mut self.pending);
-        requests.into_iter().map(|req| {
-            let result = match req.operation {
-                IOOperation::Read => {
-                    std::fs::read(&req.path)
-                        .map_err(|e| DxError::RuntimeError(e.to_string()))
-                }
-                IOOperation::Write(data) => {
-                    std::fs::write(&req.path, data)
+        requests
+            .into_iter()
+            .map(|req| {
+                let result = match req.operation {
+                    IOOperation::Read => {
+                        std::fs::read(&req.path).map_err(|e| DxError::RuntimeError(e.to_string()))
+                    }
+                    IOOperation::Write(data) => std::fs::write(&req.path, data)
                         .map(|_| Vec::new())
-                        .map_err(|e| DxError::RuntimeError(e.to_string()))
-                }
-            };
-            (req.id, result)
-        }).collect()
+                        .map_err(|e| DxError::RuntimeError(e.to_string())),
+                };
+                (req.id, result)
+            })
+            .collect()
     }
 }
 
 impl Default for IOQueue {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

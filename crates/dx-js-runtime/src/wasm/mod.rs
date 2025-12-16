@@ -10,14 +10,26 @@ pub struct WasmModule {
 }
 
 pub enum WasmExport {
-    Function { params: Vec<WasmType>, results: Vec<WasmType> },
-    Memory { initial: u32, maximum: Option<u32> },
-    Global { value_type: WasmType, mutable: bool },
+    Function {
+        params: Vec<WasmType>,
+        results: Vec<WasmType>,
+    },
+    Memory {
+        initial: u32,
+        maximum: Option<u32>,
+    },
+    Global {
+        value_type: WasmType,
+        mutable: bool,
+    },
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum WasmType {
-    I32, I64, F32, F64,
+    I32,
+    I64,
+    F32,
+    F64,
 }
 
 pub struct WasmMemory {
@@ -34,7 +46,8 @@ impl WasmMemory {
     }
 
     pub fn read(&self, offset: usize, len: usize) -> DxResult<&[u8]> {
-        self.data.get(offset..offset + len)
+        self.data
+            .get(offset..offset + len)
             .ok_or_else(|| DxError::RuntimeError("Memory access out of bounds".to_string()))
     }
 

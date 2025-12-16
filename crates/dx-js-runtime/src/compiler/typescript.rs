@@ -3,7 +3,7 @@
 //! This module handles TypeScript type annotations, type checking,
 //! and type inference to generate optimized code.
 
-use crate::compiler::mir::{Type, PrimitiveType, TypeId};
+use crate::compiler::mir::{PrimitiveType, Type, TypeId};
 use crate::error::DxResult;
 use oxc_ast::ast::TSType;
 use std::collections::HashMap;
@@ -65,32 +65,32 @@ impl TypeScriptAnalyzer {
             TSType::TSNullKeyword(_) => Ok(Type::Primitive(PrimitiveType::Null)),
             TSType::TSUndefinedKeyword(_) => Ok(Type::Primitive(PrimitiveType::Undefined)),
             TSType::TSVoidKeyword(_) => Ok(Type::Primitive(PrimitiveType::Undefined)),
-            
+
             TSType::TSArrayType(array) => {
                 let element_type = self.convert_ts_type(&array.element_type)?;
                 Ok(Type::Array(Box::new(element_type)))
             }
-            
+
             TSType::TSTupleType(_tuple) => {
                 // Tuples not yet supported in MIR, use Array
                 Ok(Type::Array(Box::new(Type::Any)))
             }
-            
+
             TSType::TSUnionType(_union) => {
                 // Unions not yet supported in MIR, use Any
                 Ok(Type::Any)
             }
-            
+
             TSType::TSTypeLiteral(_literal) => {
                 // Object type with specific properties
                 // For now, use TypeId(0) as placeholder
                 Ok(Type::Object(TypeId(0)))
             }
-            
+
             TSType::TSTypeReference(type_ref) => {
                 // Look up type alias or interface
                 let type_name = type_ref.type_name.to_string();
-                
+
                 // Check if it's a built-in generic type
                 match type_name.as_str() {
                     "Array" => {
@@ -117,7 +117,7 @@ impl TypeScriptAnalyzer {
                     }
                 }
             }
-            
+
             TSType::TSFunctionType(_func) => {
                 // For now, use placeholder FunctionSignature
                 // TODO: properly parse params and return type
@@ -127,7 +127,7 @@ impl TypeScriptAnalyzer {
                     return_type: Box::new(Type::Any),
                 }))
             }
-            
+
             _ => {
                 // Unsupported TypeScript type, default to Any
                 Ok(Type::Any)
@@ -148,7 +148,7 @@ impl TypeScriptAnalyzer {
     /// Infer type from expression
     pub fn infer_type(&self, expr: &oxc_ast::ast::Expression) -> Type {
         use oxc_ast::ast::Expression;
-        
+
         match expr {
             Expression::BooleanLiteral(_) => Type::Primitive(PrimitiveType::Bool),
             Expression::NumericLiteral(_) => Type::Primitive(PrimitiveType::F64),
@@ -163,14 +163,14 @@ impl TypeScriptAnalyzer {
                     params: vec![],
                     return_type: Box::new(Type::Any),
                 })
-            },
+            }
             Expression::FunctionExpression(_) => {
                 use crate::compiler::mir::FunctionSignature;
                 Type::Function(FunctionSignature {
                     params: vec![],
                     return_type: Box::new(Type::Any),
                 })
-            },
+            }
             _ => Type::Any,
         }
     }
@@ -180,19 +180,19 @@ impl TypeScriptAnalyzer {
         match (value_type, target_type) {
             // Any is assignable to and from anything
             (Type::Any, _) | (_, Type::Any) => true,
-            
+
             // Exact type match
             (Type::Primitive(a), Type::Primitive(b)) => a == b,
-            
+
             // Array covariance
             (Type::Array(a), Type::Array(b)) => self.is_assignable(a, b),
-            
+
             // Union type handling - not yet supported in MIR
             // (removed for now)
-            
+
             // Object types
             (Type::Object(_), Type::Object(_)) => true,
-            
+
             _ => false,
         }
     }
@@ -234,11 +234,11 @@ mod tests {
     #[test]
     fn test_basic_type_checking() {
         let analyzer = TypeScriptAnalyzer::new();
-        
+
         let i32_type = Type::Primitive(PrimitiveType::I32);
         let f64_type = Type::Primitive(PrimitiveType::F64);
         let bool_type = Type::Primitive(PrimitiveType::Bool);
-        
+
         assert!(analyzer.is_assignable(&i32_type, &f64_type));
         assert!(analyzer.is_assignable(&f64_type, &i32_type));
         assert!(!analyzer.is_assignable(&bool_type, &i32_type));
@@ -247,10 +247,10 @@ mod tests {
     #[test]
     fn test_any_type() {
         let analyzer = TypeScriptAnalyzer::new();
-        
+
         let any_type = Type::Any;
         let i32_type = Type::Primitive(PrimitiveType::I32);
-        
+
         assert!(analyzer.is_assignable(&any_type, &i32_type));
         assert!(analyzer.is_assignable(&i32_type, &any_type));
     }

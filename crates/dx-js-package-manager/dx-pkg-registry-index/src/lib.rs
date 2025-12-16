@@ -41,22 +41,22 @@ use thiserror::Error;
 pub enum IndexError {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
-    
+
     #[error("Invalid index format")]
     InvalidIndex,
-    
+
     #[error("Network error: {0}")]
     Network(#[from] reqwest::Error),
-    
+
     #[error("Decompression error: {0}")]
     Decompression(String),
-    
+
     #[error("Package not found: {0}")]
     PackageNotFound(String),
-    
+
     #[error("Delta update not available")]
     DeltaNotAvailable,
-    
+
     #[error("Build error: {0}")]
     BuildError(String),
 }
@@ -166,11 +166,11 @@ impl RegistryIndex {
             .unwrap_or_else(|| PathBuf::from("."))
             .join("dx")
             .join("registry");
-        
+
         std::fs::create_dir_all(&cache_dir)?;
-        
+
         let index_path = cache_dir.join("npm-registry.cpri");
-        
+
         // Check if we have a valid index
         if index_path.exists() {
             if let Ok(index) = Self::open(&index_path) {
@@ -178,123 +178,122 @@ impl RegistryIndex {
                 if index.is_fresh() {
                     return Ok(index);
                 }
-                
+
                 // For now, just use existing index
                 // TODO: Implement delta updates
                 return Ok(index);
             }
         }
-        
+
         // Build index from popular packages (fast path)
         Self::build_from_popular(&index_path).await
     }
-    
+
     /// Open existing index
     fn open(path: &Path) -> Result<Self, IndexError> {
         let file = File::open(path)?;
         let mmap = unsafe { Mmap::map(&file)? };
-        
+
         // Validate magic
         if mmap.len() < 64 || &mmap[0..4] != b"CPRI" {
             return Err(IndexError::InvalidIndex);
         }
-        
+
         Ok(Self {
             mmap,
             path: path.to_path_buf(),
             last_update: file.metadata()?.modified()?,
         })
     }
-    
+
     /// Build index from popular packages (fast bootstrap)
     async fn build_from_popular(path: &Path) -> Result<Self, IndexError> {
         println!("📥 Building package index from popular packages (~30s one-time setup)...");
-        
+
         let client = reqwest::Client::new();
         let mut builder = CpriBuilder::new();
-        
+
         // Fetch top 500 most popular packages
         let popular = include_str!("../data/popular-500.txt");
-        
+
         let mut fetched = 0;
         for name in popular.lines().take(500) {
             if let Ok(meta) = fetch_package_meta(&client, name).await {
                 builder.add_package(&meta)?;
                 fetched += 1;
-                
+
                 if fetched % 50 == 0 {
                     print!("\r   {}/{} packages indexed", fetched, 500);
                     std::io::Write::flush(&mut std::io::stdout()).ok();
                 }
             }
         }
-        
+
         println!("\r   ✓ Indexed {} packages", fetched);
-        
+
         // Build and save
         let data = builder.build()?;
         std::fs::write(path, &data)?;
-        
+
         println!("   ✓ Registry index ready");
-        
+
         Self::open(path)
     }
-    
+
     /// O(1) package lookup
     #[inline]
     pub fn get_package(&self, name: &str) -> Option<PackageInfo> {
         let hash = xxhash_rust::xxh64::xxh64(name.as_bytes(), 0);
         let header = self.header();
-        
+
         // Hash table lookup
         let bucket_idx = (hash as usize) & (header.hash_table_size as usize - 1);
         let bucket_offset = header.hash_table_offset as usize + bucket_idx * 8;
-        
+
         if bucket_offset + 8 > self.mmap.len() {
             return None;
         }
-        
-        let entry_offset = u64::from_le_bytes(
-            self.mmap[bucket_offset..bucket_offset + 8].try_into().ok()?
-        );
-        
+
+        let entry_offset =
+            u64::from_le_bytes(self.mmap[bucket_offset..bucket_offset + 8].try_into().ok()?);
+
         if entry_offset == 0 {
             return None;
         }
-        
+
         // Read entry
         let entry_size = std::mem::size_of::<PackageEntry>();
         if entry_offset as usize + entry_size > self.mmap.len() {
             return None;
         }
-        
+
         let entry: &PackageEntry = bytemuck::from_bytes(
-            &self.mmap[entry_offset as usize..entry_offset as usize + entry_size]
+            &self.mmap[entry_offset as usize..entry_offset as usize + entry_size],
         );
-        
+
         // Verify hash matches
         if entry.name_hash != hash {
             return None;
         }
-        
+
         Some(PackageInfo::from_entry(entry, &self.mmap))
     }
-    
+
     /// O(1) version lookup
     #[inline]
     pub fn get_version(&self, name: &str, constraint: &str) -> Option<VersionInfo> {
         let pkg = self.get_package(name)?;
         pkg.resolve_version(constraint)
     }
-    
+
     fn header(&self) -> &CpriHeader {
         bytemuck::from_bytes(&self.mmap[0..64])
     }
-    
+
     fn package_count(&self) -> u32 {
         self.header().package_count
     }
-    
+
     fn is_fresh(&self) -> bool {
         // Fresh if less than 1 hour old
         self.last_update.elapsed().map(|d| d.as_secs() < 3600).unwrap_or(false)
@@ -312,22 +311,31 @@ pub struct PackageInfo {
 impl PackageInfo {
     fn from_entry(entry: &PackageEntry, mmap: &[u8]) -> Self {
         let name = Self::read_string(mmap, entry.name_offset as usize, entry.name_len as usize);
-        let latest = Self::read_string(mmap, entry.latest_version_offset as usize, entry.latest_version_len as usize);
-        
+        let latest = Self::read_string(
+            mmap,
+            entry.latest_version_offset as usize,
+            entry.latest_version_len as usize,
+        );
+
         let mut versions = Vec::with_capacity(entry.version_count as usize);
         let version_size = std::mem::size_of::<VersionEntry>();
-        
+
         for i in 0..entry.version_count as usize {
             let offset = entry.versions_offset as usize + i * version_size;
             if offset + version_size <= mmap.len() {
-                let version_entry: &VersionEntry = bytemuck::from_bytes(&mmap[offset..offset + version_size]);
+                let version_entry: &VersionEntry =
+                    bytemuck::from_bytes(&mmap[offset..offset + version_size]);
                 versions.push(VersionInfo::from_entry(version_entry, mmap));
             }
         }
-        
-        Self { name, versions, latest }
+
+        Self {
+            name,
+            versions,
+            latest,
+        }
     }
-    
+
     fn read_string(mmap: &[u8], offset: usize, len: usize) -> String {
         if offset + len <= mmap.len() {
             String::from_utf8_lossy(&mmap[offset..offset + len]).into_owned()
@@ -335,23 +343,20 @@ impl PackageInfo {
             String::new()
         }
     }
-    
+
     /// Resolve version constraint to specific version
     pub fn resolve_version(&self, constraint: &str) -> Option<VersionInfo> {
         if constraint == "latest" || constraint == "*" {
-            return self.versions.iter()
-                .find(|v| v.version == self.latest)
-                .cloned();
+            return self.versions.iter().find(|v| v.version == self.latest).cloned();
         }
-        
+
         let req = semver::VersionReq::parse(constraint).ok()?;
-        
+
         // Find best matching version (highest that satisfies)
-        self.versions.iter()
+        self.versions
+            .iter()
             .filter(|v| {
-                semver::Version::parse(&v.version)
-                    .map(|ver| req.matches(&ver))
-                    .unwrap_or(false)
+                semver::Version::parse(&v.version).map(|ver| req.matches(&ver)).unwrap_or(false)
             })
             .max_by(|a, b| {
                 let va = semver::Version::parse(&a.version).unwrap();
@@ -373,21 +378,28 @@ pub struct VersionInfo {
 
 impl VersionInfo {
     fn from_entry(entry: &VersionEntry, mmap: &[u8]) -> Self {
-        let version = Self::read_string(mmap, entry.version_offset as usize, entry.version_len as usize);
-        let tarball_url = Self::read_string(mmap, entry.tarball_url_offset as usize, entry.tarball_url_len as usize);
-        let integrity = Self::read_string(mmap, entry.integrity_offset as usize, entry.integrity_len as usize);
-        
+        let version =
+            Self::read_string(mmap, entry.version_offset as usize, entry.version_len as usize);
+        let tarball_url = Self::read_string(
+            mmap,
+            entry.tarball_url_offset as usize,
+            entry.tarball_url_len as usize,
+        );
+        let integrity =
+            Self::read_string(mmap, entry.integrity_offset as usize, entry.integrity_len as usize);
+
         let mut dependencies = Vec::with_capacity(entry.dep_count as usize);
         let dep_size = std::mem::size_of::<DependencyEntry>();
-        
+
         for i in 0..entry.dep_count as usize {
             let offset = entry.deps_offset as usize + i * dep_size;
             if offset + dep_size <= mmap.len() {
-                let dep_entry: &DependencyEntry = bytemuck::from_bytes(&mmap[offset..offset + dep_size]);
+                let dep_entry: &DependencyEntry =
+                    bytemuck::from_bytes(&mmap[offset..offset + dep_size]);
                 dependencies.push(Dependency::from_entry(dep_entry, mmap));
             }
         }
-        
+
         Self {
             version,
             tarball_url,
@@ -396,7 +408,7 @@ impl VersionInfo {
             dependencies,
         }
     }
-    
+
     fn read_string(mmap: &[u8], offset: usize, len: usize) -> String {
         if offset + len <= mmap.len() {
             String::from_utf8_lossy(&mmap[offset..offset + len]).into_owned()
@@ -416,15 +428,19 @@ pub struct Dependency {
 impl Dependency {
     fn from_entry(entry: &DependencyEntry, mmap: &[u8]) -> Self {
         let name_offset = 0; // TODO: Need to store name offset in DependencyEntry
-        let constraint = Self::read_string(mmap, entry.constraint_offset as usize, entry.constraint_len as usize);
-        
+        let constraint = Self::read_string(
+            mmap,
+            entry.constraint_offset as usize,
+            entry.constraint_len as usize,
+        );
+
         Self {
             name: String::new(), // Will be resolved via name_hash
             constraint,
             dep_type: DependencyType::from_u8(entry.dep_type),
         }
     }
-    
+
     fn read_string(mmap: &[u8], offset: usize, len: usize) -> String {
         if offset + len <= mmap.len() {
             String::from_utf8_lossy(&mmap[offset..offset + len]).into_owned()
@@ -469,44 +485,44 @@ impl CpriBuilder {
             string_offsets: HashMap::new(),
         }
     }
-    
+
     fn add_package(&mut self, meta: &PackageMetadata) -> Result<(), IndexError> {
         self.packages.push(meta.clone());
         Ok(())
     }
-    
+
     fn intern_string(&mut self, s: &str) -> u32 {
         if let Some(&offset) = self.string_offsets.get(s) {
             return offset;
         }
-        
+
         let offset = self.string_table.len() as u32;
         self.string_table.extend_from_slice(s.as_bytes());
         self.string_offsets.insert(s.to_string(), offset);
         offset
     }
-    
+
     fn build(&mut self) -> Result<Vec<u8>, IndexError> {
         // Calculate sizes
         let hash_table_size = 1 << 16; // 64K buckets
         let header_size = 64;
         let hash_table_bytes = hash_table_size * 8;
-        
+
         let mut result = Vec::new();
-        
+
         // Write header (placeholder)
         result.resize(header_size, 0);
-        
+
         // Write hash table (placeholder)
         let hash_table_offset = result.len();
         result.resize(hash_table_offset + hash_table_bytes, 0);
-        
+
         // Write package entries
         let entries_offset = result.len();
-        
+
         // TODO: Implement full binary serialization
         // For now, just create a minimal valid header
-        
+
         let header = CpriHeader {
             magic: *b"CPRI",
             version: 1,
@@ -515,16 +531,13 @@ impl CpriBuilder {
             hash_table_offset: hash_table_offset as u64,
             entries_offset: entries_offset as u64,
             strings_offset: 0,
-            timestamp: SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_secs(),
+            timestamp: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs(),
         };
-        
+
         // Write header
         let header_bytes = bytemuck::bytes_of(&header);
         result[0..64].copy_from_slice(header_bytes);
-        
+
         Ok(result)
     }
 }
@@ -551,36 +564,54 @@ struct DistMetadata {
     size: u32,
 }
 
-async fn fetch_package_meta(client: &reqwest::Client, name: &str) -> Result<PackageMetadata, IndexError> {
+async fn fetch_package_meta(
+    client: &reqwest::Client,
+    name: &str,
+) -> Result<PackageMetadata, IndexError> {
     let url = format!("https://registry.npmjs.org/{}", name);
-    
+
     let response = client.get(&url).send().await?;
     let json: serde_json::Value = response.json().await?;
-    
-    let versions_obj = json["versions"].as_object().ok_or(IndexError::BuildError("No versions".into()))?;
+
+    let versions_obj = json["versions"]
+        .as_object()
+        .ok_or(IndexError::BuildError("No versions".into()))?;
     let mut versions = HashMap::new();
-    
+
     for (ver, ver_obj) in versions_obj {
         if let Some(dist) = ver_obj["dist"].as_object() {
             let tarball = dist["tarball"].as_str().unwrap_or("").to_string();
             let shasum = dist["shasum"].as_str().unwrap_or("").to_string();
             let integrity = dist["integrity"].as_str().unwrap_or("").to_string();
             let size = dist["unpackedSize"].as_u64().unwrap_or(0) as u32;
-            
-            let deps = ver_obj["dependencies"].as_object()
-                .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.as_str().unwrap_or("*").to_string())).collect())
+
+            let deps = ver_obj["dependencies"]
+                .as_object()
+                .map(|obj| {
+                    obj.iter()
+                        .map(|(k, v)| (k.clone(), v.as_str().unwrap_or("*").to_string()))
+                        .collect()
+                })
                 .unwrap_or_default();
-            
-            versions.insert(ver.clone(), VersionMetadata {
-                version: ver.clone(),
-                dist: DistMetadata { tarball, shasum, integrity, size },
-                dependencies: deps,
-            });
+
+            versions.insert(
+                ver.clone(),
+                VersionMetadata {
+                    version: ver.clone(),
+                    dist: DistMetadata {
+                        tarball,
+                        shasum,
+                        integrity,
+                        size,
+                    },
+                    dependencies: deps,
+                },
+            );
         }
     }
-    
+
     let latest = json["dist-tags"]["latest"].as_str().unwrap_or("").to_string();
-    
+
     Ok(PackageMetadata {
         name: name.to_string(),
         versions,

@@ -54,11 +54,12 @@ impl MicrosoftTranslator {
         api_key: Option<String>,
         region: Option<String>,
     ) -> Result<Self> {
-        let api_key = api_key.or_else(|| env::var("MICROSOFT_API_KEY").ok())
-            .ok_or_else(|| I18nError::ApiKeyRequired(
+        let api_key = api_key.or_else(|| env::var("MICROSOFT_API_KEY").ok()).ok_or_else(|| {
+            I18nError::ApiKeyRequired(
                 "Microsoft Translator".to_string(),
                 "MICROSOFT_API_KEY".to_string(),
-            ))?;
+            )
+        })?;
 
         Ok(Self {
             client: Client::new(),
@@ -80,33 +81,22 @@ impl Translator for MicrosoftTranslator {
         }
 
         let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "Ocp-Apim-Subscription-Key",
-            self.api_key.parse().unwrap(),
-        );
-        headers.insert(
-            "Content-Type",
-            "application/json".parse().unwrap(),
-        );
+        headers.insert("Ocp-Apim-Subscription-Key", self.api_key.parse().unwrap());
+        headers.insert("Content-Type", "application/json".parse().unwrap());
 
         if let Some(ref region) = self.region {
-            headers.insert(
-                "Ocp-Apim-Subscription-Region",
-                region.parse().unwrap(),
-            );
+            headers.insert("Ocp-Apim-Subscription-Region", region.parse().unwrap());
         }
 
         let body = vec![TranslationRequest {
             text: text.to_string(),
         }];
 
-        let response = self.client
+        let response = self
+            .client
             .post(MICROSOFT_TRANSLATE_URL)
             .headers(headers)
-            .query(&[
-                ("from", self.source.as_str()),
-                ("to", self.target.as_str()),
-            ])
+            .query(&[("from", self.source.as_str()), ("to", self.target.as_str())])
             .json(&body)
             .send()
             .await?;
@@ -121,7 +111,7 @@ impl Translator for MicrosoftTranslator {
         }
 
         let translations: Vec<TranslationResponse> = response.json().await?;
-        
+
         if let Some(first) = translations.first() {
             if let Some(translation) = first.translations.first() {
                 return Ok(translation.text.clone());
@@ -133,7 +123,9 @@ impl Translator for MicrosoftTranslator {
 
     fn get_supported_languages(&self) -> Vec<&'static str> {
         // Microsoft supports many languages - returning a subset
-        vec!["en", "es", "fr", "de", "it", "ja", "ko", "pt", "ru", "zh-Hans", "zh-Hant"]
+        vec![
+            "en", "es", "fr", "de", "it", "ja", "ko", "pt", "ru", "zh-Hans", "zh-Hant",
+        ]
     }
 
     fn source(&self) -> &str {

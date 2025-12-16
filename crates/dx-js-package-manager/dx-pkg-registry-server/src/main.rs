@@ -69,7 +69,7 @@ async fn handle_connection(
         // Read request (32 bytes)
         let mut req_buf = [0u8; 32];
         let n = socket.read(&mut req_buf).await?;
-        
+
         if n == 0 {
             // Connection closed
             return Ok(());
@@ -173,10 +173,8 @@ async fn handle_download(
 #[tokio::main]
 async fn main() -> Result<()> {
     // Parse command line arguments
-    let storage_path = std::env::args()
-        .nth(1)
-        .unwrap_or_else(|| ".dx-registry".to_string());
-    
+    let storage_path = std::env::args().nth(1).unwrap_or_else(|| ".dx-registry".to_string());
+
     let addr: SocketAddr = std::env::args()
         .nth(2)
         .unwrap_or_else(|| "127.0.0.1:3000".to_string())

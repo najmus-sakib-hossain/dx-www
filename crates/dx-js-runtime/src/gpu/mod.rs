@@ -19,12 +19,17 @@ impl GpuDevice {
         if !self.available {
             return Err(DxError::RuntimeError("GPU not available".to_string()));
         }
-        Ok(GpuBuffer { data: vec![0; size], size })
+        Ok(GpuBuffer {
+            data: vec![0; size],
+            size,
+        })
     }
 }
 
 impl Default for GpuDevice {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 pub struct GpuBuffer {
@@ -42,7 +47,8 @@ impl GpuBuffer {
     }
 
     pub fn read(&self, offset: usize, len: usize) -> DxResult<&[u8]> {
-        self.data.get(offset..offset + len)
+        self.data
+            .get(offset..offset + len)
             .ok_or_else(|| DxError::RuntimeError("Buffer read out of bounds".to_string()))
     }
 }

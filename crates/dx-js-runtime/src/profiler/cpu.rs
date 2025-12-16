@@ -1,7 +1,7 @@
 //! CPU Profiler with sampling and stack traces
 
-use std::time::{Duration, Instant};
 use std::collections::HashMap;
+use std::time::{Duration, Instant};
 
 pub struct CpuProfiler {
     samples: Vec<Sample>,
@@ -33,10 +33,14 @@ impl CpuProfiler {
         self.samples.clear();
     }
 
-    pub fn stop(&mut self) { self.active = false; }
+    pub fn stop(&mut self) {
+        self.active = false;
+    }
 
     pub fn sample(&mut self, stack: Vec<String>) {
-        if !self.active { return; }
+        if !self.active {
+            return;
+        }
         self.samples.push(Sample {
             timestamp: self.start_time.elapsed(),
             stack,
@@ -73,7 +77,9 @@ pub struct CpuProfile {
 
 impl CpuProfile {
     pub fn hot_functions(&self, limit: usize) -> Vec<(String, u64, Duration)> {
-        let mut funcs: Vec<_> = self.call_counts.iter()
+        let mut funcs: Vec<_> = self
+            .call_counts
+            .iter()
             .map(|(name, &count)| {
                 let time = self.total_time.get(name).copied().unwrap_or(Duration::ZERO);
                 (name.clone(), count, time)

@@ -11,13 +11,17 @@ pub struct Version {
 
 impl Version {
     pub fn new(major: u32, minor: u32, patch: u32) -> Self {
-        Self { major, minor, patch }
+        Self {
+            major,
+            minor,
+            patch,
+        }
     }
 
     pub fn parse(s: &str) -> Result<Self> {
         let s = s.trim_start_matches('v');
         let parts: Vec<&str> = s.split('.').collect();
-        
+
         if parts.len() != 3 {
             return Err(Error::InvalidVersion(s.to_string()));
         }
@@ -41,8 +45,8 @@ impl fmt::Display for Version {
 pub enum VersionConstraint {
     Exact(Version),
     Range { min: Version, max: Version },
-    Caret(Version),  // ^1.2.3 = >=1.2.3 <2.0.0
-    Tilde(Version),  // ~1.2.3 = >=1.2.3 <1.3.0
+    Caret(Version), // ^1.2.3 = >=1.2.3 <2.0.0
+    Tilde(Version), // ~1.2.3 = >=1.2.3 <1.3.0
 }
 
 /// Encode version to u64 (major << 40 | minor << 20 | patch)

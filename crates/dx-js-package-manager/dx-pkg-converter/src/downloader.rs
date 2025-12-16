@@ -47,10 +47,7 @@ impl NpmDownloader {
 
         // Resolve version
         let resolved_version = if version == "latest" {
-            metadata
-                .dist_tags
-                .get("latest")
-                .context("No latest version found")?
+            metadata.dist_tags.get("latest").context("No latest version found")?
         } else {
             version
         };
@@ -67,13 +64,7 @@ impl NpmDownloader {
         println!("   Downloading: {}", tarball_url);
 
         // Download tarball
-        let bytes = self
-            .client
-            .get(tarball_url)
-            .send()
-            .await?
-            .bytes()
-            .await?;
+        let bytes = self.client.get(tarball_url).send().await?.bytes().await?;
 
         Ok(bytes.to_vec())
     }

@@ -29,7 +29,10 @@ impl RegExp {
                 _ => return Err(DxError::RuntimeError(format!("Invalid flag: {}", c))),
             }
         }
-        Ok(Self { pattern: pattern.to_string(), flags: f })
+        Ok(Self {
+            pattern: pattern.to_string(),
+            flags: f,
+        })
     }
 
     pub fn test(&self, input: &str) -> bool {
@@ -37,9 +40,17 @@ impl RegExp {
     }
 
     pub fn exec(&self, input: &str) -> Option<RegExpMatch> {
-        let pattern = if self.flags.ignorecase { self.pattern.to_lowercase() } else { self.pattern.clone() };
-        let text = if self.flags.ignorecase { input.to_lowercase() } else { input.to_string() };
-        
+        let pattern = if self.flags.ignorecase {
+            self.pattern.to_lowercase()
+        } else {
+            self.pattern.clone()
+        };
+        let text = if self.flags.ignorecase {
+            input.to_lowercase()
+        } else {
+            input.to_string()
+        };
+
         if let Some(pos) = text.find(&pattern) {
             Some(RegExpMatch {
                 matched: input[pos..pos + pattern.len()].to_string(),

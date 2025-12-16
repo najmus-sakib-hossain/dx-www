@@ -5,9 +5,9 @@
 //! - Ed25519 signature checks
 //! - Parallel batch verification
 
-use dx_pkg_core::{hash::ContentHash, Result};
-use sha2::{Sha256, Digest};
-use ed25519_dalek::{Verifier, Signature, VerifyingKey};
+use dx_pkg_core::{Result, hash::ContentHash};
+use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+use sha2::{Digest, Sha256};
 
 /// Package verifier
 pub struct PackageVerifier {
@@ -72,7 +72,7 @@ mod tests {
         let verifier = PackageVerifier::default();
         let data = b"test data";
         let hash = dx_pkg_core::hash::xxhash128(data);
-        
+
         assert!(verifier.verify_hash(data, hash).unwrap());
         assert!(!verifier.verify_hash(data, hash + 1).unwrap());
     }
@@ -81,26 +81,26 @@ mod tests {
     fn test_verify_sha256() {
         let verifier = PackageVerifier::default();
         let data = b"test data";
-        
+
         let mut hasher = Sha256::new();
         hasher.update(data);
         let hash: [u8; 32] = hasher.finalize().into();
-        
+
         assert!(verifier.verify_sha256(data, &hash).unwrap());
     }
 
     #[test]
     fn test_batch_verify() {
         let verifier = PackageVerifier::default();
-        
+
         let data1 = b"package1";
         let data2 = b"package2";
         let hash1 = dx_pkg_core::hash::xxhash128(data1);
         let hash2 = dx_pkg_core::hash::xxhash128(data2);
-        
+
         let packages = vec![(data1.as_slice(), hash1), (data2.as_slice(), hash2)];
         let results = verifier.verify_batch(packages);
-        
+
         assert_eq!(results, vec![true, true]);
     }
 }

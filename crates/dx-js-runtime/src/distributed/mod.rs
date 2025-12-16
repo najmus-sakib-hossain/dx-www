@@ -44,11 +44,12 @@ impl DistributedRuntime {
     }
 
     pub fn select_node_for_task(&self, required_caps: &NodeCapabilities) -> Option<&NodeInfo> {
-        self.nodes.values()
+        self.nodes
+            .values()
             .filter(|n| {
-                n.capabilities.cpu_cores >= required_caps.cpu_cores &&
-                n.capabilities.memory_gb >= required_caps.memory_gb &&
-                (!required_caps.gpu_available || n.capabilities.gpu_available)
+                n.capabilities.cpu_cores >= required_caps.cpu_cores
+                    && n.capabilities.memory_gb >= required_caps.memory_gb
+                    && (!required_caps.gpu_available || n.capabilities.gpu_available)
             })
             .min_by(|a, b| a.load.partial_cmp(&b.load).unwrap())
     }
@@ -116,5 +117,7 @@ impl TaskScheduler {
 }
 
 impl Default for TaskScheduler {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

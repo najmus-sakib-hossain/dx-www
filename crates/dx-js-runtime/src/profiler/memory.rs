@@ -35,11 +35,20 @@ impl MemoryProfiler {
         self.peak_usage = 0;
     }
 
-    pub fn stop(&mut self) { self.active = false; }
+    pub fn stop(&mut self) {
+        self.active = false;
+    }
 
     pub fn track_allocation(&mut self, id: u64, size: usize, stack: Vec<String>) {
-        if !self.active { return; }
-        self.allocations.push(Allocation { id, size, stack, allocated_at: Instant::now() });
+        if !self.active {
+            return;
+        }
+        self.allocations.push(Allocation {
+            id,
+            size,
+            stack,
+            allocated_at: Instant::now(),
+        });
         self.current_usage += size;
         if self.current_usage > self.peak_usage {
             self.peak_usage = self.current_usage;
@@ -47,7 +56,9 @@ impl MemoryProfiler {
     }
 
     pub fn track_deallocation(&mut self, size: usize) {
-        if !self.active { return; }
+        if !self.active {
+            return;
+        }
         self.current_usage = self.current_usage.saturating_sub(size);
     }
 
@@ -69,7 +80,9 @@ impl MemoryProfiler {
 }
 
 impl Default for MemoryProfiler {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 pub struct MemorySnapshot {
@@ -81,9 +94,7 @@ pub struct MemorySnapshot {
 
 impl MemorySnapshot {
     pub fn top_allocators(&self, limit: usize) -> Vec<(String, usize)> {
-        let mut items: Vec<_> = self.by_location.iter()
-            .map(|(k, &v)| (k.clone(), v))
-            .collect();
+        let mut items: Vec<_> = self.by_location.iter().map(|(k, &v)| (k.clone(), v)).collect();
         items.sort_by(|a, b| b.1.cmp(&a.1));
         items.truncate(limit);
         items

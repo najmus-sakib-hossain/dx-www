@@ -48,7 +48,13 @@ impl CryptoModule {
     }
 
     /// PBKDF2 key derivation
-    pub fn pbkdf2(&self, password: &[u8], salt: &[u8], iterations: usize, key_len: usize) -> Vec<u8> {
+    pub fn pbkdf2(
+        &self,
+        password: &[u8],
+        salt: &[u8],
+        iterations: usize,
+        key_len: usize,
+    ) -> Vec<u8> {
         // Simplified PBKDF2 - in production use pbkdf2 crate
         let mut key = Vec::with_capacity(key_len);
         for i in 0..key_len {
@@ -62,7 +68,7 @@ impl CryptoModule {
         if a.len() != b.len() {
             return false;
         }
-        
+
         let mut result = 0u8;
         for (x, y) in a.iter().zip(b.iter()) {
             result |= x ^ y;
@@ -119,7 +125,7 @@ impl HashBuilder {
         let mut hasher = DefaultHasher::new();
         self.data.hash(&mut hasher);
         let hash = StdHasher::finish(&hasher);
-        
+
         match self.algorithm.as_str() {
             "sha256" => hash.to_be_bytes().repeat(4).to_vec(), // 32 bytes
             "sha512" => hash.to_be_bytes().repeat(8).to_vec(), // 64 bytes
@@ -131,10 +137,7 @@ impl HashBuilder {
 
     /// Get digest as hex string
     pub fn digest_hex(&self) -> String {
-        self.digest()
-            .iter()
-            .map(|b| format!("{:02x}", b))
-            .collect()
+        self.digest().iter().map(|b| format!("{:02x}", b)).collect()
     }
 
     /// Get digest as base64
@@ -175,10 +178,7 @@ impl Hmac {
 
     /// Get digest as hex string
     pub fn digest_hex(&self) -> String {
-        self.digest()
-            .iter()
-            .map(|b| format!("{:02x}", b))
-            .collect()
+        self.digest().iter().map(|b| format!("{:02x}", b)).collect()
     }
 }
 
@@ -201,10 +201,7 @@ impl Cipher {
     /// Encrypt data
     pub fn encrypt(&self, data: &[u8]) -> Vec<u8> {
         // Simplified XOR cipher - in production use aes/chacha20 crates
-        data.iter()
-            .enumerate()
-            .map(|(i, b)| b ^ self.key[i % self.key.len()])
-            .collect()
+        data.iter().enumerate().map(|(i, b)| b ^ self.key[i % self.key.len()]).collect()
     }
 
     /// Decrypt data
@@ -218,24 +215,32 @@ impl Cipher {
 fn base64_encode(data: &[u8]) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut result = String::new();
-    
+
     for chunk in data.chunks(3) {
         let mut buf = [0u8; 3];
         for (i, &byte) in chunk.iter().enumerate() {
             buf[i] = byte;
         }
-        
+
         let b1 = (buf[0] >> 2) as usize;
         let b2 = (((buf[0] & 0x03) << 4) | (buf[1] >> 4)) as usize;
         let b3 = (((buf[1] & 0x0F) << 2) | (buf[2] >> 6)) as usize;
         let b4 = (buf[2] & 0x3F) as usize;
-        
+
         result.push(CHARSET[b1] as char);
         result.push(CHARSET[b2] as char);
-        result.push(if chunk.len() > 1 { CHARSET[b3] as char } else { '=' });
-        result.push(if chunk.len() > 2 { CHARSET[b4] as char } else { '=' });
+        result.push(if chunk.len() > 1 {
+            CHARSET[b3] as char
+        } else {
+            '='
+        });
+        result.push(if chunk.len() > 2 {
+            CHARSET[b4] as char
+        } else {
+            '='
+        });
     }
-    
+
     result
 }
 

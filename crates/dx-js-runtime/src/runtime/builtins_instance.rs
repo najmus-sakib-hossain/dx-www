@@ -41,18 +41,39 @@ pub struct ArrayPrototype;
 
 impl ArrayPrototype {
     /// Array.prototype.map(callback)
-    pub fn map(&self, array: Vec<Value>, callback: Box<dyn Fn(Value, usize) -> Value>) -> Vec<Value> {
+    pub fn map(
+        &self,
+        array: Vec<Value>,
+        callback: Box<dyn Fn(Value, usize) -> Value>,
+    ) -> Vec<Value> {
         array.into_iter().enumerate().map(|(i, val)| callback(val, i)).collect()
     }
 
     /// Array.prototype.filter(callback)
-    pub fn filter(&self, array: Vec<Value>, callback: Box<dyn Fn(&Value, usize) -> bool>) -> Vec<Value> {
-        array.into_iter().enumerate().filter(|(i, val)| callback(val, *i)).map(|(_, v)| v).collect()
+    pub fn filter(
+        &self,
+        array: Vec<Value>,
+        callback: Box<dyn Fn(&Value, usize) -> bool>,
+    ) -> Vec<Value> {
+        array
+            .into_iter()
+            .enumerate()
+            .filter(|(i, val)| callback(val, *i))
+            .map(|(_, v)| v)
+            .collect()
     }
 
     /// Array.prototype.reduce(callback, initial)
-    pub fn reduce(&self, array: Vec<Value>, callback: Box<dyn Fn(Value, Value, usize) -> Value>, initial: Value) -> Value {
-        array.into_iter().enumerate().fold(initial, |acc, (i, val)| callback(acc, val, i))
+    pub fn reduce(
+        &self,
+        array: Vec<Value>,
+        callback: Box<dyn Fn(Value, Value, usize) -> Value>,
+        initial: Value,
+    ) -> Value {
+        array
+            .into_iter()
+            .enumerate()
+            .fold(initial, |acc, (i, val)| callback(acc, val, i))
     }
 
     /// Array.prototype.forEach(callback)
@@ -61,17 +82,33 @@ impl ArrayPrototype {
     }
 
     /// Array.prototype.find(callback)
-    pub fn find(&self, array: &[Value], callback: Box<dyn Fn(&Value, usize) -> bool>) -> Option<Value> {
+    pub fn find(
+        &self,
+        array: &[Value],
+        callback: Box<dyn Fn(&Value, usize) -> bool>,
+    ) -> Option<Value> {
         array.iter().enumerate().find_map(|(i, val)| {
-            if callback(val, i) { Some(val.clone()) } else { None }
+            if callback(val, i) {
+                Some(val.clone())
+            } else {
+                None
+            }
         })
     }
 
     /// Array.prototype.findIndex(callback)
     pub fn find_index(&self, array: &[Value], callback: Box<dyn Fn(&Value, usize) -> bool>) -> i32 {
-        array.iter().enumerate().find_map(|(i, val)| {
-            if callback(val, i) { Some(i as i32) } else { None }
-        }).unwrap_or(-1)
+        array
+            .iter()
+            .enumerate()
+            .find_map(|(i, val)| {
+                if callback(val, i) {
+                    Some(i as i32)
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(-1)
     }
 
     /// Array.prototype.every(callback)
@@ -107,8 +144,14 @@ impl ArrayPrototype {
     /// Array.prototype.slice(start, end)
     pub fn slice(&self, array: &[Value], start: i32, end: Option<i32>) -> Vec<Value> {
         let len = array.len() as i32;
-        let start = if start < 0 { (len + start).max(0) } else { start.min(len) } as usize;
-        let end = end.map(|e| if e < 0 { (len + e).max(0) } else { e.min(len) } as usize).unwrap_or(array.len());
+        let start = if start < 0 {
+            (len + start).max(0)
+        } else {
+            start.min(len)
+        } as usize;
+        let end = end
+            .map(|e| if e < 0 { (len + e).max(0) } else { e.min(len) } as usize)
+            .unwrap_or(array.len());
         array[start..end].to_vec()
     }
 
@@ -124,14 +167,16 @@ impl ArrayPrototype {
     }
 
     /// Array.prototype.sort(compareFn)
-    pub fn sort(&self, mut array: Vec<Value>, compare: Option<Box<dyn Fn(&Value, &Value) -> i32>>) -> Vec<Value> {
+    pub fn sort(
+        &self,
+        mut array: Vec<Value>,
+        compare: Option<Box<dyn Fn(&Value, &Value) -> i32>>,
+    ) -> Vec<Value> {
         if let Some(cmp) = compare {
-            array.sort_by(|a, b| {
-                match cmp(a, b) {
-                    x if x < 0 => std::cmp::Ordering::Less,
-                    x if x > 0 => std::cmp::Ordering::Greater,
-                    _ => std::cmp::Ordering::Equal,
-                }
+            array.sort_by(|a, b| match cmp(a, b) {
+                x if x < 0 => std::cmp::Ordering::Less,
+                x if x > 0 => std::cmp::Ordering::Greater,
+                _ => std::cmp::Ordering::Equal,
             });
         } else {
             array.sort_by(|a, b| format!("{:?}", a).cmp(&format!("{:?}", b)));
@@ -153,7 +198,11 @@ impl ArrayPrototype {
     }
 
     /// Array.prototype.flatMap(callback)
-    pub fn flat_map(&self, array: Vec<Value>, callback: Box<dyn Fn(Value, usize) -> Vec<Value>>) -> Vec<Value> {
+    pub fn flat_map(
+        &self,
+        array: Vec<Value>,
+        callback: Box<dyn Fn(Value, usize) -> Vec<Value>>,
+    ) -> Vec<Value> {
         array.into_iter().enumerate().flat_map(|(i, val)| callback(val, i)).collect()
     }
 }
@@ -195,8 +244,14 @@ impl StringPrototype {
     /// String.prototype.slice(start, end)
     pub fn slice(&self, s: &str, start: i32, end: Option<i32>) -> String {
         let len = s.len() as i32;
-        let start = if start < 0 { (len + start).max(0) } else { start.min(len) } as usize;
-        let end = end.map(|e| if e < 0 { (len + e).max(0) } else { e.min(len) } as usize).unwrap_or(s.len());
+        let start = if start < 0 {
+            (len + start).max(0)
+        } else {
+            start.min(len)
+        } as usize;
+        let end = end
+            .map(|e| if e < 0 { (len + e).max(0) } else { e.min(len) } as usize)
+            .unwrap_or(s.len());
         s.chars().skip(start).take(end - start).collect()
     }
 
@@ -209,7 +264,11 @@ impl StringPrototype {
     /// String.prototype.substr(start, length)
     pub fn substr(&self, s: &str, start: i32, length: Option<usize>) -> String {
         let len = s.len() as i32;
-        let start = if start < 0 { (len + start).max(0) } else { start.min(len) } as usize;
+        let start = if start < 0 {
+            (len + start).max(0)
+        } else {
+            start.min(len)
+        } as usize;
         let length = length.unwrap_or(s.len() - start);
         s.chars().skip(start).take(length).collect()
     }
@@ -364,7 +423,7 @@ impl NumberPrototype {
         if radix < 2 || radix > 36 {
             return Err(DxError::RuntimeError("Invalid radix".to_string()));
         }
-        
+
         if radix == 10 {
             Ok(num.to_string())
         } else if radix == 2 {
@@ -388,13 +447,16 @@ mod tests {
     fn test_array_map() {
         let proto = ArrayPrototype;
         let arr = vec![Value::Number(1.0), Value::Number(2.0), Value::Number(3.0)];
-        let result = proto.map(arr, Box::new(|v, _| {
-            if let Value::Number(n) = v {
-                Value::Number(n * 2.0)
-            } else {
-                v
-            }
-        }));
+        let result = proto.map(
+            arr,
+            Box::new(|v, _| {
+                if let Value::Number(n) = v {
+                    Value::Number(n * 2.0)
+                } else {
+                    v
+                }
+            }),
+        );
         assert_eq!(result.len(), 3);
     }
 

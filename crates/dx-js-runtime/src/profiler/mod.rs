@@ -1,12 +1,12 @@
 //! Profiler module for performance analysis
 
 pub mod cpu;
-pub mod memory;
 pub mod flamegraph;
+pub mod memory;
 
-pub use cpu::{CpuProfiler, CpuProfile};
-pub use memory::{MemoryProfiler, MemorySnapshot};
+pub use cpu::{CpuProfile, CpuProfiler};
 pub use flamegraph::FlameGraph;
+pub use memory::{MemoryProfiler, MemorySnapshot};
 
 pub struct Profiler {
     pub cpu: CpuProfiler,
@@ -40,7 +40,9 @@ impl Profiler {
 }
 
 impl Default for Profiler {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 pub struct ProfileReport {

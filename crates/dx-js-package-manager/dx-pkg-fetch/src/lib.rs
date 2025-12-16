@@ -6,13 +6,13 @@
 //! - Retry with exponential backoff
 //! - Speculative fetching (Markov prediction)
 
-use dx_pkg_core::{error::Error, hash::ContentHash, version::Version, Result};
+use dx_pkg_core::{Result, error::Error, hash::ContentHash, version::Version};
 use dx_pkg_registry::DxrpClient;
 use futures::future::join_all;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{Semaphore, Mutex};
-use tokio::time::{sleep, Duration};
+use tokio::sync::{Mutex, Semaphore};
+use tokio::time::{Duration, sleep};
 
 /// Maximum concurrent downloads
 const MAX_CONCURRENT: usize = 20;
@@ -26,10 +26,10 @@ const BASE_RETRY_DELAY: Duration = Duration::from_millis(100);
 /// Download priority levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Priority {
-    Critical = 0,  // Direct dependencies
-    High = 1,      // Peer dependencies
-    Normal = 2,    // Transitive dependencies
-    Low = 3,       // Dev dependencies
+    Critical = 0, // Direct dependencies
+    High = 1,     // Peer dependencies
+    Normal = 2,   // Transitive dependencies
+    Low = 3,      // Dev dependencies
 }
 
 /// Package download request
@@ -78,10 +78,7 @@ impl ParallelFetcher {
     }
 
     /// Fetch multiple packages in parallel
-    pub async fn fetch_many(
-        &self,
-        requests: Vec<DownloadRequest>,
-    ) -> Result<Vec<DownloadResult>> {
+    pub async fn fetch_many(&self, requests: Vec<DownloadRequest>) -> Result<Vec<DownloadResult>> {
         // Initialize stats
         {
             let mut stats = self.stats.lock().await;
@@ -307,9 +304,7 @@ mod tests {
         let fetcher = SpeculativeFetcher::new(client);
 
         // Train model
-        fetcher
-            .train("react", vec!["react-dom".into(), "scheduler".into()])
-            .await;
+        fetcher.train("react", vec!["react-dom".into(), "scheduler".into()]).await;
 
         let cache = fetcher.prediction_cache.lock().await;
         assert!(cache.contains_key("react"));

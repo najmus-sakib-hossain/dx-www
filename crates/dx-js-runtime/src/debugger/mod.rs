@@ -36,9 +36,12 @@ impl Debugger {
     }
 
     pub fn set_breakpoint(&mut self, file: String, line: usize, column: usize) {
-        self.breakpoints.entry(file.clone())
-            .or_insert_with(Vec::new)
-            .push(Breakpoint { file, line, column, enabled: true });
+        self.breakpoints.entry(file.clone()).or_insert_with(Vec::new).push(Breakpoint {
+            file,
+            line,
+            column,
+            enabled: true,
+        });
     }
 
     pub fn remove_breakpoint(&mut self, file: &str, line: usize) {
@@ -48,12 +51,17 @@ impl Debugger {
     }
 
     pub fn should_break(&self, file: &str, line: usize) -> bool {
-        self.breakpoints.get(file)
+        self.breakpoints
+            .get(file)
             .map_or(false, |bps| bps.iter().any(|bp| bp.enabled && bp.line == line))
     }
 
-    pub fn pause(&mut self) { self.paused = true; }
-    pub fn resume(&mut self) { self.paused = false; }
+    pub fn pause(&mut self) {
+        self.paused = true;
+    }
+    pub fn resume(&mut self) {
+        self.paused = false;
+    }
     pub fn step_over(&mut self) {}
     pub fn step_into(&mut self) {}
     pub fn step_out(&mut self) {}
@@ -64,5 +72,7 @@ impl Debugger {
 }
 
 impl Default for Debugger {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

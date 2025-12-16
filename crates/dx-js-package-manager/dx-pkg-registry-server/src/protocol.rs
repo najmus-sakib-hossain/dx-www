@@ -1,27 +1,27 @@
 //! DXRP Protocol Implementation
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
 
 /// DXRP Request (32 bytes)
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct DxrpRequest {
-    pub magic: [u8; 4],     // "DXRP"
-    pub op: DxrpOp,         // Operation (1 byte)
-    pub _padding: [u8; 3],  // Alignment
-    pub name_hash: u64,     // blake3(package_name)
-    pub version: u64,       // Encoded version
-    pub checksum: u64,      // Request integrity
+    pub magic: [u8; 4],    // "DXRP"
+    pub op: DxrpOp,        // Operation (1 byte)
+    pub _padding: [u8; 3], // Alignment
+    pub name_hash: u64,    // blake3(package_name)
+    pub version: u64,      // Encoded version
+    pub checksum: u64,     // Request integrity
 }
 
 /// DXRP Operations
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DxrpOp {
-    Resolve = 1,   // Resolve package metadata
-    Download = 2,  // Download .dxp package
-    Ping = 3,      // Health check
+    Resolve = 1,  // Resolve package metadata
+    Download = 2, // Download .dxp package
+    Ping = 3,     // Health check
 }
 
 impl TryFrom<u8> for DxrpOp {
@@ -96,7 +96,7 @@ impl DxrpResponse {
     pub fn ok(payload: &[u8]) -> Self {
         let hash = blake3::hash(payload);
         let hash_u64 = u64::from_le_bytes(hash.as_bytes()[0..8].try_into().unwrap());
-        
+
         Self {
             status: DxrpStatus::Ok,
             payload_size: payload.len() as u64,
@@ -109,7 +109,7 @@ impl DxrpResponse {
         let payload = msg.as_bytes();
         let hash = blake3::hash(payload);
         let hash_u64 = u64::from_le_bytes(hash.as_bytes()[0..8].try_into().unwrap());
-        
+
         Self {
             status: DxrpStatus::Error,
             payload_size: payload.len() as u64,

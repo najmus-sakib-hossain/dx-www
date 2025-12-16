@@ -30,56 +30,57 @@ impl DxpFile {
     /// Write DXP file to disk
     pub fn write(&self, path: &Path) -> Result<()> {
         let mut file = File::create(path)?;
-        
+
         // Write magic bytes
         file.write_all(b"DXPK")?;
-        
+
         // Write version
         file.write_all(&self.version.to_le_bytes())?;
-        
+
         // Serialize entire structure with bincode
         let encoded = bincode::encode_to_vec(&self, bincode::config::standard())?;
-        
+
         // Write length + data
         file.write_all(&(encoded.len() as u64).to_le_bytes())?;
         file.write_all(&encoded)?;
-        
+
         Ok(())
     }
 
     /// Read DXP file from disk
     pub fn read(path: &Path) -> Result<Self> {
         use std::io::Read;
-        
+
         let mut file = File::open(path)?;
-        
+
         // Read magic
         let mut magic = [0u8; 4];
         file.read_exact(&mut magic)?;
         if &magic != b"DXPK" {
             anyhow::bail!("Invalid DXP file: bad magic");
         }
-        
+
         // Read version
         let mut version_bytes = [0u8; 4];
         file.read_exact(&mut version_bytes)?;
         let version = u32::from_le_bytes(version_bytes);
-        
+
         // Read entry count
         let mut count_bytes = [0u8; 4];
         file.read_exact(&mut count_bytes)?;
         let _count = u32::from_le_bytes(count_bytes);
-        
+
         // Read entries
         let mut size_bytes = [0u8; 8];
         file.read_exact(&mut size_bytes)?;
         let data_size = u64::from_le_bytes(size_bytes);
-        
+
         let mut data = vec![0u8; data_size as usize];
         file.read_exact(&mut data)?;
-        
-        let (dxp, _): (DxpFile, _) = 
+
+        let (dxp, _): (DxpFile, _) =
             bincode::decode_from_slice(&data, bincode::config::standard())?;
-        
+
         Ok(dxp)
-    }}
+    }
+}

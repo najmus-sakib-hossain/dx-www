@@ -14,7 +14,7 @@ impl ZeroCopyFile {
     pub fn read(path: &Path) -> std::io::Result<Self> {
         let file = File::open(path)?;
         let mmap = unsafe { Mmap::map(&file)? };
-        
+
         // SAFETY: We keep mmap alive, so the pointer is valid
         let content = unsafe {
             let ptr = mmap.as_ptr();
@@ -22,13 +22,16 @@ impl ZeroCopyFile {
             let slice = std::slice::from_raw_parts(ptr, len);
             std::str::from_utf8_unchecked(slice)
         };
-        
+
         // Transmute to 'static - safe because we keep _mmap alive
         let content: &'static str = unsafe { std::mem::transmute(content) };
-        
-        Ok(Self { _mmap: mmap, content })
+
+        Ok(Self {
+            _mmap: mmap,
+            content,
+        })
     }
-    
+
     /// Get content as string slice
     pub fn as_str(&self) -> &str {
         self.content

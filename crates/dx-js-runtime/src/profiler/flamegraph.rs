@@ -33,8 +33,11 @@ impl FlameGraph {
     }
 
     pub fn to_svg(&self, width: u32, height: u32) -> String {
-        let mut svg = format!(r#"<svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">"#, width, height);
-        
+        let mut svg = format!(
+            r#"<svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">"#,
+            width, height
+        );
+
         let total: u64 = self.nodes.iter().map(|n| n.value).sum();
         let mut y = 0;
 
@@ -63,7 +66,9 @@ impl FlameGraph {
     pub fn to_json(&self) -> String {
         let mut json = String::from("{\"nodes\":[");
         for (i, node) in self.nodes.iter().enumerate() {
-            if i > 0 { json.push(','); }
+            if i > 0 {
+                json.push(',');
+            }
             json.push_str(&format!(r#"{{"name":"{}","value":{}}}"#, node.name, node.value));
         }
         json.push_str("]}");

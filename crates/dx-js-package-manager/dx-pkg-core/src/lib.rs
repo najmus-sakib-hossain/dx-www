@@ -10,9 +10,9 @@ pub mod headers;
 pub mod version;
 
 pub use error::{Error, Result};
-pub use hash::{xxhash64, xxhash128, ContentHash};
-pub use headers::{DxpHeader, DxlHeader, DxrpRequestHeader, DxrpResponseHeader};
-pub use version::{Version, VersionConstraint, encode_version, decode_version};
+pub use hash::{ContentHash, xxhash64, xxhash128};
+pub use headers::{DxlHeader, DxpHeader, DxrpRequestHeader, DxrpResponseHeader};
+pub use version::{Version, VersionConstraint, decode_version, encode_version};
 
 /// Magic numbers for binary format identification
 pub const DXP_MAGIC: &[u8; 4] = b"DXP\0";

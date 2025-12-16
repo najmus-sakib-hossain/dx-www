@@ -1,8 +1,8 @@
 //! Child Process API (exec, spawn, fork)
 
 use crate::error::{DxError, DxResult};
-use std::process::{Command, Child, Stdio, Output};
 use std::io::{Read, Write};
+use std::process::{Child, Command, Output, Stdio};
 
 pub struct ChildProcess;
 
@@ -42,13 +42,16 @@ pub struct SpawnedProcess {
 
 impl SpawnedProcess {
     pub fn wait(&mut self) -> DxResult<i32> {
-        let status = self.child.wait()
+        let status = self
+            .child
+            .wait()
             .map_err(|e| DxError::RuntimeError(format!("wait failed: {}", e)))?;
         Ok(status.code().unwrap_or(-1))
     }
 
     pub fn kill(&mut self) -> DxResult<()> {
-        self.child.kill()
+        self.child
+            .kill()
             .map_err(|e| DxError::RuntimeError(format!("kill failed: {}", e)))
     }
 

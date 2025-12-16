@@ -46,10 +46,8 @@ impl PackageStorage {
                 if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
                     if let Some((name, version)) = stem.split_once('@') {
                         let hash = hash_package_name(name);
-                        self.index.insert(
-                            hash,
-                            (name.to_string(), version.to_string(), path.clone()),
-                        );
+                        self.index
+                            .insert(hash, (name.to_string(), version.to_string(), path.clone()));
                     }
                 }
             }
@@ -60,10 +58,7 @@ impl PackageStorage {
 
     /// Get package metadata
     pub async fn get_metadata(&self, name_hash: u64, _version: u64) -> Result<PackageMetadata> {
-        let (name, version, path) = self
-            .index
-            .get(&name_hash)
-            .context("Package not found")?;
+        let (name, version, path) = self.index.get(&name_hash).context("Package not found")?;
 
         let size = fs::metadata(path)?.len();
         let file_data = fs::read(path)?;
@@ -81,10 +76,7 @@ impl PackageStorage {
 
     /// Get package data
     pub async fn get_package(&self, name_hash: u64, _version: u64) -> Result<Vec<u8>> {
-        let (_name, _version, path) = self
-            .index
-            .get(&name_hash)
-            .context("Package not found")?;
+        let (_name, _version, path) = self.index.get(&name_hash).context("Package not found")?;
 
         let mut file = File::open(path).await?;
         let mut data = Vec::new();

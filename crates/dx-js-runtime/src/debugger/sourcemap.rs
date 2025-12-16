@@ -1,6 +1,5 @@
 //! Source map generation and parsing
 
-
 #[derive(Debug, Clone)]
 pub struct SourceMap {
     pub version: u32,
@@ -25,17 +24,26 @@ impl SourceMap {
         }
     }
 
-    pub fn add_mapping(&mut self, generated_line: usize, generated_column: usize,
-                       source_line: usize, source_column: usize) {
-        let mapping = format!("{},{},{},{}", 
-            generated_line, generated_column, source_line, source_column);
-        if !self.mappings.is_empty() { self.mappings.push(';'); }
+    pub fn add_mapping(
+        &mut self,
+        generated_line: usize,
+        generated_column: usize,
+        source_line: usize,
+        source_column: usize,
+    ) {
+        let mapping =
+            format!("{},{},{},{}", generated_line, generated_column, source_line, source_column);
+        if !self.mappings.is_empty() {
+            self.mappings.push(';');
+        }
         self.mappings.push_str(&mapping);
     }
 
     pub fn to_json(&self) -> String {
-        format!(r#"{{"version":{},"sources":{:?},"mappings":"{}","names":{:?}}}"#,
-            self.version, self.sources, self.mappings, self.names)
+        format!(
+            r#"{{"version":{},"sources":{:?},"mappings":"{}","names":{:?}}}"#,
+            self.version, self.sources, self.mappings, self.names
+        )
     }
 
     pub fn lookup(&self, generated_line: usize, generated_column: usize) -> Option<SourceLocation> {
@@ -50,7 +58,9 @@ impl SourceMap {
 }
 
 impl Default for SourceMap {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(Debug, Clone)]

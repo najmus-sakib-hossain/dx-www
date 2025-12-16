@@ -2,7 +2,7 @@
 
 pub mod console;
 
-pub use console::{BatchConsole, console_log_number, console_flush};
+pub use console::{BatchConsole, console_flush, console_log_number};
 
 use crate::error::{DxError, DxResult};
 
@@ -80,10 +80,10 @@ pub fn vector_add_f32(a: &[f32], b: &[f32], result: &mut [f32]) -> DxResult<()> 
     let chunks = a.len() / 4;
     for i in 0..chunks {
         let offset = i * 4;
-        let va = SimdF32x4::new(a[offset], a[offset+1], a[offset+2], a[offset+3]);
-        let vb = SimdF32x4::new(b[offset], b[offset+1], b[offset+2], b[offset+3]);
+        let va = SimdF32x4::new(a[offset], a[offset + 1], a[offset + 2], a[offset + 3]);
+        let vb = SimdF32x4::new(b[offset], b[offset + 1], b[offset + 2], b[offset + 3]);
         let vr = va.add(&vb);
-        result[offset..offset+4].copy_from_slice(&vr.0);
+        result[offset..offset + 4].copy_from_slice(&vr.0);
     }
 
     // Handle remainder

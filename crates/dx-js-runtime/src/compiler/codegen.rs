@@ -1,16 +1,16 @@
 //! Cranelift code generation with built-in function support
 
-use crate::compiler::mir::{
-    BinOpKind, BlockId, Constant, FunctionId, LocalId, Terminator,
-    TypedFunction, TypedInstruction, TypedMIR,
-};
 use crate::compiler::OptLevel;
+use crate::compiler::mir::{
+    BinOpKind, BlockId, Constant, FunctionId, LocalId, Terminator, TypedFunction, TypedInstruction,
+    TypedMIR,
+};
 use crate::error::{DxError, DxResult};
 use crate::value::Value;
 use cranelift::prelude::*;
+use cranelift_codegen::ir::FuncRef;
 use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{FuncId, Linkage, Module};
-use cranelift_codegen::ir::FuncRef;
 use std::collections::HashMap;
 
 // Alias to avoid name collision with our mir::FunctionBuilder
@@ -167,7 +167,7 @@ impl CodeGenerator {
             let sig = &signatures[&func.id];
 
             ctx.func.signature = sig.clone();
-            
+
             // Pre-declare all function references before creating FunctionBuilder
             let mut func_refs: HashMap<u32, FuncRef> = HashMap::new();
             for (&magic_id, &builtin_id) in &builtin_func_ids {
@@ -179,12 +179,7 @@ impl CodeGenerator {
                 func_refs.insert(mir_func_id.0, func_ref);
             }
 
-            self.compile_function_body(
-                &mut ctx,
-                &mut func_ctx,
-                func,
-                &func_refs,
-            )?;
+            self.compile_function_body(&mut ctx, &mut func_ctx, func, &func_refs)?;
 
             jit_module
                 .define_function(func_id, &mut ctx)
@@ -409,7 +404,11 @@ impl CodeGenerator {
                 locals.insert(*dest, result);
             }
 
-            TypedInstruction::Call { dest, function, args } => {
+            TypedInstruction::Call {
+                dest,
+                function,
+                args,
+            } => {
                 let arg_values: Vec<cranelift::prelude::Value> =
                     args.iter().map(|a| locals[a]).collect();
 

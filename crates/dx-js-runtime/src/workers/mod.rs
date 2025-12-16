@@ -1,7 +1,7 @@
 //! Web Workers for parallel execution
 
 use crate::error::{DxError, DxResult};
-use std::sync::mpsc::{channel, Sender, Receiver};
+use std::sync::mpsc::{Receiver, Sender, channel};
 use std::thread::{self, JoinHandle};
 
 pub struct Worker {
@@ -23,7 +23,7 @@ pub enum WorkerResponse {
 impl Worker {
     pub fn new(id: usize) -> DxResult<Self> {
         let (tx, rx) = channel();
-        
+
         let handle = thread::spawn(move || {
             Self::worker_loop(rx);
         });
@@ -47,14 +47,16 @@ impl Worker {
     }
 
     pub fn post_message(&self, code: String) -> DxResult<()> {
-        self.sender.send(WorkerMessage::Execute(code))
+        self.sender
+            .send(WorkerMessage::Execute(code))
             .map_err(|e| DxError::RuntimeError(format!("Worker send failed: {}", e)))
     }
 
     pub fn terminate(mut self) -> DxResult<()> {
         let _ = self.sender.send(WorkerMessage::Terminate);
         if let Some(handle) = self.handle.take() {
-            handle.join()
+            handle
+                .join()
                 .map_err(|_| DxError::RuntimeError("Worker join failed".to_string()))?;
         }
         Ok(())
@@ -72,11 +74,15 @@ impl WorkerPool {
         for i in 0..size {
             workers.push(Worker::new(i)?);
         }
-        Ok(Self { workers, next_id: size })
+        Ok(Self {
+            workers,
+            next_id: size,
+        })
     }
 
     pub fn execute(&self, worker_id: usize, code: String) -> DxResult<()> {
-        self.workers.get(worker_id)
+        self.workers
+            .get(worker_id)
             .ok_or_else(|| DxError::RuntimeError("Invalid worker ID".to_string()))?
             .post_message(code)
     }

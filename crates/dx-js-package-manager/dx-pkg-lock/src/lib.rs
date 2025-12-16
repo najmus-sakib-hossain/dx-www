@@ -13,7 +13,12 @@
 //! ```
 
 use bytemuck::{Pod, Zeroable};
-use dx_pkg_core::{error::Error, hash::{xxhash64, ContentHash}, version::{Version, encode_version, decode_version}, Result};
+use dx_pkg_core::{
+    Result,
+    error::Error,
+    hash::{ContentHash, xxhash64},
+    version::{Version, decode_version, encode_version},
+};
 use memmap2::{Mmap, MmapMut};
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
@@ -23,7 +28,7 @@ use std::path::{Path, PathBuf};
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct DxlHeader {
-    pub magic: [u8; 4],          // "DXL\0"
+    pub magic: [u8; 4], // "DXL\0"
     pub version: u16,
     pub flags: u16,
     pub package_count: u32,
@@ -39,9 +44,9 @@ pub struct DxlHeader {
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 struct HashEntry {
-    name_hash: u64,         // Hash of package name
-    entry_offset: u64,      // Offset to PackageEntry
-    next: u64,              // Collision chain (0 = end)
+    name_hash: u64,    // Hash of package name
+    entry_offset: u64, // Offset to PackageEntry
+    next: u64,         // Collision chain (0 = end)
     reserved: u64,
 }
 
@@ -50,15 +55,15 @@ struct HashEntry {
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 struct PackageEntry {
     name_hash: u64,
-    version: u64,               // Encoded version
-    content_hash: u128,         // Package content hash
-    deps_offset: u64,           // Offset to dependency list
+    version: u64,       // Encoded version
+    content_hash: u128, // Package content hash
+    deps_offset: u64,   // Offset to dependency list
     deps_count: u32,
-    url_offset: u32,            // Offset in metadata section
+    url_offset: u32, // Offset in metadata section
     url_length: u16,
     flags: u16,
-    integrity_offset: u32,      // Offset to integrity checksum
-    _reserved1: [u8; 32],       // Split into smaller arrays
+    integrity_offset: u32, // Offset to integrity checksum
+    _reserved1: [u8; 32],  // Split into smaller arrays
     _reserved2: u32,
 }
 
@@ -142,30 +147,30 @@ impl DxlLock {
         // Linear probing to find the entry
         let mut slot = (name_hash as usize) % self.header.hash_table_size as usize;
         let max_probes = self.header.hash_table_size as usize;
-        
+
         for _ in 0..max_probes {
-            let entry_offset = self.header.hash_table_offset as usize + 
-                             slot * std::mem::size_of::<HashEntry>();
-            
+            let entry_offset =
+                self.header.hash_table_offset as usize + slot * std::mem::size_of::<HashEntry>();
+
             if entry_offset + std::mem::size_of::<HashEntry>() > self.mmap.len() {
                 break;
             }
-            
+
             let hash_entry = *bytemuck::from_bytes::<HashEntry>(
-                &self.mmap[entry_offset..entry_offset + std::mem::size_of::<HashEntry>()]
+                &self.mmap[entry_offset..entry_offset + std::mem::size_of::<HashEntry>()],
             );
-            
+
             if hash_entry.name_hash == 0 {
                 // Empty slot - not found
                 break;
             }
-            
+
             if hash_entry.name_hash == name_hash {
                 // Found it!
                 let entry = self.read_entry(hash_entry.entry_offset)?;
                 return self.build_package_info(name, &entry);
             }
-            
+
             // Collision - try next slot
             slot = (slot + 1) % self.header.hash_table_size as usize;
         }
@@ -180,34 +185,34 @@ impl DxlLock {
         // Linear probing to find entry
         let mut slot = (name_hash as usize) % self.header.hash_table_size as usize;
         let max_probes = self.header.hash_table_size as usize;
-        
+
         let mut entry_offset_found = None;
         for _ in 0..max_probes {
-            let hash_offset = self.header.hash_table_offset as usize + 
-                            slot * std::mem::size_of::<HashEntry>();
-            
+            let hash_offset =
+                self.header.hash_table_offset as usize + slot * std::mem::size_of::<HashEntry>();
+
             if hash_offset + std::mem::size_of::<HashEntry>() > self.mmap.len() {
                 break;
             }
-            
+
             let hash_entry = *bytemuck::from_bytes::<HashEntry>(
-                &self.mmap[hash_offset..hash_offset + std::mem::size_of::<HashEntry>()]
+                &self.mmap[hash_offset..hash_offset + std::mem::size_of::<HashEntry>()],
             );
-            
+
             if hash_entry.name_hash == 0 {
                 break;
             }
-            
+
             if hash_entry.name_hash == name_hash {
                 entry_offset_found = Some(hash_entry.entry_offset);
                 break;
             }
-            
+
             slot = (slot + 1) % self.header.hash_table_size as usize;
         }
-        
-        let entry_offset = entry_offset_found
-            .ok_or_else(|| Error::PackageNotFound(name.to_string()))?;
+
+        let entry_offset =
+            entry_offset_found.ok_or_else(|| Error::PackageNotFound(name.to_string()))?;
 
         let entry = self.read_entry(entry_offset)?;
 
@@ -221,11 +226,11 @@ impl DxlLock {
         for i in 0..entry.deps_count as usize {
             let offset = deps_offset + i * std::mem::size_of::<DependencyRef>();
             let dep_ref = self.read_dep_ref(offset)?;
-            
+
             // Copy packed fields to avoid alignment issues
             let dep_name_hash = dep_ref.name_hash;
             let dep_version = decode_version(dep_ref.version);
-            
+
             // For now, use hash as placeholder name
             // In production, we'd store name strings in metadata
             let dep_name = format!("pkg_{:016x}", dep_name_hash);
@@ -255,12 +260,12 @@ impl DxlLock {
     /// Verify checksum integrity
     pub fn verify(&self) -> Result<bool> {
         // Calculate checksum over data (excluding checksum field)
-        let data_end = self.header.metadata_offset as usize + 
-                       (self.mmap.len() - self.header.metadata_offset as usize);
-        
+        let data_end = self.header.metadata_offset as usize
+            + (self.mmap.len() - self.header.metadata_offset as usize);
+
         let data = &self.mmap[std::mem::size_of::<DxlHeader>()..data_end.min(self.mmap.len())];
         let computed = dx_pkg_core::hash::xxhash128(data);
-        
+
         Ok(computed == self.header.checksum)
     }
 
@@ -279,7 +284,7 @@ impl DxlLock {
             }
 
             let entry = *bytemuck::from_bytes::<HashEntry>(&mmap[offset..offset + entry_size]);
-            
+
             if entry.name_hash != 0 {
                 table.insert(entry.name_hash, entry.entry_offset);
             }
@@ -317,8 +322,7 @@ impl DxlLock {
             return Err(Error::CorruptedData);
         }
 
-        String::from_utf8(self.mmap[start..end].to_vec())
-            .map_err(|_| Error::CorruptedData)
+        String::from_utf8(self.mmap[start..end].to_vec()).map_err(|_| Error::CorruptedData)
     }
 
     fn build_package_info(&self, name: &str, entry: &PackageEntry) -> Result<PackageInfo> {
@@ -382,7 +386,7 @@ impl DxlBuilder {
         let hash_table_size = self.packages.len().next_power_of_two();
         let hash_table_bytes = hash_table_size * std::mem::size_of::<HashEntry>();
         let entries_size = self.packages.len() * std::mem::size_of::<PackageEntry>();
-        
+
         // Calculate deps size
         let deps_size: usize = self
             .packages
@@ -422,15 +426,15 @@ impl DxlBuilder {
         // Write hash table with collision handling
         let mut current_entry_offset = entries_offset as u64;
         let mut slot_map: HashMap<usize, u64> = HashMap::new(); // Track occupied slots
-        
+
         for (_i, (name_hash, _)) in self.packages.iter().enumerate() {
             let mut slot = (*name_hash as usize) % hash_table_size;
-            
+
             // Linear probing for collision resolution
             while slot_map.contains_key(&slot) {
                 slot = (slot + 1) % hash_table_size;
             }
-            
+
             let entry_offset = hash_table_offset + slot * std::mem::size_of::<HashEntry>();
 
             let hash_entry = HashEntry {
@@ -442,7 +446,7 @@ impl DxlBuilder {
 
             let entry_bytes = bytemuck::bytes_of(&hash_entry);
             mmap[entry_offset..entry_offset + entry_bytes.len()].copy_from_slice(entry_bytes);
-            
+
             slot_map.insert(slot, current_entry_offset);
             current_entry_offset += std::mem::size_of::<PackageEntry>() as u64;
         }
@@ -472,7 +476,8 @@ impl DxlBuilder {
             // Write dependencies
             for (j, (dep_name, dep_version)) in pkg.dependencies.iter().enumerate() {
                 let dep_hash = xxhash64(dep_name.as_bytes());
-                let dep_offset = current_deps_offset as usize + j * std::mem::size_of::<DependencyRef>();
+                let dep_offset =
+                    current_deps_offset as usize + j * std::mem::size_of::<DependencyRef>();
 
                 let dep_ref = DependencyRef {
                     name_hash: dep_hash,
@@ -483,7 +488,8 @@ impl DxlBuilder {
                 mmap[dep_offset..dep_offset + dep_bytes.len()].copy_from_slice(dep_bytes);
             }
 
-            current_deps_offset += (pkg.dependencies.len() * std::mem::size_of::<DependencyRef>()) as u64;
+            current_deps_offset +=
+                (pkg.dependencies.len() * std::mem::size_of::<DependencyRef>()) as u64;
         }
 
         // Write metadata
@@ -541,11 +547,15 @@ mod tests {
         let mut builder = DxlBuilder::new();
         builder.add_package(
             "test-package".to_string(),
-            Version { major: 1, minor: 2, patch: 3 },
+            Version {
+                major: 1,
+                minor: 2,
+                patch: 3,
+            },
             0u128,
             vec![],
             "https://registry.example.com/test-package-1.2.3.tgz".to_string(),
-        )?;;
+        )?;
 
         builder.write(path)?;
 
@@ -568,11 +578,15 @@ mod tests {
         let path = temp.path();
 
         let mut builder = DxlBuilder::new();
-        
+
         for i in 0..10 {
             builder.add_package(
                 format!("package-{}", i),
-                Version { major: 1, minor: 0, patch: i },
+                Version {
+                    major: 1,
+                    minor: 0,
+                    patch: i,
+                },
                 i as u128,
                 vec![],
                 format!("https://example.com/pkg-{}", i),
@@ -600,14 +614,32 @@ mod tests {
         let path = temp.path();
 
         let mut builder = DxlBuilder::new();
-        
+
         builder.add_package(
             "parent".to_string(),
-            Version { major: 1, minor: 0, patch: 0 },
+            Version {
+                major: 1,
+                minor: 0,
+                patch: 0,
+            },
             1u128,
             vec![
-                ("child1".to_string(), Version { major: 2, minor: 0, patch: 0 }),
-                ("child2".to_string(), Version { major: 3, minor: 0, patch: 0 }),
+                (
+                    "child1".to_string(),
+                    Version {
+                        major: 2,
+                        minor: 0,
+                        patch: 0,
+                    },
+                ),
+                (
+                    "child2".to_string(),
+                    Version {
+                        major: 3,
+                        minor: 0,
+                        patch: 0,
+                    },
+                ),
             ],
             "https://example.com/parent".to_string(),
         )?;
@@ -629,14 +661,22 @@ mod tests {
         let mut builder = DxlBuilder::new();
         builder.add_package(
             "pkg1".to_string(),
-            Version { major: 1, minor: 0, patch: 0 },
+            Version {
+                major: 1,
+                minor: 0,
+                patch: 0,
+            },
             0u128,
             vec![],
             String::new(),
         )?;
         builder.add_package(
             "pkg2".to_string(),
-            Version { major: 2, minor: 0, patch: 0 },
+            Version {
+                major: 2,
+                minor: 0,
+                patch: 0,
+            },
             0u128,
             vec![],
             String::new(),

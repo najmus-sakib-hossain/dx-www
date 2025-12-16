@@ -14,7 +14,7 @@ impl BatchConsole {
             pos: 0,
         }
     }
-    
+
     /// Log a number using fast formatting (no allocations)
     #[inline]
     pub fn log_number(&mut self, value: f64) {
@@ -22,12 +22,12 @@ impl BatchConsole {
         self.pos += len;
         self.buffer[self.pos] = b'\n';
         self.pos += 1;
-        
+
         if self.pos > 64000 {
             self.flush();
         }
     }
-    
+
     /// Flush all buffered output - single syscall
     pub fn flush(&mut self) {
         if self.pos > 0 {
@@ -53,7 +53,7 @@ fn fast_format_f64(value: f64, buffer: &mut [u8]) -> usize {
         buffer[..3].copy_from_slice(b"NaN");
         return 3;
     }
-    
+
     if value.is_infinite() {
         if value.is_sign_positive() {
             buffer[..8].copy_from_slice(b"Infinity");
@@ -63,13 +63,13 @@ fn fast_format_f64(value: f64, buffer: &mut [u8]) -> usize {
             return 9;
         }
     }
-    
+
     // Fast integer case
     if value.fract() == 0.0 && value.abs() < 1e15 {
         let int_val = value as i64;
         return fast_format_i64(int_val, buffer);
     }
-    
+
     // Use ryu for floats (fastest double-to-string)
     let mut ryu_buf = ryu::Buffer::new();
     let formatted = ryu_buf.format(value);
@@ -85,38 +85,38 @@ fn fast_format_i64(mut value: i64, buffer: &mut [u8]) -> usize {
         buffer[0] = b'0';
         return 1;
     }
-    
+
     let negative = value < 0;
     if negative {
         value = -value;
     }
-    
+
     let mut pos = 0;
     let mut temp = [0u8; 20];
     let mut temp_pos = 0;
-    
+
     while value > 0 {
         temp[temp_pos] = b'0' + (value % 10) as u8;
         temp_pos += 1;
         value /= 10;
     }
-    
+
     if negative {
         buffer[pos] = b'-';
         pos += 1;
     }
-    
+
     for i in (0..temp_pos).rev() {
         buffer[pos] = temp[i];
         pos += 1;
     }
-    
+
     pos
 }
 
 // Thread-local console for zero-lock access
 thread_local! {
-    static CONSOLE: std::cell::RefCell<BatchConsole> = 
+    static CONSOLE: std::cell::RefCell<BatchConsole> =
         std::cell::RefCell::new(BatchConsole::new());
 }
 

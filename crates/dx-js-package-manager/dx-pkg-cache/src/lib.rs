@@ -7,13 +7,13 @@
 //! - Bloom filter for instant negative lookups
 
 use bloomfilter::Bloom;
-use dx_pkg_core::{hash::ContentHash, Result};
+use dx_pkg_core::{Result, hash::ContentHash};
 use lru::LruCache;
 use std::collections::HashMap;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use std::fs;
 
 /// Cache hit types
 #[derive(Debug)]
@@ -27,13 +27,13 @@ pub enum CacheHit {
 pub struct IntelligentCache {
     /// Tier 1: Memory cache (top 100 packages)
     memory: Arc<RwLock<LruCache<ContentHash, Arc<Vec<u8>>>>>,
-    
+
     /// Tier 2: Disk cache path
     disk_path: PathBuf,
-    
+
     /// Bloom filter (instant negative lookups)
     bloom: Arc<RwLock<Bloom<ContentHash>>>,
-    
+
     /// Popularity scores (for prefetching)
     popularity: Arc<RwLock<HashMap<String, u32>>>,
 }
@@ -74,13 +74,13 @@ impl IntelligentCache {
         let disk_file = self.disk_path.join(format!("{:032x}.dxp", hash));
         if disk_file.exists() {
             let data = fs::read(&disk_file)?;
-            
+
             // Promote to memory cache
             {
                 let mut memory = self.memory.write().await;
                 memory.put(hash, Arc::new(data.clone()));
             }
-            
+
             return Ok(CacheHit::Disk(data));
         }
 
@@ -109,7 +109,10 @@ impl IntelligentCache {
     }
 
     /// Check multiple packages (batch)
-    pub async fn check_many(&self, hashes: &[ContentHash]) -> Result<(Vec<ContentHash>, Vec<ContentHash>)> {
+    pub async fn check_many(
+        &self,
+        hashes: &[ContentHash],
+    ) -> Result<(Vec<ContentHash>, Vec<ContentHash>)> {
         let mut cached = Vec::new();
         let mut missing = Vec::new();
 
@@ -141,9 +144,7 @@ impl IntelligentCache {
     /// Get cache statistics
     pub async fn stats(&self) -> CacheStats {
         let memory = self.memory.read().await;
-        let disk_entries = fs::read_dir(&self.disk_path)
-            .map(|d| d.count())
-            .unwrap_or(0);
+        let disk_entries = fs::read_dir(&self.disk_path).map(|d| d.count()).unwrap_or(0);
 
         CacheStats {
             memory_entries: memory.len(),
@@ -166,7 +167,8 @@ impl IntelligentCache {
 
     /// Clean old cache entries
     pub async fn clean(&self, keep_days: u64) -> Result<usize> {
-        let cutoff = std::time::SystemTime::now() - std::time::Duration::from_secs(keep_days * 86400);
+        let cutoff =
+            std::time::SystemTime::now() - std::time::Duration::from_secs(keep_days * 86400);
         let mut removed = 0;
 
         if let Ok(entries) = fs::read_dir(&self.disk_path) {
@@ -202,7 +204,7 @@ mod tests {
     async fn test_cache_creation() {
         let temp = std::env::temp_dir().join("dx-cache-test");
         let cache = IntelligentCache::new(&temp).unwrap();
-        
+
         let stats = cache.stats().await;
         assert_eq!(stats.memory_entries, 0);
     }
@@ -211,12 +213,12 @@ mod tests {
     async fn test_cache_put_get() {
         let temp = std::env::temp_dir().join("dx-cache-test2");
         let cache = IntelligentCache::new(&temp).unwrap();
-        
+
         let hash = 12345u128;
         let data = vec![1, 2, 3, 4];
-        
+
         cache.put(hash, data.clone()).await.unwrap();
-        
+
         match cache.get(hash).await.unwrap() {
             CacheHit::Memory(d) => assert_eq!(d, data),
             _ => panic!("Expected memory hit"),
@@ -227,11 +229,11 @@ mod tests {
     async fn test_cache_miss() {
         let temp = std::env::temp_dir().join("dx-cache-test3");
         let cache = IntelligentCache::new(&temp).unwrap();
-        
+
         let hash = 99999u128;
-        
+
         match cache.get(hash).await.unwrap() {
-            CacheHit::Miss => {},
+            CacheHit::Miss => {}
             _ => panic!("Expected cache miss"),
         }
     }

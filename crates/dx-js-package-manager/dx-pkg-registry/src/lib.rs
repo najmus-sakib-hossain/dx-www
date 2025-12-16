@@ -7,7 +7,7 @@
 //! - Delta updates
 
 use bytemuck::{Pod, Zeroable};
-use dx_pkg_core::{error::Error, hash::ContentHash, version::Version, Result};
+use dx_pkg_core::{Result, error::Error, hash::ContentHash, version::Version};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::time::Duration;
@@ -26,24 +26,23 @@ pub enum DxrpOp {
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct DxrpRequest {
-    magic: [u8; 4],       // "DXRP"
+    magic: [u8; 4], // "DXRP"
     op: u8,
     _padding: [u8; 3],
     name_hash: u64,
     version_range: u64,
-    checksum: u64,        // Lower 64 bits of u128
-
+    checksum: u64, // Lower 64 bits of u128
 }
 
 /// DXRP response (32 bytes + payload)
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct DxrpResponse {
-    magic: [u8; 4],       // "DXRR"
+    magic: [u8; 4], // "DXRR"
     status: u8,
     _padding: [u8; 3],
     payload_size: u64,
-    payload_hash: u64,    // Lower 64 bits of u128
+    payload_hash: u64, // Lower 64 bits of u128
     _reserved: u64,
 }
 
@@ -81,11 +80,7 @@ impl DxrpClient {
     }
 
     /// Resolve package version
-    pub async fn resolve(
-        &self,
-        name: &str,
-        version_range: &str,
-    ) -> Result<PackageMetadata> {
+    pub async fn resolve(&self, name: &str, version_range: &str) -> Result<PackageMetadata> {
         let name_hash = dx_pkg_core::hash::xxhash64(name.as_bytes());
         let version_range = self.parse_version_range(version_range)?;
 
@@ -187,9 +182,9 @@ impl DxrpClient {
             return Err(Error::CorruptedData);
         }
 
-        let version = dx_pkg_core::version::decode_version(
-            u64::from_le_bytes(payload[0..8].try_into().unwrap())
-        );
+        let version = dx_pkg_core::version::decode_version(u64::from_le_bytes(
+            payload[0..8].try_into().unwrap(),
+        ));
 
         let content_hash = u128::from_le_bytes(payload[8..24].try_into().unwrap());
         let size = u64::from_le_bytes(payload[24..32].try_into().unwrap());

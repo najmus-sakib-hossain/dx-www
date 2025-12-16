@@ -4,12 +4,12 @@
 //! - Resolve → Cache Check → Fetch → Verify → Link → Lock
 
 use dx_pkg_cache::IntelligentCache;
-use dx_pkg_core::{hash::ContentHash, Result};
+use dx_pkg_core::{Result, hash::ContentHash};
 use dx_pkg_fetch::{DownloadRequest, ParallelFetcher, Priority};
 use dx_pkg_link::{LinkStats, PackageLinker};
 use dx_pkg_lock::{DxlBuilder, DxlLock};
 use dx_pkg_registry::DxrpClient;
-use dx_pkg_resolve::{Dependency, PackageId};  // Removed DependencyResolver
+use dx_pkg_resolve::{Dependency, PackageId}; // Removed DependencyResolver
 use dx_pkg_store::DxpStore;
 use dx_pkg_verify::PackageVerifier;
 use std::path::Path;
@@ -51,20 +51,18 @@ impl Installer {
             verifier: PackageVerifier::default(),
             store: DxpStore::open(store_path)?,
         })
-    }    /// Full installation pipeline
+    }
+    /// Full installation pipeline
     pub async fn install(&mut self, deps: Vec<Dependency>) -> Result<InstallReport> {
         let start = Instant::now();
 
         // Phase 1: Resolve dependencies (use npm mode now)
         // let resolved = self.resolver.resolve(deps)?;
-        let resolved: Vec<PackageId> = vec![];  // TODO: Use LocalResolver
+        let resolved: Vec<PackageId> = vec![]; // TODO: Use LocalResolver
         let package_count = resolved.len();
 
         // Phase 2: Check cache (instant for hits)
-        let hashes: Vec<ContentHash> = resolved
-            .iter()
-            .map(|pkg| self.compute_hash(pkg))
-            .collect();
+        let hashes: Vec<ContentHash> = resolved.iter().map(|pkg| self.compute_hash(pkg)).collect();
 
         let (cached_hashes, missing_hashes) = self.cache.check_many(&hashes).await?;
 
@@ -130,10 +128,10 @@ impl Installer {
     ) -> Result<InstallReport> {
         // Load old lock
         let old_lock = DxlLock::open(old_lock_path)?;
-        
+
         // Resolve new deps (use npm mode now)
         // let new_resolved = self.resolver.resolve(new_deps)?;
-        let new_resolved: Vec<PackageId> = vec![];  // TODO: Use LocalResolver
+        let new_resolved: Vec<PackageId> = vec![]; // TODO: Use LocalResolver
 
         // Compute diff (which packages changed)
         let diff = self.compute_diff(&old_lock, &new_resolved);
@@ -151,13 +149,13 @@ impl Installer {
 
     async fn link_packages(&self, packages: &[PackageId], target: &str) -> Result<LinkStats> {
         let target_path = Path::new(target);
-        
+
         // Create node_modules directory
         std::fs::create_dir_all(target_path)?;
 
         // Link each package (simplified - would need actual file paths)
         let mut stats = LinkStats::default();
-        
+
         // In production, iterate through stored packages and link
         Ok(stats)
     }
@@ -207,13 +205,13 @@ mod tests {
         let _ = std::fs::remove_dir_all(&temp_store);
         std::fs::create_dir_all(&temp_cache).unwrap();
         std::fs::create_dir_all(&temp_store).unwrap();
-        
+
         let cache = IntelligentCache::new(&temp_cache).unwrap();
         let client = DxrpClient::new("localhost", 9001);
-        
+
         let installer = Installer::new(cache, client, &temp_store);
         assert!(installer.is_ok());
-        
+
         let _ = std::fs::remove_dir_all(&temp_cache);
         let _ = std::fs::remove_dir_all(&temp_store);
     }
@@ -226,15 +224,15 @@ mod tests {
         let _ = std::fs::remove_dir_all(&temp_store);
         std::fs::create_dir_all(&temp_cache).unwrap();
         std::fs::create_dir_all(&temp_store).unwrap();
-        
+
         let cache = IntelligentCache::new(&temp_cache).unwrap();
         let client = DxrpClient::new("localhost", 9001);
-        
+
         let mut installer = Installer::new(cache, client, &temp_store).unwrap();
-        
+
         let report = installer.install(vec![]).await.unwrap();
         assert_eq!(report.packages, 0);
-        
+
         let _ = std::fs::remove_dir_all(&temp_cache);
         let _ = std::fs::remove_dir_all(&temp_store);
     }

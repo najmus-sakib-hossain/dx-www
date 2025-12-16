@@ -1,12 +1,12 @@
 //! Security & Sandboxing for Dx Package Manager
-//! 
+//!
 //! Provides:
 //! - Capability-based permission system
 //! - Path sandboxing
 //! - Integrity verification
 //! - Attack vector protection
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use dx_pkg_core::hash::ContentHash;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -114,7 +114,7 @@ impl SecurityAuditor {
     pub fn audit_package(
         &self,
         path: &Path,
-        expected_hash: ContentHash,
+        _expected_hash: ContentHash,
         size: u64,
     ) -> Result<AuditResult> {
         let mut issues = Vec::new();
@@ -166,7 +166,7 @@ impl SecurityAuditor {
     fn is_safe_path(&self, path: &Path) -> bool {
         // Check for path traversal patterns
         let path_str = path.to_string_lossy();
-        
+
         // Block obvious attacks
         if path_str.contains("..") || path_str.contains("~") {
             return false;
@@ -179,13 +179,9 @@ impl SecurityAuditor {
     /// Verify package integrity
     pub fn verify_integrity(&self, data: &[u8], expected: ContentHash) -> Result<()> {
         let actual = dx_pkg_core::hash::xxhash64(data);
-        
-        if actual != expected {
-            bail!(
-                "Integrity check failed: expected {:016x}, got {:016x}",
-                expected,
-                actual
-            );
+
+        if u128::from(actual) != expected {
+            bail!("Integrity check failed: expected {:016x}, got {:016x}", expected, actual);
         }
 
         Ok(())
@@ -225,7 +221,7 @@ mod tests {
     fn test_path_traversal_detection() {
         let caps = SecurityCapabilities::for_install("./node_modules");
         let auditor = SecurityAuditor::new(caps);
-        
+
         assert!(!auditor.is_safe_path(Path::new("../etc/passwd")));
         assert!(!auditor.is_safe_path(Path::new("~/secret")));
         assert!(auditor.is_safe_path(Path::new("./node_modules/react")));
@@ -235,13 +231,15 @@ mod tests {
     fn test_size_limit() {
         let caps = SecurityCapabilities::default();
         let auditor = SecurityAuditor::new(caps);
-        
-        let result = auditor.audit_package(
-            Path::new("./node_modules/huge"),
-            0x1234567890abcdef,
-            200 * 1024 * 1024, // 200MB (exceeds limit)
-        ).unwrap();
-        
+
+        let result = auditor
+            .audit_package(
+                Path::new("./node_modules/huge"),
+                0x1234567890abcdef,
+                200 * 1024 * 1024, // 200MB (exceeds limit)
+            )
+            .unwrap();
+
         assert!(!result.passed);
         assert!(result.risk_score > 0);
         assert!(!result.issues.is_empty());
@@ -251,13 +249,13 @@ mod tests {
     fn test_integrity_verification() {
         let caps = SecurityCapabilities::default();
         let auditor = SecurityAuditor::new(caps);
-        
+
         let data = b"hello world";
         let hash = dx_pkg_core::hash::xxhash64(data);
-        
+
         // Valid hash
-        assert!(auditor.verify_integrity(data, hash).is_ok());
-        
+        assert!(auditor.verify_integrity(data, hash.into()).is_ok());
+
         // Invalid hash
         assert!(auditor.verify_integrity(data, 0xdeadbeef).is_err());
     }

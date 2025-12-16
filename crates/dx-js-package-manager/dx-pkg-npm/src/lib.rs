@@ -6,8 +6,8 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::path::PathBuf;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub mod error;
 pub use error::{Error, Result};
@@ -116,8 +116,9 @@ impl NpmClient {
     /// Fetch full package metadata from registry
     pub async fn get_metadata(&self, name: &str) -> Result<NpmPackageMetadata> {
         let url = format!("{}/{}", self.registry_url, name);
-        
-        let response = self.client
+
+        let response = self
+            .client
             .get(&url)
             .send()
             .await
@@ -141,15 +142,16 @@ impl NpmClient {
     pub async fn get_abbreviated(&self, name: &str) -> Result<AbbreviatedMetadata> {
         // Check cache first
         let cache_path = self.cache_dir.join(format!("{}.json", name.replace('/', "_")));
-        
+
         if let Ok(cached) = self.load_cached_metadata(&cache_path) {
             return Ok(cached);
         }
-        
+
         // Cache miss - fetch from npm
         let url = format!("{}/{}", self.registry_url, name);
-        
-        let response = self.client
+
+        let response = self
+            .client
             .get(&url)
             .header("Accept", "application/vnd.npm.install-v1+json")
             .send()
@@ -180,11 +182,10 @@ impl NpmClient {
         // Check age
         let metadata = std::fs::metadata(path)
             .map_err(|_| Error::PackageNotFound("cache read error".into()))?;
-        let modified = metadata.modified()
+        let modified = metadata
+            .modified()
             .map_err(|_| Error::PackageNotFound("cache time error".into()))?;
-        let age = SystemTime::now()
-            .duration_since(modified)
-            .unwrap_or(Duration::from_secs(0));
+        let age = SystemTime::now().duration_since(modified).unwrap_or(Duration::from_secs(0));
 
         // Expire after 24 hours
         if age > Duration::from_secs(24 * 60 * 60) {
@@ -203,16 +204,15 @@ impl NpmClient {
 
     /// Save metadata to cache
     fn save_cached_metadata(&self, path: &PathBuf, metadata: &AbbreviatedMetadata) -> Result<()> {
-        let json = serde_json::to_string(metadata)
-            .map_err(|e| Error::ParseError(e.to_string()))?;
-        std::fs::write(path, json)
-            .map_err(|e| Error::NetworkError(e.to_string()))?;
+        let json = serde_json::to_string(metadata).map_err(|e| Error::ParseError(e.to_string()))?;
+        std::fs::write(path, json).map_err(|e| Error::NetworkError(e.to_string()))?;
         Ok(())
     }
 
     /// Download tarball from npm CDN
     pub async fn download_tarball(&self, url: &str) -> Result<Vec<u8>> {
-        let response = self.client
+        let response = self
+            .client
             .get(url)
             .send()
             .await
@@ -222,10 +222,7 @@ impl NpmClient {
             return Err(Error::DownloadFailed(url.to_string()));
         }
 
-        let bytes = response
-            .bytes()
-            .await
-            .map_err(|e| Error::NetworkError(e.to_string()))?;
+        let bytes = response.bytes().await.map_err(|e| Error::NetworkError(e.to_string()))?;
 
         Ok(bytes.to_vec())
     }
@@ -234,10 +231,7 @@ impl NpmClient {
     pub async fn get_metadata_bulk(&self, names: &[&str]) -> Vec<Result<NpmPackageMetadata>> {
         use futures::future::join_all;
 
-        let futures: Vec<_> = names
-            .iter()
-            .map(|name| self.get_metadata(name))
-            .collect();
+        let futures: Vec<_> = names.iter().map(|name| self.get_metadata(name)).collect();
 
         join_all(futures).await
     }
@@ -246,10 +240,7 @@ impl NpmClient {
     pub async fn get_abbreviated_bulk(&self, names: &[&str]) -> Vec<Result<AbbreviatedMetadata>> {
         use futures::future::join_all;
 
-        let futures: Vec<_> = names
-            .iter()
-            .map(|name| self.get_abbreviated(name))
-            .collect();
+        let futures: Vec<_> = names.iter().map(|name| self.get_abbreviated(name)).collect();
 
         join_all(futures).await
     }
@@ -258,10 +249,7 @@ impl NpmClient {
     pub async fn download_tarballs_bulk(&self, urls: &[&str]) -> Vec<Result<Vec<u8>>> {
         use futures::future::join_all;
 
-        let futures: Vec<_> = urls
-            .iter()
-            .map(|url| self.download_tarball(url))
-            .collect();
+        let futures: Vec<_> = urls.iter().map(|url| self.download_tarball(url)).collect();
 
         join_all(futures).await
     }
@@ -281,7 +269,7 @@ mod tests {
     async fn test_fetch_lodash_metadata() {
         let client = NpmClient::new();
         let metadata = client.get_metadata("lodash").await.unwrap();
-        
+
         assert_eq!(metadata.name, "lodash");
         assert!(metadata.versions.len() > 0);
         assert!(metadata.dist_tags.contains_key("latest"));
@@ -291,7 +279,7 @@ mod tests {
     async fn test_fetch_abbreviated() {
         let client = NpmClient::new();
         let metadata = client.get_abbreviated("express").await.unwrap();
-        
+
         assert_eq!(metadata.name, "express");
         assert!(metadata.versions.len() > 0);
     }
@@ -301,7 +289,7 @@ mod tests {
         let client = NpmClient::new();
         let names = vec!["lodash", "express", "react"];
         let results = client.get_abbreviated_bulk(&names).await;
-        
+
         assert_eq!(results.len(), 3);
         assert!(results[0].is_ok());
         assert!(results[1].is_ok());

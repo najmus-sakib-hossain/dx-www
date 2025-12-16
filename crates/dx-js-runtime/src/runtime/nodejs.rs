@@ -90,7 +90,7 @@ impl FileSystemAPI {
     /// Read directory
     pub fn read_dir_sync(&self, path: &str) -> DxResult<Vec<String>> {
         let entries = fs::read_dir(path).map_err(|e| DxError::IoError(e.to_string()))?;
-        
+
         let mut result = Vec::new();
         for entry in entries {
             if let Ok(entry) = entry {
@@ -99,7 +99,7 @@ impl FileSystemAPI {
                 }
             }
         }
-        
+
         Ok(result)
     }
 
@@ -121,7 +121,7 @@ impl FileSystemAPI {
     /// Get file stats
     pub fn stat_sync(&self, path: &str) -> DxResult<FileStats> {
         let metadata = fs::metadata(path).map_err(|e| DxError::IoError(e.to_string()))?;
-        
+
         Ok(FileStats {
             size: metadata.len(),
             is_file: metadata.is_file(),
@@ -165,26 +165,17 @@ impl PathAPI {
 
     /// Get file name from path
     pub fn basename(&self, path: &str) -> Option<String> {
-        Path::new(path)
-            .file_name()
-            .and_then(|s| s.to_str())
-            .map(String::from)
+        Path::new(path).file_name().and_then(|s| s.to_str()).map(String::from)
     }
 
     /// Get directory name from path
     pub fn dirname(&self, path: &str) -> Option<String> {
-        Path::new(path)
-            .parent()
-            .and_then(|p| p.to_str())
-            .map(String::from)
+        Path::new(path).parent().and_then(|p| p.to_str()).map(String::from)
     }
 
     /// Get file extension
     pub fn extname(&self, path: &str) -> Option<String> {
-        Path::new(path)
-            .extension()
-            .and_then(|s| s.to_str())
-            .map(|s| format!(".{}", s))
+        Path::new(path).extension().and_then(|s| s.to_str()).map(|s| format!(".{}", s))
     }
 
     /// Resolve path to absolute
@@ -192,11 +183,9 @@ impl PathAPI {
         let absolute = if Path::new(path).is_absolute() {
             PathBuf::from(path)
         } else {
-            std::env::current_dir()
-                .map_err(|e| DxError::IoError(e.to_string()))?
-                .join(path)
+            std::env::current_dir().map_err(|e| DxError::IoError(e.to_string()))?.join(path)
         };
-        
+
         Ok(absolute.to_string_lossy().to_string())
     }
 
@@ -208,7 +197,7 @@ impl PathAPI {
     /// Normalize path (remove . and ..)
     pub fn normalize(&self, path: &str) -> String {
         let mut components = Vec::new();
-        
+
         for component in Path::new(path).components() {
             use std::path::Component;
             match component {
@@ -219,7 +208,7 @@ impl PathAPI {
                 _ => components.push(component.as_os_str().to_string_lossy().to_string()),
             }
         }
-        
+
         components.join(std::path::MAIN_SEPARATOR_STR)
     }
 }
@@ -244,10 +233,10 @@ impl ProcessAPI {
     pub fn new() -> Self {
         // Collect environment variables
         let env = std::env::vars().collect();
-        
+
         // Collect command line arguments
         let argv = std::env::args().collect();
-        
+
         Self {
             env,
             argv,
@@ -373,11 +362,11 @@ impl BufferAPI {
     pub fn concat(&self, buffers: &[Buffer]) -> Buffer {
         let total_size: usize = buffers.iter().map(|b| b.data.len()).sum();
         let mut result = Vec::with_capacity(total_size);
-        
+
         for buffer in buffers {
             result.extend_from_slice(&buffer.data);
         }
-        
+
         Buffer { data: result }
     }
 }
@@ -403,15 +392,11 @@ impl Buffer {
     /// Convert to string
     pub fn to_string(&self, encoding: &str) -> DxResult<String> {
         match encoding {
-            "utf8" | "utf-8" => {
-                String::from_utf8(self.data.clone()).map_err(|e| DxError::RuntimeError(e.to_string()))
-            }
+            "utf8" | "utf-8" => String::from_utf8(self.data.clone())
+                .map_err(|e| DxError::RuntimeError(e.to_string())),
             "hex" => Ok(hex::encode(&self.data)),
             "base64" => Ok(base64::encode(&self.data)),
-            _ => Err(DxError::RuntimeError(format!(
-                "Unknown encoding: {}",
-                encoding
-            ))),
+            _ => Err(DxError::RuntimeError(format!("Unknown encoding: {}", encoding))),
         }
     }
 
@@ -439,9 +424,7 @@ impl Buffer {
 // Placeholder for hex and base64 encoding
 mod hex {
     pub fn encode(data: &[u8]) -> String {
-        data.iter()
-            .map(|b| format!("{:02x}", b))
-            .collect::<String>()
+        data.iter().map(|b| format!("{:02x}", b)).collect::<String>()
     }
 }
 
@@ -450,24 +433,32 @@ mod base64 {
         // Simple base64 implementation
         const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         let mut result = String::new();
-        
+
         for chunk in data.chunks(3) {
             let mut buf = [0u8; 3];
             for (i, &byte) in chunk.iter().enumerate() {
                 buf[i] = byte;
             }
-            
+
             let b1 = (buf[0] >> 2) as usize;
             let b2 = (((buf[0] & 0x03) << 4) | (buf[1] >> 4)) as usize;
             let b3 = (((buf[1] & 0x0F) << 2) | (buf[2] >> 6)) as usize;
             let b4 = (buf[2] & 0x3F) as usize;
-            
+
             result.push(CHARSET[b1] as char);
             result.push(CHARSET[b2] as char);
-            result.push(if chunk.len() > 1 { CHARSET[b3] as char } else { '=' });
-            result.push(if chunk.len() > 2 { CHARSET[b4] as char } else { '=' });
+            result.push(if chunk.len() > 1 {
+                CHARSET[b3] as char
+            } else {
+                '='
+            });
+            result.push(if chunk.len() > 2 {
+                CHARSET[b4] as char
+            } else {
+                '='
+            });
         }
-        
+
         result
     }
 }
@@ -490,7 +481,7 @@ mod tests {
         let buffer_api = BufferAPI::new();
         let buf = buffer_api.from_string("Hello");
         assert_eq!(buf.length(), 5);
-        
+
         let slice = buf.slice(0, 2);
         assert_eq!(slice.length(), 2);
     }

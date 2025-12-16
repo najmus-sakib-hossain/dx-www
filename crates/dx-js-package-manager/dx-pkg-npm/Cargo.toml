@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 # Async HTTP client
-reqwest = { version = "0.12", features = ["json", "stream"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
 
 # Async runtime
 tokio = { version = "1.42", features = ["full"] }

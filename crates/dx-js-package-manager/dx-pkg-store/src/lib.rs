@@ -4,7 +4,7 @@
 //! Packages are stored by their content hash for deduplication, with a
 //! memory-mapped index for O(1) lookups.
 
-use dx_pkg_core::{error::Error, hash::ContentHash, Result};
+use dx_pkg_core::{Result, error::Error, hash::ContentHash};
 use dx_pkg_format::DxpPackage;
 use memmap2::MmapMut;
 use parking_lot::RwLock;
@@ -33,7 +33,7 @@ const MAX_INDEX_SIZE: usize = 1024 * 1024; // Max 1M entries
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 struct IndexHeader {
-    magic: [u8; 8],      // "DXSTORE\0"
+    magic: [u8; 8], // "DXSTORE\0"
     version: u32,
     entry_count: u32,
     capacity: u32,
@@ -44,10 +44,10 @@ struct IndexHeader {
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 struct IndexEntry {
-    hash: u128,         // Content hash
-    offset: u64,        // Offset in packages directory (encoded path)
-    size: u64,          // Package size in bytes
-    flags: u64,         // Reserved for future use
+    hash: u128,  // Content hash
+    offset: u64, // Offset in packages directory (encoded path)
+    size: u64,   // Package size in bytes
+    flags: u64,  // Reserved for future use
 }
 
 impl Default for IndexEntry {
@@ -199,20 +199,13 @@ impl DxpStore {
 
     /// Garbage collect unused packages
     pub fn gc(&self, keep_hashes: &[ContentHash]) -> Result<usize> {
-        let keep_set: std::collections::HashSet<u128> = keep_hashes
-            .iter()
-            .copied()
-            .collect();
+        let keep_set: std::collections::HashSet<u128> = keep_hashes.iter().copied().collect();
 
         let mut removed = 0;
         let mut index = self.index.write();
 
-        let to_remove: Vec<u128> = index
-            .entries
-            .keys()
-            .filter(|h| !keep_set.contains(h))
-            .copied()
-            .collect();
+        let to_remove: Vec<u128> =
+            index.entries.keys().filter(|h| !keep_set.contains(h)).copied().collect();
 
         for hash in to_remove {
             let path = self.package_path(hash);
@@ -230,11 +223,7 @@ impl DxpStore {
     /// List all stored packages
     pub fn list(&self) -> Result<Vec<ContentHash>> {
         let index = self.index.read();
-        Ok(index
-            .entries
-            .keys()
-            .copied()
-            .collect())
+        Ok(index.entries.keys().copied().collect())
     }
 
     /// Get store statistics
@@ -256,10 +245,7 @@ impl DxpStore {
         let hex = format!("{:032x}", hash);
         let dir1 = &hex[0..2];
         let dir2 = &hex[2..4];
-        self.packages_path
-            .join(dir1)
-            .join(dir2)
-            .join(format!("{}.dxp", hex))
+        self.packages_path.join(dir1).join(dir2).join(format!("{}.dxp", hex))
     }
 
     fn load_index(path: &Path) -> Result<StoreIndex> {
@@ -275,7 +261,12 @@ impl DxpStore {
         if &header.magic != b"DXSTORE\0" {
             return Err(Error::InvalidMagic {
                 expected: *b"DXST",
-                found: [header.magic[0], header.magic[1], header.magic[2], header.magic[3]],
+                found: [
+                    header.magic[0],
+                    header.magic[1],
+                    header.magic[2],
+                    header.magic[3],
+                ],
             });
         }
 
@@ -295,7 +286,7 @@ impl DxpStore {
             unsafe {
                 let entry_bytes = std::slice::from_raw_parts_mut(
                     &mut entry as *mut IndexEntry as *mut u8,
-                    INDEX_ENTRY_SIZE
+                    INDEX_ENTRY_SIZE,
                 );
                 entry_bytes.copy_from_slice(&mmap[offset..offset + INDEX_ENTRY_SIZE]);
             }
@@ -305,9 +296,7 @@ impl DxpStore {
             }
         }
 
-        Ok(StoreIndex {
-            entries,
-        })
+        Ok(StoreIndex { entries })
     }
 
     fn create_index(path: &Path) -> Result<StoreIndex> {
@@ -380,7 +369,7 @@ impl DxpStore {
             let bytes = unsafe {
                 std::slice::from_raw_parts(
                     entry as *const IndexEntry as *const u8,
-                    INDEX_ENTRY_SIZE
+                    INDEX_ENTRY_SIZE,
                 )
             };
             mmap[offset..offset + INDEX_ENTRY_SIZE].copy_from_slice(bytes);
@@ -447,11 +436,11 @@ mod tests {
     fn test_store_create() -> Result<()> {
         let temp = TempDir::new()?;
         let store = DxpStore::open(temp.path())?;
-        
+
         assert!(store.index_path.exists());
         assert!(store.packages_path.exists());
         assert!(store.cache_path.exists());
-        
+
         Ok(())
     }
 
@@ -462,18 +451,18 @@ mod tests {
 
         // Create test package data
         let data = b"test package data";
-        
+
         // Store package
         let hash = store.put(data)?;
-        
+
         // Verify it exists
         assert!(store.verify(hash)?);
-        
+
         // List packages
         let packages = store.list()?;
         assert_eq!(packages.len(), 1);
         assert_eq!(packages[0], hash);
-        
+
         Ok(())
     }
 
@@ -483,15 +472,15 @@ mod tests {
         let store = DxpStore::open(temp.path())?;
 
         let data = b"duplicate data";
-        
+
         let hash1 = store.put(data)?;
         let hash2 = store.put(data)?;
-        
+
         assert_eq!(hash1, hash2);
-        
+
         let packages = store.list()?;
         assert_eq!(packages.len(), 1);
-        
+
         Ok(())
     }
 
@@ -510,7 +499,7 @@ mod tests {
 
         let packages = store.list()?;
         assert_eq!(packages.len(), 2);
-        
+
         Ok(())
     }
 
@@ -525,7 +514,7 @@ mod tests {
         let stats = store.stats();
         assert_eq!(stats.package_count, 2);
         assert!(stats.total_size > 0);
-        
+
         Ok(())
     }
 }

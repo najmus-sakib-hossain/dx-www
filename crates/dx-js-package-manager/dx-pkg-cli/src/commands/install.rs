@@ -11,21 +11,20 @@ use std::time::Instant;
 
 pub async fn run(packages: Vec<String>, verbose: bool) -> Result<()> {
     let start = Instant::now();
-    
+
     if verbose {
         println!("🚀 DX Package Manager - Starting installation...");
     }
 
     // Initialize components
-    let cache = IntelligentCache::new(".dx/cache")
-        .context("Failed to initialize cache")?;
+    let cache = IntelligentCache::new(".dx/cache").context("Failed to initialize cache")?;
     let client = DxrpClient::new("registry.npmjs.org", 443);
-    let mut installer = Installer::new(cache, client, ".dx/store")
-        .context("Failed to initialize installer")?;
+    let mut installer =
+        Installer::new(cache, client, ".dx/store").context("Failed to initialize installer")?;
 
     // Read package.json
-    let pkg_json = PackageJson::read(Path::new("package.json"))
-        .context("Failed to read package.json")?;
+    let pkg_json =
+        PackageJson::read(Path::new("package.json")).context("Failed to read package.json")?;
 
     if verbose {
         println!("📦 Package: {} v{}", pkg_json.name, pkg_json.version);
@@ -35,10 +34,7 @@ pub async fn run(packages: Vec<String>, verbose: bool) -> Result<()> {
     let deps_map = if packages.is_empty() {
         pkg_json.all_dependencies()
     } else {
-        packages
-            .into_iter()
-            .map(|p| (p, "*".to_string()))
-            .collect()
+        packages.into_iter().map(|p| (p, "*".to_string())).collect()
     };
 
     if verbose {
@@ -58,15 +54,18 @@ pub async fn run(packages: Vec<String>, verbose: bool) -> Result<()> {
     match installer.install(deps).await {
         Ok(report) => {
             let total_ms = report.total_time.as_secs_f64() * 1000.0;
-            
+
             println!("✨ Done in {:.2}ms", total_ms);
             println!("   📦 Packages: {}", report.packages);
             println!("   💾 Cached: {}", report.cached);
             println!("   ⬇️  Downloaded: {}", report.downloaded);
-            
+
             if verbose {
-                println!("   💰 Saved: {:.2}MB (reflinks)", report.bytes_saved as f64 / 1_000_000.0);
-                
+                println!(
+                    "   💰 Saved: {:.2}MB (reflinks)",
+                    report.bytes_saved as f64 / 1_000_000.0
+                );
+
                 // Estimate speedup
                 let bun_estimate = total_ms * 16.0; // Conservative 16x estimate
                 println!("   ⚡ ~{:.0}x faster than Bun", bun_estimate / total_ms);

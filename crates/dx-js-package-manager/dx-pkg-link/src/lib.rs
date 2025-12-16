@@ -9,17 +9,17 @@
 pub mod reflink;
 
 use dx_pkg_core::Result;
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
 pub use reflink::ReflinkLinker;
 
 /// Link strategy (fastest to slowest)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LinkStrategy {
-    Reflink,    // CoW clone (instant, 0 bytes)
-    Hardlink,   // Hard link (instant, 0 bytes)
-    Copy,       // Full copy (slow, uses disk)
+    Reflink,  // CoW clone (instant, 0 bytes)
+    Hardlink, // Hard link (instant, 0 bytes)
+    Copy,     // Full copy (slow, uses disk)
 }
 
 /// Platform-specific linker
@@ -141,11 +141,7 @@ impl PackageLinker {
         const FICLONE: libc::c_ulong = 0x40049409;
 
         let result = unsafe {
-            libc::ioctl(
-                dst_file.as_raw_fd(),
-                FICLONE as libc::c_ulong,
-                src_file.as_raw_fd(),
-            )
+            libc::ioctl(dst_file.as_raw_fd(), FICLONE as libc::c_ulong, src_file.as_raw_fd())
         };
 
         if result != 0 {
@@ -289,10 +285,10 @@ mod tests {
     #[test]
     fn test_strategy_detection() {
         let strategy = PackageLinker::detect_best_strategy();
-        
+
         #[cfg(target_os = "macos")]
         assert_eq!(strategy, LinkStrategy::Reflink);
-        
+
         #[cfg(target_os = "windows")]
         assert_eq!(strategy, LinkStrategy::Hardlink);
     }
@@ -300,11 +296,11 @@ mod tests {
     #[test]
     fn test_link_stats() {
         let mut stats = LinkStats::default();
-        
+
         stats.record(LinkStrategy::Reflink, 1000);
         stats.record(LinkStrategy::Hardlink, 500);
         stats.record(LinkStrategy::Copy, 200);
-        
+
         assert_eq!(stats.reflinks, 1);
         assert_eq!(stats.hardlinks, 1);
         assert_eq!(stats.copies, 1);

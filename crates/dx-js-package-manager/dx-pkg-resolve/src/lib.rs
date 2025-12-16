@@ -4,11 +4,11 @@
 //! Still fast through: binary lock file checking, BFS resolution, parallel fetching
 
 use anyhow::{Context, Result};
-use dx_pkg_core::{version::Version};
+use dx_pkg_core::version::Version;
 use std::collections::{HashMap, HashSet, VecDeque};
 
 // Re-export npm client
-pub use dx_pkg_npm::{NpmClient, AbbreviatedMetadata};
+pub use dx_pkg_npm::{AbbreviatedMetadata, NpmClient};
 
 /// Package identifier
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
@@ -65,9 +65,12 @@ impl LocalResolver {
     }
 
     /// Resolve all dependencies from package.json manifest (PARALLEL!)
-    pub async fn resolve(&mut self, dependencies: &HashMap<String, String>) -> Result<ResolvedGraph> {
+    pub async fn resolve(
+        &mut self,
+        dependencies: &HashMap<String, String>,
+    ) -> Result<ResolvedGraph> {
         use futures::stream::{self, StreamExt};
-        
+
         let mut resolved = ResolvedGraph::new();
         let mut queue: VecDeque<(String, String)> = VecDeque::new();
         let mut seen: HashSet<String> = HashSet::new();
@@ -81,13 +84,13 @@ impl LocalResolver {
         while !queue.is_empty() {
             let batch_size = queue.len().min(32);
             let batch: Vec<_> = queue.drain(..batch_size).collect();
-            
+
             // Mark as seen BEFORE fetching (prevents duplicate fetches)
             for (name, constraint) in &batch {
                 let key = format!("{}@{}", name, constraint);
                 seen.insert(key);
             }
-            
+
             // Fetch all in parallel!
             let results: Vec<_> = stream::iter(batch)
                 .map(|(name, constraint)| {
@@ -98,12 +101,12 @@ impl LocalResolver {
                         // Fetch metadata
                         let metadata = npm.get_abbreviated(&name_owned).await
                             .with_context(|| format!("Failed to fetch metadata for {}", name_owned))?;
-                        
+
                         // Find best version
                         let version = Self::find_best_version(&metadata, &constraint_owned)?;
                         let version_info = metadata.versions.get(&version)
                             .ok_or_else(|| anyhow::anyhow!("Version {} not found for {}", version, name_owned))?;
-                        
+
                         // Return package + its deps
                         let package = ResolvedPackage {
                             name: name_owned,
@@ -111,18 +114,18 @@ impl LocalResolver {
                             tarball_url: version_info.dist.tarball.clone(),
                             dependencies: version_info.dependencies.clone(),
                         };
-                        
+
                         Ok::<_, anyhow::Error>(package)
                     }
                 })
                 .buffer_unordered(32) // 32 concurrent requests!
                 .collect()
                 .await;
-            
+
             // Process results
             for result in results {
                 let package = result?;
-                
+
                 // Queue transitive dependencies
                 for (dep_name, dep_constraint) in &package.dependencies {
                     let key = format!("{}@{}", dep_name, dep_constraint);
@@ -130,7 +133,7 @@ impl LocalResolver {
                         queue.push_back((dep_name.clone(), dep_constraint.clone()));
                     }
                 }
-                
+
                 resolved.add(package);
             }
         }
@@ -139,10 +142,7 @@ impl LocalResolver {
     }
 
     /// Find the best matching version for a semver constraint
-    fn find_best_version(
-        metadata: &AbbreviatedMetadata,
-        constraint: &str,
-    ) -> Result<String> {
+    fn find_best_version(metadata: &AbbreviatedMetadata, constraint: &str) -> Result<String> {
         // Handle special cases
         if constraint == "latest" || constraint == "*" {
             return metadata
@@ -172,10 +172,9 @@ impl LocalResolver {
         // Sort descending (prefer newest)
         matching.sort_by(|a, b| b.cmp(a));
 
-        matching
-            .first()
-            .map(|v| v.to_string())
-            .ok_or_else(|| anyhow::anyhow!("No matching version found for constraint: {}", constraint))
+        matching.first().map(|v| v.to_string()).ok_or_else(|| {
+            anyhow::anyhow!("No matching version found for constraint: {}", constraint)
+        })
     }
 }
 
@@ -199,8 +198,8 @@ pub struct Dependency {
 pub enum VersionConstraint {
     Exact(Version),
     Range { min: Version, max: Version },
-    Caret(Version),  // ^1.2.3 (>=1.2.3 <2.0.0)
-    Tilde(Version),  // ~1.2.3 (>=1.2.3 <1.3.0)
+    Caret(Version), // ^1.2.3 (>=1.2.3 <2.0.0)
+    Tilde(Version), // ~1.2.3 (>=1.2.3 <1.3.0)
     Latest,
 }
 
@@ -215,7 +214,7 @@ mod tests {
         deps.insert("lodash".to_string(), "^4.17.0".to_string());
 
         let graph = resolver.resolve(&deps).await.unwrap();
-        
+
         assert_eq!(graph.packages.len(), 1);
         assert_eq!(graph.packages[0].name, "lodash");
         assert!(graph.packages[0].version.starts_with("4.17"));
@@ -228,7 +227,7 @@ mod tests {
         deps.insert("express".to_string(), "^4.18.0".to_string());
 
         let graph = resolver.resolve(&deps).await.unwrap();
-        
+
         // Express has many dependencies
         assert!(graph.packages.len() > 10);
         assert!(graph.get("express").is_some());

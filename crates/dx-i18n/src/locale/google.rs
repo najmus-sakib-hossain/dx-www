@@ -65,7 +65,7 @@ impl GoogleTranslator {
 impl Translator for GoogleTranslator {
     async fn translate(&self, text: &str) -> Result<String> {
         let text = text.trim();
-        
+
         if text.is_empty() {
             return Ok(text.to_string());
         }
@@ -78,7 +78,8 @@ impl Translator for GoogleTranslator {
             return Err(I18nError::InvalidLength { min: 1, max: 5000 });
         }
 
-        let response = self.client
+        let response = self
+            .client
             .get(GOOGLE_TRANSLATE_URL)
             .query(&[
                 ("tl", self.target.as_str()),
@@ -90,13 +91,13 @@ impl Translator for GoogleTranslator {
 
         if response.status() == 429 {
             return Err(I18nError::TooManyRequests(
-                "Too many requests to Google Translate. Please try again later.".to_string()
+                "Too many requests to Google Translate. Please try again later.".to_string(),
             ));
         }
 
         let html = response.text().await?;
         let document = Html::parse_document(&html);
-        
+
         // Try primary selector
         let selector = Selector::parse("div.t0").unwrap();
         if let Some(element) = document.select(&selector).next() {

@@ -8,7 +8,10 @@ fn main() -> ExitCode {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        eprintln!("dx-js v{} - The fastest JavaScript/TypeScript runtime", env!("CARGO_PKG_VERSION"));
+        eprintln!(
+            "dx-js v{} - The fastest JavaScript/TypeScript runtime",
+            env!("CARGO_PKG_VERSION")
+        );
         eprintln!();
         eprintln!("Usage: dx-js <file.js|file.ts>");
         eprintln!();
@@ -55,10 +58,10 @@ fn main() -> ExitCode {
 
     // Run the file - NUCLEAR FAST PATH with SIMD & Crystallized Cache
     let start = Instant::now();
-    
+
     // Try cache first (50x faster on warm runs)
     let mut cache = dx_js_runtime::crystallized::CrystalCache::new().ok();
-    
+
     match std::fs::read_to_string(file) {
         Ok(source) => {
             // Check cache (Phase 21: Crystallized Binary)
@@ -66,36 +69,36 @@ fn main() -> ExitCode {
                 if let Some(cached) = c.get(&source) {
                     // Cache hit - instant execution!
                     println!("{}", cached);
-                    
+
                     let elapsed = start.elapsed();
                     if env::var("DX_DEBUG").is_ok() {
                         eprintln!("\n─── Performance ───");
                         eprintln!("  Cache: HIT (warm start)");
                         eprintln!("  Total time: {:?}", elapsed);
                     }
-                    
+
                     return ExitCode::SUCCESS;
                 }
             }
-            
+
             // Cache miss - execute with ULTRA optimizations
             let output = dx_js_runtime::simple_exec_ultra::execute_js(&source);
-            
+
             // Store in cache for next run
             if let Some(ref mut c) = cache {
                 let _ = c.store(&source, output.clone());
             }
-            
+
             if !output.is_empty() {
                 println!("{}", output);
             }
-            
+
             let elapsed = start.elapsed();
             if env::var("DX_DEBUG").is_ok() {
                 eprintln!("\n─── Performance ───");
                 eprintln!("  Total time: {:?}", elapsed);
             }
-            
+
             ExitCode::SUCCESS
         }
         Err(e) => {
