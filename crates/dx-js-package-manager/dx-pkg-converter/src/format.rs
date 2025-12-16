@@ -63,18 +63,14 @@ impl DxpFile {
         // Read version
         let mut version_bytes = [0u8; 4];
         file.read_exact(&mut version_bytes)?;
-        let version = u32::from_le_bytes(version_bytes);
+        let _version = u32::from_le_bytes(version_bytes);
 
-        // Read entry count
-        let mut count_bytes = [0u8; 4];
-        file.read_exact(&mut count_bytes)?;
-        let _count = u32::from_le_bytes(count_bytes);
-
-        // Read entries
+        // Read data size
         let mut size_bytes = [0u8; 8];
         file.read_exact(&mut size_bytes)?;
         let data_size = u64::from_le_bytes(size_bytes);
 
+        // Read and decode data
         let mut data = vec![0u8; data_size as usize];
         file.read_exact(&mut data)?;
 

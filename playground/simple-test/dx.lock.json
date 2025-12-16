@@ -1,6 +1,6 @@
 [
   {
-    "cached": false,
+    "cached": true,
     "name": "lodash",
     "path": "C:\\Users\\Computer\\.dx\\cache\\lodash-4.17.21.tgz",
     "version": "4.17.21"

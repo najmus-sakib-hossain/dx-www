@@ -117,7 +117,7 @@ ln package.json → node_modules/package/package.json
 
 ## The Secret Sauce: Why We're 50x Faster
 
-### Bun's Bottleneck
+### Bun's Bottleneckwa
 Bun re-fetches metadata from npm registry on EVERY install:
 ```
 bun install

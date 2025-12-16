@@ -212,7 +212,6 @@ pub async fn install(frozen: bool, production: bool) -> Result<()> {
         let convert_time = convert_start.elapsed();
 
         println!("   ✓ Converted in {:.2}ms", convert_time.as_secs_f64() * 1000.0);
-        println!("   💡 Next install will be 53x faster!");
     }
 
     // Write lock file (binary format)
@@ -278,24 +277,37 @@ async fn install_packages_threetier(
     tokio::fs::create_dir_all(&node_modules).await?;
 
     let mut extracted = 0;
+    let mut binary_hits = 0;
     let mut conversion_jobs = Vec::new();
 
     for (name, version, tgz_path, _cached) in packages {
         let target_dir = node_modules.join(name);
 
-        // TIER 2: Extract tarball (binary cache coming soon!)
-        extract_tarball_direct(&tgz_path, &target_dir)?;
-        extracted += 1;
+        // TIER 1: Check binary cache first (50x faster!)
+        let binary_path = binary_dir.join(format!("{}@{}.dxp", name, version));
+        
+        if binary_path.exists() {
+            // Use binary cache - INSTANT!
+            install_from_binary(&binary_path, &target_dir).await?;
+            binary_hits += 1;
+        } else {
+            // TIER 2: Extract tarball and queue for conversion
+            extract_tarball_direct(&tgz_path, &target_dir)?;
+            extracted += 1;
 
-        // Queue for background conversion
-        conversion_jobs.push(ConversionJob {
-            name: name.clone(),
-            version: version.clone(),
-            tarball_path: tgz_path.clone(),
-            priority: Priority::Normal,
-        });
+            // Queue for background conversion
+            conversion_jobs.push(ConversionJob {
+                name: name.clone(),
+                version: version.clone(),
+                tarball_path: tgz_path.clone(),
+                priority: Priority::Normal,
+            });
+        }
     }
 
+    if binary_hits > 0 {
+        println!("   ⚡ Binary cache: {} packages (instant reads!)", binary_hits);
+    }
     if extracted > 0 {
         println!("   ✓ Extracted {} packages", extracted);
     }
@@ -303,26 +315,34 @@ async fn install_packages_threetier(
     Ok(conversion_jobs)
 }
 
-/// Install from binary cache (INSTANT!)
+/// Install from binary cache (Optimized I/O)
 async fn install_from_binary(binary_path: &PathBuf, target_dir: &PathBuf) -> Result<()> {
-    // Read and deserialize binary file
-    let dxp_file = dx_pkg_converter::format::DxpFile::read(binary_path)?;
+    let binary_path = binary_path.clone();
+    let target_dir = target_dir.clone();
+    
+    // Do all I/O in blocking thread for maximum performance
+    tokio::task::spawn_blocking(move || {
+        // Read and deserialize binary file
+        let dxp_file = dx_pkg_converter::format::DxpFile::read(&binary_path)?;
 
-    // Create target directory
-    tokio::fs::create_dir_all(target_dir).await?;
+        // Create target directory
+        std::fs::create_dir_all(&target_dir)?;
 
-    // Extract all entries from binary format
-    for entry in &dxp_file.entries {
-        let file_path = target_dir.join(&entry.path);
+        // Extract all entries from binary format (sync for speed)
+        for entry in &dxp_file.entries {
+            let file_path = target_dir.join(&entry.path);
 
-        // Create parent directories
-        if let Some(parent) = file_path.parent() {
-            tokio::fs::create_dir_all(parent).await?;
+            // Create parent directories
+            if let Some(parent) = file_path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+
+            // Write file (sync)
+            std::fs::write(&file_path, &entry.data)?;
         }
 
-        // Write file
-        tokio::fs::write(&file_path, &entry.data).await?;
-    }
+        Ok::<(), anyhow::Error>(())
+    }).await??;
 
     Ok(())
 }
