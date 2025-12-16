@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**TL;DR:** dx-serializer is optimized for **human readability and LLM efficiency**, achieving 65x better token efficiency than TOON and 90%+ better than JSON. However, **FlatBuffers and Protocol Buffers are faster for pure machine-to-machine communication** due to their binary-first, zero-parse architecture.
+**TL;DR:** dx-serializer is optimized for **human readability and LLM efficiency**, achieving **6-7× better token efficiency** than TOON/JSON (85% reduction). However, **FlatBuffers and Protocol Buffers are faster for pure machine-to-machine communication** due to their binary-first, zero-parse architecture.
 
 **The Verdict:**
 - **Best for Humans/LLMs:** dx-serializer (90%+ token reduction)
@@ -739,7 +739,7 @@ impl<'a> ZeroCopyDx<'a> {
 
 **The True Achievement:**
 
-dx-serializer is **65x better than TOON** and **90%+ better than JSON** for **its intended purpose**: human-readable, LLM-efficient serialization.
+dx-serializer is **6-7× better than TOON** and **85%+ better than JSON** for **its intended purpose**: human-readable, LLM-efficient serialization.
 
 FlatBuffers is **12x faster** for **its intended purpose**: zero-parse, machine-to-machine communication.
 
