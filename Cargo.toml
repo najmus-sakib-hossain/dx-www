@@ -56,6 +56,9 @@ members = [
     "crates/dx-rtl",
     "crates/dx-debug",
     
+    # NEW: Internationalization (i18n) - Translation & TTS
+    "crates/dx-i18n",
+    
     # NEW: JavaScript/TypeScript Runtime (10x faster than Bun)
     "crates/dx-js-runtime",
     
@@ -159,6 +162,7 @@ dx-a11y = { path = "crates/dx-a11y" }
 dx-print = { path = "crates/dx-print" }
 dx-rtl = { path = "crates/dx-rtl" }
 dx-debug = { path = "crates/dx-debug" }
+dx-i18n = { path = "crates/dx-i18n" }
 
 
 # ============================================================================
