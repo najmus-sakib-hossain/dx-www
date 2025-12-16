@@ -70,6 +70,9 @@ benchmarks/*.json
 dist/
 build/
 
+*/*/target/
+*/target/
+
 # Temporary files
 tmp/
 temp/
