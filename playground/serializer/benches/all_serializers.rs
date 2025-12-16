@@ -1,8 +1,7 @@
 //! Comprehensive benchmark: All serializers
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use serializer_benchmark::{User, UserRkyv};
-use std::hint::black_box as bb;
 
 // =============================================================================
 // DX-ZERO (Our Implementation)
@@ -75,12 +74,12 @@ fn deserialize_dx_zero(bytes: &[u8]) -> &UserDxZero {
 
 fn serialize_rkyv(user: &User) -> Vec<u8> {
     let user_rkyv = UserRkyv::from(user);
-    rkyv::to_bytes::<_, 256>(&user_rkyv).unwrap().to_vec()
+    rkyv::to_bytes::<rkyv::rancor::Error>(&user_rkyv).unwrap().into_vec()
 }
 
 fn deserialize_rkyv(bytes: &[u8]) -> u64 {
-    let archived = unsafe { rkyv::archived_root::<UserRkyv>(bytes) };
-    archived.id
+    let archived: &rkyv::Archived<UserRkyv> = unsafe { rkyv::access_unchecked(bytes) };
+    u64::from(archived.id)
 }
 
 // =============================================================================

@@ -50,13 +50,7 @@ impl User {
 }
 
 // Rkyv support
-#[derive(
-    rkyv::Archive, 
-    rkyv::Serialize, 
-    rkyv::Deserialize,
-    Debug, Clone, PartialEq
-)]
-#[rkyv(derive(Debug))]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct UserRkyv {
     pub id: u64,
     pub age: u32,
