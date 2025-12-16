@@ -7,3 +7,7 @@ repository.workspace = true
 
 [dependencies]
 dx-pkg-core = { path = "../dx-pkg-core" }
+thiserror = "2.0"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"

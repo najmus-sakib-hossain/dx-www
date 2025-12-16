@@ -37,6 +37,9 @@ pub enum Error {
 
     #[error("Parse error: {0}")]
     Parse(String),
+
+    #[error("Integrity check failed: {0}")]
+    Integrity(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
