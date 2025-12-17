@@ -1,0 +1,14 @@
+[package]
+name = "dx-bundle-minify"
+version = "0.1.0"
+edition = "2024"
+authors = ["DX Team"]
+description = "SIMD minification for DX bundler"
+
+[dependencies]
+dx-bundle-core = { path = "../dx-bundle-core" }
+xxhash-rust = { workspace = true }
+
+[lib]
+name = "dx_bundle_minify"
+path = "src/lib.rs"

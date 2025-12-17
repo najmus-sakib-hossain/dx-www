@@ -1,0 +1,26 @@
+[package]
+name = "dx-bundle-graph"
+version = "0.1.0"
+edition = "2024"
+authors = ["DX Team"]
+description = "O(1) module graph cache for DX bundler"
+
+[dependencies]
+dx-bundle-core = { path = "../dx-bundle-core" }
+memmap2 = { workspace = true }
+dashmap = { workspace = true }
+blake3 = { workspace = true }
+xxhash-rust = { workspace = true }
+walkdir = { workspace = true }
+rayon = { workspace = true }
+crossbeam-channel = { workspace = true }
+num_cpus = { workspace = true }
+oxc_parser = { workspace = true }
+oxc_ast = { workspace = true }
+oxc_span = { workspace = true }
+oxc_allocator = { workspace = true }
+bytemuck = { workspace = true }
+
+[lib]
+name = "dx_bundle_graph"
+path = "src/lib.rs"

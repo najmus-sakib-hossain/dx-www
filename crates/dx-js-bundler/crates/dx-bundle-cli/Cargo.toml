@@ -1,0 +1,24 @@
+[package]
+name = "dx-bundle-cli"
+version = "0.1.0"
+edition = "2024"
+authors = ["DX Team"]
+description = "CLI interface for DX bundler"
+
+[[bin]]
+name = "dx-bundle"
+path = "src/main.rs"
+
+[dependencies]
+dx-bundle-core = { path = "../dx-bundle-core" }
+dx-bundle-graph = { path = "../dx-bundle-graph" }
+dx-bundle-resolve = { path = "../dx-bundle-resolve" }
+dx-bundle-parse = { path = "../dx-bundle-parse" }
+dx-bundle-transform = { path = "../dx-bundle-transform" }
+dx-bundle-tree-shake = { path = "../dx-bundle-tree-shake" }
+dx-bundle-concat = { path = "../dx-bundle-concat" }
+dx-bundle-minify = { path = "../dx-bundle-minify" }
+dx-bundle-sourcemap = { path = "../dx-bundle-sourcemap" }
+clap = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }

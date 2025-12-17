@@ -1,0 +1,13 @@
+[package]
+name = "dx-bundle-tree-shake"
+version = "0.1.0"
+edition = "2024"
+authors = ["DX Team"]
+description = "Binary tree shaking for DX bundler"
+
+[dependencies]
+dx-bundle-core = { path = "../dx-bundle-core" }
+
+[lib]
+name = "dx_bundle_tree_shake"
+path = "src/lib.rs"

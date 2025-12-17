@@ -62,6 +62,9 @@ members = [
     # NEW: JavaScript/TypeScript Runtime (10x faster than Bun)
     "crates/dx-js-runtime",
     
+    # NEW: JavaScript Bundler (3x faster than Bun)
+    "crates/dx-js-bundler",
+    
     # Examples & Playground
     "examples/hello-world",
     "playground",
