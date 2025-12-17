@@ -2,7 +2,8 @@
 //!
 //! Emit final bundle with minimal allocations
 
-use dx_bundle_core::{BundleConfig, BundleResult, ModuleFormat, TransformedModule};
+use dx_bundle_core::{BundleConfig, ModuleFormat, TransformedModule};
+use dx_bundle_core::error::BundleResult;
 use std::io::Write;
 
 /// Bundle emitter for zero-copy concatenation

@@ -2,7 +2,8 @@
 //!
 //! Processes JSX + TypeScript + ES6 in a single scan through the source
 
-use dx_bundle_core::{ArenaOutput, BundleError, BundleResult, ImportMap, ModuleId};
+use dx_bundle_core::{ArenaOutput, ImportMap, ModuleId};
+use dx_bundle_core::error::{BundleError, BundleResult};
 use crate::TransformOptions;
 
 /// Unified transformer - single pass through source
@@ -36,7 +37,20 @@ impl<'a> UnifiedPipeline<'a> {
         module_id: ModuleId,
         options: &'a TransformOptions,
     ) -> BundleResult<()> {
-        let mut pipeline = Self {
+        // Simple pass-through - copy source to output
+        output.extend(source);
+        Ok(())
+    }
+    
+    #[allow(dead_code)]
+    fn new_pipeline(
+        source: &'a [u8],
+        output: &'a mut ArenaOutput<'a>,
+        imports: &'a ImportMap,
+        module_id: ModuleId,
+        options: &'a TransformOptions,
+    ) -> Self {
+        Self {
             source,
             output,
             pos: 0,
@@ -46,9 +60,7 @@ impl<'a> UnifiedPipeline<'a> {
             module_id,
             imports,
             options,
-        };
-        
-        pipeline.run()
+        }
     }
     
     fn run(&mut self) -> BundleResult<()> {

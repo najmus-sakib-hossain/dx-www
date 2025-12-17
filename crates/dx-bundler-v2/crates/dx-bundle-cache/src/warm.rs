@@ -1,7 +1,8 @@
 //! Warm cache - in-memory hot cache with persistent backing
 
 use crate::{CachedTransform, CacheStats};
-use dx_bundle_core::{ContentHash, ModuleId, PathHasher};
+use dx_bundle_core::{ContentHash, ModuleId};
+use dx_bundle_core::hash::PathHasher;
 use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -15,6 +16,17 @@ pub struct WarmCache {
     /// Statistics
     hits: AtomicUsize,
     misses: AtomicUsize,
+}
+
+impl Clone for WarmCache {
+    fn clone(&self) -> Self {
+        Self {
+            hot: self.hot.clone(),
+            cache_dir: self.cache_dir.clone(),
+            hits: AtomicUsize::new(self.hits.load(Ordering::Relaxed)),
+            misses: AtomicUsize::new(self.misses.load(Ordering::Relaxed)),
+        }
+    }
 }
 
 impl WarmCache {

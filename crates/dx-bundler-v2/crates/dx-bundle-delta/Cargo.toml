@@ -8,5 +8,3 @@ license.workspace = true
 [dependencies]
 dx-bundle-core = { path = "../dx-bundle-core" }
 dashmap.workspace = true
-serde.workspace = true
-bincode.workspace = true

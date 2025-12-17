@@ -7,7 +7,8 @@ pub mod worker;
 
 pub use speculative::SpeculativeBundler;
 
-use dx_bundle_core::{ModuleId, ResolvedModule, TransformedModule};
+use dx_bundle_core::{ModuleId, TransformedModule};
+use dx_bundle_core::error::BundleResult;
 use std::path::PathBuf;
 
 /// Bundle result from parallel processing

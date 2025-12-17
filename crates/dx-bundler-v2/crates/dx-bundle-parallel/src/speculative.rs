@@ -4,9 +4,11 @@
 
 use crate::{ParallelBundle, ParallelOptions};
 use dx_bundle_core::{
-    BundleConfig, BundleError, BundleResult, ContentHash, ImportMap, ModuleId,
-    PathHasher, ResolvedModule, TransformedModule,
+    BundleConfig, ContentHash, ImportMap, ModuleId, ModuleFormat,
+    ResolvedModule, TransformedModule,
 };
+use dx_bundle_core::error::{BundleError, BundleResult};
+use dx_bundle_core::hash::PathHasher;
 use dx_bundle_cache::WarmCache;
 use dx_bundle_pipeline::{transform, TransformOptions};
 use dx_bundle_simd::scan_source;
@@ -161,7 +163,7 @@ impl SpeculativeBundler {
             transform_jsx: !self.config.preserve_jsx,
             jsx_factory: self.config.jsx_factory.clone(),
             jsx_fragment: self.config.jsx_fragment.clone(),
-            transform_es6: self.config.format == dx_bundle_core::ModuleFormat::CJS,
+            transform_es6: self.config.format == ModuleFormat::CJS,
             minify: self.config.minify,
             preserve_comments: false,
         };
@@ -272,7 +274,7 @@ impl SpeculativeBundler {
 fn get_mtime(path: &Path) -> u64 {
     std::fs::metadata(path)
         .and_then(|m| m.modified())
-        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH))
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "time error")))
         .map(|d| d.as_secs())
         .unwrap_or(0)
 }

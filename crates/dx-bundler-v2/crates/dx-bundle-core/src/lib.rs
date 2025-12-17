@@ -16,5 +16,5 @@ pub mod hash;
 pub use arena::{BundleArena, ArenaOutput, with_arena};
 pub use types::*;
 pub use error::BundleError;
-pub use config::BundleConfig;
+pub use config::{BundleConfig, ModuleFormat, Target};
 pub use hash::ContentHash;

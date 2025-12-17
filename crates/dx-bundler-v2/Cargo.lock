@@ -284,6 +284,7 @@ dependencies = [
  "dx-bundle-parallel",
  "dx-bundle-pipeline",
  "dx-bundle-simd",
+ "num_cpus",
  "tokio",
 ]
 
@@ -306,10 +307,8 @@ dependencies = [
 name = "dx-bundle-delta"
 version = "0.1.0"
 dependencies = [
- "bincode",
  "dashmap",
  "dx-bundle-core",
- "serde",
 ]
 
 [[package]]

@@ -9,7 +9,8 @@ pub use warm::WarmCache;
 pub use persistent::PersistentCache;
 
 use dx_bundle_core::{ContentHash, ModuleId, TransformedModule};
-use std::path::{Path, PathBuf};
+use dx_bundle_core::error::BundleResult;
+use std::path::Path;
 
 /// Cached transform data
 #[derive(Clone)]

@@ -20,3 +20,4 @@ dx-bundle-emit = { path = "../dx-bundle-emit" }
 clap.workspace = true
 anyhow.workspace = true
 tokio.workspace = true
+num_cpus = "1.16"
