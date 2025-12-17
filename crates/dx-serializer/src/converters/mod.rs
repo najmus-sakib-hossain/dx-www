@@ -13,11 +13,14 @@ pub mod toml;
 pub mod toon;
 pub mod yaml;
 pub mod dx_ultra;
+pub mod dx_hyper;
 
 pub use json::json_to_dx;
 pub use toml::toml_to_dx;
 pub use toon::toon_to_dx;
 pub use yaml::yaml_to_dx;
+pub use dx_ultra::{encode_ultra, decode_ultra};
+pub use dx_hyper::{encode_hyper, decode_hyper};
 
 use crate::optimizer;
 use std::io::Write;
