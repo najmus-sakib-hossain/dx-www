@@ -1,9 +1,9 @@
 [package]
 name = "dx-bundle-cli"
-version = "0.1.0"
-edition = "2024"
-authors = ["DX Team"]
-description = "CLI interface for DX bundler"
+description = "CLI for DX Bundler v2 - 3x faster than Bun"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [[bin]]
 name = "dx-bundle"
@@ -11,14 +11,13 @@ path = "src/main.rs"
 
 [dependencies]
 dx-bundle-core = { path = "../dx-bundle-core" }
-dx-bundle-graph = { path = "../dx-bundle-graph" }
-dx-bundle-resolve = { path = "../dx-bundle-resolve" }
-dx-bundle-parse = { path = "../dx-bundle-parse" }
-dx-bundle-transform = { path = "../dx-bundle-transform" }
-dx-bundle-tree-shake = { path = "../dx-bundle-tree-shake" }
-dx-bundle-concat = { path = "../dx-bundle-concat" }
-dx-bundle-minify = { path = "../dx-bundle-minify" }
-dx-bundle-sourcemap = { path = "../dx-bundle-sourcemap" }
-clap = { workspace = true }
-tokio = { workspace = true }
-anyhow = { workspace = true }
+dx-bundle-scanner = { path = "../dx-bundle-scanner" }
+dx-bundle-pipeline = { path = "../dx-bundle-pipeline" }
+dx-bundle-cache = { path = "../dx-bundle-cache" }
+dx-bundle-parallel = { path = "../dx-bundle-parallel" }
+dx-bundle-delta = { path = "../dx-bundle-delta" }
+dx-bundle-emit = { path = "../dx-bundle-emit" }
+clap.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+num_cpus = "1.16"

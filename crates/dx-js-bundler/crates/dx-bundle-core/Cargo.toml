@@ -1,14 +1,20 @@
 [package]
 name = "dx-bundle-core"
-version = "0.1.0"
-edition = "2024"
-authors = ["DX Team"]
-description = "Core types and binary formats for DX bundler"
+description = "Core types and arena allocator for DX Bundler v2"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
-bytemuck = { workspace = true }
-memmap2 = { workspace = true }
+thiserror.workspace = true
+parking_lot.workspace = true
+dashmap.workspace = true
+xxhash-rust.workspace = true
+blake3.workspace = true
+bytemuck.workspace = true
+bumpalo.workspace = true
+num_cpus.workspace = true
+hex = "0.4"
 
-[lib]
-name = "dx_bundle_core"
-path = "src/lib.rs"
+[features]
+default = []
