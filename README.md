@@ -751,3 +751,11 @@ CI/CD: Save ~49 minutes/day (300 hours/year)
 Cost: Thousands of dollars in CI/CD time saved
 The Binary Web revolution continues! 🚀⚡
 ```
+
+I have created:
+dx-js-runtime - 10.59x faster than Bun
+dx-js-test-runner - 26x faster than Bun
+dx-js-package-manager - 20x faster than Bun
+dx-js-bundler - 3x faster than Bun
+
+Now, please test all these with real tests again bun in the playground folder and verify the results so that we can announce the complete victory over bun in all these 4 critical areas. And as you are in the playground folder please remove all the old experiments that are not relevant anymore to keep the playground clean and focused on the key victories.
