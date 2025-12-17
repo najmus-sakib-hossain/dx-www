@@ -148,6 +148,25 @@ async fn bundle_command(
 
     let parse_time = parse_start.elapsed();
 
+    // Build path-to-ID mapping for module resolution
+    let mut path_to_id: std::collections::HashMap<String, u32> = std::collections::HashMap::new();
+    for (idx, (path, _)) in module_sources.iter().enumerate() {
+        // Store full path
+        let full_path = path.to_str().unwrap_or("").to_string();
+        path_to_id.insert(full_path.clone(), idx as u32);
+
+        // Also store just the filename for simple imports like './utils'
+        if let Some(file_name) = path.file_stem() {
+            let stem = file_name.to_str().unwrap_or("");
+            path_to_id.insert(format!("./{}", stem), idx as u32);
+            path_to_id.insert(format!("'./{}'", stem), idx as u32);
+            path_to_id.insert(format!("\"./{}.ts\"", stem), idx as u32);
+            path_to_id.insert(format!("\"./{}.tsx\"", stem), idx as u32);
+            path_to_id.insert(format!("'./{}.ts'", stem), idx as u32);
+            path_to_id.insert(format!("'./{}.tsx'", stem), idx as u32);
+        }
+    }
+
     if verbose {
         println!(
             "🔍 Loaded {} modules in {:.2}ms",
@@ -216,6 +235,7 @@ async fn bundle_command(
         // Convert ES6 exports to CommonJS (only at statement start)
         let lines: Vec<&str> = code.lines().collect();
         let mut converted_lines = Vec::new();
+        let mut deferred_exports: Vec<String> = Vec::new(); // Track class/function exports
 
         for line in lines {
             let trimmed = line.trim_start();
@@ -224,12 +244,72 @@ async fn bundle_command(
             // Only convert if at start of line (statement level)
             if trimmed.starts_with("export default ") {
                 converted_line = line.replace("export default ", "module.exports = ");
-            } else if trimmed.starts_with("export function ") {
+            } else if let Some(after_class) = trimmed.strip_prefix("export class ") {
+                // Extract class name (up to first space or {)
+                let class_name = after_class
+                    .split(|c: char| c.is_whitespace() || c == '{' || c == '<')
+                    .next()
+                    .unwrap_or("");
+                if !class_name.is_empty() {
+                    deferred_exports.push(format!("exports.{} = {};", class_name, class_name));
+                }
+                converted_line = line.replace("export class ", "class ");
+            } else if let Some(after_func) = trimmed.strip_prefix("export function ") {
+                // Extract function name (up to first space or ()
+                let func_name = after_func
+                    .split(|c: char| c.is_whitespace() || c == '(' || c == '<')
+                    .next()
+                    .unwrap_or("");
+                if !func_name.is_empty() {
+                    deferred_exports.push(format!("exports.{} = {};", func_name, func_name));
+                }
                 converted_line = line.replace("export function ", "function ");
-            } else if trimmed.starts_with("export const ") {
-                converted_line = line.replace("export const ", "exports.");
+            } else if let Some(after_const) = trimmed.strip_prefix("export const ") {
+                // For export const, we need: const name = value; exports.name = name;
+                if let Some(eq_pos) = after_const.find('=') {
+                    let before_eq = &after_const[..eq_pos].trim();
+                    let after_eq = &after_const[eq_pos..];
+
+                    // Remove type annotation if present: name: type → name
+                    let name_part = if let Some(colon_pos) = before_eq.find(':') {
+                        before_eq[..colon_pos].trim()
+                    } else {
+                        before_eq
+                    };
+
+                    if verbose && is_utils {
+                        println!(
+                            "ES6 const: after_const='{}', before_eq='{}', name_part='{}', after_eq='{}'",
+                            after_const, before_eq, name_part, after_eq
+                        );
+                    }
+
+                    // Keep const declaration, add deferred export
+                    converted_line = format!("const {} {}", name_part, after_eq);
+                    deferred_exports.push(format!("exports.{} = {};", name_part, name_part));
+                } else {
+                    converted_line = line.replace("export const ", "const ");
+                }
+            } else if let Some(after_let) = trimmed.strip_prefix("export let ") {
+                // Similar handling for let: let name = value; exports.name = name;
+                if let Some(eq_pos) = after_let.find('=') {
+                    let before_eq = &after_let[..eq_pos].trim();
+                    let after_eq = &after_let[eq_pos..];
+
+                    let name_part = if let Some(colon_pos) = before_eq.find(':') {
+                        before_eq[..colon_pos].trim()
+                    } else {
+                        before_eq
+                    };
+
+                    // Keep let declaration, add deferred export
+                    converted_line = format!("let {} {}", name_part, after_eq);
+                    deferred_exports.push(format!("exports.{} = {};", name_part, name_part));
+                } else {
+                    converted_line = line.replace("export let ", "let ");
+                }
             } else if trimmed.starts_with("import ") {
-                // Convert imports: import { x } from 'y' => const { x } = require('y')
+                // Convert imports: import { x } from 'y' => const { x } = __dx_require(ID)
                 if let Some(from_pos) = trimmed.find(" from ") {
                     let import_part = &trimmed[7..from_pos]; // After "import "
                     let path_part = &trimmed[from_pos + 6..]; // After " from "
@@ -237,23 +317,73 @@ async fn bundle_command(
                     // Remove semicolon from path if present
                     let path_clean = path_part.trim().trim_end_matches(';');
 
-                    // Build the require statement with proper closing paren
+                    // Look up module ID for this path
+                    let module_id = path_to_id
+                        .get(path_clean)
+                        .copied()
+                        .or_else(|| {
+                            // Try without quotes and with common extensions
+                            let unquoted = path_clean.trim_matches(|c| c == '\'' || c == '"');
+                            path_to_id.get(unquoted).copied()
+                        })
+                        .unwrap_or(0); // Default to 0 if not found
+
+                    // Build the require statement using __dx_require(ID)
                     if import_part.trim().starts_with('{') {
                         // Named import: import { x } from 'y'
                         converted_line =
-                            format!("const {} = require({});", import_part.trim(), path_clean);
+                            format!("const {} = __dx_require({});", import_part.trim(), module_id);
                     } else {
                         // Default import: import x from 'y'
                         converted_line =
-                            format!("const {} = require({});", import_part.trim(), path_clean);
+                            format!("const {} = __dx_require({});", import_part.trim(), module_id);
                     }
+                }
+            } else if trimmed.starts_with("export {") {
+                // Named exports: export { name1, name2 } => exports.name1 = name1; exports.name2 = name2;
+                // Parse the names between braces
+                if let (Some(open), Some(close)) = (trimmed.find('{'), trimmed.find('}')) {
+                    let names_str = &trimmed[open + 1..close];
+                    let names: Vec<&str> = names_str
+                        .split(',')
+                        .map(|s| s.trim())
+                        .filter(|s| !s.is_empty())
+                        .collect();
+                    let exports_list: Vec<String> = names
+                        .iter()
+                        .map(|name| {
+                            // Handle "name as alias" syntax
+                            if let Some(as_pos) = name.find(" as ") {
+                                let original = name[..as_pos].trim();
+                                let alias = name[as_pos + 4..].trim();
+                                format!("exports.{} = {};", alias, original)
+                            } else {
+                                format!("exports.{} = {};", name, name)
+                            }
+                        })
+                        .collect();
+                    converted_line = exports_list.join(" ");
                 }
             }
 
             converted_lines.push(converted_line);
         }
 
+        // Add deferred exports (class and function exports)
+        for export_stmt in deferred_exports {
+            converted_lines.push(export_stmt);
+        }
+
         code = converted_lines.join("\n");
+
+        // Strip TypeScript AGAIN after ES6 conversion to catch exports.name: Type patterns
+        if verbose && is_utils {
+            println!("\nBefore 2nd TS strip:\n{}", code);
+        }
+        code = dx_bundle_transform::strip_typescript_simple(&code);
+        if verbose && is_utils {
+            println!("\nAfter 2nd TS strip:\n{}", code);
+        }
 
         // Fix JSX artifacts - empty return statements (can span multiple lines)
         code = code.replace("return (\n  \n);", "return null;");

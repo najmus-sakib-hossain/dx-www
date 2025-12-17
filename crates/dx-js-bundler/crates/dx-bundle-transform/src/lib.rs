@@ -17,16 +17,30 @@ pub fn transform_jsx(source: &str) -> String {
             // Check if this is JSX (not comparison, not TypeScript generic)
             if i + 1 < chars.len() {
                 let next = chars[i + 1];
+                let prev = if i > 0 { chars[i - 1] } else { ' ' };
 
                 // TypeScript generic: <T>, <T, U> etc. after identifier
-                let is_generic = if i > 0 {
-                    let prev = chars[i - 1];
-                    (prev.is_alphanumeric() || prev == '_') && (next.is_uppercase() || next == '_')
-                } else {
-                    false
+                // Also covers: Record<string, T>, Array<T>, Map<K, V>, etc.
+                let is_generic = (prev.is_alphanumeric() || prev == '_')
+                    && (next.is_uppercase() || next == '_' || next.is_lowercase());
+
+                // Additional check: if we're in a type annotation context (after : and before =)
+                // then treat any < as a generic, not JSX
+                let in_type_context = {
+                    // Look backwards for : and make sure no = between : and current position
+                    let before = &result;
+                    let last_colon = before.rfind(':');
+                    let last_eq = before.rfind('=');
+                    let last_brace = before.rfind('{');
+                    match (last_colon, last_eq, last_brace) {
+                        (Some(colon), Some(eq), _) if colon > eq => true,
+                        (Some(colon), None, Some(brace)) if colon > brace => true,
+                        (Some(_), None, None) => true,
+                        _ => false,
+                    }
                 };
 
-                if is_generic {
+                if is_generic || in_type_context {
                     // Keep the generic - just copy it
                     result.push(chars[i]);
                     i += 1;
@@ -41,6 +55,14 @@ pub fn transform_jsx(source: &str) -> String {
                         i += 1;
                     }
                     continue;
+                }
+
+                // Debug: ALWAYS print when we see < that's treated as JSX
+                if source.contains("Record") {
+                    eprintln!(
+                        "JSX < at {}: prev='{}', next='{}', is_generic={}, in_type_context={}",
+                        i, prev, next, is_generic, in_type_context
+                    );
                 }
 
                 // JSX closing tag
