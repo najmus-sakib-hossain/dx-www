@@ -17,6 +17,7 @@ dx-bundle-cache = { path = "../dx-bundle-cache" }
 dx-bundle-parallel = { path = "../dx-bundle-parallel" }
 dx-bundle-delta = { path = "../dx-bundle-delta" }
 dx-bundle-emit = { path = "../dx-bundle-emit" }
+dx-bundle-dxm = { path = "../dx-bundle-dxm" }
 clap.workspace = true
 anyhow.workspace = true
 tokio.workspace = true

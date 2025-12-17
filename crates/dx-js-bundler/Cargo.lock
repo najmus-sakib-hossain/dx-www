@@ -280,6 +280,7 @@ dependencies = [
  "dx-bundle-cache",
  "dx-bundle-core",
  "dx-bundle-delta",
+ "dx-bundle-dxm",
  "dx-bundle-emit",
  "dx-bundle-parallel",
  "dx-bundle-pipeline",
@@ -309,6 +310,15 @@ version = "0.1.0"
 dependencies = [
  "dashmap",
  "dx-bundle-core",
+]
+
+[[package]]
+name = "dx-bundle-dxm"
+version = "0.1.0"
+dependencies = [
+ "memmap2",
+ "num_cpus",
+ "rayon",
 ]
 
 [[package]]

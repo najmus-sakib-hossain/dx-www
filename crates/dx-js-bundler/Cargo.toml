@@ -10,6 +10,7 @@ members = [
     "crates/dx-bundle-ir",
     "crates/dx-bundle-emit",
     "crates/dx-bundle-cli",
+    "crates/dx-bundle-dxm",
 ]
 
 [workspace.package]
@@ -52,13 +53,14 @@ clap = { version = "4.5", features = ["derive"] }
 
 # Internal crates
 dx-bundle-core = { path = "crates/dx-bundle-core" }
-dx-bundle-simd = { path = "crates/dx-bundle-simd" }
+dx-bundle-scanner = { path = "crates/dx-bundle-scanner" }
 dx-bundle-pipeline = { path = "crates/dx-bundle-pipeline" }
 dx-bundle-cache = { path = "crates/dx-bundle-cache" }
 dx-bundle-parallel = { path = "crates/dx-bundle-parallel" }
 dx-bundle-delta = { path = "crates/dx-bundle-delta" }
 dx-bundle-ir = { path = "crates/dx-bundle-ir" }
 dx-bundle-emit = { path = "crates/dx-bundle-emit" }
+dx-bundle-dxm = { path = "crates/dx-bundle-dxm" }
 
 [profile.release]
 opt-level = 3
