@@ -13,10 +13,7 @@ pub enum DxZeroError {
     /// Slot operation error
     Slot(SlotError),
     /// Buffer too small
-    BufferTooSmall {
-        required: usize,
-        available: usize,
-    },
+    BufferTooSmall { required: usize, available: usize },
     /// Invalid UTF-8 in string data
     InvalidUtf8,
     /// Invalid alignment
@@ -36,11 +33,10 @@ impl fmt::Display for DxZeroError {
         match self {
             Self::Header(err) => write!(f, "Header error: {}", err),
             Self::Slot(err) => write!(f, "Slot error: {}", err),
-            Self::BufferTooSmall { required, available } => write!(
-                f,
-                "Buffer too small: need {} bytes, have {} bytes",
-                required, available
-            ),
+            Self::BufferTooSmall {
+                required,
+                available,
+            } => write!(f, "Buffer too small: need {} bytes, have {} bytes", required, available),
             Self::InvalidUtf8 => write!(f, "Invalid UTF-8 in string data"),
             Self::InvalidAlignment => write!(f, "Invalid buffer alignment"),
             Self::CorruptedData { reason } => write!(f, "Corrupted data: {}", reason),

@@ -27,20 +27,20 @@ impl<'a> DxZeroBuilder<'a> {
     #[inline]
     pub fn new(buffer: &'a mut Vec<u8>, fixed_size: usize, slot_count: usize) -> Self {
         let header = DxZeroHeader::new();
-        
+
         // Calculate heap start offset
         let heap_offset = DxZeroHeader::size() + fixed_size + (slot_count * 16);
-        
+
         // Reserve space
         buffer.clear();
         buffer.reserve(heap_offset + 256); // Reserve extra for heap
-        
+
         // Write header placeholder
         buffer.extend_from_slice(&[0u8; 4]);
-        
+
         // Initialize fixed section with zeros
         buffer.resize(heap_offset, 0);
-        
+
         Self {
             buffer,
             heap_cursor: heap_offset,
@@ -54,7 +54,7 @@ impl<'a> DxZeroBuilder<'a> {
         let bytes = unsafe {
             std::slice::from_raw_parts(&value as *const T as *const u8, std::mem::size_of::<T>())
         };
-        
+
         let start = DxZeroHeader::size() + offset;
         self.buffer[start..start + bytes.len()].copy_from_slice(bytes);
     }
@@ -140,7 +140,7 @@ impl<'a> DxZeroBuilder<'a> {
     #[inline]
     pub fn write_bytes(&mut self, slot_offset: usize, bytes: &[u8]) {
         let slot_pos = DxZeroHeader::size() + slot_offset;
-        
+
         if bytes.len() <= MAX_INLINE_SIZE {
             // Inline: fits in slot
             let mut slot = DxZeroSlot::new();
@@ -150,10 +150,10 @@ impl<'a> DxZeroBuilder<'a> {
             // Heap: write to heap section
             let heap_start = self.heap_cursor - (DxZeroHeader::size() + slot_offset);
             let offset = (self.heap_cursor - heap_start) as u32;
-            
-            let mut slot = DxZeroSlot::heap_reference(offset, bytes.len() as u32);
+
+            let slot = DxZeroSlot::heap_reference(offset, bytes.len() as u32);
             self.buffer[slot_pos..slot_pos + 16].copy_from_slice(&slot.data);
-            
+
             // Write data to heap
             self.buffer.extend_from_slice(bytes);
             self.heap_cursor += bytes.len();
@@ -175,13 +175,13 @@ impl<'a> DxZeroBuilder<'a> {
 
     /// Finalize and return the serialized length
     #[inline]
-    pub fn finish(mut self) -> usize {
+    pub fn finish(self) -> usize {
         // Write header at beginning
         self.header.write_to(&mut self.buffer[0..4]);
-        
+
         // Shrink to actual size
         self.buffer.truncate(self.heap_cursor);
-        
+
         self.heap_cursor
     }
 
@@ -200,12 +200,12 @@ mod tests {
     fn test_builder_basic() {
         let mut buffer = Vec::new();
         let mut builder = DxZeroBuilder::new(&mut buffer, 8, 1); // 8 bytes fixed, 1 slot
-        
+
         builder.write_u64(0, 12345);
         builder.write_string(8, "test");
-        
+
         let size = builder.finish();
-        
+
         assert!(size > 0);
         assert_eq!(buffer[0], 0x5A); // Magic
         assert_eq!(buffer[1], 0x44);
@@ -215,11 +215,11 @@ mod tests {
     fn test_builder_inline_string() {
         let mut buffer = Vec::new();
         let mut builder = DxZeroBuilder::new(&mut buffer, 0, 1);
-        
+
         builder.write_string(0, "Hello"); // 5 bytes, inline
-        
+
         let size = builder.finish();
-        
+
         // Check slot is inline
         let slot_data = &buffer[4..20];
         assert_eq!(slot_data[0], 5); // Length
@@ -231,16 +231,16 @@ mod tests {
     fn test_builder_heap_string() {
         let mut buffer = Vec::new();
         let mut builder = DxZeroBuilder::new(&mut buffer, 0, 1);
-        
+
         let long_str = "This is a very long string that exceeds 14 bytes";
         builder.write_string(0, long_str);
-        
+
         let size = builder.finish();
-        
+
         // Check slot is heap reference
         let slot_data = &buffer[4..20];
         assert_eq!(slot_data[15], 0xFF); // Heap marker
-        
+
         // Check heap data exists
         assert!(size > 20);
     }
@@ -249,14 +249,14 @@ mod tests {
     fn test_builder_multiple_fields() {
         let mut buffer = Vec::new();
         let mut builder = DxZeroBuilder::new(&mut buffer, 17, 2);
-        
+
         builder.write_u64(0, 999);
         builder.write_u32(8, 42);
         builder.write_bool(12, true);
         builder.write_f32(13, 3.14);
         builder.write_string(17, "name");
         builder.write_string(33, "email");
-        
+
         let size = builder.finish();
         assert!(size > 0);
     }
@@ -265,7 +265,7 @@ mod tests {
     fn test_builder_primitive_types() {
         let mut buffer = Vec::new();
         let mut builder = DxZeroBuilder::new(&mut buffer, 30, 0);
-        
+
         builder.write_u8(0, 255);
         builder.write_i8(1, -128);
         builder.write_u16(2, 65535);
@@ -274,9 +274,9 @@ mod tests {
         builder.write_i32(10, -2147483648);
         builder.write_u64(14, u64::MAX);
         builder.write_i64(22, i64::MIN);
-        
+
         builder.finish();
-        
+
         // Verify values are written correctly
         assert_eq!(buffer[4], 255); // u8
         assert_eq!(buffer[5] as i8, -128); // i8

@@ -1,10 +1,9 @@
 /// DX-Ultra Format Demo
-/// 
+///
 /// Demonstrates the ultra-compact token-optimized format
-
-use dx_serializer::converters::dx_ultra::{encode_ultra, decode_ultra};
-use dx_serializer::converters::toon::encode_toon;
+use dx_serializer::converters::dx_ultra::{decode_ultra, encode_ultra};
 use dx_serializer::converters::json::encode_json;
+use dx_serializer::converters::toon::encode_toon;
 use dx_serializer::types::DxValue;
 
 fn main() {
@@ -21,7 +20,7 @@ fn main() {
 
 fn demo_hikes_example() {
     println!("📊 Example 1: Hiking Data (TOON's Signature Example)\n");
-    
+
     let data = DxValue::Object(vec![
         (
             "context".to_string(),
@@ -86,8 +85,10 @@ fn demo_hikes_example() {
     println!("{}", ultra);
     println!("\n📏 Size: {} bytes\n", ultra.len());
 
-    let ultra_savings_vs_toon = ((toon.len() as f64 - ultra.len() as f64) / toon.len() as f64) * 100.0;
-    let ultra_savings_vs_json = ((json.len() as f64 - ultra.len() as f64) / json.len() as f64) * 100.0;
+    let ultra_savings_vs_toon =
+        ((toon.len() as f64 - ultra.len() as f64) / toon.len() as f64) * 100.0;
+    let ultra_savings_vs_json =
+        ((json.len() as f64 - ultra.len() as f64) / json.len() as f64) * 100.0;
 
     println!("✨ Token Savings:");
     println!("   • DX-Ultra vs TOON: {:.1}% smaller", ultra_savings_vs_toon);
@@ -134,7 +135,12 @@ fn demo_employee_records() {
     println!("{}", ultra);
 
     let savings = ((toon.len() as f64 - ultra.len() as f64) / toon.len() as f64) * 100.0;
-    println!("\n✨ Space savings: {:.1}% ({} bytes vs {} bytes)", savings, ultra.len(), toon.len());
+    println!(
+        "\n✨ Space savings: {:.1}% ({} bytes vs {} bytes)",
+        savings,
+        ultra.len(),
+        toon.len()
+    );
     println!("\n{'─' * 80}\n");
 }
 
@@ -172,7 +178,12 @@ fn demo_nested_config() {
     println!("{}", ultra);
 
     let savings = ((toon.len() as f64 - ultra.len() as f64) / toon.len() as f64) * 100.0;
-    println!("\n✨ Space savings: {:.1}% ({} bytes vs {} bytes)", savings, ultra.len(), toon.len());
+    println!(
+        "\n✨ Space savings: {:.1}% ({} bytes vs {} bytes)",
+        savings,
+        ultra.len(),
+        toon.len()
+    );
     println!("\n{'─' * 80}\n");
 }
 
@@ -206,8 +217,13 @@ fn demo_github_repos() {
     println!("{}", ultra);
 
     let savings = ((toon.len() as f64 - ultra.len() as f64) / toon.len() as f64) * 100.0;
-    println!("\n✨ Space savings: {:.1}% ({} bytes vs {} bytes)", savings, ultra.len(), toon.len());
-    
+    println!(
+        "\n✨ Space savings: {:.1}% ({} bytes vs {} bytes)",
+        savings,
+        ultra.len(),
+        toon.len()
+    );
+
     println!("\n╔══════════════════════════════════════════════════════════════════════════════╗");
     println!("║                           KEY INNOVATIONS                                    ║");
     println!("╠══════════════════════════════════════════════════════════════════════════════╣");

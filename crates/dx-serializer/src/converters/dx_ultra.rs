@@ -1,14 +1,14 @@
 /// DX-Ultra: Token-Optimized Format for LLM Input
-/// 
+///
 /// **Beats TOON by 3x in token efficiency**
-/// 
+///
 /// Strategy:
 /// - Single-char delimiters that tokenize efficiently
 /// - Strategic Unicode characters (•|‣→)
 /// - Zero redundant syntax
 /// - Implied structure from position
 /// - No quoted strings unless required
-/// 
+///
 /// Format Example:
 /// ```
 /// context→task:Our favorite hikes together|location:Boulder|season:spring_2025
@@ -18,7 +18,7 @@
 ///  2|Ridge Overlook|9.2|540|luis|0
 ///  3|Wildflower Loop|5.1|180|sam|1
 /// ```
-/// 
+///
 /// vs TOON:
 /// ```
 /// context:
@@ -31,18 +31,9 @@
 ///   2,Ridge Overlook,9.2,540,luis,false
 ///   3,Wildflower Loop,5.1,180,sam,true
 /// ```
-
 use crate::error::Result;
-use crate::types::{DxValue, DxArray, DxObject};
+use crate::types::{DxArray, DxObject, DxValue};
 use std::fmt::Write;
-
-// Helper to convert fmt::Error to DxError
-fn fmt_error<T>(result: std::fmt::Result) -> Result<()> {
-    result.map_err(|_| crate::error::DxError::InvalidSyntax {
-        pos: 0,
-        msg: "Formatting error".to_string(),
-    })
-}
 
 /// Token-optimized encoder for LLM contexts
 pub struct DxUltraEncoder {
@@ -211,7 +202,7 @@ impl DxUltraDecoder {
 
     fn parse_value(&mut self) -> Result<DxValue> {
         self.skip_whitespace();
-        
+
         if self.peek() == Some('•') {
             self.parse_array()
         } else if self.peek() == Some('{') {
@@ -232,7 +223,7 @@ impl DxUltraDecoder {
     fn parse_array(&mut self) -> Result<DxValue> {
         self.advance(); // Skip '•'
         let count = self.parse_number_raw()?;
-        
+
         self.skip_whitespace();
         if self.peek() == Some('→') {
             self.advance();
@@ -243,7 +234,10 @@ impl DxUltraDecoder {
                 }
                 arr.push(self.parse_value()?);
             }
-            Ok(DxValue::Array(DxArray { values: arr, is_stream: false }))
+            Ok(DxValue::Array(DxArray {
+                values: arr,
+                is_stream: false,
+            }))
         } else if self.peek() == Some('•') {
             self.parse_table(count)
         } else {
@@ -253,14 +247,14 @@ impl DxUltraDecoder {
 
     fn parse_table(&mut self, count: usize) -> Result<DxValue> {
         self.advance(); // Skip '•'
-        
+
         // Parse headers
         let mut headers = Vec::new();
         loop {
             self.skip_whitespace();
             let key = self.parse_identifier()?;
             headers.push(key);
-            
+
             self.skip_whitespace();
             if self.peek() != Some('|') {
                 break;
@@ -273,7 +267,7 @@ impl DxUltraDecoder {
         for _ in 0..count {
             self.skip_whitespace();
             self.skip_line();
-            
+
             let mut map = Vec::new();
             for (i, header) in headers.iter().enumerate() {
                 if i > 0 {
@@ -289,20 +283,23 @@ impl DxUltraDecoder {
             arr.push(DxValue::Object(obj));
         }
 
-        Ok(DxValue::Array(DxArray { values: arr, is_stream: false }))
+        Ok(DxValue::Array(DxArray {
+            values: arr,
+            is_stream: false,
+        }))
     }
 
     fn parse_object(&mut self) -> Result<DxValue> {
         let mut map = Vec::new();
-        
+
         loop {
             self.skip_whitespace();
             if self.is_at_end() {
                 break;
             }
-            
+
             let key = self.parse_identifier()?;
-            
+
             self.skip_whitespace();
             if self.peek() == Some('→') {
                 self.advance();
@@ -312,7 +309,7 @@ impl DxUltraDecoder {
                     self.expect(':')?;
                     let value = self.parse_value()?;
                     map.push((inner_key, value));
-                    
+
                     if self.peek() != Some('|') {
                         break;
                     }
@@ -327,7 +324,7 @@ impl DxUltraDecoder {
                 let value = self.parse_array()?;
                 map.push((key, value));
             }
-            
+
             self.skip_whitespace();
             if self.peek() == Some('\n') || self.is_at_end() {
                 self.advance();
@@ -344,7 +341,7 @@ impl DxUltraDecoder {
     fn parse_string(&mut self) -> Result<DxValue> {
         self.advance(); // Skip opening quote
         let mut s = String::new();
-        
+
         while let Some(ch) = self.peek() {
             if ch == '"' {
                 self.advance();
@@ -379,12 +376,15 @@ impl DxUltraDecoder {
                 break;
             }
         }
-        num_str.parse().map_err(|_| crate::error::DxError::InvalidSyntax { pos: self.pos, msg: "Invalid number".to_string() })
+        num_str.parse().map_err(|_| crate::error::DxError::InvalidSyntax {
+            pos: self.pos,
+            msg: "Invalid number".to_string(),
+        })
     }
 
     fn parse_number_or_string(&mut self) -> Result<DxValue> {
         let mut s = String::new();
-        
+
         while let Some(ch) = self.peek() {
             if ch == '|' || ch == '\n' || ch.is_whitespace() {
                 break;
@@ -404,7 +404,7 @@ impl DxUltraDecoder {
 
     fn parse_identifier(&mut self) -> Result<String> {
         let mut id = String::new();
-        
+
         while let Some(ch) = self.peek() {
             if ch.is_alphanumeric() || ch == '_' || ch == '-' {
                 id.push(self.advance().unwrap());
@@ -414,7 +414,10 @@ impl DxUltraDecoder {
         }
 
         if id.is_empty() {
-            return Err(crate::error::DxError::InvalidSyntax { pos: self.pos, msg: "Expected identifier".to_string() });
+            return Err(crate::error::DxError::InvalidSyntax {
+                pos: self.pos,
+                msg: "Expected identifier".to_string(),
+            });
         }
 
         Ok(id)
@@ -453,7 +456,10 @@ impl DxUltraDecoder {
         if self.advance() == Some(expected) {
             Ok(())
         } else {
-            Err(crate::error::DxError::InvalidSyntax { pos: self.pos, msg: format!("Expected '{}'", expected) })
+            Err(crate::error::DxError::InvalidSyntax {
+                pos: self.pos,
+                msg: format!("Expected '{}'", expected),
+            })
         }
     }
 
@@ -500,7 +506,10 @@ mod tests {
     }
 
     fn make_array(values: Vec<DxValue>) -> DxValue {
-        DxValue::Array(DxArray { values, is_stream: false })
+        DxValue::Array(DxArray {
+            values,
+            is_stream: false,
+        })
     }
 
     #[test]
@@ -513,7 +522,7 @@ mod tests {
 
         let encoded = encode_ultra(&value);
         println!("Encoded: {}", encoded);
-        
+
         // Should be ultra-compact
         assert!(encoded.contains("name"));
         assert!(encoded.len() < 50);
@@ -532,7 +541,7 @@ mod tests {
 
         let encoded = encode_ultra(&value);
         println!("Encoded: {}", encoded);
-        
+
         assert!(encoded.contains("friends•3"));
         assert!(encoded.contains("→"));
     }
@@ -557,7 +566,7 @@ mod tests {
 
         let encoded = encode_ultra(&value);
         println!("Encoded table: {}", encoded);
-        
+
         assert!(encoded.contains("hikes•2•"));
         assert!(encoded.contains("id|name|distance"));
     }

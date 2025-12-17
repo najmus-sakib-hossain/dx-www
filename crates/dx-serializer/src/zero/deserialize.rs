@@ -10,7 +10,7 @@ use super::types::{DxZeroError, Result};
 /// field extraction.
 ///
 /// # Safety
-/// 
+///
 /// This function performs an unsafe pointer cast. The caller must ensure:
 /// - Buffer remains valid during struct lifetime
 /// - Buffer is not modified during access
@@ -81,6 +81,7 @@ mod tests {
     fn test_from_bytes_too_small() {
         let bytes = vec![0x5A, 0x44]; // Only 2 bytes
         let result = DxZeroHeader::from_bytes(&bytes);
-        assert!(matches!(result, Err(super::header::HeaderError::BufferTooSmall)));
+        use crate::zero::header::HeaderError;
+        assert!(matches!(result, Err(HeaderError::BufferTooSmall)));
     }
 }

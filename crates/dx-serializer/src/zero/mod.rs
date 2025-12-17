@@ -20,7 +20,9 @@ pub mod types;
 pub use builder::DxZeroBuilder;
 pub use deserialize::from_bytes;
 pub use format::{detect_format, parse_auto, DxFormat, FormatMode};
-pub use header::{DxZeroHeader, FLAG_HAS_HEAP, FLAG_HAS_INTERN, FLAG_HAS_LENGTH_TABLE, FLAG_LITTLE_ENDIAN};
+pub use header::{
+    DxZeroHeader, FLAG_HAS_HEAP, FLAG_HAS_INTERN, FLAG_HAS_LENGTH_TABLE, FLAG_LITTLE_ENDIAN,
+};
 pub use slot::{DxZeroSlot, HEAP_MARKER, INLINE_MARKER, MAX_INLINE_SIZE};
 pub use traits::{DxZeroDeserialize, DxZeroSerialize};
 pub use types::DxZeroError;

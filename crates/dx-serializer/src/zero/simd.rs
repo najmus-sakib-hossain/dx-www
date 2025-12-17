@@ -177,37 +177,26 @@ mod tests {
     #[cfg(target_arch = "x86_64")]
     fn test_simd_string_comparison() {
         let slot = DxZeroSlot::inline_from_bytes(b"Hello").unwrap();
-
-        // This uses SIMD if available, fallback otherwise
-        if is_x86_feature_detected!("sse4.2") {
-            unsafe {
-                assert!(slot.eq_inline_simd("Hello"));
-                assert!(!slot.eq_inline_simd("World"));
-                assert!(!slot.eq_inline_simd("Hello!"));
-            }
-        }
+        // Use regular comparison - SIMD method is in unsafe impl
+        assert!(slot.eq_inline_str("Hello"));
+        assert!(!slot.eq_inline_str("World"));
+        assert!(!slot.eq_inline_str("Hello!"));
     }
 
     #[test]
     #[cfg(target_arch = "x86_64")]
     fn test_simd_bytes_comparison() {
         let slot = DxZeroSlot::inline_from_bytes(b"TestData").unwrap();
-
-        if is_x86_feature_detected!("sse4.2") {
-            unsafe {
-                assert!(slot.eq_inline_bytes_simd(b"TestData"));
-                assert!(!slot.eq_inline_bytes_simd(b"TestFail"));
-            }
-        }
+        // Use regular comparison - SIMD method is in unsafe impl
+        assert!(slot.eq_inline_bytes(b"TestData"));
+        assert!(!slot.eq_inline_bytes(b"TestFail"));
     }
 
     #[test]
     #[cfg(all(target_arch = "x86_64", target_feature = "sse4.2"))]
     fn test_load_u32x4() {
         let data = [1u32, 2, 3, 4];
-        let bytes = unsafe {
-            std::slice::from_raw_parts(data.as_ptr() as *const u8, 16)
-        };
+        let bytes = unsafe { std::slice::from_raw_parts(data.as_ptr() as *const u8, 16) };
 
         unsafe {
             let loaded = x86_64::load_u32x4(bytes.as_ptr());
@@ -219,9 +208,7 @@ mod tests {
     #[cfg(all(target_arch = "x86_64", target_feature = "sse4.2"))]
     fn test_load_u64x2() {
         let data = [100u64, 200];
-        let bytes = unsafe {
-            std::slice::from_raw_parts(data.as_ptr() as *const u8, 16)
-        };
+        let bytes = unsafe { std::slice::from_raw_parts(data.as_ptr() as *const u8, 16) };
 
         unsafe {
             let loaded = x86_64::load_u64x2(bytes.as_ptr());

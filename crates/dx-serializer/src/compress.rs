@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     fn test_roundtrip() {
-        let original = "c.n:dx^v:0.0.1\nws>frontend|backend";
+        let _original = "c.n:dx^v:0.0.1\nws>frontend|backend";
 
         // This would need format_human to test fully
         // For now just test compression doesn't crash

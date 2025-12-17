@@ -18,18 +18,18 @@ use dx_serializer::zero::{DxZeroBuilder, DxZeroHeader, DxZeroSlot};
 struct UserDxZero {
     // Header (validated, not stored in struct)
     _header_space: [u8; 4],
-    
+
     // Fixed fields (13 bytes total)
-    id: u64,        // offset 4
-    age: u32,       // offset 12
-    active: bool,   // offset 16
-    
+    id: u64,      // offset 4
+    age: u32,     // offset 12
+    active: bool, // offset 16
+
     // Variable slots (16 bytes each = 48 bytes total)
-    name_slot: [u8; 16],    // offset 17
-    email_slot: [u8; 16],   // offset 33
-    bio_slot: [u8; 16],     // offset 49
-    
-    // Heap data follows at offset 65 (if FLAG_HAS_HEAP)
+    name_slot: [u8; 16],  // offset 17
+    email_slot: [u8; 16], // offset 33
+    bio_slot: [u8; 16],   // offset 49
+
+                          // Heap data follows at offset 65 (if FLAG_HAS_HEAP)
 }
 
 impl UserDxZero {
@@ -88,7 +88,7 @@ impl UserDxZero {
     #[inline(always)]
     pub fn name(&self) -> &str {
         let slot = unsafe { &*(self.name_slot.as_ptr() as *const DxZeroSlot) };
-        
+
         if slot.is_inline() {
             // Inline: 90%+ case, ~1.2 ns
             slot.inline_str()
@@ -108,7 +108,7 @@ impl UserDxZero {
     #[inline(always)]
     pub fn email(&self) -> &str {
         let slot = unsafe { &*(self.email_slot.as_ptr() as *const DxZeroSlot) };
-        
+
         if slot.is_inline() {
             slot.inline_str()
         } else {
@@ -135,62 +135,66 @@ fn main() {
     // ==========================================
     // SERIALIZATION (0 ns - in-place construction)
     // ==========================================
-    
+
     println!("📦 Serialization (0 ns):");
     println!("   Building user directly in buffer...");
-    
+
     let mut buffer = Vec::new();
-    let mut builder = DxZeroBuilder::new(&mut buffer, UserDxZero::FIXED_SIZE, UserDxZero::SLOT_COUNT);
-    
+    let mut builder =
+        DxZeroBuilder::new(&mut buffer, UserDxZero::FIXED_SIZE, UserDxZero::SLOT_COUNT);
+
     // Write fixed fields (direct memory writes)
-    builder.write_u64(0, 12345);           // id
-    builder.write_u32(8, 30);              // age
-    builder.write_bool(12, true);          // active
-    
+    builder.write_u64(0, 12345); // id
+    builder.write_u32(8, 30); // age
+    builder.write_bool(12, true); // active
+
     // Write variable fields (auto inline/heap optimization)
-    builder.write_string(13, "John Doe");           // name (8 bytes, inline)
-    builder.write_string(29, "john@example.com");   // email (16 bytes, heap)
-    builder.write_string(45, "Software engineer with 10 years of experience in Rust and systems programming."); // bio (heap)
-    
+    builder.write_string(13, "John Doe"); // name (8 bytes, inline)
+    builder.write_string(29, "john@example.com"); // email (16 bytes, heap)
+    builder.write_string(
+        45,
+        "Software engineer with 10 years of experience in Rust and systems programming.",
+    ); // bio (heap)
+
     let size = builder.finish();
-    
+
     println!("   ✓ Serialized {} bytes", size);
     println!("   ✓ Time: 0 ns (direct memory writes)\n");
 
     // ==========================================
     // DESERIALIZATION (0.8-2.1 ns - pointer cast)
     // ==========================================
-    
+
     println!("📬 Deserialization (0.8-2.1 ns):");
     println!("   Casting buffer to struct...");
-    
+
     let user = UserDxZero::from_bytes(&buffer).expect("Failed to deserialize");
-    
+
     println!("   ✓ Deserialized in 0.8-2.1 ns (single pointer cast)\n");
 
     // ==========================================
     // FIELD ACCESS (single memory load per field)
     // ==========================================
-    
+
     println!("🔍 Field Access (0.9-2.8 ns per field):");
-    
+
     // Fixed fields: single load
     println!("   id:     {} (single load: ~0.9 ns)", user.id());
     println!("   age:    {} (single load: ~0.9 ns)", user.age());
     println!("   active: {} (single load: ~0.9 ns)", user.active());
-    
+
     // String fields: inline or heap
     println!("   name:   '{}' (inline: ~1.2 ns)", user.name());
     println!("   email:  '{}' (heap: ~2.8 ns)", user.email());
-    
+
     println!();
 
     // ==========================================
     // BATCH ACCESS (single cache line)
     // ==========================================
-    
+
     println!("⚡ Batch Access (cache-line optimized):");
-    
+
     let (id, age, active) = user.load_summary();
     println!("   Loaded (id={}, age={}, active={}) in single cache line", id, age, active);
     println!("   Time: ~1.5 ns total (vs 2.7 ns sequential)\n");
@@ -198,24 +202,36 @@ fn main() {
     // ==========================================
     // SIZE COMPARISON
     // ==========================================
-    
+
     println!("📊 Size Comparison:");
     println!("   DX-Zero:      {} bytes", size);
-    
+
     // Simulate other formats (estimated)
     let json_size = r#"{"id":12345,"age":30,"active":true,"name":"John Doe","email":"john@example.com","bio":"Software engineer with 10 years of experience in Rust and systems programming."}"#.len();
     let protobuf_estimate = size + 20; // Tag-length overhead
     let capnproto_estimate = size + 30; // Pointer overhead
-    
-    println!("   JSON:         {} bytes ({:.1}× larger)", json_size, json_size as f64 / size as f64);
-    println!("   Protobuf:     ~{} bytes ({:.1}× larger)", protobuf_estimate, protobuf_estimate as f64 / size as f64);
-    println!("   Cap'n Proto:  ~{} bytes ({:.1}× larger)", capnproto_estimate, capnproto_estimate as f64 / size as f64);
+
+    println!(
+        "   JSON:         {} bytes ({:.1}× larger)",
+        json_size,
+        json_size as f64 / size as f64
+    );
+    println!(
+        "   Protobuf:     ~{} bytes ({:.1}× larger)",
+        protobuf_estimate,
+        protobuf_estimate as f64 / size as f64
+    );
+    println!(
+        "   Cap'n Proto:  ~{} bytes ({:.1}× larger)",
+        capnproto_estimate,
+        capnproto_estimate as f64 / size as f64
+    );
     println!();
 
     // ==========================================
     // PERFORMANCE SUMMARY
     // ==========================================
-    
+
     println!("🚀 Performance Summary:");
     println!("   ┌─────────────────────┬──────────────┬─────────────┐");
     println!("   │ Operation           │ DX-Zero      │ Competitors │");
@@ -232,7 +248,7 @@ fn main() {
     // ==========================================
     // INLINE OPTIMIZATION DEMO
     // ==========================================
-    
+
     println!("💡 Inline Optimization:");
     println!("   Strings ≤14 bytes are stored inline (no pointer chase)");
     println!("   - 'John Doe' (8 bytes):        INLINE ✓ (90%+ case)");
@@ -244,7 +260,7 @@ fn main() {
     // ==========================================
     // ZERO-COPY MAGIC
     // ==========================================
-    
+
     println!("🪄 Zero-Copy Magic:");
     println!("   1. Read file/network → buffer (mmap/recv)");
     println!("   2. Cast buffer → struct (single instruction)");
@@ -256,7 +272,7 @@ fn main() {
     // ==========================================
     // CONCLUSION
     // ==========================================
-    
+
     println!("🎯 Conclusion:");
     println!("   DX-Zero is {} bytes and deserializes in 0.8-2.1 ns", size);
     println!("   That's 4-10× faster than Cap'n Proto, rkyv, FlatBuffers");

@@ -25,7 +25,7 @@ pub fn detect_format(bytes: &[u8]) -> DxFormat {
     }
 
     match &bytes[0..2] {
-        [0x5A, 0x44] => DxFormat::Zero,    // "ZD" little-endian
+        [0x5A, 0x44] => DxFormat::Zero,     // "ZD" little-endian
         [0x44, 0x58] => DxFormat::Infinity, // "DX" (hypothetical)
         _ => DxFormat::Unknown,
     }
@@ -39,7 +39,8 @@ pub fn parse_auto(bytes: &[u8]) -> Result<DxValue, String> {
     match detect_format(bytes) {
         DxFormat::Zero => {
             // Parse as DX-Zero binary
-            Err("DX-Zero to DxValue conversion not yet implemented (use direct struct access)".to_string())
+            Err("DX-Zero to DxValue conversion not yet implemented (use direct struct access)"
+                .to_string())
         }
         DxFormat::Infinity | DxFormat::Unknown => {
             // Parse as DX-Infinity text (fallback)

@@ -193,15 +193,9 @@ pub enum HeaderError {
     /// Buffer too small to contain header
     BufferTooSmall,
     /// Invalid magic bytes
-    InvalidMagic {
-        expected: [u8; 2],
-        found: [u8; 2],
-    },
+    InvalidMagic { expected: [u8; 2], found: [u8; 2] },
     /// Unsupported format version
-    UnsupportedVersion {
-        supported: u8,
-        found: u8,
-    },
+    UnsupportedVersion { supported: u8, found: u8 },
     /// Reserved flags are set (future version)
     ReservedFlagsSet,
     /// Unsupported endianness
@@ -212,18 +206,20 @@ impl fmt::Display for HeaderError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::BufferTooSmall => write!(f, "Buffer too small to contain header (need 4 bytes)"),
-            Self::InvalidMagic { expected, found } => write!(
-                f,
-                "Invalid magic bytes: expected {:02X?}, found {:02X?}",
-                expected, found
-            ),
+            Self::InvalidMagic { expected, found } => {
+                write!(f, "Invalid magic bytes: expected {:02X?}, found {:02X?}", expected, found)
+            }
             Self::UnsupportedVersion { supported, found } => write!(
                 f,
                 "Unsupported format version: this implementation supports v{:02X}, found v{:02X}",
                 supported, found
             ),
-            Self::ReservedFlagsSet => write!(f, "Reserved flags are set (file from future version?)"),
-            Self::UnsupportedEndianness => write!(f, "Unsupported endianness (big-endian not supported in v1)"),
+            Self::ReservedFlagsSet => {
+                write!(f, "Reserved flags are set (file from future version?)")
+            }
+            Self::UnsupportedEndianness => {
+                write!(f, "Unsupported endianness (big-endian not supported in v1)")
+            }
         }
     }
 }
@@ -247,11 +243,11 @@ mod tests {
     #[test]
     fn test_header_flags() {
         let mut header = DxZeroHeader::new();
-        
+
         assert!(!header.has_heap());
         header.set_has_heap(true);
         assert!(header.has_heap());
-        
+
         assert!(!header.has_intern_table());
         header.set_has_intern_table(true);
         assert!(header.has_intern_table());
@@ -261,10 +257,10 @@ mod tests {
     fn test_header_roundtrip() {
         let mut bytes = [0u8; 4];
         let header = DxZeroHeader::with_flags(FLAG_HAS_HEAP | FLAG_LITTLE_ENDIAN);
-        
+
         header.write_to(&mut bytes);
         let parsed = DxZeroHeader::from_bytes(&bytes).unwrap();
-        
+
         assert_eq!(parsed.magic, header.magic);
         assert_eq!(parsed.version, header.version);
         assert_eq!(parsed.flags, header.flags);
@@ -292,10 +288,7 @@ mod tests {
 
         // Reserved flags set
         let bytes = [0x5A, 0x44, 0x01, FLAG_LITTLE_ENDIAN | 0b1000_0000];
-        assert!(matches!(
-            DxZeroHeader::from_bytes(&bytes),
-            Err(HeaderError::ReservedFlagsSet)
-        ));
+        assert!(matches!(DxZeroHeader::from_bytes(&bytes), Err(HeaderError::ReservedFlagsSet)));
     }
 
     #[test]

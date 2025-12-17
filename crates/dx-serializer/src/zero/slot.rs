@@ -19,14 +19,14 @@ pub const HEAP_MARKER: u8 = 0xFF;
 #[derive(Clone, Copy)]
 pub struct DxZeroSlot {
     /// Raw slot data (16 bytes)
-    /// 
+    ///
     /// Layout depends on marker byte (byte 15):
-    /// 
+    ///
     /// **Inline (marker = 0x00):**
     /// - [0]:     length (0-14)
     /// - [1-14]:  inline data
     /// - [15]:    0x00 (INLINE_MARKER)
-    /// 
+    ///
     /// **Heap (marker = 0xFF):**
     /// - [0-3]:   heap offset (u32 LE)
     /// - [4-7]:   data length (u32 LE)
@@ -39,9 +39,7 @@ impl DxZeroSlot {
     /// Create empty slot (inline, zero length)
     #[inline]
     pub const fn new() -> Self {
-        Self {
-            data: [0; 16],
-        }
+        Self { data: [0; 16] }
     }
 
     /// Create inline slot from data (≤14 bytes)
