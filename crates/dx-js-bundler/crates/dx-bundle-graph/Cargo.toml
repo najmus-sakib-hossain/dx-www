@@ -21,6 +21,9 @@ oxc_span = { workspace = true }
 oxc_allocator = { workspace = true }
 bytemuck = { workspace = true }
 
+[dev-dependencies]
+tempfile = { workspace = true }
+
 [lib]
 name = "dx_bundle_graph"
 path = "src/lib.rs"
