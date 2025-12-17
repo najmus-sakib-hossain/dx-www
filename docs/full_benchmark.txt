@@ -1,0 +1,42 @@
+serialize/dx_zero       time:   [49.449 ns 49.854 ns 50.389 ns]
+                        change: [-3.7290% -1.9618% -0.0411%] (p = 0.03 < 0.05)
+                        Change within noise threshold.
+Found 7 outliers among 100 measurements (7.00%)
+  1 (1.00%) high mild
+  6 (6.00%) high severe
+serialize/rkyv          time:   [405.05 ns 409.00 ns 415.02 ns]
+                        change: [-5.9418% -3.8696% -2.0214%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 11 outliers among 100 measurements (11.00%)
+  1 (1.00%) low severe
+  2 (2.00%) high mild
+  8 (8.00%) high severe
+serialize/bincode       time:   [38.466 ns 38.529 ns 38.593 ns]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+serialize/json          time:   [236.52 ns 237.08 ns 237.65 ns]
+Found 6 outliers among 100 measurements (6.00%)
+  2 (2.00%) low mild
+  4 (4.00%) high mild
+serialize/dx_infinity   time:   [182.53 ns 182.98 ns 183.48 ns]
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+
+deserialize/dx_zero     time:   [681.28 ps 682.03 ps 682.78 ps]
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+deserialize/rkyv        time:   [682.45 ps 683.28 ps 684.26 ps]
+Found 9 outliers among 100 measurements (9.00%)
+  4 (4.00%) high mild
+  5 (5.00%) high severe
+deserialize/bincode     time:   [114.13 ns 114.26 ns 114.39 ns]
+Found 7 outliers among 100 measurements (7.00%)
+  2 (2.00%) low mild
+  2 (2.00%) high mild
+  3 (3.00%) high severe
+deserialize/json        time:   [314.36 ns 316.35 ns 320.21 ns]
+Found 8 outliers among 100 measurements (8.00%)
+  3 (3.00%) high mild
+  5 (5.00%) high severe

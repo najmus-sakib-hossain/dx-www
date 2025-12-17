@@ -1,0 +1,10 @@
+Beginning round 1...
+Benchmarking 100 connections @ http://127.0.0.1:8080/plaintext for 10 second(s)
+  Latencies:
+    Avg      Stdev    Min      Max      
+    0.95ms   0.35ms   0.05ms   12.02ms  
+  Requests:
+    Total: 1049423 Req/Sec: 104963.40
+  Transfer:
+    Total: 130.11 MB Transfer Rate: 13.01 MB/Sec
+

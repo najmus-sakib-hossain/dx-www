@@ -27,13 +27,5 @@ path = "benchmarks/omega-comparison.rs"
 name = "infinity-comparison"
 path = "benchmarks/infinity-comparison.rs"
 
-[[bin]]
-name = "dx-machine-example"
-path = "examples/dx-machine-example.rs"
-
-[[bin]]
-name = "dx-human-example"
-path = "examples/dx-human-example.rs"
-
 [dependencies]
-dx-serializer = { path = "../crates/serializer" }
+dx-serializer = { path = "../crates/dx-serializer" }

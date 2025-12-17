@@ -1,0 +1,33 @@
+[package]
+name = "dx-i18n"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+async-trait = "0.1"
+thiserror = "1.0"
+scraper = "0.18"
+base64 = "0.21"
+url = "2.5"
+futures = "0.3"
+lazy_static = "1.4"
+regex = "1.10"
+urlencoding = "2.1"
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+futures-util = "0.3"
+uuid = { version = "1.6", features = ["v4"] }
+chrono = "0.4"
+html-escape = "0.2"
+sha2 = "0.10"
+
+[lib]
+name = "dx_i18n"
+path = "src/lib.rs"
+
+[[bin]]
+name = "i18n-demo"
+path = "src/bin/demo.rs"

@@ -1,0 +1,90 @@
+[package]
+name = "dx-js-runtime"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "The fastest JavaScript/TypeScript runtime - targeting 10x faster than Bun"
+repository = "https://github.com/paigexx/dx"
+keywords = ["javascript", "typescript", "runtime", "jit", "compiler"]
+categories = ["compilers", "development-tools"]
+
+[features]
+default = ["simd"]
+simd = []
+io_uring = ["dep:io-uring"]
+gpu = ["dep:wgpu"]
+full = ["simd", "io_uring", "gpu"]
+
+[dependencies]
+# OXC - Fastest JavaScript/TypeScript parser
+oxc_parser = "0.49"
+oxc_ast = "0.49"
+oxc_span = "0.49"
+oxc_allocator = "0.49"
+oxc_diagnostics = "0.49"
+oxc_syntax = "0.49"
+
+# Cranelift - Fast code generation
+cranelift = "0.116"
+cranelift-codegen = "0.116"
+cranelift-frontend = "0.116"
+cranelift-jit = "0.116"
+cranelift-module = "0.116"
+cranelift-native = "0.116"
+target-lexicon = "0.12"
+
+# Memory management
+bumpalo = { version = "3.16", features = ["collections"] }
+memmap2 = "0.9"
+bytemuck = { version = "1.21", features = ["derive"] }
+
+# Hashing
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+blake3 = "1.5"
+
+# Serialization
+postcard = { version = "1.1", features = ["alloc"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+ryu = "1.0"
+itoa = "1.0"
+
+# Concurrency
+parking_lot = "0.12"
+crossbeam = "0.8"
+
+# Async (optional io_uring)
+tokio = { version = "1.43", features = ["rt-multi-thread", "fs", "io-util", "macros"] }
+io-uring = { version = "0.7", optional = true }
+
+# GPU (optional)
+wgpu = { version = "24", optional = true }
+
+# Error handling
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Utilities
+num_cpus = "1.16"
+hex = "0.4"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+tempfile = "3.15"
+
+[[bench]]
+name = "runtime"
+harness = false
+
+[[bench]]
+name = "runtime_bench"
+harness = false
+
+[[bin]]
+name = "dx-js"
+path = "src/bin/main.rs"
+
+[[bin]]
+name = "runtime_bench"
+path = "benches/runtime_bench.rs"

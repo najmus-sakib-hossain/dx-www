@@ -8,14 +8,6 @@ description = "Ultra-tiny WASM runtime for dx-www - NO_STD Integer DOM (< 2 KB)"
 [lib]
 crate-type = ["cdylib"]
 
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"
-opt-level = "z"
-lto = true
-
 [dependencies]
 # ZERO dependencies - pure NO_STD
 

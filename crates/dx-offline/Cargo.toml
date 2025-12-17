@@ -1,0 +1,18 @@
+[package]
+name = "dx-offline"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "CRDT offline engine"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+yrs = "0.18"
+bincode = "2.0.0-rc.3"
+serde = { version = "1.0", features = ["derive"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+indexed_db_futures = "0.5"

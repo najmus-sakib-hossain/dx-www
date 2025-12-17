@@ -1,0 +1,18 @@
+commit: 0a071327
+
+estree_typescript Summary:
+AST Parsed     : 9771/9771 (100.00%)
+Positive Passed: 9765/9771 (99.94%)
+Expect to Parse: tasks/coverage/typescript/tests/cases/compiler/modulePreserveTopLevelAwait1.ts
+`await` is only allowed within async functions and at the top levels of modules
+
+Mismatch: tasks/coverage/typescript/tests/cases/conformance/importDefer/importDeferComments.ts
+
+Mismatch: tasks/coverage/typescript/tests/cases/conformance/importDefer/importDeferDeclaration.ts
+
+Mismatch: tasks/coverage/typescript/tests/cases/conformance/jsx/jsxReactTestSuite.tsx
+
+Mismatch: tasks/coverage/typescript/tests/cases/conformance/jsx/tsxReactEmitEntities.tsx
+
+Mismatch: tasks/coverage/typescript/tests/cases/conformance/jsx/tsxReactEmitNesting.tsx
+

@@ -1,0 +1,92 @@
+   Compiling serializer-benchmark v0.1.0 (F:\Code\dx\playground\serializer)
+warning: unused import: `format_array`
+ --> F:\Code\dx\crates\dx-serializer\src\converters\toon.rs:4:24
+  |
+4 | use crate::optimizer::{format_array, optimize_key};
+  |                        ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::optimizer`
+  --> F:\Code\dx\crates\dx-serializer\src\converters\mod.rs:21:5
+   |
+21 | use crate::optimizer;
+   |     ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::io::Write`
+  --> F:\Code\dx\crates\dx-serializer\src\converters\mod.rs:22:5
+   |
+22 | use std::io::Write;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `FLAG_HAS_HEAP`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:3:35
+  |
+3 | use super::header::{DxZeroHeader, FLAG_HAS_HEAP};
+  |                                   ^^^^^^^^^^^^^
+
+warning: unused import: `super::types::Result`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:5:5
+  |
+5 | use super::types::Result;
+  |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `DxZeroError` and `Result as ZeroResult`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\format.rs:6:26
+  |
+6 | use crate::zero::types::{DxZeroError, Result as ZeroResult};
+  |                          ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::zero::MAGIC as DX_ZERO_MAGIC`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\format.rs:7:5
+  |
+7 | use crate::zero::MAGIC as DX_ZERO_MAGIC;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:154:17
+    |
+154 |             let mut slot = DxZeroSlot::heap_reference(offset, bytes.len() as u32);
+    |                 ----^^^^
+    |                 |
+    |                 help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:178:19
+    |
+178 |     pub fn finish(mut self) -> usize {
+    |                   ----^^^^
+    |                   |
+    |                   help: remove this `mut`
+
+warning: `dx-serializer` (lib) generated 9 warnings (run `cargo fix --lib -p dx-serializer` to apply 9 suggestions)
+warning: serializer-benchmark@0.1.0: Cap'n Proto schema compilation skipped: Error { kind: Failed, extra: "Failed to execute `capnp --version`: program not found. Please verify that version 0.5.2 or higher of the capnp executable is installed on your system. See https://capnproto.org/install.html" }
+warning: serializer-benchmark@0.1.0: Install Cap'n Proto to enable Cap'n Proto benchmarks: choco install capnproto
+warning: unexpected `cfg` condition value: `capnproto`
+  --> src\lib.rs:79:7
+   |
+79 | #[cfg(feature = "capnproto")]
+   |       ^^^^^^^^^^^^^^^^^^^^^ help: remove the condition
+   |
+   = note: no expected values for `feature`
+   = help: consider adding `capnproto` as a feature in `Cargo.toml`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: `serializer-benchmark` (lib) generated 1 warning
+warning: associated items `HEAP_OFFSET` and `age` are never used
+  --> benches\all_serializers.rs:27:11
+   |
+24 | impl UserDxZero {
+   | --------------- associated items in this implementation
+...
+27 |     const HEAP_OFFSET: usize = 73;
+   |           ^^^^^^^^^^^
+...
+43 |     fn age(&self) -> u32 {
+   |        ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+

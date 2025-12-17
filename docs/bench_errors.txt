@@ -1,0 +1,39 @@
+Gnuplot not found, using plotters backend
+Benchmarking serialize/dx_zero
+Benchmarking serialize/dx_zero: Warming up for 3.0000 s
+Benchmarking serialize/dx_zero: Collecting 100 samples in estimated 5.0000 s (102M iterations)
+Benchmarking serialize/dx_zero: Analyzing
+Benchmarking serialize/rkyv
+Benchmarking serialize/rkyv: Warming up for 3.0000 s
+Benchmarking serialize/rkyv: Collecting 100 samples in estimated 5.0003 s (12M iterations)
+Benchmarking serialize/rkyv: Analyzing
+Benchmarking serialize/bincode
+Benchmarking serialize/bincode: Warming up for 3.0000 s
+Benchmarking serialize/bincode: Collecting 100 samples in estimated 5.0001 s (129M iterations)
+Benchmarking serialize/bincode: Analyzing
+Benchmarking serialize/json
+Benchmarking serialize/json: Warming up for 3.0000 s
+Benchmarking serialize/json: Collecting 100 samples in estimated 5.0002 s (21M iterations)
+Benchmarking serialize/json: Analyzing
+Benchmarking serialize/dx_infinity
+Benchmarking serialize/dx_infinity: Warming up for 3.0000 s
+Benchmarking serialize/dx_infinity: Collecting 100 samples in estimated 5.0009 s (26M iterations)
+Benchmarking serialize/dx_infinity: Analyzing
+Benchmarking deserialize/dx_zero
+Benchmarking deserialize/dx_zero: Warming up for 3.0000 s
+Benchmarking deserialize/dx_zero: Collecting 100 samples in estimated 5.0000 s (7.3B iterations)
+Benchmarking deserialize/dx_zero: Analyzing
+Benchmarking deserialize/rkyv
+Benchmarking deserialize/rkyv: Warming up for 3.0000 s
+Benchmarking deserialize/rkyv: Collecting 100 samples in estimated 5.0000 s (7.3B iterations)
+Benchmarking deserialize/rkyv: Analyzing
+Benchmarking deserialize/bincode
+Benchmarking deserialize/bincode: Warming up for 3.0000 s
+Benchmarking deserialize/bincode: Collecting 100 samples in estimated 5.0001 s (43M iterations)
+Benchmarking deserialize/bincode: Analyzing
+Benchmarking deserialize/json
+Benchmarking deserialize/json: Warming up for 3.0000 s
+Benchmarking deserialize/json: Collecting 100 samples in estimated 5.0012 s (16M iterations)
+Benchmarking deserialize/json: Analyzing
+Benchmarking deserialize/dx_infinity
+Benchmarking deserialize/dx_infinity: Warming up for 3.0000 s

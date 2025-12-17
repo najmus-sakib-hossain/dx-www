@@ -1,0 +1,19 @@
+[package]
+name = "dx-client"
+version = "1.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Sub-20KB WASM runtime for dx-www - pure FFI, no wasm-bindgen"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Core runtime - zero external deps for minimal size
+# Ecosystem features (conditional compilation)
+dx-error = { path = "../dx-error", optional = true }
+dx-debug = { path = "../dx-debug", optional = true }
+
+[features]
+default = []
+dev = ["dx-error", "dx-debug"]

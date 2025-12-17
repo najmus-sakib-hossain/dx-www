@@ -66,10 +66,23 @@ benchmarks/node_modules/
 benchmarks/*.json
 !benchmarks/benchmark-results.json
 
+# DX Package Manager cache and test files
+.dx-cache/
+.dx-registry/
+*.dxp
+playground/benchmark-test/node_modules/
+playground/package-manager/*/node_modules/
+playground/package-manager/*/bun.lockb
+
 # Build artifacts
 dist/
 build/
 
+*/*/target/
+*/target/
+crates/*/target/
+
 # Temporary files
 tmp/
 temp/
+error.log

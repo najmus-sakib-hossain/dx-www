@@ -1,0 +1,121 @@
+warning: unused import: `format_array`
+ --> F:\Code\dx\crates\dx-serializer\src\converters\toon.rs:4:24
+  |
+4 | use crate::optimizer::{format_array, optimize_key};
+  |                        ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::optimizer`
+  --> F:\Code\dx\crates\dx-serializer\src\converters\mod.rs:21:5
+   |
+21 | use crate::optimizer;
+   |     ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::io::Write`
+  --> F:\Code\dx\crates\dx-serializer\src\converters\mod.rs:22:5
+   |
+22 | use std::io::Write;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `FLAG_HAS_HEAP`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:3:35
+  |
+3 | use super::header::{DxZeroHeader, FLAG_HAS_HEAP};
+  |                                   ^^^^^^^^^^^^^
+
+warning: unused import: `super::types::Result`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:5:5
+  |
+5 | use super::types::Result;
+  |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `DxZeroError` and `Result as ZeroResult`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\format.rs:6:26
+  |
+6 | use crate::zero::types::{DxZeroError, Result as ZeroResult};
+  |                          ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::zero::MAGIC as DX_ZERO_MAGIC`
+ --> F:\Code\dx\crates\dx-serializer\src\zero\format.rs:7:5
+  |
+7 | use crate::zero::MAGIC as DX_ZERO_MAGIC;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:154:17
+    |
+154 |             let mut slot = DxZeroSlot::heap_reference(offset, bytes.len() as u32);
+    |                 ----^^^^
+    |                 |
+    |                 help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> F:\Code\dx\crates\dx-serializer\src\zero\builder.rs:178:19
+    |
+178 |     pub fn finish(mut self) -> usize {
+    |                   ----^^^^
+    |                   |
+    |                   help: remove this `mut`
+
+   Compiling serializer-benchmark v0.1.0 (F:\Code\dx\playground\serializer)
+warning: `dx-serializer` (lib) generated 9 warnings (run `cargo fix --lib -p dx-serializer` to apply 9 suggestions)
+warning: serializer-benchmark@0.1.0: Cap'n Proto schema compilation skipped: Error { kind: Failed, extra: "Failed to execute `capnp --version`: program not found. Please verify that version 0.5.2 or higher of the capnp executable is installed on your system. See https://capnproto.org/install.html" }
+warning: serializer-benchmark@0.1.0: Install Cap'n Proto to enable Cap'n Proto benchmarks: choco install capnproto
+warning: unexpected `cfg` condition value: `capnproto`
+  --> src\lib.rs:79:7
+   |
+79 | #[cfg(feature = "capnproto")]
+   |       ^^^^^^^^^^^^^^^^^^^^^ help: remove the condition
+   |
+   = note: no expected values for `feature`
+   = help: consider adding `capnproto` as a feature in `Cargo.toml`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: `serializer-benchmark` (lib) generated 1 warning
+error[E0252]: the name `DxZeroBuilder` is defined multiple times
+  --> benches\all_serializers.rs:16:5
+   |
+10 | use dx_serializer::zero::DxZeroBuilder;
+   |     ---------------------------------- previous import of the type `DxZeroBuilder` here
+...
+16 | use dx_serializer::zero::DxZeroBuilder;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `DxZeroBuilder` reimported here
+   |
+   = note: `DxZeroBuilder` must be defined only once in the type namespace of this module
+
+warning: unused import: `dx_serializer::zero::DxZeroBuilder`
+  --> benches\all_serializers.rs:16:5
+   |
+16 | use dx_serializer::zero::DxZeroBuilder;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `rkyv::Deserialize`
+  --> benches\all_serializers.rs:87:9
+   |
+87 |     use rkyv::Deserialize;
+   |         ^^^^^^^^^^^^^^^^^
+
+error[E0605]: non-primitive cast: `u64_le` as `u64`
+  --> benches\all_serializers.rs:89:5
+   |
+89 |     archived.id as u64
+   |     ^^^^^^^^^^^^^^^^^^ an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+   |
+help: consider using the `From` trait instead
+   |
+89 -     archived.id as u64
+89 +     u64::from(archived.id)
+   |
+
+Some errors have detailed explanations: E0252, E0605.
+For more information about an error, try `rustc --explain E0252`.
+warning: `serializer-benchmark` (bench "all_serializers") generated 2 warnings
+warning: serializer-benchmark@0.1.0: Cap'n Proto schema compilation skipped: Error { kind: Failed, extra: "Failed to execute `capnp --version`: program not found. Please verify that version 0.5.2 or higher of the capnp executable is installed on your system. See https://capnproto.org/install.html" }
+warning: serializer-benchmark@0.1.0: Install Cap'n Proto to enable Cap'n Proto benchmarks: choco install capnproto
+error: could not compile `serializer-benchmark` (bench "all_serializers") due to 2 previous errors; 2 warnings emitted

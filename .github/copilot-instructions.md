@@ -1,13 +1,14 @@
-# Dx-WWW Runtime: System Instructions & Architectural Standards
+# Dx Project: System Instructions & Architectural Standards
 
 - Remember to please use /docs folder to store all documentation related files.
-- Please study this codebaase and make sure that its properly formatted and linted and the folder structure is correct and professionally organized. And no empty or useless files or folders are present!!!
+- Please study this codebase and make sure that its properly formatted and linted and the folder structure is correct and professionally organized. And no empty or useless files or folders are present!!!
 - Always use latest crates versions.
 
 ## 1. Project Context & Philosophy
-You are building the **Kernel** of `dx-www`, a revolutionary web runtime that replaces React/Next.js.
+You are building **Dx**, a revolutionary binary-first web framework. The `dx-www` crate is the core web runtime package that replaces React/Next.js.
 *   **Goal:** January 1, 2026 Release.
 *   **Status:** ✅ Core runtime complete (338B Micro / 7.5KB Macro)
+*   **Project Structure:** Cargo workspace with multiple specialized crates. The `dx-www` crate is the core web runtime package.
 *   **Core Philosophy:** "Binary Everywhere." We do not ship JSON. We do not ship HTML strings. We do not use Virtual DOM diffing.
 *   **Architecture:** Hybrid Template Instantiation Protocol (HTIP). We use WASM to drive the browser's `cloneNode` C++ engine via batched operations to break the "WASM Wall."
 *   **Performance Target:** Zero-Parse, Zero-GC (Garbage Collection), Zero-Hydration.
@@ -17,18 +18,18 @@ You are building the **Kernel** of `dx-www`, a revolutionary web runtime that re
 
 ## 1.1 The Binary Web: Complete Technical Specification
 
-### ⚡ dx-www: The Binary Web Runtime
+### ⚡ Dx: The Binary Web Framework
 
 > **"The Browser was built for Text. We built Dx for Applications."**
 
-**dx-www** is a full-stack, binary-first web framework that replaces React, Next.js, and the entire npm ecosystem with a single, high-performance Toolchain. It compiles TypeScript (`.tsx`) directly into **WebAssembly** and **Binary Layouts**, completely bypassing the JavaScript Runtime, Virtual DOM, and HTML Parsers.
+**Dx** is a full-stack, binary-first web framework that replaces React, Next.js, and the entire npm ecosystem with a single, high-performance Toolchain. The framework consists of multiple specialized crates, with **dx-www** being the core web runtime package. It compiles TypeScript (`.tsx`) directly into **WebAssembly** and **Binary Layouts**, completely bypassing the JavaScript Runtime, Virtual DOM, and HTML Parsers.
 
 ### 🚀 The Paradigm Shift
 
 For 10 years, web performance has been capped by the speed of parsing Text (JSON, HTML, JS).
-**dx-www** changes the fundamental unit of the web from **Text Strings** to **Binary Structs**.
+**Dx** changes the fundamental unit of the web from **Text Strings** to **Binary Structs**.
 
-| Feature | React / Next.js (Text Web) | **dx-www (Binary Web)** |
+| Feature | React / Next.js (Text Web) | **Dx (Binary Web)** |
 | :--- | :--- | :--- |
 | **Data Format** | JSON (Slow Parse) | **Bincode / WASM (Zero-Copy)** |
 | **Rendering** | Virtual DOM Diffing | **HTIP (Batch Cloning)** |
@@ -39,7 +40,7 @@ For 10 years, web performance has been capped by the speed of parsing Text (JSON
 
 ### 🛠️ The Architecture: "The Engine & The Factory"
 
-dx-www is not a library you import. It is a **Compiler** (`dx`) and a **Runtime** (`dx-client`).
+Dx is not a library you import. It is a complete framework with a **Compiler** (`dx-cli`) and a **Runtime** (`dx-www` crate with `dx-client`).
 
 #### 1. The Compiler (`dx build`)
 Instead of bundling JavaScript strings, the `dx` compiler analyzes your TSX and splits it into two streams:
@@ -96,7 +97,7 @@ We don't just replace React. We replace the "Glue Code" ecosystem with highly op
 
 ### 📊 Performance Benchmarks (Dec 2025)
 
-| Metric | Next.js 15 | Svelte 5 | **dx-www (Binary)** |
+| Metric | Next.js 15 | Svelte 5 | **Dx (Binary)** |
 | :--- | :--- | :--- | :--- |
 | **Hello World Size** | 140 KB | 3.9 KB | **338 Bytes** (Micro Mode) |
 | **SaaS Dashboard Size** | 450 KB | 60 KB | **22 KB** (Macro Mode) |
@@ -161,18 +162,30 @@ Delete your `node_modules`.
     *   `once_cell` / `lazy_static`: For global singletons (Template Cache).
 
 ## 3. Workspace Structure & Crate Boundaries
-Implement a Cargo Workspace structure. Do not build a monolith.
+The Dx project is organized as a Cargo Workspace with multiple specialized crates. Do not build a monolith.
 
 ```text
-/dx-www-runtime
+/dx
 ├── Cargo.toml (Workspace Root)
 ├── /crates
-│   ├── /dx-core     # Memory Layout, SharedArrayBuffer, Capability Security
-│   ├── /dx-dom      # HTIP Renderer, Template Cache, Batch Cloner
-│   ├── /dx-morph    # Dirty-Bit Patcher, State Structs
-│   └── /dx-sched    # RAF Loop, Frame Budget Controller
-└── /examples
-    └── /hello-world # Proof of Concept Implementation
+│   ├── /core        # Memory Layout, SharedArrayBuffer, Capability Security
+│   ├── /dom         # HTIP Renderer, Template Cache, Batch Cloner
+│   ├── /morph       # Dirty-Bit Patcher, State Structs
+│   ├── /sched       # RAF Loop, Frame Budget Controller
+│   ├── /dx-www      # Core Web Runtime Package
+│   ├── /dx-cli      # CLI Compiler Tools
+│   ├── /dx-client   # Browser Runtime Client
+│   ├── /dx-state    # State Management
+│   ├── /dx-style    # Binary CSS (B-CSS)
+│   ├── /dx-sync     # Differential Data Sync
+│   ├── /dx-guard    # Form Validation & Security
+│   ├── /dx-server   # Server-Side Runtime
+│   ├── /dx-auth     # Authentication
+│   ├── /dx-db       # Database Integration
+│   └── ... (other specialized crates)
+├── /docs            # All documentation files
+├── /examples        # Example applications
+└── /benchmarks      # Performance benchmarks
 ```
 
 ## 4. Coding Standards & "The Acid Test" Rules

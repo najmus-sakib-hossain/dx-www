@@ -1,0 +1,182 @@
+[
+  {
+    "cached": true,
+    "name": "lodash",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\lodash-4.17.21.tgz",
+    "version": "4.17.21"
+  },
+  {
+    "cached": true,
+    "name": "axios",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\axios-1.6.0.tgz",
+    "version": "1.6.0"
+  },
+  {
+    "cached": true,
+    "name": "proxy-from-env",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\proxy-from-env-1.1.0.tgz",
+    "version": "1.1.0"
+  },
+  {
+    "cached": true,
+    "name": "form-data",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\form-data-4.0.5.tgz",
+    "version": "4.0.5"
+  },
+  {
+    "cached": true,
+    "name": "follow-redirects",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\follow-redirects-1.15.11.tgz",
+    "version": "1.15.11"
+  },
+  {
+    "cached": true,
+    "name": "mime-types",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\mime-types-2.1.35.tgz",
+    "version": "2.1.35"
+  },
+  {
+    "cached": true,
+    "name": "asynckit",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\asynckit-0.4.0.tgz",
+    "version": "0.4.0"
+  },
+  {
+    "cached": true,
+    "name": "hasown",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\hasown-2.0.2.tgz",
+    "version": "2.0.2"
+  },
+  {
+    "cached": true,
+    "name": "es-set-tostringtag",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\es-set-tostringtag-2.1.0.tgz",
+    "version": "2.1.0"
+  },
+  {
+    "cached": true,
+    "name": "combined-stream",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\combined-stream-1.0.8.tgz",
+    "version": "1.0.8"
+  },
+  {
+    "cached": true,
+    "name": "mime-db",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\mime-db-1.52.0.tgz",
+    "version": "1.52.0"
+  },
+  {
+    "cached": true,
+    "name": "function-bind",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\function-bind-1.1.2.tgz",
+    "version": "1.1.2"
+  },
+  {
+    "cached": true,
+    "name": "es-errors",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\es-errors-1.3.0.tgz",
+    "version": "1.3.0"
+  },
+  {
+    "cached": true,
+    "name": "get-intrinsic",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\get-intrinsic-1.3.1.tgz",
+    "version": "1.3.1"
+  },
+  {
+    "cached": true,
+    "name": "has-tostringtag",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\has-tostringtag-1.0.2.tgz",
+    "version": "1.0.2"
+  },
+  {
+    "cached": true,
+    "name": "delayed-stream",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\delayed-stream-1.0.0.tgz",
+    "version": "1.0.0"
+  },
+  {
+    "cached": true,
+    "name": "call-bind-apply-helpers",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\call-bind-apply-helpers-1.0.2.tgz",
+    "version": "1.0.2"
+  },
+  {
+    "cached": true,
+    "name": "es-define-property",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\es-define-property-1.0.1.tgz",
+    "version": "1.0.1"
+  },
+  {
+    "cached": true,
+    "name": "has-symbols",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\has-symbols-1.1.0.tgz",
+    "version": "1.1.0"
+  },
+  {
+    "cached": true,
+    "name": "get-proto",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\get-proto-1.0.1.tgz",
+    "version": "1.0.1"
+  },
+  {
+    "cached": true,
+    "name": "async-function",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\async-function-1.0.0.tgz",
+    "version": "1.0.0"
+  },
+  {
+    "cached": true,
+    "name": "es-object-atoms",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\es-object-atoms-1.1.1.tgz",
+    "version": "1.1.1"
+  },
+  {
+    "cached": true,
+    "name": "generator-function",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\generator-function-2.0.1.tgz",
+    "version": "2.0.1"
+  },
+  {
+    "cached": true,
+    "name": "math-intrinsics",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\math-intrinsics-1.1.0.tgz",
+    "version": "1.1.0"
+  },
+  {
+    "cached": true,
+    "name": "gopd",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\gopd-1.2.0.tgz",
+    "version": "1.2.0"
+  },
+  {
+    "cached": true,
+    "name": "async-generator-function",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\async-generator-function-1.0.0.tgz",
+    "version": "1.0.0"
+  },
+  {
+    "cached": true,
+    "name": "has-symbols",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\has-symbols-1.1.0.tgz",
+    "version": "1.1.0"
+  },
+  {
+    "cached": true,
+    "name": "dunder-proto",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\dunder-proto-1.0.1.tgz",
+    "version": "1.0.1"
+  },
+  {
+    "cached": true,
+    "name": "es-object-atoms",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\es-object-atoms-1.1.1.tgz",
+    "version": "1.1.1"
+  },
+  {
+    "cached": true,
+    "name": "call-bind-apply-helpers",
+    "path": "C:\\Users\\Computer\\.dx\\cache\\call-bind-apply-helpers-1.0.2.tgz",
+    "version": "1.0.2"
+  }
+]
