@@ -772,3 +772,8 @@ dx-js-package-manager - 20x faster than Bun
 dx-js-bundler - 3x faster than Bun
 
 Now, please test all these with real tests again bun in the playground folder and verify the results so that we can announce the complete victory over bun in all these 4 critical areas. And as you are in the playground folder please remove all the old experiments that are not relevant anymore to keep the playground clean and focused on the key victories.
+
+
+I already created dx-forge which is VCS which has connection with cloudflare r2 bucket for storing codebase and getting no price forge clonning feature for free but now please add the feature of controlling other dx-tools and also background task like creating caching after you ran dx-js-package-manager install command and dx-js-bundler build command so that dx-forge can be the single orchestrator for all dx-tools and also background tasks like caching and prefetching. It should control all dx-tools like when dx-style should run and is it running or not and when dx-js-runtime should run and is it running or not and so on. So that dx-forge is the single point of control for all dx-tools and background tasks. And it also has our new revolutionary traffic branching means package managment system which is one of the key reason that we will beat node, npm and thing like that as dx tools won't put code inside a blackhole folder like node_modules as it will put new versions of the dx package inside your transparent source code what you have access to and can modify it if you want to. So please make sure that this traffic branching feature to dx-forge as well.
+
+So, give me binary dawn dx way so that dx-forge can do all of these tasks!!!
