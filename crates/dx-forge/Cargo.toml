@@ -179,3 +179,5 @@ md5 = "0.7.0"
 
 [dev-dependencies]
 tempfile = "3.10.1"
+proptest = "1.4"
+tokio-test = "0.4"
