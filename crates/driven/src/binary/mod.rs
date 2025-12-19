@@ -3,7 +3,7 @@
 //! Leverages DX Serializer's world-record format principles for
 //! 73% smaller rules with zero-copy parsing.
 
-mod checksum;
+pub mod checksum;
 mod infinity_format;
 mod memory_map;
 mod rule_schema;

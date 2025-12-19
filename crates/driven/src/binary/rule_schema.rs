@@ -40,22 +40,22 @@ impl BinaryRule {
     }
 }
 
-/// Binary workflow step (16 bytes)
+/// Binary workflow step (20 bytes, no padding)
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct BinaryStep {
-    /// Step ID
+    /// Step ID (2 bytes)
     pub step_id: u16,
-    /// Name string index
+    /// Number of actions (2 bytes)
+    pub action_count: u16,
+    /// Name string index (4 bytes)
     pub name: u32,
-    /// Description string index
+    /// Description string index (4 bytes)
     pub description: u32,
-    /// Condition string index (0 = no condition)
+    /// Condition string index (4 bytes, 0 = no condition)
     pub condition: u32,
-    /// Number of actions
-    pub action_count: u8,
-    /// Reserved for alignment
-    pub _reserved: u8,
+    /// Reserved (4 bytes)
+    pub _reserved: u32,
 }
 
 impl BinaryStep {
@@ -63,10 +63,10 @@ impl BinaryStep {
     pub fn new(step_id: u16, name: u32, description: u32) -> Self {
         Self {
             step_id,
+            action_count: 0,
             name,
             description,
             condition: 0,
-            action_count: 0,
             _reserved: 0,
         }
     }
@@ -146,13 +146,13 @@ impl BinaryContext {
     }
 }
 
-/// Binary signature (96 bytes)
+/// Binary signature (100 bytes)
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct BinarySignature {
     /// Algorithm (1 = Ed25519)
     pub algorithm: u8,
-    /// Reserved
+    /// Reserved (3 bytes for alignment)
     pub _reserved: [u8; 3],
     /// Public key (32 bytes)
     pub public_key: [u8; 32],
@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn test_binary_step_size() {
-        assert_eq!(BinaryStep::size(), 16);
+        assert_eq!(BinaryStep::size(), 20);
     }
 
     #[test]

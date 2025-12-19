@@ -99,7 +99,7 @@ impl<'a> SimdTokenizer<'a> {
         }
 
         // Check for bullet
-        if self.starts_with(b"- ") || self.starts_with(b"* ") || self.starts_with(b"• ") {
+        if self.starts_with(b"- ") || self.starts_with(b"* ") || self.starts_with(b"\xE2\x80\xA2 ") {
             return Ok(self.tokenize_bullet(start));
         }
 

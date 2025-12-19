@@ -13,6 +13,7 @@
 //! - **Context Intelligence**: Deep project analysis for AI guidance
 //! - **Professional Templates**: Battle-tested patterns for AI agents
 //! - **Zero-Parse Loading**: Instant rule loading with memory-mapped binaries
+//! - **DX Binary Dawn**: SIMD scanning, XOR patching, Ed25519 signing
 //!
 //! ## Quick Start
 //!
@@ -41,7 +42,16 @@
 //! - [`context`]: AI context intelligence and project analysis
 //! - [`sync`]: Multi-editor synchronization
 //! - [`validation`]: Rule validation and linting
+//!
+//! ## DX Binary Dawn Modules
+//!
+//! - [`binary`]: DX ∞ infinity format, zero-copy schemas, SIMD tokenizer
+//! - [`fusion`]: Pre-compiled templates, hot cache, speculative loading
+//! - [`streaming`]: HTIP delivery, XOR patching, ETag negotiation
+//! - [`security`]: Ed25519 signing, capability manifest, sandbox
+//! - [`state`]: Dirty-bit tracking, shared rules, atomic sync
 
+// Core modules
 pub mod context;
 pub mod emitter;
 pub mod format;
@@ -49,6 +59,13 @@ pub mod parser;
 pub mod sync;
 pub mod templates;
 pub mod validation;
+
+// DX Binary Dawn modules
+pub mod binary;
+pub mod fusion;
+pub mod security;
+pub mod state;
+pub mod streaming;
 
 #[cfg(feature = "cli")]
 pub mod cli;
@@ -61,6 +78,16 @@ pub use parser::{ParsedRule, Parser, UnifiedRule};
 pub use sync::SyncEngine;
 pub use templates::{Template, TemplateRegistry};
 pub use validation::{Linter, ValidationResult};
+
+// Re-export DX Binary Dawn types
+pub use binary::{
+    Blake3Checksum, InfinityHeader, InfinityRule, MappedRule, SimdTokenizer, StringId, StringTable,
+    StringTableBuilder,
+};
+pub use fusion::{BinaryCache, FusionModule, HotCache, SpeculativeLoader};
+pub use security::{Capability, CapabilityManifest, Ed25519Signer, IntegrityGuard, Sandbox};
+pub use state::{AtomicSync, DirtyBits, RuleSnapshot, SharedRules, SnapshotManager};
+pub use streaming::{ChunkStreamer, ETagNegotiator, HtipDelivery, XorPatcher};
 
 /// Configuration for Driven
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -308,7 +335,7 @@ impl RuleSet {
 #[derive(Debug, thiserror::Error)]
 pub enum DrivenError {
     #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(std::io::Error),
 
     #[error("Parse error: {0}")]
     Parse(String),
@@ -334,6 +361,9 @@ pub enum DrivenError {
     #[error("Config error: {0}")]
     Config(String),
 
+    #[error("Security error: {0}")]
+    Security(String),
+
     #[error("Context error: {0}")]
     Context(String),
 
@@ -346,6 +376,12 @@ pub enum DrivenError {
 
 /// Result type alias for Driven operations
 pub type Result<T> = std::result::Result<T, DrivenError>;
+
+impl From<std::io::Error> for DrivenError {
+    fn from(err: std::io::Error) -> Self {
+        DrivenError::Io(err)
+    }
+}
 
 #[cfg(test)]
 mod tests {

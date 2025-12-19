@@ -19,8 +19,10 @@ pub struct InfinityHeader {
     pub version: u16,
     /// Flags bitfield (2 bytes)
     pub flags: u16,
-    /// Section offsets (24 bytes = 6 × 4)
-    pub section_offsets: SectionOffsets,
+    /// Checksum (16 bytes)
+    pub checksum: [u8; 16],
+    /// Reserved (8 bytes)
+    pub _reserved: [u8; 8],
 }
 
 /// Section offsets for O(1) access
@@ -108,7 +110,8 @@ impl InfinityHeader {
             magic: *INFINITY_MAGIC,
             version,
             flags: flags.0,
-            section_offsets: SectionOffsets::default(),
+            checksum: [0; 16],
+            _reserved: [0; 8],
         }
     }
 
@@ -150,6 +153,8 @@ impl InfinityHeader {
 pub struct InfinityRule<'a> {
     /// The header
     pub header: &'a InfinityHeader,
+    /// Section offsets (follows header in binary)
+    pub section_offsets: &'a SectionOffsets,
     /// Raw data (memory-mapped)
     data: &'a [u8],
 }
@@ -157,13 +162,30 @@ pub struct InfinityRule<'a> {
 impl<'a> InfinityRule<'a> {
     /// Create from raw bytes (zero-copy)
     pub fn from_bytes(data: &'a [u8]) -> Result<Self> {
+        let header_size = std::mem::size_of::<InfinityHeader>();
+        let offsets_size = std::mem::size_of::<SectionOffsets>();
+        let min_size = header_size + offsets_size;
+
+        if data.len() < min_size {
+            return Err(DrivenError::InvalidBinary(
+                "Data too small for infinity rule".into(),
+            ));
+        }
+
         let header = InfinityHeader::from_bytes(data)?;
-        Ok(Self { header, data })
+        let section_offsets: &SectionOffsets =
+            bytemuck::from_bytes(&data[header_size..header_size + offsets_size]);
+
+        Ok(Self {
+            header,
+            section_offsets,
+            data,
+        })
     }
 
     /// Get string table section
     pub fn string_table_data(&self) -> Option<&'a [u8]> {
-        let offset = self.header.section_offsets.string_table as usize;
+        let offset = self.section_offsets.string_table as usize;
         if offset == 0 || offset >= self.data.len() {
             return None;
         }
@@ -175,7 +197,7 @@ impl<'a> InfinityRule<'a> {
         if !self.header.flags().has_persona() {
             return None;
         }
-        let offset = self.header.section_offsets.persona as usize;
+        let offset = self.section_offsets.persona as usize;
         if offset == 0 || offset >= self.data.len() {
             return None;
         }
@@ -187,7 +209,7 @@ impl<'a> InfinityRule<'a> {
         if !self.header.flags().has_standards() {
             return None;
         }
-        let offset = self.header.section_offsets.standards as usize;
+        let offset = self.section_offsets.standards as usize;
         if offset == 0 || offset >= self.data.len() {
             return None;
         }
@@ -199,7 +221,7 @@ impl<'a> InfinityRule<'a> {
         if !self.header.flags().has_workflow() {
             return None;
         }
-        let offset = self.header.section_offsets.workflow as usize;
+        let offset = self.section_offsets.workflow as usize;
         if offset == 0 || offset >= self.data.len() {
             return None;
         }
@@ -211,7 +233,7 @@ impl<'a> InfinityRule<'a> {
         if !self.header.flags().has_context() {
             return None;
         }
-        let offset = self.header.section_offsets.context as usize;
+        let offset = self.section_offsets.context as usize;
         if offset == 0 || offset >= self.data.len() {
             return None;
         }
