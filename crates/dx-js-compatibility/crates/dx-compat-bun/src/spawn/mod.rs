@@ -214,3 +214,276 @@ impl Subprocess {
         }
     }
 }
+
+
+/// Exit status from a subprocess.
+#[derive(Debug, Clone)]
+pub struct ExitStatus {
+    /// Exit code (None if terminated by signal)
+    pub code: Option<i32>,
+    /// Whether the process exited successfully
+    pub success: bool,
+    /// Signal that terminated the process (Unix only)
+    pub signal: Option<i32>,
+}
+
+impl ExitStatus {
+    /// Get exit code, defaulting to -1 if terminated by signal.
+    pub fn code_or_default(&self) -> i32 {
+        self.code.unwrap_or(-1)
+    }
+}
+
+/// Synchronous subprocess result.
+#[derive(Debug, Clone)]
+pub struct SyncSubprocess {
+    /// Exit status
+    pub status: ExitStatus,
+    /// Stdout bytes
+    pub stdout: Bytes,
+    /// Stderr bytes
+    pub stderr: Bytes,
+}
+
+impl SyncSubprocess {
+    /// Get stdout as string.
+    pub fn stdout_text(&self) -> Result<String, std::string::FromUtf8Error> {
+        String::from_utf8(self.stdout.to_vec())
+    }
+
+    /// Get stderr as string.
+    pub fn stderr_text(&self) -> Result<String, std::string::FromUtf8Error> {
+        String::from_utf8(self.stderr.to_vec())
+    }
+
+    /// Parse stdout as JSON.
+    pub fn stdout_json<T: serde::de::DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
+        serde_json::from_slice(&self.stdout)
+    }
+}
+
+/// Spawn async subprocess (Bun.spawn()).
+///
+/// # Arguments
+/// * `cmd` - Command and arguments as a slice
+/// * `options` - Optional spawn configuration
+///
+/// # Example
+/// ```ignore
+/// let mut proc = spawn(&["echo", "hello"], None).await?;
+/// let status = proc.exited().await?;
+/// ```
+pub async fn spawn(cmd: &[&str], options: Option<SpawnOptions>) -> BunResult<Subprocess> {
+    if cmd.is_empty() {
+        return Err(BunError::Spawn("Empty command".to_string()));
+    }
+
+    let options = options.unwrap_or_default();
+    let mut command = Command::new(cmd[0]);
+
+    if cmd.len() > 1 {
+        command.args(&cmd[1..]);
+    }
+
+    if let Some(cwd) = &options.cwd {
+        command.current_dir(cwd);
+    }
+
+    if options.clear_env {
+        command.env_clear();
+    }
+
+    if let Some(env) = &options.env {
+        command.envs(env);
+    }
+
+    command.stdin(options.stdin.into());
+    command.stdout(options.stdout.into());
+    command.stderr(options.stderr.into());
+
+    let mut child = command
+        .spawn()
+        .map_err(|e| BunError::Spawn(format!("Spawn failed: {}", e)))?;
+
+    let pid = child.id().unwrap_or(0);
+    let stdin = child.stdin.take();
+    let stdout = child.stdout.take();
+    let stderr = child.stderr.take();
+
+    Ok(Subprocess {
+        pid,
+        child,
+        stdin,
+        stdout,
+        stderr,
+    })
+}
+
+/// Spawn sync subprocess (Bun.spawnSync()).
+///
+/// # Arguments
+/// * `cmd` - Command and arguments as a slice
+/// * `options` - Optional spawn configuration
+///
+/// # Example
+/// ```ignore
+/// let result = spawn_sync(&["echo", "hello"], None)?;
+/// println!("Output: {}", result.stdout_text().unwrap());
+/// ```
+pub fn spawn_sync(cmd: &[&str], options: Option<SpawnOptions>) -> BunResult<SyncSubprocess> {
+    if cmd.is_empty() {
+        return Err(BunError::Spawn("Empty command".to_string()));
+    }
+
+    let options = options.unwrap_or_default();
+    let mut command = std::process::Command::new(cmd[0]);
+
+    if cmd.len() > 1 {
+        command.args(&cmd[1..]);
+    }
+
+    if let Some(cwd) = &options.cwd {
+        command.current_dir(cwd);
+    }
+
+    if options.clear_env {
+        command.env_clear();
+    }
+
+    if let Some(env) = &options.env {
+        command.envs(env);
+    }
+
+    // For sync, we always capture output
+    command.stdin(Stdio::null());
+    command.stdout(Stdio::piped());
+    command.stderr(Stdio::piped());
+
+    let output = command
+        .output()
+        .map_err(|e| BunError::Spawn(format!("Spawn failed: {}", e)))?;
+
+    Ok(SyncSubprocess {
+        status: ExitStatus {
+            code: output.status.code(),
+            success: output.status.success(),
+            #[cfg(unix)]
+            signal: std::os::unix::process::ExitStatusExt::signal(&output.status),
+            #[cfg(not(unix))]
+            signal: None,
+        },
+        stdout: Bytes::from(output.stdout),
+        stderr: Bytes::from(output.stderr),
+    })
+}
+
+/// Execute a command in a shell.
+///
+/// # Arguments
+/// * `cmd` - Shell command string
+/// * `options` - Optional spawn configuration
+pub fn exec_sync(cmd: &str, options: Option<SpawnOptions>) -> BunResult<SyncSubprocess> {
+    #[cfg(windows)]
+    let shell_cmd = ["cmd", "/C", cmd];
+    #[cfg(not(windows))]
+    let shell_cmd = ["sh", "-c", cmd];
+
+    spawn_sync(&shell_cmd, options)
+}
+
+/// Execute a command in a shell asynchronously.
+pub async fn exec(cmd: &str, options: Option<SpawnOptions>) -> BunResult<Subprocess> {
+    #[cfg(windows)]
+    let shell_cmd = ["cmd", "/C", cmd];
+    #[cfg(not(windows))]
+    let shell_cmd = ["sh", "-c", cmd];
+
+    spawn(&shell_cmd, options).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_spawn_options_builder() {
+        let options = SpawnOptions::new()
+            .cwd("/tmp")
+            .env("FOO", "bar")
+            .stdin(StdioConfig::Pipe)
+            .stdout(StdioConfig::Pipe);
+
+        assert_eq!(options.cwd, Some(PathBuf::from("/tmp")));
+        assert_eq!(options.env.as_ref().unwrap().get("FOO"), Some(&"bar".to_string()));
+        assert_eq!(options.stdin, StdioConfig::Pipe);
+        assert_eq!(options.stdout, StdioConfig::Pipe);
+    }
+
+    #[test]
+    fn test_spawn_sync_echo() {
+        #[cfg(windows)]
+        let result = spawn_sync(&["cmd", "/C", "echo hello"], None);
+        #[cfg(not(windows))]
+        let result = spawn_sync(&["echo", "hello"], None);
+
+        let result = result.unwrap();
+        assert!(result.status.success);
+        let stdout = result.stdout_text().unwrap();
+        assert!(stdout.contains("hello"));
+    }
+
+    #[test]
+    fn test_spawn_sync_with_env() {
+        #[cfg(windows)]
+        let result = spawn_sync(
+            &["cmd", "/C", "echo %TEST_VAR%"],
+            Some(SpawnOptions::new().env("TEST_VAR", "test_value")),
+        );
+        #[cfg(not(windows))]
+        let result = spawn_sync(
+            &["sh", "-c", "echo $TEST_VAR"],
+            Some(SpawnOptions::new().env("TEST_VAR", "test_value")),
+        );
+
+        let result = result.unwrap();
+        assert!(result.status.success);
+        let stdout = result.stdout_text().unwrap();
+        assert!(stdout.contains("test_value"));
+    }
+
+    #[test]
+    fn test_exec_sync() {
+        let result = exec_sync("echo hello", None).unwrap();
+        assert!(result.status.success);
+        let stdout = result.stdout_text().unwrap();
+        assert!(stdout.contains("hello"));
+    }
+
+    #[tokio::test]
+    async fn test_spawn_async() {
+        #[cfg(windows)]
+        let mut proc = spawn(&["cmd", "/C", "echo hello"], None).await.unwrap();
+        #[cfg(not(windows))]
+        let mut proc = spawn(&["echo", "hello"], None).await.unwrap();
+
+        let status = proc.exited().await.unwrap();
+        assert!(status.success);
+    }
+
+    #[test]
+    fn test_exit_status() {
+        let status = ExitStatus {
+            code: Some(0),
+            success: true,
+            signal: None,
+        };
+        assert_eq!(status.code_or_default(), 0);
+
+        let status = ExitStatus {
+            code: None,
+            success: false,
+            signal: Some(9),
+        };
+        assert_eq!(status.code_or_default(), -1);
+    }
+}

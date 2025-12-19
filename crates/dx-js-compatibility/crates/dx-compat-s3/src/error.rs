@@ -24,6 +24,14 @@ pub enum S3Error {
     /// Configuration error
     #[error("Configuration error: {0}")]
     Config(String),
+
+    /// Invalid data
+    #[error("Invalid data: {0}")]
+    InvalidData(String),
+
+    /// Upload error
+    #[error("Upload error: {0}")]
+    Upload(String),
 }
 
 /// Result type for S3 operations.

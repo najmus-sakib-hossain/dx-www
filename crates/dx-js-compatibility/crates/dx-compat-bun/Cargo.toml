@@ -36,6 +36,9 @@ sha2 = "0.10"
 sha1 = "0.10"
 md-5 = "0.10"
 
+# Encoding
+base64 = "0.22"
+
 # Random
 rand = "0.8"
 murmur3 = "0.5"

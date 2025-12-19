@@ -1118,6 +1118,7 @@ name = "dx-compat-bun"
 version = "0.1.0"
 dependencies = [
  "argon2",
+ "base64",
  "bcrypt",
  "brotli",
  "bytes",
@@ -1127,6 +1128,7 @@ dependencies = [
  "flate2",
  "futures",
  "http 1.4.0",
+ "http-body-util",
  "hyper 1.8.1",
  "hyper-util",
  "md-5",
@@ -1212,17 +1214,24 @@ dependencies = [
  "getrandom 0.2.16",
  "hmac",
  "http 1.4.0",
+ "hyper 1.8.1",
+ "hyper-util",
  "md-5",
  "memmap2",
  "notify",
  "parking_lot",
  "proptest",
  "rand 0.8.5",
+ "rustls 0.23.35",
+ "serde",
+ "serde_json",
  "sha1",
  "sha2",
  "tempfile",
  "thiserror 2.0.17",
  "tokio",
+ "tokio-rustls 0.26.4",
+ "tokio-stream",
  "zerocopy",
 ]
 
@@ -1245,6 +1254,7 @@ dependencies = [
  "bytes",
  "proptest",
  "serde",
+ "serde_json",
  "thiserror 2.0.17",
  "tokio",
 ]
@@ -2628,7 +2638,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls 0.23.35",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "thiserror 2.0.17",
  "tokio",
  "tracing",
@@ -2665,9 +2675,9 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -3518,6 +3528,18 @@ checksum = "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61"
 dependencies = [
  "rustls 0.23.35",
  "tokio",
+]
+
+[[package]]
+name = "tokio-stream"
+version = "0.1.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eca58d7bba4a75707817a2c44174253f9236b2d5fbd055602e9d5c07c139a047"
+dependencies = [
+ "futures-core",
+ "pin-project-lite",
+ "tokio",
+ "tokio-util",
 ]
 
 [[package]]

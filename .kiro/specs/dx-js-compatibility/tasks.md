@@ -90,7 +90,7 @@ This implementation plan creates a comprehensive Bun API compatibility layer usi
     - **File: tests/node/events_props.rs**
 
 - [ ] 6. Implement node:http and node:https modules
-  - [ ] 6.1 Create HTTP server using `hyper`
+  - [-] 6.1 Create HTTP server using `hyper`
     - Implement `createServer` with HTTP/1.1 and HTTP/2 support
     - Add request/response streaming and keep-alive
     - Integrate `rustls` for HTTPS support
@@ -169,80 +169,83 @@ This implementation plan creates a comprehensive Bun API compatibility layer usi
     - **Property 2: Bun.file() Read/Write Round-Trip**
     - **Validates: Requirements 14.1, 14.2, 14.6**
 
-  - [-] 11.4 Implement Bun.spawn() process spawning
+  - [x] 11.4 Implement Bun.spawn() process spawning
     - Create high-performance subprocess spawning (10k+ spawns/s target)
     - Support async and sync variants with stdio configuration
     - Add environment variable and working directory support
     - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7_
 
 - [ ] 12. Implement Bun hashing and compression functions
-  - [ ] 12.1 Create fast hashing functions
+  - [x] 12.1 Create fast hashing functions
     - Implement `wyhash`, `crc32`, `adler32`, `cityHash64`, `murmur32v3`
     - Add streaming `CryptoHasher` for large data
     - Use SIMD instructions for 2x performance improvement
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8_
 
-  - [ ] 12.2 Write property test for hash consistency
+  - [x] 12.2 Write property test for hash consistency
     - **Property 7: Hash Consistency**
     - **Validates: Requirements 16.1, 16.2, 16.3, 16.4, 16.5, 16.6**
 
-  - [ ] 12.3 Implement password hashing
+  - [x] 12.3 Implement password hashing
     - Add Argon2id and bcrypt support using `argon2`, `bcrypt` crates
     - Implement `hash()` and `verify()` functions with configurable parameters
     - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
 
-  - [ ] 12.4 Write property test for password hash/verify round-trip
+  - [x] 12.4 Write property test for password hash/verify round-trip
     - **Property 6: Password Hash/Verify Round-Trip**
     - **Validates: Requirements 17.1, 17.2**
 
-  - [ ] 12.5 Implement compression functions
+  - [x] 12.5 Implement compression functions
     - Add gzip, deflate, brotli, zstd compression using respective crates
     - Achieve 450 MB/s gzip throughput target
     - Support configurable compression levels
     - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5, 18.6, 18.7_
 
-  - [ ] 12.6 Write property test for compression round-trip
+  - [x] 12.6 Write property test for compression round-trip
     - **Property 5: Compression Round-Trip**
     - **Validates: Requirements 18.1, 18.2, 18.3, 18.4, 18.5, 18.6**
 
-- [ ] 13. Implement dx-compat-sqlite sub-crate
-  - [ ] 13.1 Create SQLite database wrapper
+- [x] 13. Implement dx-compat-sqlite sub-crate
+  - [x] 13.1 Create SQLite database wrapper
     - Use `rusqlite` with WAL mode enabled by default
     - Implement `Database`, `PreparedStatement` classes with LRU statement cache
     - Add transaction support with proper error handling
     - Achieve 200k+ operations/second target
     - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.6, 19.7, 19.8, 19.9, 19.10_
 
-  - [ ] 13.2 Write property test for SQLite query correctness
+  - [x] 13.2 Write property test for SQLite query correctness
     - **Property 12: SQLite Query Correctness**
     - **Validates: Requirements 19.2, 19.6, 19.7, 19.8**
+    - **File: tests/sqlite_props.rs**
 
-  - [ ] 13.3 Write property test for SQLite transaction atomicity
+  - [x] 13.3 Write property test for SQLite transaction atomicity
     - **Property 13: SQLite Transaction Atomicity**
     - **Validates: Requirements 19.5**
+    - **File: tests/sqlite_props.rs**
 
-- [ ] 14. Implement dx-compat-s3 sub-crate
-  - [ ] 14.1 Create S3-compatible client
+- [x] 14. Implement dx-compat-s3 sub-crate
+  - [x] 14.1 Create S3-compatible client
     - Use `aws-sdk-s3` for S3 operations with custom endpoint support
     - Implement `S3Client`, `S3File` classes with presigned URL generation
     - Add multipart upload support for large files
     - Support AWS SigV4 authentication
     - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.7, 20.8, 20.9_
 
-  - [ ] 14.2 Write property test for S3 object read/write round-trip
+  - [-] 14.2 Write property test for S3 object read/write round-trip
     - **Property 3: S3 Object Read/Write Round-Trip**
     - **Validates: Requirements 20.3, 20.5**
+    - **Note: Requires S3-compatible service for testing (LocalStack/MinIO)**
 
-- [ ] 15. Implement dx-compat-ffi sub-crate
-  - [ ] 15.1 Create Foreign Function Interface
+- [x] 15. Implement dx-compat-ffi sub-crate
+  - [x] 15.1 Create Foreign Function Interface
     - Use `libloading` for dynamic library loading
     - Implement safe pointer operations and type marshaling
     - Support C ABI calling convention with struct layouts
     - Add cross-platform library support (DLL, dylib, .so)
     - _Requirements: 21.1, 21.2, 21.3, 21.4, 21.5, 21.6, 21.7_
 
-- [ ] 16. Implement dx-compat-shell sub-crate
-  - [ ] 16.1 Create shell scripting compatibility
+- [x] 16. Implement dx-compat-shell sub-crate
+  - [x] 16.1 Create shell scripting compatibility
     - Implement template literal shell execution with safe escaping
     - Support command chaining with pipes, &&, ||
     - Add result parsing for text, JSON, and binary output
@@ -255,25 +258,27 @@ This implementation plan creates a comprehensive Bun API compatibility layer usi
     - Implement asset embedding with zstd compression
     - _Requirements: 23.1, 23.2, 23.3, 23.4, 23.5, 23.6, 23.7_
 
-  - [ ] 17.2 Create dx-compat-hmr for Hot Module Replacement
+  - [x] 17.2 Create dx-compat-hmr for Hot Module Replacement
     - Use `notify` crate for file watching
     - Implement dependency graph tracking with `petgraph`
     - Add WebSocket-based client communication
     - _Requirements: 24.1, 24.2, 24.3, 24.4, 24.5, 24.6, 24.7_
 
-  - [ ] 17.3 Write property test for HMR dependency invalidation
+  - [x] 17.3 Write property test for HMR dependency invalidation
     - **Property 16: HMR Dependency Invalidation**
     - **Validates: Requirements 24.1, 24.2**
+    - **File: tests/hmr_props.rs**
 
-  - [ ] 17.4 Create dx-compat-plugin for plugin system
+  - [x] 17.4 Create dx-compat-plugin for plugin system
     - Implement plugin registration and hook system
     - Support `onLoad` and `onResolve` handlers with filter patterns
     - Add namespace support for virtual modules
     - _Requirements: 25.1, 25.2, 25.3, 25.4, 25.5, 25.6, 25.7_
 
-  - [ ] 17.5 Write property test for plugin hook filter matching
+  - [x] 17.5 Write property test for plugin hook filter matching
     - **Property 17: Plugin Hook Filter Matching**
     - **Validates: Requirements 25.2, 25.5**
+    - **File: tests/plugin_props.rs**
 
   - [ ] 17.6 Create dx-compat-macro for compile-time macros
     - Implement isolated runtime for macro execution
@@ -281,15 +286,16 @@ This implementation plan creates a comprehensive Bun API compatibility layer usi
     - Add value serialization and inlining
     - _Requirements: 26.1, 26.2, 26.3, 26.4, 26.5_
 
-  - [ ] 17.7 Create dx-compat-html for HTML Rewriter
+  - [x] 17.7 Create dx-compat-html for HTML Rewriter
     - Use `lol_html` crate for streaming HTML transformation
     - Implement element selection and manipulation APIs
     - Support content insertion, replacement, and removal
     - _Requirements: 27.1, 27.2, 27.3, 27.4, 27.5, 27.6, 27.7_
 
-  - [ ] 17.8 Write property test for HTML transform correctness
+  - [x] 17.8 Write property test for HTML transform correctness
     - **Property 18: HTML Transform Correctness**
     - **Validates: Requirements 27.2, 27.3**
+    - **File: tests/html_props.rs**
 
 - [ ] 18. Integration and performance optimization
   - [ ] 18.1 Wire all sub-crates together in main lib.rs
