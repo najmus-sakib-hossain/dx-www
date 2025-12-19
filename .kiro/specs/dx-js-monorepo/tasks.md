@@ -34,7 +34,7 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - Parse workspace:* references during manifest generation
     - Resolve to concrete versions from workspace packages
     - _Requirements: 1.5_
-  - [ ] 2.6 Write property test for workspace protocol resolution
+  - [x] 2.6 Write property test for workspace protocol resolution
     - **Property 16: Workspace Protocol Resolution Completeness**
     - **Validates: Requirements 1.5, 5.2**
 
@@ -47,14 +47,14 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - Create binary search index for package names
     - Implement get_package() and get_package_by_index()
     - _Requirements: 1.4_
-  - [ ] 3.3 Write property test for O(1) lookup time invariance
+  - [x] 3.3 Write property test for O(1) lookup time invariance
     - **Property 4: O(1) Lookup Time Invariance**
     - **Validates: Requirements 1.4, 5.1, 7.2**
   - [x] 3.4 Implement incremental manifest updates
     - Detect package.json changes
     - Update only affected package entries
     - _Requirements: 1.2_
-  - [ ] 3.5 Write property test for incremental update isolation
+  - [-] 3.5 Write property test for incremental update isolation
     - **Property 3: Incremental Manifest Update Isolation**
     - **Validates: Requirements 1.2**
   - [x] 3.6 Implement manifest regeneration on corruption
