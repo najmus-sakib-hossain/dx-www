@@ -1,0 +1,18 @@
+[package]
+name = "dx-compat-s3"
+version = "0.1.0"
+edition = "2024"
+description = "S3-compatible object storage for DX"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+aws-sdk-s3 = "1.61"
+aws-config = "1.5"
+tokio = { version = "1.41", features = ["full"] }
+bytes.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+proptest = "1.4"
+tokio = { version = "1.41", features = ["full", "test-util"] }

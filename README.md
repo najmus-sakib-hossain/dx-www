@@ -1,5 +1,7 @@
 # Dx: The Binary-First Development Experience
 
+Good, now please add dx tools like dx-media, dx-font, dx-icon and forge is like a pacakge manager + vsc + orchestrator that know what dx-tools is being used and control them and also make the dx to have arguments like "dx forge status" and other too!!!
+
 [![Rust](https://img.shields.io/badge/Rust-2024_Edition-orange.svg)](https://www.rust-lang.org/)
 [![WASM](https://img.shields.io/badge/WebAssembly-Binary-blue.svg)](https://webassembly.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)

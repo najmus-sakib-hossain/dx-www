@@ -1,0 +1,55 @@
+[package]
+name = "dx-compat-bun"
+version = "0.1.0"
+edition = "2024"
+description = "Bun-specific APIs compatibility layer for DX"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# HTTP server
+hyper = { version = "1.5", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http = "1.1"
+
+# TLS
+rustls = "0.23"
+tokio-rustls = "0.26"
+
+# Async runtime
+tokio = { version = "1.41", features = ["full"] }
+futures = "0.3"
+
+# Binary data
+bytes.workspace = true
+
+# Memory-mapped I/O
+memmap2 = "0.9"
+
+# Hashing
+wyhash = "0.5"
+crc32fast = "1.4"
+xxhash-rust.workspace = true
+murmur3 = "0.5"
+cityhash-rs = "1.0"
+
+# Password hashing
+argon2.workspace = true
+bcrypt = "0.15"
+
+# Compression
+flate2 = "1.0"
+brotli = "6.0"
+zstd = "0.13"
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest = "1.4"
+tempfile = "3.14"
+tokio = { version = "1.41", features = ["full", "test-util"] }
+criterion = { version = "0.5", features = ["html_reports"] }

@@ -1,0 +1,38 @@
+[package]
+name = "dx-compat-web"
+version = "0.1.0"
+edition = "2024"
+description = "Web Standard APIs compatibility layer for DX"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# HTTP client
+reqwest = { workspace = true, features = ["json", "stream"] }
+http.workspace = true
+
+# Async runtime
+tokio = { version = "1.41", features = ["sync", "time"] }
+futures = "0.3"
+
+# Binary data
+bytes.workspace = true
+
+# WebSocket
+tokio-tungstenite.workspace = true
+
+# Compression
+flate2 = "1.0"
+
+# URL parsing
+url = "2.5"
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest = "1.4"
+tokio = { version = "1.41", features = ["full", "test-util"] }
