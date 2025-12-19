@@ -1,8 +1,8 @@
 //! Sovereign Orchestrator - Tool lifecycle management
 
 use std::collections::HashMap;
-use tokio::sync::RwLock;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToolStatus {

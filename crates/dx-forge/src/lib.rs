@@ -166,8 +166,8 @@ pub use version::{
 
 pub use sovereign::{
     BackgroundTask, BackgroundWorker, DxForge, DxToolDefinition,
-    Orchestrator as SovereignOrchestrator, ToolStatus as SovereignToolStatus,
-    TrafficLight, TrafficManager,
+    Orchestrator as SovereignOrchestrator, ToolStatus as SovereignToolStatus, TrafficLight,
+    TrafficManager,
 };
 
 // ========================================================================

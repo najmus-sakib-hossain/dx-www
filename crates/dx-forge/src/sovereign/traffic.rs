@@ -1,7 +1,7 @@
 //! Traffic Branching System - Revolutionary package management
 
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum TrafficLight {
@@ -16,7 +16,9 @@ pub struct TrafficManager {
 
 impl TrafficManager {
     pub fn new() -> Self {
-        Self { registry: PathBuf::from("./src/dx_packages") }
+        Self {
+            registry: PathBuf::from("./src/dx_packages"),
+        }
     }
 
     pub fn analyze_traffic_safety(&self, path: &Path, new_content: &str) -> TrafficLight {
@@ -24,18 +26,25 @@ impl TrafficManager {
             return TrafficLight::Green;
         }
         let local = fs::read_to_string(path).unwrap_or_default();
-        if local == new_content { TrafficLight::Green } else { TrafficLight::Yellow }
+        if local == new_content {
+            TrafficLight::Green
+        } else {
+            TrafficLight::Yellow
+        }
     }
 
     pub async fn install_package(&self, package_name: &str, version: &str) -> anyhow::Result<()> {
         println!("🚦 Traffic Control: analyzing {} v{}", package_name, version);
-        
-        let files = vec![("lib.rs", "pub fn hello() {}"), ("config.rs", "const X: i32 = 1;")];
-        
+
+        let files = vec![
+            ("lib.rs", "pub fn hello() {}"),
+            ("config.rs", "const X: i32 = 1;"),
+        ];
+
         for (filename, content) in files {
             let target = self.registry.join(package_name).join(filename);
             let signal = self.analyze_traffic_safety(&target, content);
-            
+
             match signal {
                 TrafficLight::Green => {
                     println!("🟢 Injecting: {:?}", target);
@@ -68,18 +77,18 @@ impl TrafficManager {
 
     pub async fn install_all_dependencies(&self) -> anyhow::Result<()> {
         println!("📦 Installing all dependencies from dx.toml...");
-        
+
         // For now, simulate reading from dx.toml and installing some common packages
         let dependencies = vec![
             ("dx-style", "1.0.0"),
             ("dx-icon", "1.0.0"),
             ("dx-media", "1.0.0"),
         ];
-        
+
         for (package_name, version) in dependencies {
             self.install_package(package_name, version).await?;
         }
-        
+
         println!("✅ All dependencies installed successfully");
         Ok(())
     }

@@ -31,7 +31,7 @@ impl Default for MemoryConfig {
         Self {
             max_connections: 10_000,
             buffer_pool_size: 256,
-            buffer_size: 4096, // 4KB buffers
+            buffer_size: 4096,          // 4KB buffers
             max_body_size: 1024 * 1024, // 1MB max body
             aggressive_gc: false,
         }
@@ -44,7 +44,7 @@ impl MemoryConfig {
         Self {
             max_connections: 1_000,
             buffer_pool_size: 64,
-            buffer_size: 1024, // 1KB buffers
+            buffer_size: 1024,        // 1KB buffers
             max_body_size: 64 * 1024, // 64KB max body
             aggressive_gc: true,
         }
@@ -55,7 +55,7 @@ impl MemoryConfig {
         Self {
             max_connections: 100_000,
             buffer_pool_size: 1024,
-            buffer_size: 8192, // 8KB buffers
+            buffer_size: 8192,               // 8KB buffers
             max_body_size: 10 * 1024 * 1024, // 10MB max body
             aggressive_gc: false,
         }
@@ -75,7 +75,7 @@ impl MemoryConfig {
 pub mod static_responses {
     /// Plaintext "Hello, World!" response
     pub const PLAINTEXT: &[u8] = b"Hello, World!";
-    
+
     /// Pre-built HTTP response for plaintext (no allocation needed)
     pub const PLAINTEXT_HTTP: &[u8] = b"HTTP/1.1 200 OK\r\n\
         Content-Type: text/plain\r\n\
@@ -84,7 +84,7 @@ pub mod static_responses {
         Connection: keep-alive\r\n\
         \r\n\
         Hello, World!";
-    
+
     /// Health check response
     pub const HEALTH_HTTP: &[u8] = b"HTTP/1.1 200 OK\r\n\
         Content-Type: text/plain\r\n\
@@ -122,7 +122,7 @@ impl ConnectionCounter {
     pub fn connect(&self) {
         let prev = self.active.fetch_add(1, Ordering::Relaxed);
         self.total.fetch_add(1, Ordering::Relaxed);
-        
+
         // Update max seen
         let current = prev + 1;
         let mut max = self.max_seen.load(Ordering::Relaxed);
@@ -188,12 +188,12 @@ mod tests {
     #[test]
     fn test_connection_counter() {
         let counter = ConnectionCounter::new();
-        
+
         counter.connect();
         counter.connect();
         assert_eq!(counter.active(), 2);
         assert_eq!(counter.total(), 2);
-        
+
         counter.disconnect();
         assert_eq!(counter.active(), 1);
         assert_eq!(counter.total(), 2);
