@@ -65,6 +65,9 @@ members = [
     # NEW: JavaScript/TypeScript Runtime (10x faster than Bun)
     "crates/dx-js-runtime",
     
+    # NEW: AI-Assisted Development Orchestrator
+    "crates/driven",
+    
     # Examples & Playground
     "examples/hello-world",
 ]
