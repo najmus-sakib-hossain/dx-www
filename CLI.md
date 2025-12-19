@@ -1,14 +1,16 @@
-Please create a new rust crate at crates folder called "dx-cli" where unite all dx crates so that we can access all dx tools via that dx cli with these features:
+This is a very big task so please create planing and then create tasklist and then complete all todos one by one systemitically and your agent mode will take so much question and tokens so please do as much works as you can possibily can in one go but make sure that don't try to do too so we will get errors, just try to do as efficiently and systemitically as you can!!!
+
+Please create a new rust crate at crates folder called "dx" where unite all dx crates so that we can access all dx tools via that dx cli with these features:
 
 ```markdown
 # Modern DX CLI - Complete Implementation
 
-Here's a comprehensive, modern CLI for your dx project with a Vercel-like aesthetic:
+Here's a comprehensive, modern CLI for your dx project with a Vercel-like aesthetic clean and systemized structure:
 
 ## Project Structure
 
 ```
-crates/dx-cli/
+crates/dx/
 ├── Cargo.toml
 ├── src/
 │   ├── main.rs
@@ -46,7 +48,7 @@ crates/dx-cli/
 
 ```toml
 [package]
-name = "dx-cli"
+name = "dx"
 version = "0.1.0"
 edition = "2024"
 authors = ["DX Team"]
