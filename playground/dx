@@ -65,7 +65,7 @@ bundler.engine      : dx-js-bundler
 # ═══════════════════════════════════════════════════════════════════
 package.engine      : dx-pkg
 ^lockfile           : dx.lock
-^cache_dir          : .dx/unsafe
+^cache_dir          : .dx/node_modules
 ^registry           : https://registry.npmjs.org
 ^binary_cache       : true
 ^dedup              : true
@@ -129,15 +129,16 @@ media_cache         : .dx/media
 # ═══════════════════════════════════════════════════════════════════
 # DX-I18N (Internationalization)
 # ═══════════════════════════════════════════════════════════════════
-i18n.locales_path   : @/locales
+i18n.locales.path   : @/locales
 ^default            : en-US
 ^fallback           : en
+^cache_dir          : .dx/i18n
 
 i18n_locales_dev    > en-US
 i18n_locales_prod   > en-US | es-ES | fr-FR | de-DE | ja-JP | zh-CN | bn-BD
 
-i18n.ttses_path     : ./ttses
-^tts_default        : en-US
+i18n.tts.path       : ./ttses
+^default            : en-US
 i18n_tts_voices     > en-US | bn-BD
 
 # ═══════════════════════════════════════════════════════════════════
@@ -146,6 +147,7 @@ i18n_tts_voices     > en-US | bn-BD
 ui.path             : @/components/ui
 ^design_system      : dx-design
 ^animations         : true
+^cache_dir          : .dx/ui
 
 ui_components       > button | card | modal | navbar | footer | input | select | table | dialog | tooltip
 
@@ -194,16 +196,16 @@ workspace.cache     : .dx/workspace
 # ═══════════════════════════════════════════════════════════════════
 # EDITORS & IDEs (Development Environments)
 # ═══════════════════════════════════════════════════════════════════
-editors             > vscode | cursor | windsurf | vim | neovim | zed
+workspace.editors_supported   > vscode | cursor | windsurf | vim | neovim | zed
 
-editors.recommended > vscode | cursor
+workspace.editors_recommended > vscode | cursor
 
-editors.extensions  > dx.dx-vscode | esbenp.prettier-vscode | bradlc.vscode-tailwindcss
+workspace.editors_extensions  > dx.dx-vscode | esbenp.prettier-vscode | bradlc.vscode-tailwindcss
 
 # ═══════════════════════════════════════════════════════════════════
 # CLOUD & INFRASTRUCTURE
 # ═══════════════════════════════════════════════════════════════════
-cloud               > gitpod | github-codespace | replit | firebase-studio | stackblitz
+workspace_cloud     > gitpod | github-codespace | replit | firebase-studio | stackblitz
 
 deploy.provider     : vercel
 ^region             : auto
@@ -218,14 +220,6 @@ security.signing    : ed25519
 ^csp                : strict
 
 # ═══════════════════════════════════════════════════════════════════
-# PERFORMANCE TARGETS
-# ═══════════════════════════════════════════════════════════════════
-perf.frame_budget   : 4ms
-^first_paint        : 50ms
-^tti                : 100ms
-^bundle_size        : 10KB
-
-# ═══════════════════════════════════════════════════════════════════
 # .DX FOLDER STRUCTURE
 # ═══════════════════════════════════════════════════════════════════
 # All cache and tool-specific files are stored in .dx folder:
@@ -233,15 +227,18 @@ perf.frame_budget   : 4ms
 # .dx/
 # ├── cache/           # Global cache for all dx tools
 # ├── forge/           # Build orchestration state
+# ├── bundler/         # Bundler cache
+# ├── node_modules/    # npm packages (familiar to JS devs)
+# ├── test/            # Test runner cache
 # ├── style/           # Compiled CSS cache
 # ├── icon/            # Optimized icons cache
-# ├── media/           # Processed media cache
 # ├── font/            # Subsetted fonts cache
-# ├── stack/           # Runtime/bundler cache
-# ├── workspace/       # Monorepo dependency graph
+# ├── media/           # Processed media cache
+# ├── i18n/            # Internationalization cache
+# ├── ui/              # UI component cache
+# ├── serializer/      # Parsed config cache
 # ├── generator/       # Generated code cache
 # ├── driven/          # AI task state
-# ├── unsafe/          # npm packages (untrusted)
-# ├── serializer/      # Parsed config cache
-# └── www/             # HTIP template cache
+# ├── workspace/       # Monorepo dependency graph
+# └── www/             # HTIP template cache (if dx-www project)
 # ═══════════════════════════════════════════════════════════════════
