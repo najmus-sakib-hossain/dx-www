@@ -47,6 +47,10 @@ pub use cache::CacheManager;
 pub use change::ChangeDetector;
 pub use affected::AffectedDetector;
 pub use dxl::LockfileResolver;
+pub use fusion::FusionAnalyzer;
+pub use ghost::GhostDetector;
+pub use watch::WatchManager;
+pub use remote::RemoteCacheClient;
 
 /// Magic bytes for Binary Workspace Manifest
 pub const BWM_MAGIC: [u8; 4] = *b"DXWM";

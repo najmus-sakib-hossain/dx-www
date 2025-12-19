@@ -231,117 +231,117 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - Create binary index from file paths to packages
     - _Requirements: 7.4_
 
-- [ ] 17. Implement Affected Detector
-  - [ ] 17.1 Implement affected package query
+- [x] 17. Implement Affected Detector
+  - [x] 17.1 Implement affected package query
     - Use BAG for <5ms affected detection
     - _Requirements: 7.1_
-  - [ ] 17.2 Write property test for affected package transitivity
+  - [x] 17.2 Write property test for affected package transitivity
     - **Property 18: Affected Package Transitivity**
     - **Validates: Requirements 7.1, 7.3, 7.4**
-  - [ ] 17.3 Implement inverse dependency lookup
+  - [x] 17.3 Implement inverse dependency lookup
     - O(1) lookup of dependents
     - _Requirements: 7.2_
-  - [ ] 17.4 Write property test for inverse dependency correctness
+  - [x] 17.4 Write property test for inverse dependency correctness
     - **Property 19: Inverse Dependency Index Correctness**
     - **Validates: Requirements 7.2**
-  - [ ] 17.5 Implement SIMD import graph analysis
+  - [x] 17.5 Implement SIMD import graph analysis
     - Use Change Detector's SIMD import detection
     - Build actual code dependency graph
     - _Requirements: 7.5_
 
-- [ ] 18. Checkpoint - Affected Detector complete
-  - Ensure all tests pass, ask the user if questions arise.
+- [x] 18. Checkpoint - Affected Detector complete
+  - All tests pass.
 
-- [ ] 19. Implement Remote Cache Protocol (DXRC)
-  - [ ] 19.1 Implement DXRC request/response format
+- [x] 19. Implement Remote Cache Protocol (DXRC)
+  - [x] 19.1 Implement DXRC request/response format
     - Define binary protocol messages
     - Support batch fetch requests
     - _Requirements: 6.1_
-  - [ ] 19.2 Write property test for single request multi-entry fetch
+  - [x] 19.2 Write property test for single request multi-entry fetch
     - **Property 17: Single Request Multi-Entry Fetch**
     - **Validates: Requirements 6.1, 6.4**
-  - [ ] 19.3 Implement XOR patch streaming
+  - [x] 19.3 Implement XOR patch streaming
     - Transfer only byte differences
     - _Requirements: 6.2_
-  - [ ] 19.4 Implement connection multiplexing
+  - [x] 19.4 Implement connection multiplexing
     - Multiple entries over single connection
     - _Requirements: 6.4_
-  - [ ] 19.5 Implement resume-capable downloads
+  - [x] 19.5 Implement resume-capable downloads
     - Binary checkpoints for interrupted transfers
     - _Requirements: 6.5_
-  - [ ] 19.6 Implement speculative prefetching
+  - [x] 19.6 Implement speculative prefetching
     - Predict and pre-download likely cache needs
     - _Requirements: 6.3_
 
-- [ ] 20. Checkpoint - Remote Cache complete
-  - Ensure all tests pass, ask the user if questions arise.
+- [x] 20. Checkpoint - Remote Cache complete
+  - All tests pass.
 
-- [ ] 21. Implement Fusion Analyzer
-  - [ ] 21.1 Implement task fusion analysis
+- [x] 21. Implement Fusion Analyzer
+  - [x] 21.1 Implement task fusion analysis
     - Identify tasks with shared work
     - Detect TypeScript compilation, bundling opportunities
     - _Requirements: 8.1_
-  - [ ] 21.2 Implement fused task execution
+  - [x] 21.2 Implement fused task execution
     - Merge compatible tasks into single process
     - Share resources across task boundaries
     - _Requirements: 8.2, 8.3_
-  - [ ] 21.3 Write property test for fusion output equivalence
+  - [x] 21.3 Write property test for fusion output equivalence
     - **Property 20: Fusion Output Equivalence**
     - **Validates: Requirements 8.4**
 
-- [ ] 22. Implement Ghost Detector
-  - [ ] 22.1 Implement SIMD import scanning
+- [x] 22. Implement Ghost Detector
+  - [x] 22.1 Implement SIMD import scanning
     - Scan all imports in workspace
     - Use Change Detector's SIMD capabilities
     - _Requirements: 9.1_
-  - [ ] 22.2 Implement dependency cross-referencing
+  - [x] 22.2 Implement dependency cross-referencing
     - Compare imports with declared dependencies
     - _Requirements: 9.2_
-  - [ ] 22.3 Write property test for ghost detection accuracy
+  - [x] 22.3 Write property test for ghost detection accuracy
     - **Property 21: Ghost Detection Accuracy**
     - **Validates: Requirements 9.1, 9.2, 9.3**
-  - [ ] 22.4 Implement ghost report generation
+  - [x] 22.4 Implement ghost report generation
     - Include package name, file, line, column
     - _Requirements: 9.3_
-  - [ ] 22.5 Write property test for ghost report completeness
+  - [x] 22.5 Write property test for ghost report completeness
     - **Property 22: Ghost Report Completeness**
     - **Validates: Requirements 9.3**
-  - [ ] 22.6 Implement hoisting accident detection
+  - [x] 22.6 Implement hoisting accident detection
     - Identify code relying on hoisting
     - _Requirements: 9.4_
-  - [ ] 22.7 Implement vulnerability checking
+  - [x] 22.7 Implement vulnerability checking
     - Check ghost deps against vulnerability databases
     - _Requirements: 9.5_
 
-- [ ] 23. Checkpoint - Ghost Detector complete
-  - Ensure all tests pass, ask the user if questions arise.
+- [x] 23. Checkpoint - Ghost Detector complete
+  - All tests pass.
 
-- [ ] 24. Implement Watch Manager
-  - [ ] 24.1 Implement file system watching
+- [x] 24. Implement Watch Manager
+  - [x] 24.1 Implement file system watching
     - Use notify crate for cross-platform watching
     - Binary change subscription
     - _Requirements: 10.1_
-  - [ ] 24.2 Implement intelligent debouncing
+  - [x] 24.2 Implement intelligent debouncing
     - Coalesce rapid changes
     - Configurable debounce settings
     - _Requirements: 10.3_
-  - [ ] 24.3 Write property test for watch event coalescing
+  - [x] 24.3 Write property test for watch event coalescing
     - **Property 23: Watch Event Coalescing**
     - **Validates: Requirements 10.3**
-  - [ ] 24.4 Implement predictive task execution
+  - [x] 24.4 Implement predictive task execution
     - Start likely tasks before save completes
     - _Requirements: 10.2_
-  - [ ] 24.5 Implement cross-package coordination
+  - [x] 24.5 Implement cross-package coordination
     - Prevent redundant rebuilds
     - _Requirements: 10.5_
-  - [ ] 24.6 Write property test for rebuild deduplication
+  - [x] 24.6 Write property test for rebuild deduplication
     - **Property 24: Cross-Package Rebuild Deduplication**
     - **Validates: Requirements 10.5**
-  - [ ] 24.7 Implement memory-mapped output updates
+  - [x] 24.7 Implement memory-mapped output updates
     - No disk writes for unchanged outputs
     - _Requirements: 10.4_
 
-- [ ] 25. Implement CLI
+- [-] 25. Implement CLI
   - [ ] 25.1 Implement workspace initialization command
     - `dx-monorepo init` - create workspace config
     - Generate initial BWM from package.json files
