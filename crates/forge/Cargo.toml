@@ -79,6 +79,10 @@ path = "examples/web_ui.rs"
 name = "dx_orchestrator_demo"
 path = "examples/dx_orchestrator_demo.rs"
 
+[[example]]
+name = "forge_daemon_demo"
+path = "examples/forge_daemon_demo.rs"
+
 [dependencies]
 # Core async runtime
 tokio = { version = "1.48.0", features = ["full"] }

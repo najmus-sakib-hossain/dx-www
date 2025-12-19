@@ -121,6 +121,9 @@ pub mod dx_executor;
 // Binary Dawn: Sovereign Orchestration Engine
 pub mod sovereign;
 
+// Forge Daemon - Binary Dawn Edition (v2.0.0)
+pub mod daemon;
+
 // ========================================================================
 // Primary Public API - Forge Unified Interface
 // ========================================================================
@@ -185,6 +188,17 @@ pub use dx_cache::{
 pub use dx_executor::{
     BundlerTool, DxToolExecutable, DxToolExecutor, PackageManagerTool, StyleTool, TestRunnerTool,
     ToolConfig, ToolResult, ExecutionContext as DxExecutionContext,
+};
+
+// ========================================================================
+// Forge Daemon exports (v2.0.0) - Binary Dawn Edition
+// ========================================================================
+
+pub use daemon::{
+    ForgeDaemon, DaemonConfig, DaemonState, DaemonEvent,
+    LspBridge, LspMessage, LspNotification,
+    DaemonStateManager, ToolState as DaemonToolState, ProjectState,
+    WorkerPool, WorkerTask, TaskPriority,
 };
 
 // ========================================================================

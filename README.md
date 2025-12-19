@@ -983,7 +983,7 @@ Welcome to the future. Welcome to **Dx.**
 - [x]  **Monorepo** → Binary-first monorepo manager (✅ COMPLETE)
 - [x]  **Stack** → Runtime + Package Manager + Builder + Monorepo + Compatibility + Test (✅ COMPLETE)
 - [x]  **Forge + Serializer** → dx config file and .dx folder improvements (✅ COMPLETE)
-- [ ]  **Crate Separation** → Dx WWW related crates separation from Dx tools related crates
+- [x]  **Crate Separation** → Dx WWW related crates separation from Dx tools related crates
 - [ ]  **Multi-Language Package Managers** → Uv + Crates + Composer + All other package managers
 - [ ]  **Framework Switcher** → All framework and stack switcher
 

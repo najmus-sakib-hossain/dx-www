@@ -1,0 +1,120 @@
+{
+  "name": "dx-forge",
+  "displayName": "DX Forge",
+  "description": "Binary Dawn - DX tool orchestration for VS Code",
+  "version": "0.1.0",
+  "publisher": "dx",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "dx",
+    "forge",
+    "binary",
+    "wasm",
+    "rust"
+  ],
+  "activationEvents": [
+    "workspaceContains:dx",
+    "workspaceContains:dx.config",
+    "workspaceContains:.dx"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dx.startDaemon",
+        "title": "DX: Start Forge Daemon"
+      },
+      {
+        "command": "dx.stopDaemon",
+        "title": "DX: Stop Forge Daemon"
+      },
+      {
+        "command": "dx.runTool",
+        "title": "DX: Run Tool"
+      },
+      {
+        "command": "dx.warmCache",
+        "title": "DX: Warm Cache"
+      },
+      {
+        "command": "dx.clearCache",
+        "title": "DX: Clear Cache"
+      },
+      {
+        "command": "dx.showStats",
+        "title": "DX: Show Statistics"
+      }
+    ],
+    "configuration": {
+      "title": "DX Forge",
+      "properties": {
+        "dx.daemonPort": {
+          "type": "number",
+          "default": 9527,
+          "description": "Port for Forge Daemon connection"
+        },
+        "dx.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start daemon on workspace open"
+        },
+        "dx.enableLspWatcher": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable LSP file change notifications"
+        },
+        "dx.enableFsWatcher": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable filesystem watcher (fallback)"
+        },
+        "dx.autoRunTools": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically run tools on file change"
+        }
+      }
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "dxToolsView",
+          "name": "DX Tools"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dx",
+          "title": "DX Forge",
+          "icon": "resources/dx-icon.svg"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.50.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0"
+  }
+}
