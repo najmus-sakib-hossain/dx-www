@@ -1,4 +1,6 @@
-So for dx now I am creating workspace rust crate which will generate configaration for working in different code editors as if you are using vscode then if you want to use it in a cloud ide like codesandbox, firebase studio, and other places then it will create configurations to run your project in other projects too so anyone can run your project and if its a monorepo then it will help to build thing systemitically better than turborepo and pnpm workspace!!! This will help maintain consistency across the codebase and improve overall development efficiency.
+So for dx now I am creating workspace rust crate which will generate configaration for working in different code editors as if you are using vscode then if you want to use it in a cloud ide like codesandbox, firebase studio, and other places then it will create configurations to run your project in other projects too so anyone can run your project it will help to build thing systemitically better than turborepo and pnpm workspace!!! This will help maintain consistency across the codebase and improve overall development efficiency.
+
+Make sure to not give me any code!!!
 
 And here is more about dx:
 ```markdown

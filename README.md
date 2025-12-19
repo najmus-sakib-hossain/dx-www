@@ -895,3 +895,10 @@ Welcome to the future. Welcome to **Dx.**
 - [ ]  Dx WWW related crates separation from Dx tools related crates
 - [ ]  Uv + Crates + Composer + All other package managers
 - [ ]  All framework and stack swticher
+
+Please learn from integrations/Speck-Kit and integrations/BMAD_METHOD and create a new rust crate at crates/ folder to create driven crate.
+
+Here is the planning:
+```markdown
+
+```

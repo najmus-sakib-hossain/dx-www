@@ -2,6 +2,8 @@ So for dx now I am creating driven rust crate which is like Speck-Kit + BMAD_MET
 
 Driven crate will like speck-kit + BMAD_METHOD give some professional templates and also convert cursor rules, to other code editor specific rules like vscode copilot so that user can use the same templates and rules in any code editor. And in this driven crate please use dx binary dawn game changing unique features to make it more powerfull and efficient!!!
 
+Make sure to not give me any code!!!
+
 And here is more about dx:
 ```markdown
 # Dx: The Binary-First Development Experience
