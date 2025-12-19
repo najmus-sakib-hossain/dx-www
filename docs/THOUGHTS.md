@@ -13,6 +13,8 @@
 │  ◼ mcp (Svelte MCP - https://svelte.dev/docs/mcp)
 └
 
+Just give me planning for our dx-js-monorepo no need to give me full source - Just give me details and instructions about planning no need to give me code - You can give me rust crates and other planning stuffs but don't give me code!!!
+
 Good, now we have defeated bun at test-runner too so please help me to beat but at bundler too - make sure that our dx-js-bundler is at least 3x faster than bun's bundler.
 
 ```bun bundler
