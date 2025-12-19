@@ -1,0 +1,13 @@
+[package]
+name = "dx-www-rtl"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "RTL detection and CSS flipping"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+unic-langid = "0.9"

@@ -1774,6 +1774,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "debug"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "deflate64"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2025,7 +2034,6 @@ dependencies = [
  "console",
  "ctrlc",
  "dialoguer",
- "dx-stack",
  "fuzzy-matcher",
  "glob",
  "home",
@@ -2041,6 +2049,7 @@ dependencies = [
  "predicates",
  "serde",
  "serde_json",
+ "stack",
  "tempfile",
  "textwrap",
  "thiserror 2.0.17",
@@ -2056,338 +2065,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "dx-a11y"
-version = "0.1.0"
-dependencies = [
- "miette",
- "oxc_parser 0.22.1",
-]
-
-[[package]]
-name = "dx-auth"
-version = "0.1.0"
-dependencies = [
- "argon2",
- "base64 0.22.1",
- "bincode 2.0.1",
- "chrono",
- "dx-packet",
- "ed25519-dalek",
- "rand 0.8.5",
- "serde",
- "tokio",
- "webauthn-rs",
-]
-
-[[package]]
-name = "dx-binary"
-version = "1.0.0"
-dependencies = [
- "bincode 2.0.1",
- "blake3",
- "bytemuck",
- "console_error_panic_hook",
- "dx-core",
- "dx-morph",
- "ed25519-dalek",
- "getrandom 0.2.16",
- "hex",
- "js-sys",
- "rand 0.8.5",
- "serde",
- "thiserror 1.0.69",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "dx-cache"
-version = "1.0.0"
-dependencies = [
- "bincode 2.0.1",
- "blake3",
- "console_error_panic_hook",
- "dx-binary",
- "ed25519-dalek",
- "getrandom 0.2.16",
- "indexed_db_futures",
- "js-sys",
- "rand 0.8.5",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
 name = "dx-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
  "console",
- "dx-forge",
- "dx-style",
  "dx-www",
+ "forge",
+ "style",
  "tokio",
-]
-
-[[package]]
-name = "dx-client"
-version = "1.0.0"
-dependencies = [
- "dx-debug",
- "dx-error",
-]
-
-[[package]]
-name = "dx-client-tiny"
-version = "1.0.0"
-
-[[package]]
-name = "dx-core"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "console_error_panic_hook",
- "js-sys",
- "once_cell",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "dx-db"
-version = "0.1.0"
-dependencies = [
- "bincode 2.0.1",
- "bytes",
- "deadpool-postgres",
- "dx-packet",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror 1.0.69",
- "tokio",
- "tokio-postgres",
- "zerocopy 0.7.35",
-]
-
-[[package]]
-name = "dx-debug"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "dx-dom"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "console_error_panic_hook",
- "dx-core",
- "js-sys",
- "once_cell",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "dx-error"
-version = "0.1.0"
-dependencies = [
- "bincode 2.0.1",
- "console_error_panic_hook",
- "serde",
-]
-
-[[package]]
-name = "dx-fallback"
-version = "0.1.0"
-dependencies = [
- "maud",
-]
-
-[[package]]
-name = "dx-font"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "console",
- "dirs",
- "futures",
- "indicatif",
- "rayon",
- "regex",
- "reqwest 0.12.25",
- "scraper 0.18.1",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-stream",
- "tracing",
- "tracing-subscriber",
- "url",
-]
-
-[[package]]
-name = "dx-forge"
-version = "0.1.3"
-dependencies = [
- "ahash 0.8.12",
- "anyhow",
- "automerge",
- "axum 0.8.7",
- "base64 0.22.1",
- "bincode 1.3.3",
- "bytes",
- "chrono",
- "clap",
- "colored 3.0.0",
- "crossbeam",
- "dashmap 6.1.0",
- "dirs",
- "dotenvy",
- "futures",
- "git2",
- "hex",
- "hmac",
- "ignore",
- "jwalk",
- "lz4",
- "md5",
- "memchr",
- "memmap2",
- "notify 8.2.0",
- "notify-debouncer-full",
- "num_cpus",
- "once_cell",
- "parking_lot",
- "proptest",
- "rayon",
- "regex",
- "reqwest 0.12.25",
- "ropey",
- "rusqlite",
- "serde",
- "serde_cbor",
- "serde_json",
- "sha2 0.10.9",
- "similar",
- "tempfile",
- "tokio",
- "tokio-test",
- "tokio-tungstenite 0.28.0",
- "toml 0.8.23",
- "tower 0.5.2",
- "tower-http 0.6.8",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "tree-sitter",
- "tree-sitter-rust",
- "url",
- "uuid",
- "walkdir",
- "whoami",
- "windows-sys 0.59.0",
- "yrs 0.21.3",
- "zip",
-]
-
-[[package]]
-name = "dx-form"
-version = "0.1.0"
-dependencies = [
- "bincode 2.0.1",
- "bitflags 2.10.0",
- "criterion",
- "dx-packet",
- "once_cell",
- "regex-automata",
- "serde",
-]
-
-[[package]]
-name = "dx-generator"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "blake3",
- "bumpalo",
- "bytemuck",
- "bytes",
- "criterion",
- "ed25519-dalek",
- "memmap2",
- "parking_lot",
- "rand 0.8.5",
- "rayon",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.17",
- "xxhash-rust",
-]
-
-[[package]]
-name = "dx-guard"
-version = "0.1.0"
-dependencies = [
- "web-sys",
-]
-
-[[package]]
-name = "dx-i18n"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64 0.21.7",
- "chrono",
- "futures",
- "futures-util",
- "html-escape",
- "lazy_static",
- "regex",
- "reqwest 0.11.27",
- "scraper 0.18.1",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "thiserror 1.0.69",
- "tokio",
- "tokio-tungstenite 0.21.0",
- "url",
- "urlencoding",
- "uuid",
-]
-
-[[package]]
-name = "dx-icon"
-version = "0.0.1"
-dependencies = [
- "flatbuffers 24.12.23",
- "flatc-rust",
- "quick-xml",
- "regex",
- "serde",
- "serde_json",
- "walkdir",
-]
-
-[[package]]
-name = "dx-interaction"
-version = "0.1.0"
-dependencies = [
- "web-sys",
 ]
 
 [[package]]
@@ -2456,263 +2143,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dx-media"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "chrono",
- "clap",
- "colored 2.2.0",
- "console",
- "directories",
- "dotenvy",
- "futures",
- "indicatif",
- "once_cell",
- "pretty_assertions",
- "rayon",
- "regex",
- "reqwest 0.12.25",
- "sanitize-filename",
- "scraper 0.22.0",
- "serde",
- "serde_json",
- "strum",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
- "tokio-test",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid",
- "walkdir",
- "wiremock",
-]
-
-[[package]]
-name = "dx-morph"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "console_error_panic_hook",
- "dx-core",
- "dx-dom",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "dx-offline"
-version = "0.1.0"
-dependencies = [
- "bincode 2.0.1",
- "indexed_db_futures",
- "serde",
- "yrs 0.18.8",
-]
-
-[[package]]
-name = "dx-packet"
-version = "1.0.0"
-dependencies = [
- "bincode 2.0.1",
- "serde",
-]
-
-[[package]]
-name = "dx-print"
-version = "0.1.0"
-dependencies = [
- "lightningcss",
-]
-
-[[package]]
-name = "dx-query"
-version = "0.1.0"
-dependencies = [
- "bincode 2.0.1",
- "dashmap 6.1.0",
- "dx-packet",
- "gloo-net",
- "js-sys",
- "reqwest 0.12.25",
- "serde",
- "tokio",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "xxhash-rust",
-]
-
-[[package]]
-name = "dx-rtl"
-version = "0.1.0"
-dependencies = [
- "unic-langid",
-]
-
-[[package]]
-name = "dx-sched"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "dx-core",
- "dx-dom",
- "dx-morph",
- "js-sys",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "dx-serializer"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "bytes",
- "criterion",
- "memchr",
- "rustc-hash 1.1.0",
- "serde",
- "serde_json",
- "serde_yaml",
- "thiserror 2.0.17",
- "toml 0.8.23",
-]
-
-[[package]]
-name = "dx-server"
-version = "0.1.0"
-dependencies = [
- "axum 0.7.9",
- "bincode 2.0.1",
- "blake3",
- "bytes",
- "chrono",
- "dashmap 5.5.3",
- "dx-auth",
- "dx-binary",
- "dx-db",
- "dx-fallback",
- "dx-offline",
- "dx-packet",
- "dx-query",
- "dx-sync",
- "ed25519-dalek",
- "futures",
- "hyper 1.8.1",
- "mimalloc",
- "notify 6.1.1",
- "rand 0.8.5",
- "reqwest 0.11.27",
- "serde",
- "serde_json",
- "tokio",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "dx-stack"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bitflags 2.10.0",
- "serde",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
- "toml 0.8.23",
-]
-
-[[package]]
-name = "dx-state"
-version = "0.1.0"
-dependencies = [
- "atomic",
- "bincode 2.0.1",
- "bytemuck",
- "criterion",
- "dx-packet",
- "parking_lot",
- "serde",
-]
-
-[[package]]
-name = "dx-style"
-version = "0.0.0"
-dependencies = [
- "ahash 0.8.12",
- "bumpalo",
- "bytemuck",
- "colored 3.0.0",
- "criterion",
- "cssparser 0.35.0",
- "flatbuffers 25.9.23",
- "flatc-rust",
- "float-cmp 0.9.0",
- "image",
- "indexmap",
- "lasso",
- "lazy_static",
- "libm",
- "lightningcss",
- "memchr",
- "memmap2",
- "notify 8.2.0",
- "notify-debouncer-full",
- "once_cell",
- "rayon",
- "regex",
- "reqwest 0.12.25",
- "rustc-hash 2.1.1",
- "seahash",
- "serde",
- "serde_json",
- "smallvec",
- "tempfile",
- "tokio",
- "toml 0.9.8",
- "twoway",
- "winapi",
-]
-
-[[package]]
-name = "dx-sync"
-version = "0.1.0"
-dependencies = [
- "bincode 2.0.1",
- "dashmap 6.1.0",
- "flume",
- "gloo-net",
- "serde",
- "tokio",
- "tokio-tungstenite 0.21.0",
-]
-
-[[package]]
-name = "dx-workspace"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "blake3",
- "console",
- "memmap2",
- "pathdiff",
- "serde",
- "serde_json",
- "serde_yaml",
- "tempfile",
- "thiserror 1.0.69",
- "toml 0.8.23",
- "walkdir",
-]
-
-[[package]]
 name = "dx-www"
 version = "0.1.0"
 dependencies = [
@@ -2722,14 +2152,14 @@ dependencies = [
  "chrono",
  "clap",
  "console",
- "dx-a11y",
- "dx-db",
- "dx-form",
- "dx-packet",
- "dx-print",
- "dx-query",
- "dx-rtl",
- "dx-state",
+ "dx-www-a11y",
+ "dx-www-db",
+ "dx-www-form",
+ "dx-www-packet",
+ "dx-www-print",
+ "dx-www-query",
+ "dx-www-rtl",
+ "dx-www-state",
  "flate2",
  "indicatif",
  "notify 6.1.1",
@@ -2747,6 +2177,336 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "walkdir",
+]
+
+[[package]]
+name = "dx-www-a11y"
+version = "0.1.0"
+dependencies = [
+ "miette",
+ "oxc_parser 0.22.1",
+]
+
+[[package]]
+name = "dx-www-auth"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "base64 0.22.1",
+ "bincode 2.0.1",
+ "chrono",
+ "dx-www-packet",
+ "ed25519-dalek",
+ "rand 0.8.5",
+ "serde",
+ "tokio",
+ "webauthn-rs",
+]
+
+[[package]]
+name = "dx-www-binary"
+version = "1.0.0"
+dependencies = [
+ "bincode 2.0.1",
+ "blake3",
+ "bytemuck",
+ "console_error_panic_hook",
+ "dx-www-core",
+ "dx-www-morph",
+ "ed25519-dalek",
+ "getrandom 0.2.16",
+ "hex",
+ "js-sys",
+ "rand 0.8.5",
+ "serde",
+ "thiserror 1.0.69",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "dx-www-cache"
+version = "1.0.0"
+dependencies = [
+ "bincode 2.0.1",
+ "blake3",
+ "console_error_panic_hook",
+ "dx-www-binary",
+ "ed25519-dalek",
+ "getrandom 0.2.16",
+ "indexed_db_futures",
+ "js-sys",
+ "rand 0.8.5",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "dx-www-client"
+version = "1.0.0"
+dependencies = [
+ "debug",
+ "error",
+]
+
+[[package]]
+name = "dx-www-client-tiny"
+version = "1.0.0"
+
+[[package]]
+name = "dx-www-core"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "console_error_panic_hook",
+ "js-sys",
+ "once_cell",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "dx-www-db"
+version = "0.1.0"
+dependencies = [
+ "bincode 2.0.1",
+ "bytes",
+ "deadpool-postgres",
+ "dx-www-packet",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-postgres",
+ "zerocopy 0.7.35",
+]
+
+[[package]]
+name = "dx-www-dom"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "console_error_panic_hook",
+ "dx-www-core",
+ "js-sys",
+ "once_cell",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "dx-www-fallback"
+version = "0.1.0"
+dependencies = [
+ "maud",
+]
+
+[[package]]
+name = "dx-www-form"
+version = "0.1.0"
+dependencies = [
+ "bincode 2.0.1",
+ "bitflags 2.10.0",
+ "criterion",
+ "dx-www-packet",
+ "once_cell",
+ "regex-automata",
+ "serde",
+]
+
+[[package]]
+name = "dx-www-guard"
+version = "0.1.0"
+dependencies = [
+ "web-sys",
+]
+
+[[package]]
+name = "dx-www-i18n"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64 0.21.7",
+ "chrono",
+ "futures",
+ "futures-util",
+ "html-escape",
+ "lazy_static",
+ "regex",
+ "reqwest 0.11.27",
+ "scraper 0.18.1",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-tungstenite 0.21.0",
+ "url",
+ "urlencoding",
+ "uuid",
+]
+
+[[package]]
+name = "dx-www-interaction"
+version = "0.1.0"
+dependencies = [
+ "web-sys",
+]
+
+[[package]]
+name = "dx-www-morph"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "console_error_panic_hook",
+ "dx-www-core",
+ "dx-www-dom",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "dx-www-offline"
+version = "0.1.0"
+dependencies = [
+ "bincode 2.0.1",
+ "indexed_db_futures",
+ "serde",
+ "yrs 0.18.8",
+]
+
+[[package]]
+name = "dx-www-packet"
+version = "1.0.0"
+dependencies = [
+ "bincode 2.0.1",
+ "serde",
+]
+
+[[package]]
+name = "dx-www-print"
+version = "0.1.0"
+dependencies = [
+ "lightningcss",
+]
+
+[[package]]
+name = "dx-www-query"
+version = "0.1.0"
+dependencies = [
+ "bincode 2.0.1",
+ "dashmap 6.1.0",
+ "dx-www-packet",
+ "gloo-net",
+ "js-sys",
+ "reqwest 0.12.25",
+ "serde",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "xxhash-rust",
+]
+
+[[package]]
+name = "dx-www-rtl"
+version = "0.1.0"
+dependencies = [
+ "unic-langid",
+]
+
+[[package]]
+name = "dx-www-sched"
+version = "0.1.0"
+dependencies = [
+ "console_error_panic_hook",
+ "dx-www-core",
+ "dx-www-dom",
+ "dx-www-morph",
+ "js-sys",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "dx-www-serializer"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "bytes",
+ "criterion",
+ "memchr",
+ "rustc-hash 1.1.0",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror 2.0.17",
+ "toml 0.8.23",
+]
+
+[[package]]
+name = "dx-www-server"
+version = "0.1.0"
+dependencies = [
+ "axum 0.7.9",
+ "bincode 2.0.1",
+ "blake3",
+ "bytes",
+ "chrono",
+ "dashmap 5.5.3",
+ "dx-www-auth",
+ "dx-www-binary",
+ "dx-www-db",
+ "dx-www-fallback",
+ "dx-www-offline",
+ "dx-www-packet",
+ "dx-www-query",
+ "dx-www-sync",
+ "ed25519-dalek",
+ "futures",
+ "hyper 1.8.1",
+ "mimalloc",
+ "notify 6.1.1",
+ "rand 0.8.5",
+ "reqwest 0.11.27",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "dx-www-state"
+version = "0.1.0"
+dependencies = [
+ "atomic",
+ "bincode 2.0.1",
+ "bytemuck",
+ "criterion",
+ "dx-www-packet",
+ "parking_lot",
+ "serde",
+]
+
+[[package]]
+name = "dx-www-sync"
+version = "0.1.0"
+dependencies = [
+ "bincode 2.0.1",
+ "dashmap 6.1.0",
+ "flume",
+ "gloo-net",
+ "serde",
+ "tokio",
+ "tokio-tungstenite 0.21.0",
 ]
 
 [[package]]
@@ -2863,6 +2623,15 @@ checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "error"
+version = "0.1.0"
+dependencies = [
+ "bincode 2.0.1",
+ "console_error_panic_hook",
+ "serde",
 ]
 
 [[package]]
@@ -3101,6 +2870,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 
 [[package]]
+name = "font"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "console",
+ "dirs",
+ "futures",
+ "indicatif",
+ "rayon",
+ "regex",
+ "reqwest 0.12.25",
+ "scraper 0.18.1",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
 name = "foreign-types"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3141,6 +2935,71 @@ name = "foreign-types-shared"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
+
+[[package]]
+name = "forge"
+version = "0.1.3"
+dependencies = [
+ "ahash 0.8.12",
+ "anyhow",
+ "automerge",
+ "axum 0.8.7",
+ "base64 0.22.1",
+ "bincode 1.3.3",
+ "bytes",
+ "chrono",
+ "clap",
+ "colored 3.0.0",
+ "crossbeam",
+ "dashmap 6.1.0",
+ "dirs",
+ "dotenvy",
+ "futures",
+ "git2",
+ "hex",
+ "hmac",
+ "ignore",
+ "jwalk",
+ "lz4",
+ "md5",
+ "memchr",
+ "memmap2",
+ "notify 8.2.0",
+ "notify-debouncer-full",
+ "num_cpus",
+ "once_cell",
+ "parking_lot",
+ "proptest",
+ "rayon",
+ "regex",
+ "reqwest 0.12.25",
+ "ropey",
+ "rusqlite",
+ "serde",
+ "serde_cbor",
+ "serde_json",
+ "sha2 0.10.9",
+ "similar",
+ "tempfile",
+ "tokio",
+ "tokio-test",
+ "tokio-tungstenite 0.28.0",
+ "toml 0.8.23",
+ "tower 0.5.2",
+ "tower-http 0.6.8",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "tree-sitter",
+ "tree-sitter-rust",
+ "url",
+ "uuid",
+ "walkdir",
+ "whoami",
+ "windows-sys 0.59.0",
+ "yrs 0.21.3",
+ "zip",
+]
 
 [[package]]
 name = "form_urlencoded"
@@ -3292,6 +3151,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
 dependencies = [
  "byteorder",
+]
+
+[[package]]
+name = "generator"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "bumpalo",
+ "bytemuck",
+ "bytes",
+ "criterion",
+ "ed25519-dalek",
+ "memmap2",
+ "parking_lot",
+ "rand 0.8.5",
+ "rayon",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.17",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -3679,11 +3560,11 @@ name = "hello-world"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
- "dx-binary",
- "dx-core",
- "dx-dom",
- "dx-morph",
- "dx-sched",
+ "dx-www-binary",
+ "dx-www-core",
+ "dx-www-dom",
+ "dx-www-morph",
+ "dx-www-sched",
  "ed25519-dalek",
  "js-sys",
  "rand 0.8.5",
@@ -4030,6 +3911,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "icon"
+version = "0.0.1"
+dependencies = [
+ "flatbuffers 24.12.23",
+ "flatc-rust",
+ "quick-xml",
+ "regex",
+ "serde",
+ "serde_json",
+ "walkdir",
 ]
 
 [[package]]
@@ -4926,6 +4820,42 @@ name = "md5"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
+
+[[package]]
+name = "media"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "clap",
+ "colored 2.2.0",
+ "console",
+ "directories",
+ "dotenvy",
+ "futures",
+ "indicatif",
+ "once_cell",
+ "pretty_assertions",
+ "rayon",
+ "regex",
+ "reqwest 0.12.25",
+ "sanitize-filename",
+ "scraper 0.22.0",
+ "serde",
+ "serde_json",
+ "strum",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid",
+ "walkdir",
+ "wiremock",
+]
 
 [[package]]
 name = "memchr"
@@ -7654,6 +7584,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
+name = "stack"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bitflags 2.10.0",
+ "serde",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+ "toml 0.8.23",
+]
+
+[[package]]
 name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7733,6 +7676,45 @@ dependencies = [
  "quote",
  "rustversion",
  "syn 2.0.111",
+]
+
+[[package]]
+name = "style"
+version = "0.0.0"
+dependencies = [
+ "ahash 0.8.12",
+ "bumpalo",
+ "bytemuck",
+ "colored 3.0.0",
+ "criterion",
+ "cssparser 0.35.0",
+ "flatbuffers 25.9.23",
+ "flatc-rust",
+ "float-cmp 0.9.0",
+ "image",
+ "indexmap",
+ "lasso",
+ "lazy_static",
+ "libm",
+ "lightningcss",
+ "memchr",
+ "memmap2",
+ "notify 8.2.0",
+ "notify-debouncer-full",
+ "once_cell",
+ "rayon",
+ "regex",
+ "reqwest 0.12.25",
+ "rustc-hash 2.1.1",
+ "seahash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "tempfile",
+ "tokio",
+ "toml 0.9.8",
+ "twoway",
+ "winapi",
 ]
 
 [[package]]
@@ -9657,6 +9639,24 @@ name = "wit-bindgen"
 version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f17a85883d4e6d00e8a97c586de764dabcc06133f7f1d55dce5cdc070ad7fe59"
+
+[[package]]
+name = "workspace"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "console",
+ "memmap2",
+ "pathdiff",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tempfile",
+ "thiserror 1.0.69",
+ "toml 0.8.23",
+ "walkdir",
+]
 
 [[package]]
 name = "writeable"

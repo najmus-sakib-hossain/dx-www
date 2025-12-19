@@ -57,16 +57,16 @@ blake3 = "1.5"
 chrono = "0.4"
 
 # Internal
-dx-packet = { path = "../packet", features = ["std"] }
+dx-www-packet = { path = "../dx-www-packet", features = ["std"] }
 
 # Ecosystem crates (compile-time features)
-dx-form = { path = "../dx-form" }
-dx-query = { path = "../dx-query" }
-dx-db = { path = "../dx-db" }
-dx-state = { path = "../dx-state" }
-dx-a11y = { path = "../dx-a11y" }
-dx-print = { path = "../dx-print" }
-dx-rtl = { path = "../dx-rtl"}
+dx-www-form = { path = "../dx-www-form" }
+dx-www-query = { path = "../dx-www-query" }
+dx-www-db = { path = "../dx-www-db" }
+dx-www-state = { path = "../dx-www-state" }
+dx-www-a11y = { path = "../dx-www-a11y" }
+dx-www-print = { path = "../dx-www-print" }
+dx-www-rtl = { path = "../dx-www-rtl"}
 
 
 [dev-dependencies]

@@ -16,7 +16,7 @@
 
 use anyhow::Result;
 use clap::{Args, Subcommand, ValueEnum};
-use dx_stack::{Language, LanguageStack, StackCapability, StackRegistry};
+use stack::{Language, LanguageStack, StackCapability, StackRegistry};
 use owo_colors::OwoColorize;
 
 use crate::ui::{spinner::Spinner, table, theme::Theme};

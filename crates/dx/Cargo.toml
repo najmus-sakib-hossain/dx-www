@@ -58,7 +58,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
 # Internal crates
-dx-stack = { path = "../dx-stack" }
+stack = { path = "../stack" }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

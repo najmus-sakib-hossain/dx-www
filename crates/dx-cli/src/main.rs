@@ -77,8 +77,8 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::New { name, template } => {
-            // Forward to dx-forge
-            dx_forge::init(&name, &template)?;
+            // Forward to forge
+            forge::init(&name, &template)?;
         }
         Commands::Build {
             entry,
