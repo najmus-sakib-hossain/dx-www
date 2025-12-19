@@ -1,3 +1,9 @@
+So for dx now I am creating driven rust crate which is like Speck-Kit + BMAD_METHOD but better Speck-Kit is in pythong and BMAD_METHOD is in JS so I am creating in rust for better performance and better DX experience. For learning from them I have cloned them in the integrations folder. So, in the crates folder create a new crate called driven the idea is to ai agent that a user might be using professional instructions and stucture to work on the prject correctly, efficiently and systemitically. So, the ai agent will be able to understand the project structure, coding standards, and best practices defined in the documentation. It will assist developers by providing context-aware suggestions, code snippets, and even automated code generation based on the project's conventions. This will help maintain consistency across the codebase and improve overall development efficiency.
+
+Driven crate will like speck-kit + BMAD_METHOD give some professional templates and also convert cursor rules, to other code editor specific rules like vscode copilot so that user can use the same templates and rules in any code editor. And in this driven crate please use dx binary dawn game changing unique features to make it more powerfull and efficient!!!
+
+And here is more about dx:
+```markdown
 # Dx: The Binary-First Development Experience
 
 [![Rust](https://img.shields.io/badge/Rust-2024_Edition-orange.svg)](https://www.rust-lang.org/)
@@ -886,12 +892,4 @@ Welcome to the future. Welcome to **Dx.**
 
 **Star this repo if Dx excites you! ⭐**  
 **Follow our progress as we march toward the January 1, 2026 launch.**
-
-- [ ]  Driven → Speck-Kit + BMAD_METHOD
-- [ ]  Workspace → .github, preinstalls and all confurations
-- [ ]  Generator → Code Generator based on keywords and Templater
-- [ ]  Stack → Runtime + Package Manager + Builder + Monorepo + Compatibility + Test
-- [ ]  Forge + Serializer → dx config file and .dx folder
-- [ ]  Dx WWW related crates separation from Dx tools related crates
-- [ ]  Uv + Crates + Composer + All other package managers
-- [ ]  All framework and stack swticher
+```

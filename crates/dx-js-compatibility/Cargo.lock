@@ -545,6 +545,12 @@ checksum = "349a06037c7bf932dd7e7d1f653678b2038b9ad46a74102f1fc7bd7872678cce"
 
 [[package]]
 name = "base64"
+version = "0.21.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
+
+[[package]]
+name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
@@ -571,7 +577,7 @@ version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e65938ed058ef47d92cf8b346cc76ef48984572ade631927e9937b5ffc7662c7"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "blowfish",
  "getrandom 0.2.16",
  "subtle",
@@ -1118,7 +1124,7 @@ name = "dx-compat-bun"
 version = "0.1.0"
 dependencies = [
  "argon2",
- "base64",
+ "base64 0.22.1",
  "bcrypt",
  "brotli",
  "bytes",
@@ -1154,9 +1160,15 @@ dependencies = [
 name = "dx-compat-compile"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "bytes",
+ "proptest",
+ "serde",
+ "serde_json",
+ "sha2",
  "tempfile",
  "thiserror 2.0.17",
+ "walkdir",
  "zstd",
 ]
 
@@ -1196,9 +1208,11 @@ dependencies = [
 name = "dx-compat-macro"
 version = "0.1.0"
 dependencies = [
+ "parking_lot",
  "proptest",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.17",
 ]
 
@@ -1207,7 +1221,7 @@ name = "dx-compat-node"
 version = "0.1.0"
 dependencies = [
  "aes",
- "base64",
+ "base64 0.22.1",
  "bytes",
  "chacha20poly1305",
  "futures",
@@ -1222,7 +1236,8 @@ dependencies = [
  "parking_lot",
  "proptest",
  "rand 0.8.5",
- "rustls 0.23.35",
+ "rustls 0.21.12",
+ "rustls-pemfile",
  "serde",
  "serde_json",
  "sha1",
@@ -1230,7 +1245,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.17",
  "tokio",
- "tokio-rustls 0.26.4",
+ "tokio-rustls 0.24.1",
  "tokio-stream",
  "zerocopy",
 ]
@@ -1890,7 +1905,7 @@ version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "727805d60e7938b76b826a6ef209eb70eaa1812794f9424d4a4e2d740662df5f"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "bytes",
  "futures-channel",
  "futures-core",
@@ -2842,7 +2857,7 @@ version = "0.12.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b4c14b2d9afca6a60277086b0cc6a6ae0b568f6f7916c943a8cdc79f8be240f"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "bytes",
  "futures-core",
  "futures-util",
@@ -2981,6 +2996,15 @@ dependencies = [
  "rustls-pki-types",
  "schannel",
  "security-framework",
+]
+
+[[package]]
+name = "rustls-pemfile"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c74cae0a4cf6ccbbf5f359f08efdf8ee7e1dc532573bf0db71968cb56b1448c"
+dependencies = [
+ "base64 0.21.7",
 ]
 
 [[package]]

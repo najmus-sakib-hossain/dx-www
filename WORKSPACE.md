@@ -1,3 +1,7 @@
+So for dx now I am creating workspace rust crate which will generate configaration for working in different code editors as if you are using vscode then if you want to use it in a cloud ide like codesandbox, firebase studio, and other places then it will create configurations to run your project in other projects too so anyone can run your project and if its a monorepo then it will help to build thing systemitically better than turborepo and pnpm workspace!!! This will help maintain consistency across the codebase and improve overall development efficiency.
+
+And here is more about dx:
+```markdown
 # Dx: The Binary-First Development Experience
 
 [![Rust](https://img.shields.io/badge/Rust-2024_Edition-orange.svg)](https://www.rust-lang.org/)
@@ -886,12 +890,4 @@ Welcome to the future. Welcome to **Dx.**
 
 **Star this repo if Dx excites you! ⭐**  
 **Follow our progress as we march toward the January 1, 2026 launch.**
-
-- [ ]  Driven → Speck-Kit + BMAD_METHOD
-- [ ]  Workspace → .github, preinstalls and all confurations
-- [ ]  Generator → Code Generator based on keywords and Templater
-- [ ]  Stack → Runtime + Package Manager + Builder + Monorepo + Compatibility + Test
-- [ ]  Forge + Serializer → dx config file and .dx folder
-- [ ]  Dx WWW related crates separation from Dx tools related crates
-- [ ]  Uv + Crates + Composer + All other package managers
-- [ ]  All framework and stack swticher
+```

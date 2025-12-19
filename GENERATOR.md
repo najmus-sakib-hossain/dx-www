@@ -1,3 +1,7 @@
+So for dx now I am creating generator rust crate, which will generate code based on keywords and templates so that user can generate code faster and more efficiently. This will help to create boilerplate code and also help to create complex code structures based on simple keywords and templates. This will help to improve overall development efficiency and reduce the time taken to write code.
+
+And here is more about dx:
+```markdown
 # Dx: The Binary-First Development Experience
 
 [![Rust](https://img.shields.io/badge/Rust-2024_Edition-orange.svg)](https://www.rust-lang.org/)
@@ -886,12 +890,4 @@ Welcome to the future. Welcome to **Dx.**
 
 **Star this repo if Dx excites you! ⭐**  
 **Follow our progress as we march toward the January 1, 2026 launch.**
-
-- [ ]  Driven → Speck-Kit + BMAD_METHOD
-- [ ]  Workspace → .github, preinstalls and all confurations
-- [ ]  Generator → Code Generator based on keywords and Templater
-- [ ]  Stack → Runtime + Package Manager + Builder + Monorepo + Compatibility + Test
-- [ ]  Forge + Serializer → dx config file and .dx folder
-- [ ]  Dx WWW related crates separation from Dx tools related crates
-- [ ]  Uv + Crates + Composer + All other package managers
-- [ ]  All framework and stack swticher
+```
