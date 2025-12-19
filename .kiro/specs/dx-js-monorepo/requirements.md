@@ -2,171 +2,146 @@
 
 ## Introduction
 
-`dx-js-monorepo` provides comprehensive JavaScript/TypeScript monorepo and workspace support for the DX ecosystem. This crate enables developers to manage multi-package repositories with features comparable to npm/yarn/pnpm workspaces and Bun workspaces, while leveraging DX's binary-first architecture for superior performance.
-
-The crate integrates with `dx-js-package-manager` for dependency resolution, `dx-js-bundler` for builds, and `dx-js-test-runner` for testing across workspace packages.
+dx-js-monorepo is a binary-first monorepo management system that combines workspace features (like pnpm) with task orchestration (like Turborepo), achieving 30-100x performance improvements through dx's proven binary architecture. The system eliminates all JSON parsing overhead by storing workspace manifests, task graphs, lockfiles, and caches in optimized binary formats with zero-copy memory-mapped access.
 
 ## Glossary
 
-- **Workspace_Manager**: The core component that discovers, validates, and manages workspace configurations
-- **Package_Resolver**: The component responsible for resolving inter-workspace dependencies and hoisting
-- **Dependency_Graph**: The directed acyclic graph representing package dependencies within the workspace
-- **Link_Manager**: The component that creates and manages symlinks between workspace packages
-- **Task_Runner**: The component that executes scripts/commands across workspace packages with proper ordering
-- **Change_Detector**: The component that identifies which packages have changed since a reference point
-- **Workspace**: A collection of related packages managed together in a single repository
-- **Package**: An individual npm-compatible package within a workspace
-- **Root_Package**: The top-level package.json that defines workspace configuration
-- **Hoisting**: The process of deduplicating dependencies by moving them to a common ancestor directory
-- **Topological_Order**: The order in which packages must be processed based on their dependency relationships
+- **BWM (Binary Workspace Manifest)**: Pre-computed workspace structure stored in dx-serializer format containing dependency graphs, package metadata, and script definitions
+- **BTG (Binary Task Graph)**: Pre-compiled task pipeline with topological ordering and parallel execution maps stored as binary indices
+- **DXC (DX Cache)**: Binary task output format with instant deserialization and XOR differential updates
+- **DXL-Workspace**: Extended binary lockfile format for workspace-aware dependency resolution with O(1) lookups
+- **DXRC (DX Remote Cache)**: Binary protocol for remote cache synchronization with XOR patch streaming
+- **BAG (Binary Affected Graph)**: Pre-computed change propagation paths for instant impact detection
+- **Workspace_Manager**: The core system component that orchestrates workspace operations
+- **Task_Executor**: The component responsible for running and scheduling tasks
+- **Cache_Manager**: The component managing local and remote task caches
+- **Change_Detector**: The component that identifies file changes and affected packages
 
 ## Requirements
 
-### Requirement 1: Workspace Discovery and Configuration
+### Requirement 1: Binary Workspace Manifest Loading
 
-**User Story:** As a developer, I want the system to automatically discover and parse workspace configurations, so that I can manage multiple packages without manual setup.
-
-#### Acceptance Criteria
-
-1. WHEN a workspace root is specified, THE Workspace_Manager SHALL parse `package.json` workspace globs (npm/yarn style)
-2. WHEN a workspace root is specified, THE Workspace_Manager SHALL parse `pnpm-workspace.yaml` configurations
-3. WHEN a workspace root is specified, THE Workspace_Manager SHALL parse `bun.lockb` workspace metadata
-4. WHEN workspace globs are provided, THE Workspace_Manager SHALL expand globs to discover all matching package directories
-5. WHEN a discovered directory contains a valid `package.json`, THE Workspace_Manager SHALL register it as a workspace package
-6. IF a workspace glob matches no directories, THEN THE Workspace_Manager SHALL emit a warning but continue processing
-7. IF a discovered `package.json` is malformed, THEN THE Workspace_Manager SHALL return a descriptive error with file location
-8. WHEN multiple workspace configuration formats exist, THE Workspace_Manager SHALL use precedence order: bun > pnpm > npm/yarn
-
-### Requirement 2: Dependency Graph Construction
-
-**User Story:** As a developer, I want the system to build an accurate dependency graph of my workspace, so that operations can be performed in the correct order.
+**User Story:** As a developer, I want the monorepo workspace structure to load instantly, so that I can start working without waiting for JSON parsing of hundreds of package.json files.
 
 #### Acceptance Criteria
 
-1. WHEN workspace packages are discovered, THE Dependency_Graph SHALL construct a directed graph of inter-package dependencies
-2. WHEN building the graph, THE Dependency_Graph SHALL include `dependencies`, `devDependencies`, `peerDependencies`, and `optionalDependencies`
-3. WHEN a package references another workspace package by name, THE Dependency_Graph SHALL create an edge between them
-4. WHEN a package references a workspace package with `workspace:*` protocol, THE Dependency_Graph SHALL resolve to the local version
-5. WHEN a package references a workspace package with `workspace:^` or `workspace:~` protocol, THE Dependency_Graph SHALL resolve with the appropriate semver range
-6. IF a circular dependency is detected, THEN THE Dependency_Graph SHALL return an error listing the cycle path
-7. WHEN the graph is complete, THE Dependency_Graph SHALL provide topological ordering for build/test operations
-8. WHEN queried for dependents, THE Dependency_Graph SHALL return all packages that depend on a given package
+1. WHEN the Workspace_Manager initializes THEN THE Workspace_Manager SHALL load the Binary Workspace Manifest via memory-mapped file access in under 5ms for a 500-package workspace
+2. WHEN a package.json file changes THEN THE Workspace_Manager SHALL incrementally update only the affected portion of the Binary Workspace Manifest
+3. THE BWM_Serializer SHALL store the complete dependency graph with pre-computed topological ordering
+4. THE BWM_Serializer SHALL include binary-indexed lookups for package metadata with O(1) access time
+5. WHEN workspace protocol references (workspace:*) are encountered THEN THE BWM_Serializer SHALL pre-resolve them at manifest generation time
+6. IF the Binary Workspace Manifest is corrupted or missing THEN THE Workspace_Manager SHALL regenerate it from source package.json files and log a warning
 
-### Requirement 3: Workspace Package Linking
+### Requirement 2: Binary Task Graph Execution
 
-**User Story:** As a developer, I want workspace packages to be automatically linked, so that changes in one package are immediately available to dependent packages.
+**User Story:** As a developer, I want task pipelines to execute without parsing overhead, so that my build commands start instantly.
 
 #### Acceptance Criteria
 
-1. WHEN workspace packages are resolved, THE Link_Manager SHALL create symlinks in `node_modules` for inter-workspace dependencies
-2. WHEN creating symlinks, THE Link_Manager SHALL use relative paths for portability
-3. WHEN a workspace package has a `bin` field, THE Link_Manager SHALL create executable symlinks in `.bin` directories
-4. IF symlink creation fails due to permissions, THEN THE Link_Manager SHALL attempt junction points on Windows or return a descriptive error
-5. WHEN a package is added to the workspace, THE Link_Manager SHALL update all dependent package links
-6. WHEN a package is removed from the workspace, THE Link_Manager SHALL remove stale symlinks from dependent packages
-7. WHEN links are created, THE Link_Manager SHALL verify link targets exist and are valid packages
+1. WHEN a task command is invoked THEN THE Task_Executor SHALL load the Binary Task Graph in under 2ms for a graph with 1000 nodes
+2. THE BTG_Serializer SHALL store task dependencies as u32 indices rather than string lookups
+3. THE BTG_Serializer SHALL include pre-computed topological order eliminating runtime graph traversal
+4. THE BTG_Serializer SHALL include a parallel execution map indicating which tasks can run simultaneously
+5. WHEN a task is instantiated THEN THE Task_Executor SHALL use native cloning patterns for zero-allocation task creation
+6. WHILE tasks are executing THEN THE Task_Executor SHALL use stack-only allocation to avoid garbage collection pauses
+7. IF a task exceeds its frame budget THEN THE Task_Executor SHALL yield to the system and resume in the next scheduling slot
 
-### Requirement 4: Dependency Hoisting
+### Requirement 3: SIMD-Accelerated Change Detection
 
-**User Story:** As a developer, I want shared dependencies to be hoisted to reduce disk usage and installation time, so that my workspace is efficient.
-
-#### Acceptance Criteria
-
-1. WHEN installing dependencies, THE Package_Resolver SHALL identify common dependencies across workspace packages
-2. WHEN multiple packages require the same dependency version, THE Package_Resolver SHALL hoist it to the workspace root
-3. WHEN packages require different versions of the same dependency, THE Package_Resolver SHALL keep conflicting versions in their respective package directories
-4. WHEN hoisting is disabled via configuration, THE Package_Resolver SHALL install all dependencies in their respective package directories
-5. WHEN a hoisted dependency has peer dependencies, THE Package_Resolver SHALL ensure peer requirements are satisfied at the hoisted location
-6. IF hoisting would break a package's resolution, THEN THE Package_Resolver SHALL keep that dependency local
-
-### Requirement 5: Task Execution Across Packages
-
-**User Story:** As a developer, I want to run scripts across all or selected workspace packages, so that I can build, test, and lint my entire monorepo efficiently.
+**User Story:** As a developer, I want file change detection to be nearly instantaneous, so that incremental builds start immediately after I save a file.
 
 #### Acceptance Criteria
 
-1. WHEN a script command is issued with `--workspace` flag, THE Task_Runner SHALL execute the script in all packages that define it
-2. WHEN executing scripts, THE Task_Runner SHALL respect topological order for dependent packages
-3. WHEN `--parallel` flag is provided, THE Task_Runner SHALL execute independent packages concurrently
-4. WHEN `--filter` pattern is provided, THE Task_Runner SHALL only execute in packages matching the pattern
-5. WHEN a script fails in one package, THE Task_Runner SHALL continue or stop based on `--continue-on-error` flag
-6. WHEN executing scripts, THE Task_Runner SHALL stream output with package name prefixes for identification
-7. WHEN `--since` reference is provided, THE Task_Runner SHALL only execute in packages changed since that reference
-8. WHEN a package has no matching script, THE Task_Runner SHALL skip it silently unless `--strict` is specified
+1. WHEN files need hashing THEN THE Change_Detector SHALL use Blake3 SIMD hashing achieving at least 30x speedup over traditional SHA hashing
+2. WHEN a file is modified THEN THE Change_Detector SHALL perform incremental hashing of only the changed file regions
+3. THE Change_Detector SHALL construct Merkle hash trees using parallel computation across all available CPU cores
+4. THE Change_Detector SHALL use AVX2 pattern matching for instant import/export statement detection
+5. THE Change_Detector SHALL generate 64-byte binary fingerprints instead of string hashes
+6. WHEN 10,000 files need hashing THEN THE Change_Detector SHALL complete the operation in under 200ms
 
-### Requirement 6: Change Detection
+### Requirement 4: Memory-Mapped Task Cache
 
-**User Story:** As a developer, I want to identify which packages have changed, so that I can run targeted builds and tests in CI/CD pipelines.
+**User Story:** As a developer, I want cache lookups to be instant, so that repeated builds complete in milliseconds.
 
 #### Acceptance Criteria
 
-1. WHEN `--since` is provided with a git ref, THE Change_Detector SHALL identify packages with file changes since that ref
-2. WHEN detecting changes, THE Change_Detector SHALL include packages whose dependencies have changed (transitive changes)
-3. WHEN a shared configuration file changes (e.g., root tsconfig), THE Change_Detector SHALL mark all affected packages as changed
-4. WHEN `.gitignore` patterns exist, THE Change_Detector SHALL exclude ignored files from change detection
-5. WHEN queried, THE Change_Detector SHALL return both directly changed and transitively affected packages
-6. IF git is not available, THEN THE Change_Detector SHALL return an error indicating git is required
+1. WHEN a cache hit occurs THEN THE Cache_Manager SHALL resolve the cached output in under 0.5ms using zero-copy memory-mapped access
+2. WHEN checking for cache existence THEN THE Cache_Manager SHALL detect cache misses in under 0.1ms
+3. THE Cache_Manager SHALL store task outputs in DXC format with instant deserialization
+4. WHEN cache entries are updated THEN THE Cache_Manager SHALL use XOR differential patching achieving 95% bandwidth savings
+5. THE Cache_Manager SHALL sign all cache artifacts with Ed25519 for tamper-proof verification
+6. WHERE zero-disk mode is enabled THEN THE Cache_Manager SHALL serve cached outputs via a virtual filesystem without writing to disk
 
-### Requirement 7: Workspace Configuration Validation
+### Requirement 5: Binary Lockfile Resolution
 
-**User Story:** As a developer, I want the system to validate my workspace configuration, so that I can catch errors before they cause problems.
-
-#### Acceptance Criteria
-
-1. WHEN a workspace is loaded, THE Workspace_Manager SHALL validate all package.json files against the npm schema
-2. WHEN validating, THE Workspace_Manager SHALL check for duplicate package names within the workspace
-3. WHEN validating, THE Workspace_Manager SHALL verify all `workspace:` protocol references resolve to existing packages
-4. WHEN validating, THE Workspace_Manager SHALL warn about packages not included in any workspace glob
-5. IF validation fails, THEN THE Workspace_Manager SHALL return all errors (not just the first) with file locations
-6. WHEN `--fix` flag is provided, THE Workspace_Manager SHALL attempt to auto-fix common issues (e.g., missing fields)
-
-### Requirement 8: Version Management
-
-**User Story:** As a developer, I want to manage versions across workspace packages, so that I can release coordinated updates.
+**User Story:** As a developer, I want dependency resolution to be instant, so that install commands don't waste time parsing lockfiles.
 
 #### Acceptance Criteria
 
-1. WHEN a version bump is requested, THE Workspace_Manager SHALL update the specified package's version
-2. WHEN a package version changes, THE Workspace_Manager SHALL update all workspace references to that package
-3. WHEN `--sync` flag is provided, THE Workspace_Manager SHALL align all package versions to the same value
-4. WHEN versioning, THE Workspace_Manager SHALL support semver increment types: major, minor, patch, prerelease
-5. WHEN a prerelease tag is specified, THE Workspace_Manager SHALL append it correctly (e.g., `1.0.0-beta.1`)
-6. WHEN versions are updated, THE Workspace_Manager SHALL preserve formatting in package.json files
+1. WHEN resolving a package THEN THE Lockfile_Resolver SHALL perform O(1) lookup using binary index tables
+2. THE DXL_Workspace_Serializer SHALL pre-resolve all workspace protocol references at lock time
+3. THE DXL_Workspace_Serializer SHALL include a pre-computed version conflict matrix for peer dependencies
+4. THE DXL_Workspace_Serializer SHALL embed the optimal node_modules hoisting strategy
+5. WHEN lockfile merge conflicts occur THEN THE Lockfile_Resolver SHALL automatically resolve them using CRDT merge semantics
+6. THE DXL_Workspace_Serializer SHALL serialize and deserialize the lockfile format with round-trip consistency
 
-### Requirement 9: Publishing Support
+### Requirement 6: Remote Cache Protocol
 
-**User Story:** As a developer, I want to publish workspace packages to npm, so that I can share my packages with others.
-
-#### Acceptance Criteria
-
-1. WHEN publishing, THE Workspace_Manager SHALL convert `workspace:*` references to actual version numbers
-2. WHEN publishing, THE Workspace_Manager SHALL respect each package's `private` field
-3. WHEN publishing with `--dry-run`, THE Workspace_Manager SHALL show what would be published without making changes
-4. WHEN publishing, THE Workspace_Manager SHALL publish packages in topological order (dependencies first)
-5. IF a package has unpublished workspace dependencies, THEN THE Workspace_Manager SHALL publish dependencies first or return an error
-6. WHEN publishing, THE Workspace_Manager SHALL support npm registry authentication via `.npmrc` or environment variables
-
-### Requirement 10: Performance and Caching
-
-**User Story:** As a developer, I want workspace operations to be fast, so that my development workflow is not slowed down.
+**User Story:** As a developer, I want remote cache synchronization to be fast, so that CI builds and team collaboration don't suffer from network overhead.
 
 #### Acceptance Criteria
 
-1. WHEN loading a workspace, THE Workspace_Manager SHALL cache parsed package.json files in memory
-2. WHEN the dependency graph is computed, THE Workspace_Manager SHALL cache it until a package.json changes
-3. WHEN file watching is enabled, THE Workspace_Manager SHALL invalidate caches incrementally on file changes
-4. WHEN performing operations, THE Workspace_Manager SHALL use parallel I/O for independent file operations
-5. WHEN serializing workspace state, THE Workspace_Manager SHALL use dx-serializer for binary format efficiency
-6. WHEN a cached state exists, THE Workspace_Manager SHALL validate cache freshness before use
+1. WHEN fetching remote cache entries THEN THE Remote_Cache_Client SHALL retrieve all needed entries in a single binary request
+2. WHEN transferring cache data THEN THE Remote_Cache_Client SHALL use XOR patch streaming to transfer only byte differences
+3. THE Remote_Cache_Client SHALL support speculative prefetching of predicted cache needs
+4. THE Remote_Cache_Client SHALL multiplex multiple cache entries over a single connection
+5. IF a cache download is interrupted THEN THE Remote_Cache_Client SHALL resume from binary checkpoints without re-downloading completed portions
+6. WHEN syncing with remote cache THEN THE Remote_Cache_Client SHALL complete synchronization at least 33x faster than HTTP/JSON approaches
 
-### Requirement 11: Integration with DX Ecosystem
+### Requirement 7: Affected Package Detection
 
-**User Story:** As a developer, I want the monorepo system to integrate with other DX tools, so that I have a cohesive development experience.
+**User Story:** As a developer, I want to instantly know which packages are affected by my changes, so that I can run only the necessary tests and builds.
 
 #### Acceptance Criteria
 
-1. WHEN resolving dependencies, THE Workspace_Manager SHALL delegate to dx-js-package-manager for external packages
-2. WHEN building packages, THE Workspace_Manager SHALL integrate with dx-js-bundler for TypeScript/JavaScript compilation
-3. WHEN running tests, THE Workspace_Manager SHALL integrate with dx-js-test-runner for test execution
-4. WHEN the runtime needs workspace info, THE Workspace_Manager SHALL provide package resolution to dx-js-runtime
-5. WHEN configuration is needed, THE Workspace_Manager SHALL support dx.json workspace configuration format
+1. WHEN querying affected packages THEN THE Affected_Detector SHALL return results in under 5ms using the Binary Affected Graph
+2. THE BAG_Builder SHALL maintain an inverse dependency index for O(1) lookup of "who depends on this package"
+3. THE BAG_Builder SHALL cache transitive closure computations for full dependency chains
+4. THE Affected_Detector SHALL maintain a binary index mapping file paths to their owning packages
+5. THE Affected_Detector SHALL use SIMD-accelerated import graph analysis to detect actual code dependencies
+
+### Requirement 8: Fusion Task Mode
+
+**User Story:** As a developer, I want compatible tasks to be automatically merged for optimal execution, so that my build pipelines run faster without manual optimization.
+
+#### Acceptance Criteria
+
+1. WHEN analyzing task pipelines THEN THE Fusion_Analyzer SHALL identify tasks with shared work (TypeScript compilation, bundling)
+2. WHEN compatible tasks are detected THEN THE Fusion_Executor SHALL merge them into a single process execution
+3. WHILE fused tasks execute THEN THE Fusion_Executor SHALL share resources (file handles, memory) across logical task boundaries
+4. WHEN fused tasks complete THEN THE Fusion_Executor SHALL produce separate outputs as if tasks ran independently
+5. THE Fusion_Executor SHALL achieve 5-10x speedup for typical build pipelines compared to sequential task execution
+
+### Requirement 9: Ghost Dependency Detection
+
+**User Story:** As a developer, I want to be warned about undeclared dependencies, so that my packages don't accidentally rely on hoisted dependencies.
+
+#### Acceptance Criteria
+
+1. WHEN scanning the workspace THEN THE Ghost_Detector SHALL use SIMD to scan all import statements
+2. THE Ghost_Detector SHALL cross-reference detected imports with declared dependencies in package.json
+3. WHEN an undeclared dependency is found THEN THE Ghost_Detector SHALL report the package name, importing file, and import location
+4. THE Ghost_Detector SHALL identify hoisting accidents where code works due to hoisting rather than declaration
+5. THE Ghost_Detector SHALL check detected ghost dependencies against known vulnerability databases
+
+### Requirement 10: Intelligent Watch Mode
+
+**User Story:** As a developer, I want file watching to trigger rebuilds with zero latency, so that my development feedback loop is instant.
+
+#### Acceptance Criteria
+
+1. WHEN a file change is detected THEN THE Watch_Manager SHALL begin task execution within 10ms of the save event
+2. THE Watch_Manager SHALL use predictive task execution to start likely tasks before the save operation completes
+3. THE Watch_Manager SHALL coalesce rapid file changes with intelligent debouncing
+4. WHERE output files are unchanged THEN THE Watch_Manager SHALL use memory-mapped updates without writing to disk
+5. THE Watch_Manager SHALL coordinate watch events across packages to prevent redundant rebuilds
