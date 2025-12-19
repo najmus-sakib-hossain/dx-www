@@ -685,7 +685,7 @@ mod tests {
     fn test_placeholder_entry() {
         let entry = PlaceholderEntry::new(100, 32, PlaceholderType::Variable, 0);
         assert_eq!(entry.output_offset, 100);
-        assert_eq!(entry.max_length, 16);
+        assert_eq!(entry.max_length, 32);
         assert_eq!(entry.get_type().unwrap(), PlaceholderType::Variable);
     }
 

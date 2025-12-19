@@ -242,9 +242,10 @@ impl PlaceholderScanner {
 
         // Scan for '{' using SIMD
         while i + 32 <= len {
-            let chunk = _mm256_loadu_si256(input.as_ptr().add(i) as *const __m256i);
-            let cmp = _mm256_cmpeq_epi8(chunk, open_brace);
-            let mask = _mm256_movemask_epi8(cmp) as u32;
+            // SAFETY: We check bounds above (i + 32 <= len)
+            let chunk = unsafe { _mm256_loadu_si256(input.as_ptr().add(i) as *const __m256i) };
+            let cmp = unsafe { _mm256_cmpeq_epi8(chunk, open_brace) };
+            let mask = unsafe { _mm256_movemask_epi8(cmp) } as u32;
 
             if mask != 0 {
                 // Found one or more '{' characters

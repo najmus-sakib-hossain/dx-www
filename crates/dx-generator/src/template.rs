@@ -121,7 +121,7 @@ impl Template {
         let inner = Self::parse_template(bytes, header)?;
         
         // Generate template ID from name hash
-        let id = xxhash_rust::xxh32::xxh32(inner.name.as_bytes(), 0);
+        let id = xxhash_rust::xxh64::xxh64(inner.name.as_bytes(), 0) as u32;
 
         Ok(Self { inner, source, id })
     }

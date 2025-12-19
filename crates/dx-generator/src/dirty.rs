@@ -335,12 +335,21 @@ impl ParamCategory {
 ///
 /// Used to compare current parameters against cached values
 /// and determine what needs regeneration.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct DirtyTracker {
     /// Current dirty state
     mask: DirtyMask,
     /// Hash of last known parameter values (per slot)
     hashes: [u64; 64],
+}
+
+impl Default for DirtyTracker {
+    fn default() -> Self {
+        Self {
+            mask: DirtyMask::clean(),
+            hashes: [0u64; 64],
+        }
+    }
 }
 
 impl DirtyTracker {

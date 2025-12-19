@@ -203,12 +203,10 @@ impl CapabilityManifest {
 
         self.allowed_files.iter().any(|pattern| {
             // Simple glob matching
-            if pattern.ends_with("*") {
-                let prefix = &pattern[..pattern.len() - 1];
-                path.starts_with(prefix)
-            } else if pattern.starts_with("*") {
-                let suffix = &pattern[1..];
-                path.ends_with(suffix)
+            if let Some(idx) = pattern.find('*') {
+                let prefix = &pattern[..idx];
+                let suffix = &pattern[idx + 1..];
+                path.starts_with(prefix) && path.ends_with(suffix)
             } else {
                 path == pattern
             }
