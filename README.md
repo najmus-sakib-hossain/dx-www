@@ -244,15 +244,45 @@ Dx is organized as a Cargo workspace with **45 specialized crates**, each focuse
 | **dx-workspace** | Dev environment configurator | 🚧 In Progress |
 | **oxc** | OXC parser integration (fastest JS/TS parser) | ✅ Integrated |
 
-### ⚡ JavaScript/TypeScript Runtime
-| Crate | Purpose | Achievement | Status |
-|-------|---------|-------------|--------|
-| **dx-js-runtime** | 10x faster than Bun - full JS/TS execution | **10.59x faster** | ✅ Production Ready |
-| **dx-js-bundler** | Fast JavaScript bundler | **3.8x faster than Bun** | ✅ Production Ready |
-| **dx-js-test-runner** | Fast test runner | **26x faster** | ✅ Complete |
-| **dx-js-package-manager** | Binary package system | **17.2x faster (verified)** | ✅ Complete |
-| **dx-js-compatibility** | Node.js API compatibility layer | Full compatibility | ✅ Complete |
-| **dx-js-monorepo** | Monorepo workspace manager | Binary-first | 🚧 In Progress |
+### ⚡ Development Stack (Language-Aware Tooling)
+
+DX introduces a **Stack** abstraction that unifies language-specific development tools. Not every language needs the same tools—Rust has `cargo`, Go has `go`, but JavaScript has a fragmented ecosystem. DX Stack adapts:
+
+```bash
+# JavaScript/TypeScript - full stack
+dx stack run index.ts        # dx-js-runtime (10x faster)
+dx stack bundle --minify     # dx-js-bundler (3.8x faster)
+dx stack test --coverage     # dx-js-test-runner (26x faster)
+dx stack install             # dx-js-package-manager (50x faster)
+
+# Rust - no stack needed (cargo handles everything)
+dx stack -l rust info
+# → Rust has a unified native toolchain: cargo
+
+# Python - partial stack (pip/poetry/pytest fragmented)
+dx stack -l python run main.py
+```
+
+#### JavaScript/TypeScript Stack Components
+| Component | Crate | Performance | Status |
+|-----------|-------|-------------|--------|
+| **Runtime** | `dx-js-runtime` | **10.59x faster than Bun** | ✅ Production Ready |
+| **Bundler** | `dx-js-bundler` | **3.8x faster than Bun** | ✅ Production Ready |
+| **Test Runner** | `dx-js-test-runner` | **26x faster than Jest** | ✅ Complete |
+| **Package Manager** | `dx-js-package-manager` | **17.2x faster (verified)** | ✅ Complete |
+| **Compatibility** | `dx-js-compatibility` | Full Node.js API support | ✅ Complete |
+| **Monorepo** | `dx-js-monorepo` | Binary-first workspaces | 🚧 In Progress |
+
+#### Language Support Matrix
+| Language | Needs DX Stack? | Components Used | Native Toolchain |
+|----------|-----------------|-----------------|------------------|
+| JavaScript/TS | ✓ Full | Runtime, Bundler, Test, Pkg, Compat, Mono | npm/node |
+| Python | ✓ Partial | Runtime, Pkg, Test, Compat, Mono | pip/python |
+| Rust | ✗ | None | `cargo` (complete) |
+| Go | ✗ | None | `go` (complete) |
+| C/C++ | ✓ Partial | Bundler (build), Compat, Test | gcc/clang |
+
+**See:** [Stack Documentation](docs/STACK.md) for full details.
 
 ### 📦 Binary Protocols
 | Crate | Purpose | Lines | Status |
@@ -339,19 +369,20 @@ dx/
 │   ├── dx-serializer/         # World record format (37% better than TOON)
 │   ├── cache/                 # Browser caching (IndexedDB + ETags)
 │   │
-│   │── [Compiler & Tools (10 crates)]
+│   │── [Compiler & Tools (11 crates)]
 │   ├── dx-www/                # TSX → Binary compiler (lib: dx_compiler)
 │   ├── dx-cli/                # Unified CLI orchestrator
 │   ├── dx-forge/              # Build orchestration engine
 │   ├── dx-debug/              # DevTools bridge
 │   ├── dx-generator/          # Template code generator
 │   ├── dx-workspace/          # Dev environment configurator
+│   ├── dx-stack/              # Language-aware development stack abstraction
 │   ├── driven/                # AI-assisted development orchestrator
 │   ├── oxc/                   # OXC parser integration
 │   ├── dx/                    # Main dx library re-exports
 │   ├── dx-error/              # Error boundaries
 │   │
-│   │── [JavaScript/TypeScript (5 crates)]
+│   │── [JavaScript/TypeScript Stack (6 crates)]
 │   ├── dx-js-runtime/         # 10.59x faster than Bun
 │   ├── dx-js-bundler/         # 3.8x faster than Bun
 │   ├── dx-js-test-runner/     # 26x faster test runner
