@@ -15,4 +15,6 @@ git clone https://github.com/github/spec-kit && cd spec-kit && rm -rf .git && cd
 git clone https://github.com/bmad-code-org/BMAD-METHOD && cd BMAD-METHOD && rm -rf .git && cd ..
 git clone https://github.com/fadeevab/cliclack.git && cd cliclack && rm -rf .git && cd ..
 git clone https://github.com/vercel/turborepo.git && cd turborepo && rm -rf .git && cd ..
+git clone https://github.com/rust-lang/cargo && cd cargo && rm -rf .git && cd ..
+git clone https://github.com/astral-sh/uv && cd uv && rm -rf .git && cd ..
 ```
