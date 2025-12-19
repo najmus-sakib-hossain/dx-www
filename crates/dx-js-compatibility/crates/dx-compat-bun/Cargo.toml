@@ -9,6 +9,7 @@ license = "MIT OR Apache-2.0"
 # HTTP server
 hyper = { version = "1.5", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
 http = "1.1"
 
 # TLS - using ring backend to avoid aws-lc-sys build issues on Windows

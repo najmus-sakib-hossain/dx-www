@@ -84,7 +84,7 @@ This implementation plan creates a comprehensive Bun API compatibility layer usi
     - Add max listeners warning system
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
 
-  - [x] 5.2 Write property test for event emitter listener invocation
+  - [-] 5.2 Write property test for event emitter listener invocation
     - **Property 10: Event Emitter Listener Invocation**
     - **Validates: Requirements 6.1, 6.2, 6.3**
     - **File: tests/node/events_props.rs**
@@ -140,36 +140,36 @@ This implementation plan creates a comprehensive Bun API compatibility layer usi
     - **Validates: Requirements 11.1, 11.4**
     - **File: tests/web/streams_props.rs**
 
-  - [ ] 10.5 Implement WebSocket API
+  - [x] 10.5 Implement WebSocket API
     - Use `tokio-tungstenite` for WebSocket implementation
     - Support binary and text messages with event handlers
     - Achieve 2x message throughput performance target
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7_
 
-  - [ ] 10.6 Write property test for WebSocket message round-trip
+  - [x] 10.6 Write property test for WebSocket message round-trip
     - **Property 14: WebSocket Message Round-Trip**
     - **Validates: Requirements 12.2, 12.6**
 
 - [ ] 11. Implement dx-compat-bun sub-crate core APIs
-  - [ ] 11.1 Create Bun.serve() HTTP server
+  - [x] 11.1 Create Bun.serve() HTTP server
     - Use `hyper` for maximum performance (400k+ req/s target)
     - Implement WebSocket upgrade handling
     - Add TLS support using `rustls`
     - Support Unix socket listening
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8_
 
-  - [ ] 11.2 Implement Bun.file() and Bun.write()
+  - [x] 11.2 Implement Bun.file() and Bun.write()
     - Create lazy-loading BunFile handle with memory mapping
     - Implement `text()`, `json()`, `arrayBuffer()`, `stream()` methods
     - Add `slice()` for zero-copy file slicing
     - Achieve 1 GB/s read throughput target
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8_
 
-  - [ ] 11.3 Write property test for Bun.file() read/write round-trip
+  - [x] 11.3 Write property test for Bun.file() read/write round-trip
     - **Property 2: Bun.file() Read/Write Round-Trip**
     - **Validates: Requirements 14.1, 14.2, 14.6**
 
-  - [ ] 11.4 Implement Bun.spawn() process spawning
+  - [-] 11.4 Implement Bun.spawn() process spawning
     - Create high-performance subprocess spawning (10k+ spawns/s target)
     - Support async and sync variants with stdio configuration
     - Add environment variable and working directory support

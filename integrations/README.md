@@ -11,6 +11,8 @@ git clone https://github.com/gantoreno/vscode-verce.git
 git clone https://github.com/actix/actix-web.git && cd actix-web && rm -rf .git && cd ..
 git clone https://github.com/tokio-rs/axum.git && cd axum && rm -rf .git && cd ..
 git clone https://github.com/gitkraken/vscode-gitlens.git && cd vscode-gitlens && rm -rf .git && cd ..
+git clone https://github.com/github/spec-kit && cd spec-kit && rm -rf .git && cd ..
+git clone https://github.com/bmad-code-org/BMAD-METHOD && cd BMAD-METHOD && rm -rf .git && cd ..
 git clone https://github.com/fadeevab/cliclack.git && cd cliclack && rm -rf .git && cd ..
 git clone https://github.com/vercel/turborepo.git && cd turborepo && rm -rf .git && cd ..
 ```
