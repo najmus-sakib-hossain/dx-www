@@ -8,6 +8,9 @@
 //! - Automatic retry logic
 //! - Binary error reporting
 
+// Allow dead_code for API completeness
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

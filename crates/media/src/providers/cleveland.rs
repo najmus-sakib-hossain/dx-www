@@ -196,7 +196,7 @@ fn deserialize_dimension<'de, D>(deserializer: D) -> std::result::Result<Option<
 where
     D: serde::Deserializer<'de>,
 {
-    use serde::de::Error;
+    
     let value: Option<serde_json::Value> = Option::deserialize(deserializer)?;
     match value {
         Some(serde_json::Value::Number(n)) => Ok(n.as_u64().map(|v| v as u32)),

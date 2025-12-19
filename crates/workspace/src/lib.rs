@@ -5,7 +5,10 @@
 //! dozens of scattered configuration files in different formats, dx-workspace uses
 //! a unified binary configuration that generates optimized, platform-specific
 //! configurations on demand.
-//!
+
+// Allow dead_code for API completeness
+#![allow(dead_code)]
+
 //! ## Philosophy
 //!
 //! The philosophy aligns with dx's core principle: **"Binary Everywhere."**

@@ -12,8 +12,6 @@ use dx_www_auth::TokenGenerator;
 #[cfg(feature = "sync")]
 use dx_sync::ChannelManager;
 
-#[cfg(feature = "fallback")]
-use dx_www_fallback::HTMLGenerator;
 
 use std::sync::Arc;
 

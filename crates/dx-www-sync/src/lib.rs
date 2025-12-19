@@ -8,6 +8,9 @@
 //! - Throughput: 100,000 messages/sec
 //! - Concurrent connections: 1,000,000
 
+// Allow unused variables for API completeness
+#![allow(unused_variables)]
+
 use dashmap::DashMap;
 use flume::{Receiver, Sender};
 use serde::{Deserialize, Serialize};

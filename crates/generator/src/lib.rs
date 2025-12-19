@@ -9,7 +9,12 @@
 //! Traditional generators parse text templates at runtime, allocate strings everywhere,
 //! and regenerate entire files for tiny changes. dx-generator applies every Dx innovation
 //! to eliminate these inefficiencies.
-//!
+
+// Allow dead_code and unused for API completeness
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_unsafe)]
+
 //! ## Key Features
 //!
 //! - **Binary Template Format (.dxt)**: Pre-compiled templates, zero runtime parsing

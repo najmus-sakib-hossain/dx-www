@@ -3,6 +3,9 @@
 //! This module contains the complete, final, immutable public API for Forge v0.1.0.
 //! All 132 functions are implemented here and organized by category.
 
+// Suppress static_mut_refs warnings until we refactor to OnceLock
+#![allow(static_mut_refs)]
+
 // Core API modules
 pub mod branching;
 pub mod cart;

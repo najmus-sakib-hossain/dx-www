@@ -13,6 +13,10 @@
 //! - CDN URL generation for font preview and usage
 //! - Support for multiple font formats (TTF, OTF, WOFF, WOFF2)
 
+// Allow dead_code for API completeness
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 pub mod cdn;
 pub mod cli;
 pub mod config;

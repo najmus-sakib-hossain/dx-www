@@ -1,15 +1,4 @@
-/// DX-Apex: The Ultimate 5× TOON Crusher
-///
-/// Revolutionary compression techniques:
-/// 1. Bit-packed booleans (8 bools = 1 byte)
-/// 2. Delta encoding for numbers
-/// 3. Run-length encoding
-/// 4. Universal string dictionary
-/// 5. Huffman-inspired symbol compression
-/// 6. Zero-redundancy format
-/// 7. Smart type inference
-use crate::error::Result;
-use crate::types::{DxArray, DxObject, DxValue};
+use crate::types::DxValue;
 use std::collections::HashMap;
 
 /// The most aggressive compression mode - 5× better than TOON

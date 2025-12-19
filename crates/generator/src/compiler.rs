@@ -4,10 +4,10 @@
 //! Zero runtime parsing—templates are memory-mapped directly.
 
 use crate::binary::{
-    BinaryTemplate, BinaryTemplateBuilder, FLAG_DEDUPED, FLAG_OPTIMIZED, FLAG_STATIC, Opcode,
+    BinaryTemplate, BinaryTemplateBuilder, FLAG_DEDUPED, FLAG_OPTIMIZED, Opcode,
     PlaceholderEntry, PlaceholderType,
 };
-use crate::error::{GeneratorError, Result};
+use crate::error::Result;
 use crate::scanner::{Placeholder, PlaceholderScanner, extract_static_segments};
 use std::collections::HashMap;
 use std::path::Path;

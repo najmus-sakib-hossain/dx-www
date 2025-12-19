@@ -9,9 +9,9 @@
 //! - 50x faster than separate template invocations
 
 use crate::binary::BinaryTemplate;
-use crate::error::{GeneratorError, Result};
+use crate::error::Result;
 use crate::params::Parameters;
-use crate::render::{RenderOutput, Renderer};
+use crate::render::Renderer;
 use crate::template::Template;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -250,7 +250,7 @@ impl FusionBundle {
 /// Common fusion bundle templates.
 pub mod bundles {
     use super::*;
-    use crate::binary::BinaryTemplateBuilder;
+    
 
     /// Create a component-full fusion bundle.
     ///

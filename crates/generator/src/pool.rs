@@ -4,7 +4,6 @@
 //! Enables zero-copy template access and parallel generation.
 
 use crate::MAX_POOL_SIZE;
-use crate::binary::BinaryTemplate;
 use crate::error::{GeneratorError, Result};
 use crate::template::{Template, TemplateHandle};
 use parking_lot::RwLock;

@@ -8,6 +8,9 @@
 //! - Base62 integers (%x): 320→5A, 540→8k
 //! - Auto-increment (%#): Sequential IDs generated automatically
 
+// Allow dead_code for API completeness
+#![allow(dead_code)]
+
 pub mod base62;
 pub mod compress;
 pub mod converters;

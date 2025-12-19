@@ -11,7 +11,6 @@ use crate::models::{
 use anyhow::Result;
 use async_trait::async_trait;
 use reqwest::Client;
-use serde::Deserialize;
 
 /// GitHub Fonts provider
 pub struct GitHubFontsProvider {

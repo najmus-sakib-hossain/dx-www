@@ -20,7 +20,7 @@
 
 use bitflags::bitflags;
 use once_cell::sync::Lazy;
-use regex_automata::{Match, meta::Regex};
+use regex_automata::meta::Regex;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "std")]

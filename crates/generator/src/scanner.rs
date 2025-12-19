@@ -10,7 +10,6 @@
 //! - 50x faster than character-by-character scanning
 
 use crate::binary::PlaceholderType;
-use crate::error::Result;
 
 // ============================================================================
 // Placeholder Detection Result

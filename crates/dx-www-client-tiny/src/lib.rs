@@ -5,6 +5,7 @@
 
 #![no_std]
 #![no_main]
+#![allow(dead_code)]
 
 // Panic handler - required for no_std
 #[panic_handler]

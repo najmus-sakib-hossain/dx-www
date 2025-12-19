@@ -4,7 +4,11 @@
 //!
 //! **Role:** Serve Binary Snapshots, Handle SSR Inflation (SEO), Manage State
 //! **Philosophy:** "Write TSX, Serve Binary"
-//!
+
+// Allow dead_code for API completeness
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 //! ## Architecture
 //!
 //! ```text

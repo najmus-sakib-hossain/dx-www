@@ -1,7 +1,7 @@
 /// TOON to DX ULTRA converter
 ///
 /// Converts TOON format to ultra-optimized DX SINGULARITY format.
-use crate::optimizer::{format_array, optimize_key};
+use crate::optimizer::optimize_key;
 
 /// Convert TOON string to DX ULTRA format
 pub fn toon_to_dx(toon_str: &str) -> Result<String, String> {

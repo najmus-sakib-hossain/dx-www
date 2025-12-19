@@ -8,7 +8,6 @@
 //! - Link expansion
 //! - Color to grayscale conversion
 
-use lightningcss::stylesheet::{ParserOptions, PrinterOptions, StyleSheet};
 
 /// Print stylesheet configuration
 #[derive(Debug, Clone)]

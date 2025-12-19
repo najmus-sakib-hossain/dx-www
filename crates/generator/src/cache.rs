@@ -4,7 +4,6 @@
 //! Uses dirty-bit tracking for O(1) invalidation decisions.
 
 use crate::dirty::DirtyMask;
-use crate::error::{GeneratorError, Result};
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;

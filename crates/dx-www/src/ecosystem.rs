@@ -2,7 +2,7 @@
 
 // Use the schema_parser from the crate root
 use crate::schema_parser;
-use crate::schema_parser::{parse_query_definitions, QueryDefinition};
+use crate::schema_parser::QueryDefinition;
 
 use anyhow::Result;
 

@@ -69,8 +69,8 @@ async fn main() -> Result<()> {
 async fn cmd_search(
     query: &str,
     limit: usize,
-    provider: Option<String>,
-    category: Option<String>,
+    _provider: Option<String>,
+    _category: Option<String>,
     format: &OutputFormat,
 ) -> Result<()> {
     println!("{}", style("🔍 Searching fonts...").cyan().bold());
@@ -183,9 +183,9 @@ async fn cmd_download(
 }
 
 async fn cmd_list(
-    provider: &str,
+    _provider: &str,
     limit: Option<usize>,
-    category: Option<String>,
+    _category: Option<String>,
     format: &OutputFormat,
 ) -> Result<()> {
     println!("{}", style("📋 Listing fonts...").cyan().bold());

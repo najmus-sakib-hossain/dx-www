@@ -3,8 +3,6 @@
 //! Automatically detects DX-Zero vs DX-Infinity format based on magic bytes.
 
 use crate::types::DxValue;
-use crate::zero::types::{DxZeroError, Result as ZeroResult};
-use crate::zero::MAGIC as DX_ZERO_MAGIC;
 
 /// Binary format type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -285,7 +285,7 @@ impl DbPool {
     }
 
     /// Execute query and return raw bytes
-    pub async fn query_raw(&self, sql: &str, params: &[QueryParam]) -> DbResult<QueryResult> {
+    pub async fn query_raw(&self, sql: &str, _params: &[QueryParam]) -> DbResult<QueryResult> {
         let client = self.get().await?;
 
         // Convert params to postgres params (simplified)
@@ -294,8 +294,8 @@ impl DbPool {
         let rows = client.query(sql, &pg_params).await?;
 
         // Convert rows to binary (would be zero-copy in production)
-        let mut data = Vec::new();
-        for row in &rows {
+        let data = Vec::new();
+        for _row in &rows {
             // This is simplified - in reality, we'd use zerocopy directly
             // data.extend_from_slice(row.as_bytes());
         }

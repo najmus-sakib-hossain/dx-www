@@ -1,8 +1,7 @@
 //! DX-Zero in-place serialization builder
 
-use super::header::{DxZeroHeader, FLAG_HAS_HEAP};
+use super::header::DxZeroHeader;
 use super::slot::{DxZeroSlot, MAX_INLINE_SIZE};
-use super::types::Result;
 
 /// Builder for in-place DX-Zero serialization (0 ns)
 ///

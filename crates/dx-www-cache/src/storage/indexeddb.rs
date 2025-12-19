@@ -5,7 +5,7 @@
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{window, IdbDatabase, IdbObjectStore, IdbOpenDbRequest, IdbTransactionMode};
+use web_sys::{window, IdbDatabase, IdbOpenDbRequest, IdbTransactionMode};
 
 /// Open or create IndexedDB database
 pub async fn open_database(db_name: &str, version: u32) -> Result<IdbDatabase, JsValue> {

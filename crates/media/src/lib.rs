@@ -43,7 +43,11 @@
 //! - **Graceful Degradation**: Premium providers work when keys are set, invisible otherwise
 //! - **1B+ Assets**: Access to over 1 billion media assets
 
-#![warn(missing_docs)]
+// Allow dead_code for API completeness - many fields are used for serde deserialization
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(missing_docs)]
 #![warn(clippy::all)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]

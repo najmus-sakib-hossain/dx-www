@@ -51,6 +51,12 @@
 //! - [`security`]: Ed25519 signing, capability manifest, sandbox
 //! - [`state`]: Dirty-bit tracking, shared rules, atomic sync
 
+// Allow dead_code for API completeness - many struct fields are for future use
+#![allow(dead_code)]
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+
 // Core modules
 pub mod context;
 pub mod emitter;

@@ -15,7 +15,7 @@ use std::time::Duration;
 
 use crate::config::Config;
 use crate::error::Result;
-use crate::http::{HttpClient, ResponseExt};
+use crate::http::HttpClient;
 use crate::providers::traits::Provider;
 use crate::types::{License, MediaAsset, MediaType, RateLimitConfig, SearchQuery, SearchResult};
 

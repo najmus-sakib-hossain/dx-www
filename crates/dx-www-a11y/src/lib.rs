@@ -8,7 +8,6 @@
 //! - Auto-fix suggestions
 //! - Zero runtime overhead
 
-use miette::{Diagnostic, SourceSpan};
 use std::fmt;
 
 /// Accessibility severity levels

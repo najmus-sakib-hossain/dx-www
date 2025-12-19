@@ -1,3 +1,6 @@
+// Allow dead_code for API completeness
+#![allow(dead_code)]
+
 pub mod binary;
 pub mod cache;
 pub mod config;

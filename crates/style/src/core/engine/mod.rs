@@ -72,6 +72,7 @@ pub struct StyleEngine {
     pub property_layer_raw: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct PropertyMeta {
     pub name: String,
@@ -80,6 +81,7 @@ pub struct PropertyMeta {
     pub initial: String,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct ThemeDefinition {
     pub name: String,

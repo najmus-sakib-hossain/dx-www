@@ -3,6 +3,9 @@
 //! A modern, high-performance CLI for the DX development platform.
 //! Provides unified control over all dx-* tools with a clean, Vercel-like UX.
 
+// Allow dead_code for API completeness
+#![allow(dead_code)]
+
 use clap::Parser;
 
 mod cli;

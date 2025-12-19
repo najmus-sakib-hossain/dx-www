@@ -100,7 +100,7 @@ pub fn execute_pipeline(pipeline_name: &str) -> Result<()> {
 
         // Update state with execution order
         state.execution_order = results.iter()
-            .map(|o| "tool-id-placeholder".to_string()) // TODO: Get tool ID from output
+            .map(|_o| "tool-id-placeholder".to_string()) // TODO: Get tool ID from output
             .collect();
 
         // Check for failures

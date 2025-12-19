@@ -18,10 +18,9 @@ extern crate alloc;
 mod allocator;
 
 // Ecosystem integration (optional features)
-#[cfg(any(feature = "dev", feature = "dx-error", feature = "dx-debug"))]
+#[cfg(any(feature = "dev", feature = "error", feature = "debug"))]
 pub mod ecosystem;
 
-use alloc::vec::Vec;
 use core::slice;
 
 #[global_allocator]
@@ -57,6 +56,7 @@ extern "C" {
     fn host_listen(node: u32, event_type: u32, handler_id: u32);
 
     // State
+    #[allow(dead_code)]
     fn host_notify_state_change(slot_id: u32);
 
     // Debug
@@ -73,6 +73,7 @@ const OP_PATCH_ATTR: u8 = 3;
 const OP_CLASS_TOGGLE: u8 = 4;
 const OP_REMOVE: u8 = 5;
 const OP_EVENT: u8 = 6;
+#[allow(dead_code)]
 const OP_STATE_UPDATE: u8 = 7;
 const OP_TEMPLATE_DEF: u8 = 8;
 const OP_EOF: u8 = 255;

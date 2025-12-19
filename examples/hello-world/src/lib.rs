@@ -207,7 +207,8 @@ pub fn demo_scheduler() {
 // UTILITIES
 // ============================================================================
 
-fn log(msg: &str) {
+#[allow(dead_code)]
+fn log(_msg: &str) {
     #[cfg(target_arch = "wasm32")]
-    web_sys::console::log_1(&msg.into());
+    web_sys::console::log_1(&_msg.into());
 }

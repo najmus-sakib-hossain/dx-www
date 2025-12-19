@@ -24,8 +24,6 @@ pub use toml::toml_to_dx;
 pub use toon::toon_to_dx;
 pub use yaml::yaml_to_dx;
 
-use crate::optimizer;
-use std::io::Write;
 
 /// Common converter trait
 pub trait ToDx {

@@ -2,6 +2,8 @@
 //!
 //! Zero malloc/free overhead - just a pointer increment
 
+#![allow(static_mut_refs)]
+
 use core::alloc::{GlobalAlloc, Layout};
 
 pub struct BumpAlloc;

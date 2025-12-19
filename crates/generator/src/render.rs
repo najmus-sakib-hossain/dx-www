@@ -8,7 +8,7 @@
 //! - **Macro Mode**: Dynamic templates with conditionals and loops.
 //!   Bytecode interpreter for control flow. ~100µs output.
 
-use crate::binary::{BinaryTemplate, Opcode, PlaceholderEntry, PlaceholderType};
+use crate::binary::{BinaryTemplate, Opcode, PlaceholderType};
 use crate::error::{GeneratorError, Result};
 use crate::params::{ParamValue, Parameters};
 
@@ -169,7 +169,7 @@ impl MicroRenderer {
         self.output.clear();
 
         // Build output by concatenating static segments and variable values
-        let mut last_end = 0;
+        let last_end = 0;
 
         for ph in &template.placeholders {
             // Only handle variables in Micro mode

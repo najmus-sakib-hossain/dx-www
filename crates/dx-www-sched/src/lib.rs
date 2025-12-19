@@ -182,7 +182,7 @@ impl Scheduler {
         self.frame_count += 1;
 
         // Execute queued tasks
-        let executed = self.task_queue.drain_until_budget(&self.timer);
+        let _executed = self.task_queue.drain_until_budget(&self.timer);
 
         // Flush pending DOM operations
         #[cfg(target_arch = "wasm32")]
@@ -191,15 +191,15 @@ impl Scheduler {
         }
 
         // Log performance stats (every 60 frames = 1 second at 60fps)
+        #[cfg(target_arch = "wasm32")]
         if self.frame_count % 60 == 0 {
             let elapsed = self.timer.elapsed();
             let remaining = self.timer.remaining_budget();
 
-            #[cfg(target_arch = "wasm32")]
             web_sys::console::log_1(
                 &format!(
                     "Frame {}: {}ms used, {}ms budget remaining, {} tasks executed",
-                    self.frame_count, elapsed, remaining, executed
+                    self.frame_count, elapsed, remaining, _executed
                 )
                 .into(),
             );
