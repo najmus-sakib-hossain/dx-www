@@ -54,7 +54,7 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - Detect package.json changes
     - Update only affected package entries
     - _Requirements: 1.2_
-  - [-] 3.5 Write property test for incremental update isolation
+  - [x] 3.5 Write property test for incremental update isolation
     - **Property 3: Incremental Manifest Update Isolation**
     - **Validates: Requirements 1.2**
   - [x] 3.6 Implement manifest regeneration on corruption
@@ -88,7 +88,7 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - Create stack-allocated TaskInstance structure
     - Implement clone_task() without heap allocation
     - _Requirements: 2.5, 2.6_
-  - [ ] 6.3 Write property test for task cloning zero-allocation
+  - [-] 6.3 Write property test for task cloning zero-allocation
     - **Property 6: Task Cloning Zero-Allocation**
     - **Validates: Requirements 2.5, 2.6**
   - [x] 6.4 Implement frame budget scheduling

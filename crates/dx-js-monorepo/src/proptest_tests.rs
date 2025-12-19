@@ -481,6 +481,59 @@ proptest! {
 }
 
 // ============================================================================
+// Property 6: Task Cloning Zero-Allocation
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    /// Property 6: Task cloning uses only stack allocation
+    /// For any task instantiation via clone_task(), the operation SHALL complete
+    /// without heap allocations, using only stack-allocated TaskInstance structures.
+    #[test]
+    fn prop_task_cloning_zero_allocation(
+        task_idx in 0u32..1000
+    ) {
+        use crate::types::TaskInstance;
+        use crate::executor::TaskExecutor;
+
+        // Verify TaskInstance is small enough for stack allocation
+        // (fits in a cache line, no heap pointers)
+        prop_assert!(TaskInstance::SIZE <= 96,
+            "TaskInstance size {} should be <= 96 bytes for stack allocation", TaskInstance::SIZE);
+
+        // Create executor and clone task
+        let executor = TaskExecutor::new();
+        let instance = executor.clone_task(task_idx);
+
+        // Verify the instance is correctly initialized
+        prop_assert_eq!(instance.task_idx, task_idx,
+            "Cloned task should have correct task_idx");
+        prop_assert_eq!(instance.state, crate::types::TaskState::Pending,
+            "Cloned task should start in Pending state");
+        prop_assert_eq!(instance.start_time_ns, 0,
+            "Cloned task should have zero start time");
+        prop_assert_eq!(instance.inline_len, 0,
+            "Cloned task should have empty inline output");
+
+        // Verify inline output buffer is zeroed (no uninitialized memory)
+        for byte in &instance.inline_output {
+            prop_assert_eq!(*byte, 0,
+                "Inline output buffer should be zeroed");
+        }
+
+        // Verify the structure is Copy (no heap allocations)
+        // If TaskInstance had heap allocations, it wouldn't implement Copy
+        let _copy: TaskInstance = instance; // This compiles only if Copy is implemented
+        let _another_copy: TaskInstance = instance; // Can copy multiple times
+
+        // Verify inline output capacity
+        prop_assert_eq!(TaskInstance::MAX_INLINE_OUTPUT, 64,
+            "Max inline output should be 64 bytes");
+    }
+}
+
+// ============================================================================
 // Property 3: Incremental Manifest Update Isolation
 // ============================================================================
 
