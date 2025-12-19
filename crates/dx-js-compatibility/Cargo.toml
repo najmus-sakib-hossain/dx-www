@@ -1,10 +1,10 @@
 [package]
 name = "dx-js-compatibility"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
+version = "0.1.0"
+edition = "2021"
+authors = ["DX Team"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dx-www/dx-www-runtime"
 description = "100% Bun API compatibility layer with 10-50x performance gains"
 keywords = ["bun", "nodejs", "compatibility", "runtime", "javascript"]
 categories = ["development-tools", "web-programming"]
@@ -62,7 +62,7 @@ dx-compat-macro = { path = "crates/dx-compat-macro", optional = true }
 dx-compat-html = { path = "crates/dx-compat-html", optional = true }
 
 # Common dependencies
-thiserror.workspace = true
+thiserror = "2.0"
 
 [dev-dependencies]
 proptest = "1.4"

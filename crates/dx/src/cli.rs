@@ -74,6 +74,15 @@ pub enum Commands {
     /// Work with dx-style (Binary CSS)
     Style(commands::style::StyleArgs),
 
+    /// Manage dx-media (Image/Video optimization)
+    Media(commands::media::MediaArgs),
+
+    /// Manage dx-font (Font subsetting)
+    Font(commands::font::FontArgs),
+
+    /// Manage dx-icon (SVG icon system)
+    Icon(commands::icon::IconArgs),
+
     /// Run dx-forge build orchestration
     Forge(commands::forge::ForgeArgs),
 
@@ -107,6 +116,9 @@ impl Cli {
             Commands::Remove(args) => commands::install::run_remove(args, &theme).await,
             Commands::Test(args) => commands::test::run(args, &theme).await,
             Commands::Style(args) => commands::style::run(args, &theme).await,
+            Commands::Media(args) => commands::media::run(args, &theme).await,
+            Commands::Font(args) => commands::font::run(args, &theme).await,
+            Commands::Icon(args) => commands::icon::run(args, &theme).await,
             Commands::Forge(args) => commands::forge::run(args, &theme).await,
             Commands::Info(args) => commands::info::run(args, &theme).await,
             Commands::Clean(args) => commands::clean::run(args, &theme).await,

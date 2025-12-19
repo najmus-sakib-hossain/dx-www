@@ -1,15 +1,15 @@
 [package]
 name = "dx-compat-sqlite"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 description = "Built-in SQLite database compatibility for DX"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
 rusqlite = { version = "0.32", features = ["bundled"] }
 lru = "0.12"
-thiserror.workspace = true
-parking_lot.workspace = true
+thiserror = "2.0"
+parking_lot = "0.12"
 
 [dev-dependencies]
 proptest = "1.4"

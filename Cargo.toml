@@ -74,6 +74,7 @@ exclude = [
     "crates/dx-js-bundler",       # Has 10 internal crates
     "crates/dx-js-test-runner",   # Has own workspace
     "crates/dx-js-package-manager", # Has 12 internal crates
+    "crates/dx-js-compatibility", # Has 12 internal sub-crates
     "crates/oxc",                 # External submodule
     "playground",                 # Experiments
     "benchmarks",                 # Performance tests

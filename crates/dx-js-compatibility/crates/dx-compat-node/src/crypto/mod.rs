@@ -1,7 +1,7 @@
 //! Cryptographic operations.
 
 use sha2::{Sha256, Sha512, Digest};
-use md5::Md5;
+use md5::Md5;  // md-5 crate re-exports as md5
 
 /// Hash algorithm.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
