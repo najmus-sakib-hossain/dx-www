@@ -141,7 +141,7 @@ impl TonalPalette {
 impl Ord for TonalPalette {
     fn cmp(&self, other: &Self) -> Ordering {
         match self._hue.partial_cmp(&other._hue) {
-            Some(Ordering::Equal) | None => {},
+            Some(Ordering::Equal) | None => {}
             ord => return ord.unwrap_or(Ordering::Equal),
         }
         self._chroma.partial_cmp(&other._chroma).unwrap_or(Ordering::Equal)

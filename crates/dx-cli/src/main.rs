@@ -2,6 +2,10 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
+// Internal crate imports (using lib names from Cargo.toml, not package names)
+use dx_compiler as www; // dx-www's lib name is dx_compiler
+use style; // dx-style's lib name is style
+
 #[derive(Parser)]
 #[command(name = "dx")]
 #[command(about = "The Unified Core - CLI & Orchestrator for the dx ecosystem", long_about = None)]
@@ -82,17 +86,17 @@ async fn main() -> Result<()> {
             verbose,
             skip_optimize,
         } => {
-            dx_www::cmd::build(entry, output, verbose, skip_optimize).await?;
+            www::cmd::build(entry, output, verbose, skip_optimize).await?;
         }
         Commands::Dev {
             entry,
             port,
             verbose,
         } => {
-            dx_www::cmd::dev(entry, port, verbose).await?;
+            www::cmd::dev(entry, port, verbose).await?;
         }
         Commands::Style { input, output } => {
-            dx_style::compile(input, output)?;
+            style::compile(input, output).map_err(|e| anyhow::anyhow!("{}", e))?;
         }
     }
 

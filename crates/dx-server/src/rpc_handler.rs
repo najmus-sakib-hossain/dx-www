@@ -2,9 +2,6 @@
 
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-
-use crate::ecosystem::EcosystemState;
 
 /// Binary RPC request
 #[derive(Debug, Deserialize)]
@@ -21,35 +18,13 @@ pub struct RPCResponse {
 }
 
 /// Handle RPC query request
+#[cfg(feature = "query")]
 pub async fn handle_rpc(
-    State(state): State<Arc<EcosystemState>>,
+    State(_state): State<crate::ServerState>,
     Json(req): Json<RPCRequest>,
 ) -> impl IntoResponse {
-    // Check cache first
-    #[cfg(feature = "query")]
-    if let Some(ref cache) = state.query_cache {
-        let query_hash = hash_query(&req.query_id, &req.params);
-
-        if let Some(cached_data) = cache.get(query_hash) {
-            return (
-                StatusCode::OK,
-                Json(RPCResponse {
-                    data: cached_data.to_vec(),
-                    cached: true,
-                }),
-            );
-        }
-    }
-
-    // Execute query
+    // Execute query (cache disabled for now - needs ecosystem integration)
     let data = execute_query(&req.query_id, &req.params).await;
-
-    // Cache result
-    #[cfg(feature = "query")]
-    if let Some(ref cache) = state.query_cache {
-        let key = dx_query::QueryKey::from_bytes(req.query_id.as_bytes());
-        cache.set_with_ttl(key, data.clone(), 300); // 5 min TTL
-    }
 
     (
         StatusCode::OK,

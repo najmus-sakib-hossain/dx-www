@@ -370,18 +370,20 @@ impl DynamicScheme {
 impl Ord for DynamicScheme {
     fn cmp(&self, other: &Self) -> Ordering {
         match self.source_color_hct.cmp(&other.source_color_hct) {
-            Ordering::Equal => {},
+            Ordering::Equal => {}
             ord => return ord,
         }
         match self.variant.cmp(&other.variant) {
-            Ordering::Equal => {},
+            Ordering::Equal => {}
             ord => return ord,
         }
         match self.is_dark.cmp(&other.is_dark) {
-            Ordering::Equal => {},
+            Ordering::Equal => {}
             ord => return ord,
         }
-        self.contrast_level.partial_cmp(&other.contrast_level).unwrap_or(Ordering::Equal)
+        self.contrast_level
+            .partial_cmp(&other.contrast_level)
+            .unwrap_or(Ordering::Equal)
     }
 }
 

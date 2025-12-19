@@ -10,7 +10,10 @@
 
 use argon2::{
     Argon2,
-    password_hash::{PasswordHash, PasswordHasher as Argon2PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
+    password_hash::{
+        PasswordHash, PasswordHasher as Argon2PasswordHasher, PasswordVerifier, SaltString,
+        rand_core::OsRng,
+    },
 };
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use chrono::{DateTime, Duration, Utc};

@@ -102,7 +102,8 @@ impl ChannelManager {
 
         // Keep history size bounded
         if history.len() > self.max_history {
-            history.drain(0..history.len() - self.max_history);
+            let drain_count = history.len() - self.max_history;
+            history.drain(0..drain_count);
         }
         drop(history);
 

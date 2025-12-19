@@ -1,7 +1,7 @@
 //! Demo application showing i18n library usage with JSON data
 
-use i18n::locale::{GoogleTranslator, Translator};
-use i18n::tts::{EdgeTTS, GoogleTTS, TextToSpeech};
+use dx_i18n::locale::{GoogleTranslator, Translator};
+use dx_i18n::tts::{EdgeTTS, GoogleTTS, TextToSpeech};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 

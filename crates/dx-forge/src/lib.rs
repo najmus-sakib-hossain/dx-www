@@ -291,3 +291,94 @@ pub use api::dx_experience::{
 // test event
 // event2
 // test edit
+
+/// Initialize a new dx project.
+///
+/// This creates the project scaffolding using the specified template.
+///
+/// # Arguments
+/// * `name` - The project name (will be used as the directory name)
+/// * `template` - The template to use (e.g., "default", "minimal", "full")
+///
+/// # Errors
+/// Returns an error if project creation fails.
+pub fn init(name: &str, template: &str) -> anyhow::Result<()> {
+    use std::fs;
+    use std::path::Path;
+
+    let project_path = Path::new(name);
+
+    // Create project directory
+    fs::create_dir_all(project_path)?;
+
+    // Create src directory
+    fs::create_dir_all(project_path.join("src"))?;
+    fs::create_dir_all(project_path.join("src/pages"))?;
+    fs::create_dir_all(project_path.join("src/components"))?;
+
+    // Create dx.toml config
+    let config_content = format!(
+        r#"[project]
+name = "{name}"
+version = "0.1.0"
+template = "{template}"
+
+[build]
+output = "dist"
+"#
+    );
+    fs::write(project_path.join("dx.toml"), config_content)?;
+
+    // Create main entry point based on template
+    let main_content = match template {
+        "minimal" => r#"// Minimal dx project
+export default function App() {
+    return <h1>Hello, dx!</h1>;
+}
+"#
+        .to_string(),
+        "full" => r#"// Full dx project with routing
+import { Router, Route } from "dx/router";
+
+export default function App() {
+    return (
+        <Router>
+            <Route path="/" component={Home} />
+            <Route path="/about" component={About} />
+        </Router>
+    );
+}
+
+function Home() {
+    return <h1>Home</h1>;
+}
+
+function About() {
+    return <h1>About</h1>;
+}
+"#
+        .to_string(),
+        _ => r#"// Default dx project
+export default function App() {
+    return (
+        <main>
+            <h1>Welcome to dx</h1>
+            <p>Edit src/pages/index.dx to get started.</p>
+        </main>
+    );
+}
+"#
+        .to_string(),
+    };
+
+    fs::write(project_path.join("src/pages/index.dx"), main_content)?;
+
+    println!("✨ Created new dx project: {}", name);
+    println!("📁 Template: {}", template);
+    println!();
+    println!("Next steps:");
+    println!("  cd {}", name);
+    println!("  dx dev");
+
+    Ok(())
+}

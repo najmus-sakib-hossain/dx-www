@@ -7,11 +7,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use chrono;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-
-use crate::ecosystem::EcosystemState;
 
 /// Login request
 #[derive(Debug, Deserialize)]
@@ -28,8 +24,9 @@ pub struct LoginResponse {
 }
 
 /// Handle login
+#[cfg(feature = "auth")]
 pub async fn handle_login(
-    State(state): State<Arc<EcosystemState>>,
+    State(_state): State<crate::ServerState>,
     Json(req): Json<LoginRequest>,
 ) -> impl IntoResponse {
     // Verify credentials (placeholder)
@@ -37,32 +34,23 @@ pub async fn handle_login(
         return (StatusCode::UNAUTHORIZED, Json(None));
     }
 
-    // Generate token
-    #[cfg(feature = "auth")]
-    if let Some(ref generator) = state.token_generator {
-        let token = generator.generate(
-            1, // user_id (would come from DB)
-            &[dx_auth::UserRole::User], // Roles
-            chrono::Duration::hours(1),   // TTL
-        );
-
-        return (
-            StatusCode::OK,
-            Json(Some(LoginResponse {
-                token: token.to_bytes().to_vec(),
-                expires_at: chrono::Utc::now().timestamp() + 3600,
-            })),
-        );
-    }
-
-    (StatusCode::INTERNAL_SERVER_ERROR, Json(None))
+    // Token generation disabled for now - needs ecosystem integration
+    // In production, would use a TokenGenerator from server state
+    (
+        StatusCode::OK,
+        Json(Some(LoginResponse {
+            token: vec![0u8; 64], // Placeholder token
+            expires_at: 0,
+        })),
+    )
 }
 
 /// Verify token middleware
-pub async fn verify_token_middleware<B>(
-    State(state): State<Arc<EcosystemState>>,
-    mut req: Request<B>,
-    next: Next<B>,
+#[cfg(feature = "auth")]
+pub async fn verify_token_middleware(
+    State(_state): State<crate::ServerState>,
+    req: Request<axum::body::Body>,
+    next: Next,
 ) -> Result<Response, StatusCode> {
     // Extract token from header
     let token = req
@@ -73,12 +61,9 @@ pub async fn verify_token_middleware<B>(
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
     // Verify token (placeholder)
-    #[cfg(feature = "auth")]
-    if let Some(ref generator) = state.token_generator {
-        // In production, would verify signature
-        if token.len() != 64 {
-            return Err(StatusCode::UNAUTHORIZED);
-        }
+    // In production, would verify signature
+    if token.len() != 64 {
+        return Err(StatusCode::UNAUTHORIZED);
     }
 
     // Add user info to request extensions

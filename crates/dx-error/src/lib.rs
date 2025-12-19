@@ -8,8 +8,6 @@
 //! - Automatic retry logic
 //! - Binary error reporting
 
-use bincode;
-use console_error_panic_hook;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -22,7 +20,9 @@ pub mod opcodes {
 }
 
 /// Error severity levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, bincode::Encode, bincode::Decode,
+)]
 pub enum ErrorSeverity {
     Warning,
     Error,
@@ -30,7 +30,7 @@ pub enum ErrorSeverity {
 }
 
 /// Component error information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, bincode::Encode, bincode::Decode)]
 pub struct ComponentError {
     pub component_id: u16,
     pub error_code: u16,
@@ -49,6 +49,7 @@ pub enum BoundaryState {
 }
 
 /// Error boundary (tracks component failures)
+#[derive(Clone)]
 pub struct ErrorBoundary {
     component_id: u16,
     state: Arc<Mutex<BoundaryState>>,
@@ -205,7 +206,8 @@ pub mod binary {
         buf.push(opcodes::ERROR_REPORT);
 
         // Serialize error to binary
-        let error_bytes = bincode::serialize(error).unwrap_or_default();
+        let error_bytes =
+            bincode::encode_to_vec(error, bincode::config::standard()).unwrap_or_default();
         buf.extend_from_slice(&(error_bytes.len() as u32).to_le_bytes());
         buf.extend_from_slice(&error_bytes);
 
@@ -223,7 +225,9 @@ pub mod binary {
             return None;
         }
 
-        bincode::deserialize(&data[5..5 + len]).ok()
+        bincode::decode_from_slice(&data[5..5 + len], bincode::config::standard())
+            .ok()
+            .map(|(v, _)| v)
     }
 }
 

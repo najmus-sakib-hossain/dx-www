@@ -9,7 +9,9 @@
 //! - Binary sync protocol
 
 use serde::{Deserialize, Serialize};
-use yrs::{Doc, StateVector, Text, Transact, Update};
+use yrs::updates::decoder::Decode;
+use yrs::updates::encoder::Encode;
+use yrs::{Doc, GetString, ReadTxn, StateVector, Text, TextRef, Transact, Update};
 
 #[cfg(target_arch = "wasm32")]
 use indexed_db_futures::{IdbDatabase, IdbQuerySource};
@@ -21,7 +23,7 @@ pub struct CRDTDocument {
     /// Document ID
     id: String,
     /// Text field (most common use case)
-    text: Text,
+    text: TextRef,
 }
 
 impl CRDTDocument {
@@ -84,7 +86,7 @@ impl CRDTDocument {
     /// Get full document state
     pub fn get_full_state(&self) -> Vec<u8> {
         let txn = self.doc.transact();
-        txn.encode_state_as_update_v1(&StateVector::default())
+        txn.encode_diff_v1(&StateVector::default())
     }
 }
 

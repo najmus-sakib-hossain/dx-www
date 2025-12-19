@@ -14,6 +14,7 @@ use dx_morph::{ComponentState, CounterState};
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 
+#[cfg(target_arch = "wasm32")]
 pub mod htip_demo;
 
 // ============================================================================
