@@ -32,6 +32,7 @@ pub mod affected;
 pub mod fusion;
 pub mod ghost;
 pub mod watch;
+pub mod remote;
 
 // Property-based tests
 #[cfg(test)]

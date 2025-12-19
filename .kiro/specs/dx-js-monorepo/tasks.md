@@ -218,16 +218,16 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
 - [x] 15. Checkpoint - Lockfile complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. Implement Binary Affected Graph (BAG)
-  - [ ] 16.1 Implement BAG serialization
+- [x] 16. Implement Binary Affected Graph (BAG)
+  - [x] 16.1 Implement BAG serialization
     - Define BinaryAffectedGraph header with magic bytes "DXAG"
     - Store inverse dependency index
     - _Requirements: 7.2_
-  - [ ] 16.2 Implement transitive closure caching
+  - [x] 16.2 Implement transitive closure caching
     - Pre-compute full dependency chains
     - Store in BAG format
     - _Requirements: 7.3_
-  - [ ] 16.3 Implement file-to-package mapping
+  - [x] 16.3 Implement file-to-package mapping
     - Create binary index from file paths to packages
     - _Requirements: 7.4_
 

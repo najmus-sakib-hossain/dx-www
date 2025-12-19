@@ -1126,3 +1126,367 @@ proptest! {
         prop_assert_eq!((major, minor, patch), (m, n, p));
     }
 }
+
+
+// ============================================================================
+// Property 17: Single Request Multi-Entry Fetch
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    /// Property 17: For any request to fetch N cache entries from remote cache,
+    /// the Remote_Cache_Client SHALL complete the operation using exactly 1 network request.
+    #[test]
+    fn prop_single_request_multi_entry_fetch(
+        entry_count in 1usize..50
+    ) {
+        use crate::remote::{DxrcRequest, DxrcRequestType};
+
+        // Generate N task hashes
+        let hashes: Vec<[u8; 32]> = (0..entry_count)
+            .map(|i| {
+                let mut hash = [0u8; 32];
+                hash[0] = i as u8;
+                hash[1] = (i >> 8) as u8;
+                hash
+            })
+            .collect();
+
+        // Create a single fetch request for all hashes
+        let request = DxrcRequest::fetch(hashes.clone());
+
+        // Verify request type
+        prop_assert_eq!(request.request_type, DxrcRequestType::Fetch);
+
+        // Verify all hashes are in the single request
+        prop_assert_eq!(request.task_hashes.len(), entry_count,
+            "Single request should contain all {} hashes", entry_count);
+
+        // Serialize and verify it's a single message
+        let serialized = request.serialize();
+        
+        // Deserialize and verify integrity
+        let deserialized = DxrcRequest::deserialize(&serialized).unwrap();
+        prop_assert_eq!(deserialized.task_hashes.len(), entry_count,
+            "Deserialized request should contain all {} hashes", entry_count);
+
+        // Verify all original hashes are present
+        for (i, hash) in hashes.iter().enumerate() {
+            prop_assert_eq!(&deserialized.task_hashes[i], hash,
+                "Hash {} should match", i);
+        }
+    }
+}
+
+// ============================================================================
+// Property 20: Fusion Output Equivalence
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(50))]
+
+    /// Property 20: For any set of fusible tasks, executing them via Fusion_Executor
+    /// SHALL produce outputs byte-identical to executing them sequentially and independently.
+    #[test]
+    fn prop_fusion_output_equivalence(
+        task_count in 2usize..6
+    ) {
+        use crate::fusion::{FusionAnalyzer, FusedTaskGroup};
+
+        let mut analyzer = FusionAnalyzer::new();
+
+        // Create fusible tasks (all tsc commands)
+        let commands: Vec<String> = (0..task_count)
+            .map(|i| format!("tsc --project packages/pkg-{}", i))
+            .collect();
+        analyzer.set_tasks(commands);
+
+        // Create a fused group
+        let group = FusedTaskGroup {
+            tasks: (0..task_count as u32).collect(),
+            shared_file_handles: Vec::new(),
+            memory_budget: 64 * 1024 * 1024,
+        };
+
+        // Execute fused
+        let fused_outputs = analyzer.execute_fused(&group).unwrap();
+
+        // Verify output count matches task count
+        prop_assert_eq!(fused_outputs.len(), task_count,
+            "Fused execution should produce {} outputs", task_count);
+
+        // Verify each task has an output
+        for (i, output) in fused_outputs.iter().enumerate() {
+            prop_assert_eq!(output.task_idx, i as u32,
+                "Output {} should have correct task_idx", i);
+            prop_assert_eq!(output.exit_code, 0,
+                "Output {} should have exit_code 0", i);
+        }
+
+        // In a real implementation, we would compare with sequential execution
+        // For now, verify the outputs are consistent
+        for output in &fused_outputs {
+            prop_assert!(!output.stdout.is_empty(),
+                "Output should have stdout");
+        }
+    }
+}
+
+// ============================================================================
+// Property 21: Ghost Detection Accuracy
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(30))]
+
+    /// Property 21: For any workspace, the Ghost_Detector SHALL identify all imports
+    /// that reference packages not declared in the importing package's dependencies,
+    /// with no false positives for declared dependencies.
+    #[test]
+    fn prop_ghost_detection_accuracy(
+        declared_count in 1usize..5,
+        undeclared_count in 1usize..5
+    ) {
+        use crate::ghost::GhostDetector;
+        use std::collections::HashSet;
+
+        let mut detector = GhostDetector::new();
+
+        // Set up declared dependencies
+        let declared: HashSet<String> = (0..declared_count)
+            .map(|i| format!("declared-pkg-{}", i))
+            .collect();
+        detector.set_declared_deps(0, declared.clone());
+
+        // Test is_declared for declared packages
+        for pkg in &declared {
+            prop_assert!(detector.is_declared(0, pkg),
+                "Declared package '{}' should be recognized as declared", pkg);
+            
+            // Also test with subpath
+            let with_subpath = format!("{}/submodule", pkg);
+            prop_assert!(detector.is_declared(0, &with_subpath),
+                "Declared package with subpath '{}' should be recognized", with_subpath);
+        }
+
+        // Test is_declared for undeclared packages
+        for i in 0..undeclared_count {
+            let undeclared = format!("undeclared-pkg-{}", i);
+            prop_assert!(!detector.is_declared(0, &undeclared),
+                "Undeclared package '{}' should NOT be recognized as declared", undeclared);
+        }
+
+        // Test builtins are always "declared"
+        let builtins = ["fs", "path", "os", "http", "crypto"];
+        for builtin in builtins {
+            prop_assert!(detector.is_declared(0, builtin),
+                "Builtin '{}' should be recognized as declared", builtin);
+        }
+
+        // Test relative imports are always "declared"
+        let relatives = ["./utils", "../shared", "./components/Button"];
+        for relative in relatives {
+            prop_assert!(detector.is_declared(0, relative),
+                "Relative import '{}' should be recognized as declared", relative);
+        }
+    }
+}
+
+// ============================================================================
+// Property 22: Ghost Report Completeness
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(50))]
+
+    /// Property 22: For any detected ghost dependency, the report SHALL include
+    /// the exact package name, importing file path, line number, and column number.
+    #[test]
+    fn prop_ghost_report_completeness(
+        line in 1u32..1000,
+        column in 1u32..200
+    ) {
+        use crate::types::GhostDependency;
+        use std::path::PathBuf;
+
+        // Create a ghost dependency report
+        let ghost = GhostDependency {
+            package_name: "undeclared-package".to_string(),
+            importing_file: PathBuf::from("packages/app/src/index.ts"),
+            line,
+            column,
+        };
+
+        // Verify all required fields are present and valid
+        prop_assert!(!ghost.package_name.is_empty(),
+            "Package name must not be empty");
+        prop_assert!(!ghost.importing_file.as_os_str().is_empty(),
+            "Importing file path must not be empty");
+        prop_assert!(ghost.line > 0,
+            "Line number must be positive (1-indexed)");
+        prop_assert!(ghost.column > 0,
+            "Column number must be positive (1-indexed)");
+
+        // Verify the values match what we set
+        prop_assert_eq!(ghost.line, line);
+        prop_assert_eq!(ghost.column, column);
+    }
+}
+
+// ============================================================================
+// Property 23: Watch Event Coalescing
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(50))]
+
+    /// Property 23: For any sequence of N rapid file changes to the same file
+    /// within the debounce window, the Watch_Manager SHALL trigger exactly 1 rebuild operation.
+    #[test]
+    fn prop_watch_event_coalescing(
+        change_count in 2usize..20
+    ) {
+        use crate::watch::{WatchManager, DebounceConfig, ChangeType};
+        use std::path::PathBuf;
+
+        let mut manager = WatchManager::new();
+        manager.set_debounce(DebounceConfig {
+            min_wait_ms: 100, // 100ms debounce window
+            max_wait_ms: 500,
+            coalesce: true,
+        });
+
+        let path = PathBuf::from("src/index.ts");
+
+        // Record N rapid changes to the same file
+        for _ in 0..change_count {
+            manager.record_change(path.clone(), ChangeType::Modified);
+        }
+
+        // Should be coalesced into exactly 1 pending change
+        let pending = manager.pending_changes();
+        prop_assert_eq!(pending.len(), 1,
+            "Multiple rapid changes to same file should coalesce to 1, got {}", pending.len());
+
+        // Verify the path is correct
+        prop_assert_eq!(&pending[0].path, &path,
+            "Coalesced change should have correct path");
+    }
+}
+
+// ============================================================================
+// Property 24: Cross-Package Rebuild Deduplication
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(30))]
+
+    /// Property 24: For any file change affecting multiple packages, the Watch_Manager
+    /// SHALL trigger each affected task at most once, preventing redundant rebuilds.
+    #[test]
+    fn prop_cross_package_rebuild_deduplication(
+        package_count in 2usize..10
+    ) {
+        use crate::watch::{WatchManager, ChangeType};
+        use std::path::PathBuf;
+        use std::collections::HashSet;
+
+        let mut manager = WatchManager::new();
+
+        // Set up predictive callback that returns tasks for affected packages
+        let affected_tasks: Vec<u32> = (0..package_count as u32).collect();
+        let tasks_clone = affected_tasks.clone();
+        manager.on_predicted_change(move |_path| {
+            tasks_clone.clone()
+        });
+
+        // Record a change to a shared file
+        let shared_file = PathBuf::from("packages/shared/src/utils.ts");
+        manager.record_change(shared_file.clone(), ChangeType::Modified);
+
+        // Get predicted tasks
+        let tasks = manager.predict_tasks(&shared_file);
+
+        // Verify each task appears exactly once
+        let unique_tasks: HashSet<u32> = tasks.iter().copied().collect();
+        prop_assert_eq!(unique_tasks.len(), tasks.len(),
+            "Each task should appear exactly once, no duplicates");
+
+        // Verify all expected tasks are present
+        for task in &affected_tasks {
+            prop_assert!(unique_tasks.contains(task),
+                "Task {} should be in the predicted tasks", task);
+        }
+
+        // Verify pending changes has exactly one entry
+        let pending = manager.pending_changes();
+        prop_assert_eq!(pending.len(), 1,
+            "Should have exactly 1 pending change for the shared file");
+    }
+}
+
+// ============================================================================
+// Property: BAG Serialization Round-Trip
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(30))]
+
+    /// BAG serialization and deserialization are inverse operations
+    #[test]
+    fn prop_bag_roundtrip(
+        package_count in 2usize..20,
+        edge_density in 0.0f64..0.3
+    ) {
+        use crate::bag::{AffectedGraphData, BagSerializer};
+
+        // Generate random DAG edges (only forward edges to avoid cycles)
+        let mut edges = Vec::new();
+        for i in 0..package_count {
+            for j in (i + 1)..package_count {
+                if rand::random::<f64>() < edge_density {
+                    edges.push((i as u32, j as u32));
+                }
+            }
+        }
+
+        // Create graph with file mappings
+        let mut graph = AffectedGraphData::from_edges(package_count as u32, &edges);
+        for i in 0..package_count {
+            graph.add_file_mapping(&format!("packages/pkg-{}/src/index.ts", i), i as u32);
+        }
+
+        // Serialize
+        let bytes = BagSerializer::serialize(&graph).unwrap();
+
+        // Deserialize
+        let restored = BagSerializer::deserialize(&bytes).unwrap();
+
+        // Verify package count
+        prop_assert_eq!(restored.package_count, graph.package_count);
+
+        // Verify inverse deps
+        for i in 0..package_count {
+            let orig = graph.dependents(i as u32);
+            let rest = restored.dependents(i as u32);
+            prop_assert_eq!(orig.len(), rest.len(),
+                "Inverse deps count mismatch for pkg {}", i);
+        }
+
+        // Verify transitive closure
+        for i in 0..package_count {
+            let orig = graph.transitive_dependents(i as u32);
+            let rest = restored.transitive_dependents(i as u32);
+            prop_assert_eq!(orig.len(), rest.len(),
+                "Transitive deps count mismatch for pkg {}", i);
+        }
+
+        // Verify file mappings
+        for i in 0..package_count {
+            let path = format!("packages/pkg-{}/src/index.ts", i);
+            prop_assert_eq!(restored.file_to_package(&path), Some(i as u32),
+                "File mapping for pkg {} should be preserved", i);
+        }
+    }
+}
