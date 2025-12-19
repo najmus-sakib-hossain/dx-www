@@ -1,0 +1,247 @@
+# ═══════════════════════════════════════════════════════════════════
+# DX CONFIG - The Universal Project Configuration
+# ═══════════════════════════════════════════════════════════════════
+# Like package.json but 4x smaller, 5x more readable, works for LLMs
+# File: dx (no extension needed, like Makefile or Dockerfile)
+# ═══════════════════════════════════════════════════════════════════
+
+name                : dx
+^version            : 0.0.1
+^title              : Enhanced Developing Experience
+^description        : Orchestrate don't just own your code
+^author             : essensefromexistence
+^license            : MIT OR Apache-2.0
+
+# ═══════════════════════════════════════════════════════════════════
+# STACK TABLE (Languages, Runtimes, Tools)
+# ═══════════════════════════════════════════════════════════════════
+# Lang               Runtime    Compiler  Bundler   PM       Framework
+# ------------------------------------------------------------------
+stack=Language Runtime Compiler Bundler PackageManager Framework
+javascript/typescript  bun      tsc       dx-js     dx-pkg   react
+python                 cpython  -         -         uv       django
+rust                   native   rustc     -         cargo    axum
+
+# ═══════════════════════════════════════════════════════════════════
+# FORGE (Build Orchestrator - Central Hub for All DX Tools)
+# ═══════════════════════════════════════════════════════════════════
+forge.repository    : https://dx.vercel.app/essensefromexistence/dx
+^container          : docker
+^registry           : ghcr.io/essensefromexistence/dx
+^ci                 : github-actions
+^cd                 : vercel
+
+forge.cache         : .dx/cache
+^strategy           : content-hash
+^r2_bucket          : dx-cache
+^max_size           : 10GB
+^warm_start         : true
+
+forge_items         > cli | docs | examples | packages | scripts | style | tests
+
+forge_tasks         > build | test | lint | format | check | deploy | bench
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-JS-RUNTIME (10.59x faster than Bun)
+# ═══════════════════════════════════════════════════════════════════
+runtime.engine      : dx-js-runtime
+^target             : es2024
+^modules            : esm
+^sourcemap          : true
+^minify             : true
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-JS-BUNDLER (3.8x faster than Bun)
+# ═══════════════════════════════════════════════════════════════════
+bundler.engine      : dx-js-bundler
+^entry              : src/main.tsx
+^outdir             : dist
+^splitting          : true
+^treeshake          : true
+^cache_dir          : .dx/bundler
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-JS-PACKAGE-MANAGER (17.2x faster than Bun, 50x target)
+# ═══════════════════════════════════════════════════════════════════
+package.engine      : dx-pkg
+^lockfile           : dx.lock
+^cache_dir          : .dx/unsafe
+^registry           : https://registry.npmjs.org
+^binary_cache       : true
+^dedup              : true
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-JS-TEST-RUNNER (26x faster than Bun)
+# ═══════════════════════════════════════════════════════════════════
+test.engine         : dx-test
+^pattern            : **/*.{test,spec}.{ts,tsx,js,jsx}
+^coverage           : true
+^parallel           : true
+^cache_dir          : .dx/test
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-STYLE (50x smaller CSS, 80x faster)
+# ═══════════════════════════════════════════════════════════════════
+style.path          : @/style
+^engine             : dx-style
+^cache_dir          : .dx/style
+
+style_engine        > atomic | enhanced | logical
+style_themes        > dx | vercel | claude | github
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-ICON
+# ═══════════════════════════════════════════════════════════════════
+icon.path           : @/components/icons
+^pack               : lucide-react
+^variant            : default
+^cache_dir          : .dx/icon
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-FONT
+# ═══════════════════════════════════════════════════════════════════
+font.path           : @/font
+^default            : Inter
+^primary            : Manrope
+^secondary          : Roboto Mono
+^cache_dir          : .dx/font
+^subsetting         : true
+^preload            : true
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-MEDIA
+# ═══════════════════════════════════════════════════════════════════
+media.images_path   : @/public/images/*
+^optimize           : true
+^webp               : true
+^avif               : true
+
+media.videos_path   : @/public/videos/*
+^transcode          : true
+^formats            : mp4 | webm
+
+media.sounds_path   : @/public/sounds/*
+
+media.assets_path   : @/public/assets/*
+
+media_cache         : .dx/media
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-I18N (Internationalization)
+# ═══════════════════════════════════════════════════════════════════
+i18n.locales_path   : @/locales
+^default            : en-US
+^fallback           : en
+
+i18n_locales_dev    > en-US
+i18n_locales_prod   > en-US | es-ES | fr-FR | de-DE | ja-JP | zh-CN | bn-BD
+
+i18n.ttses_path     : ./ttses
+^tts_default        : en-US
+i18n_tts_voices     > en-US | bn-BD
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-UI (Component Library)
+# ═══════════════════════════════════════════════════════════════════
+ui.path             : @/components/ui
+^design_system      : dx-design
+^animations         : true
+
+ui_components       > button | card | modal | navbar | footer | input | select | table | dialog | tooltip
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-SERIALIZER (World Record: 73% smaller than JSON)
+# ═══════════════════════════════════════════════════════════════════
+serializer.format   : dx-infinity
+^human_format       : dx-human
+^llm_format         : dx-hyper
+^binary_format      : dx-apex
+^cache_dir          : .dx/serializer
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-GENERATOR (Template Code Generator)
+# ═══════════════════════════════════════════════════════════════════
+generator.templates : @/templates
+^output             : src/generated
+^watch              : true
+^cache_dir          : .dx/generator
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-DRIVEN (AI-Powered Task System - BMAD Method)
+# ═══════════════════════════════════════════════════════════════════
+driven.spec_dir     : specs
+^output             : src
+^model              : claude-opus-4
+^cache_dir          : .dx/driven
+
+# ═══════════════════════════════════════════════════════════════════
+# DX-WWW (Binary-First Web Framework - 413x smaller than React)
+# ═══════════════════════════════════════════════════════════════════
+www.protocol        : htip-v1
+^runtime            : dx-www-client
+^ssr                : dx-www-server
+^cache_dir          : .dx/www
+
+www.components      > core | dom | morph | sched | state | sync | offline | auth | query | form | guard | a11y
+
+# ═══════════════════════════════════════════════════════════════════
+# WORKSPACE (Monorepo Configuration)
+# ═══════════════════════════════════════════════════════════════════
+workspace           > frontend/www | frontend/mobile | backend/api | packages/shared
+
+workspace.cache     : .dx/workspace
+
+# ═══════════════════════════════════════════════════════════════════
+# EDITORS & IDEs (Development Environments)
+# ═══════════════════════════════════════════════════════════════════
+editors             > vscode | cursor | windsurf | vim | neovim | zed
+
+editors.recommended > vscode | cursor
+
+editors.extensions  > dx.dx-vscode | esbenp.prettier-vscode | bradlc.vscode-tailwindcss
+
+# ═══════════════════════════════════════════════════════════════════
+# CLOUD & INFRASTRUCTURE
+# ═══════════════════════════════════════════════════════════════════
+cloud               > gitpod | github-codespace | replit | firebase-studio | stackblitz
+
+deploy.provider     : vercel
+^region             : auto
+^edge               : true
+
+# ═══════════════════════════════════════════════════════════════════
+# SECURITY & SAFETY
+# ═══════════════════════════════════════════════════════════════════
+security.signing    : ed25519
+^audit              : true
+^xss_protection     : compile-time
+^csp                : strict
+
+# ═══════════════════════════════════════════════════════════════════
+# PERFORMANCE TARGETS
+# ═══════════════════════════════════════════════════════════════════
+perf.frame_budget   : 4ms
+^first_paint        : 50ms
+^tti                : 100ms
+^bundle_size        : 10KB
+
+# ═══════════════════════════════════════════════════════════════════
+# .DX FOLDER STRUCTURE
+# ═══════════════════════════════════════════════════════════════════
+# All cache and tool-specific files are stored in .dx folder:
+#
+# .dx/
+# ├── cache/           # Global cache for all dx tools
+# ├── forge/           # Build orchestration state
+# ├── style/           # Compiled CSS cache
+# ├── icon/            # Optimized icons cache
+# ├── media/           # Processed media cache
+# ├── font/            # Subsetted fonts cache
+# ├── stack/           # Runtime/bundler cache
+# ├── workspace/       # Monorepo dependency graph
+# ├── generator/       # Generated code cache
+# ├── driven/          # AI task state
+# ├── unsafe/          # npm packages (untrusted)
+# ├── serializer/      # Parsed config cache
+# └── www/             # HTIP template cache
+# ═══════════════════════════════════════════════════════════════════

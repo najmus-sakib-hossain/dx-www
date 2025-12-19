@@ -4,7 +4,7 @@
 /// - Humans (readable, editable)
 /// - LLMs (text-based, token-efficient)
 /// - Machines (fast parsing)
-use dx_serializer::converters::json::json_to_dx;
+use serializer::converters::json::json_to_dx;
 use std::fs;
 
 fn main() {

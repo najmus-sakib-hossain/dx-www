@@ -1004,3 +1004,8 @@ And then please aseemble forge to run and orchestrate all dx tools and it should
 .dx/serializer
 .dx/www(If its a dx-www project)
 We have to make all dx tools to be connected with forge to make it the main orchestrator of all dx tools! And they should have their own cache files in the .dx folder as I showen above!
+
+Good, but for cache colder please update these:
+rename .dx/unsafe to .dx/node_modules(As its more familiar to devs)
+add .dx/i18n
+add .dx/ui

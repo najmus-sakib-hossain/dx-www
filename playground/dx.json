@@ -4,7 +4,7 @@
     "title": "Enhanced Developing Experience",
     "description": "Orchestrate don't just own your code",
     "author": "essensefromexistence",
-    "languages": [
+    "stack": [
         {
             "name": "javascript/typescript",
             "runtime": "bun",
@@ -96,7 +96,7 @@
             ]
         }
     },
-    "internationalization": {
+    "i18n": {
         "locales": {
             "path": "@/locales",
             "default": "en-US",
@@ -134,18 +134,20 @@
     "devDependencies": {},
     "peerDependencies": {},
     "workspace": {
-        "frontend/www": {},
-        "frontend/mobile": {}
-    },
-    "ide": {
-        "vscode": {},
-        "vim": {},
-        "gitpod": {},
-        "github-codespace": {},
-        "replit": {},
-        "firebase-studio": {},
-        "cursor": {},
-        "windsruff": {},
-        "stackblitz": {}
+        "ide": {
+            "vscode": {},
+            "vim": {},
+            "gitpod": {},
+            "github-codespace": {},
+            "replit": {},
+            "firebase-studio": {},
+            "cursor": {},
+            "windsruff": {},
+            "stackblitz": {}
+        },
+        "monorepo": {
+            "frontend/www": {},
+            "frontend/mobile": {}
+        }
     }
 }

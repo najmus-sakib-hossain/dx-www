@@ -342,6 +342,7 @@ pub fn apex_text_equivalent(binary: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{DxArray, DxObject};
 
     #[test]
     fn test_apex_compression() {
