@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Editor visual and experience settings.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EditorConfig {
     /// Tab size preference.
     #[serde(default = "default_tab_size")]
@@ -73,6 +73,28 @@ fn default_tab_size() -> u8 {
 
 fn default_true() -> bool {
     true
+}
+
+impl Default for EditorConfig {
+    fn default() -> Self {
+        Self {
+            tab_size: default_tab_size(),
+            insert_spaces: default_true(),
+            font_family: None,
+            font_size: None,
+            line_height: None,
+            theme: None,
+            icon_theme: None,
+            keybinding_style: KeybindingStyle::default(),
+            keybindings: Vec::new(),
+            snippets: Vec::new(),
+            word_wrap: WordWrap::default(),
+            render_whitespace: RenderWhitespace::default(),
+            minimap: MinimapConfig::default(),
+            breadcrumbs_enabled: default_true(),
+            extra: HashMap::new(),
+        }
+    }
 }
 
 impl EditorConfig {

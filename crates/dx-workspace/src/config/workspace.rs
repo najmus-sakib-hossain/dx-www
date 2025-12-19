@@ -262,11 +262,23 @@ pub struct DetectedFeatures {
     /// dx-i18n internationalization detected.
     pub has_dx_i18n: bool,
 
+    /// dx-db database integration detected.
+    pub has_dx_db: bool,
+
     /// Uses TypeScript.
     pub uses_typescript: bool,
 
     /// Is a Rust/Cargo project.
     pub is_cargo_project: bool,
+
+    /// Is a Rust project (alias for is_cargo_project).
+    pub is_rust: bool,
+
+    /// Is a Cargo workspace with multiple members.
+    pub is_workspace: bool,
+
+    /// Has Git repository.
+    pub has_git: bool,
 
     /// Has existing VS Code configuration.
     pub has_vscode_config: bool,

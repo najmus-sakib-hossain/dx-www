@@ -93,8 +93,9 @@ impl ProjectDetector {
         let cargo_toml = self.root.join("Cargo.toml");
         if cargo_toml.exists() {
             features.is_cargo_project = true;
+            features.is_rust = true;
 
-            // Parse Cargo.toml for dx dependencies
+            // Parse Cargo.toml for dx dependencies and workspace info
             if let Ok(content) = std::fs::read_to_string(&cargo_toml) {
                 features.has_dx_www = content.contains("dx-www");
                 features.has_dx_style = content.contains("dx-style");
@@ -106,8 +107,14 @@ impl ProjectDetector {
                 features.has_dx_state = content.contains("dx-state");
                 features.has_dx_debug = content.contains("dx-debug");
                 features.has_dx_i18n = content.contains("dx-i18n");
+                features.has_dx_db = content.contains("dx-db");
+                features.is_workspace = content.contains("[workspace]");
             }
         }
+
+        // Check for Git
+        features.has_git = self.root.join(".git").exists()
+            || self.root.join(".gitignore").exists();
 
         // Check for TypeScript
         features.uses_typescript = self.root.join("tsconfig.json").exists()

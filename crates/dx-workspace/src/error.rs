@@ -106,6 +106,22 @@ pub enum Error {
         /// Description of the conflict.
         message: String,
     },
+
+    /// Invalid binary format.
+    #[error("Invalid binary format: {reason}")]
+    InvalidBinaryFormat {
+        /// Description of what's invalid.
+        reason: String,
+    },
+
+    /// Serialization error.
+    #[error("Serialization error ({format}): {details}")]
+    Serialization {
+        /// Format being serialized (json, yaml, binary, etc.).
+        format: String,
+        /// Error details.
+        details: String,
+    },
 }
 
 impl Error {
