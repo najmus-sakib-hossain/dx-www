@@ -1,0 +1,69 @@
+[package]
+name = "dx"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "The Binary-First Development Experience CLI"
+license.workspace = true
+repository.workspace = true
+keywords = ["cli", "build-tool", "bundler", "runtime", "webassembly"]
+categories = ["command-line-utilities", "development-tools", "wasm"]
+
+[[bin]]
+name = "dx"
+path = "src/main.rs"
+
+[dependencies]
+# CLI Framework
+clap = { version = "4.5", features = ["derive", "env", "string", "wrap_help"] }
+
+# Terminal UI
+console = "0.15"
+indicatif = { version = "0.17", features = ["rayon", "tokio"] }
+dialoguer = { version = "0.11", features = ["fuzzy-select"] }
+owo-colors = { version = "4.0", features = ["supports-colors"] }
+
+# Async Runtime
+tokio = { version = "1.40", features = ["full", "parking_lot"] }
+
+# Configuration
+toml = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# File System
+walkdir = "2.5"
+notify = { version = "6.1", default-features = false, features = ["macos_kqueue"] }
+ignore = "0.4"
+glob = "0.3"
+
+# Utilities
+anyhow = "1.0"
+thiserror = "2.0"
+chrono = { version = "0.4", features = ["serde"] }
+human_bytes = "0.4"
+humantime = "2.1"
+ctrlc = "3.4"
+which = "7.0"
+home = "0.5"
+open = "5.3"
+url = "2.5"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["processthreadsapi"] }
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+tempfile = "3.12"
+
+[features]
+default = []
+self-update = []  # For future self-update functionality

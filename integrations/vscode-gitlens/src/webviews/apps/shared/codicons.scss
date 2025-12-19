@@ -1,0 +1,95 @@
+@use './styles/icons/utils';
+
+@keyframes codicon-spin {
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+.icon--sync.icon-modifier--spin,
+.icon--loading.icon-modifier--spin,
+.icon--gear.icon-modifier--spin {
+	/* Use steps to throttle FPS to reduce CPU usage */
+	animation: codicon-spin 1.5s steps(30) infinite;
+}
+
+.icon-modifier--disabled {
+	opacity: 0.5;
+}
+
+.icon-modifier--hidden {
+	opacity: 0;
+}
+
+.icon--loading {
+	/* Use steps to throttle FPS to reduce CPU usage */
+	animation: codicon-spin 1.5s steps(30) infinite;
+
+	/* custom speed & easing for loading icon */
+	animation-duration: 1s !important;
+	animation-timing-function: cubic-bezier(0.53, 0.21, 0.29, 0.67) !important;
+
+	&::before {
+		@include utils.codicon('loading');
+		font-family: codicon;
+	}
+}
+
+.icon--branch {
+	&::before {
+		@include utils.codicon('git-branch');
+		font-family: codicon;
+		position: relative;
+		top: 2px;
+		margin: 0 3px;
+	}
+}
+
+.icon--commit {
+	&::before {
+		@include utils.codicon('git-commit');
+		font-family: codicon;
+		position: relative;
+		top: 2px;
+		margin: 0 1px 0 3px;
+	}
+}
+
+.icon--paused {
+	&::before {
+		@include utils.codicon('debug-pause');
+		font-family: codicon;
+		position: relative;
+		top: 2px;
+		margin: 0 3px;
+	}
+}
+
+.icon--warning {
+	&::before {
+		@include utils.codicon('alert');
+		font-family: codicon;
+		position: relative;
+		top: 2px;
+		margin: 0 3px;
+	}
+}
+
+.codicon[class*='codicon-'] {
+	font: normal normal normal 16px/1 codicon;
+	display: inline-block;
+	text-decoration: none;
+	text-rendering: auto;
+	text-align: center;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+
+	vertical-align: middle;
+	line-height: 2rem;
+	letter-spacing: normal;
+}
+
+@include utils.all-codicons();

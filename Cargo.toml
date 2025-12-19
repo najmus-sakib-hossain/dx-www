@@ -1,6 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
+    # Unified DX CLI
+    "crates/dx",
+    
     # Core runtime crates
     "crates/core",
     "crates/dom",
