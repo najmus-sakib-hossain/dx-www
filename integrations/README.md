@@ -12,4 +12,5 @@ git clone https://github.com/actix/actix-web.git && cd actix-web && rm -rf .git 
 git clone https://github.com/tokio-rs/axum.git && cd axum && rm -rf .git && cd ..
 git clone https://github.com/gitkraken/vscode-gitlens.git && cd vscode-gitlens && rm -rf .git && cd ..
 git clone https://github.com/fadeevab/cliclack.git && cd cliclack && rm -rf .git && cd ..
+git clone https://github.com/vercel/turborepo.git && cd turborepo && rm -rf .git && cd ..
 ```

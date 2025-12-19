@@ -1270,4 +1270,198 @@ Based on the prework analysis, the following correctness properties have been id
 
 **Validates: Requirements 24.1, 24.2**
 
-### Property 
+### Property 17: Plugin Hook Filter Matching
+
+*For any* plugin with onLoad filter pattern P, the hook SHALL be invoked for all files matching P and SHALL NOT be invoked for files not matching P.
+
+**Validates: Requirements 25.2, 25.5**
+
+### Property 18: HTML Transform Correctness
+
+*For any* HTML document and element selector S, the HTMLRewriter SHALL invoke the handler for all elements matching S and SHALL preserve the document structure for non-matching elements.
+
+**Validates: Requirements 27.2, 27.3**
+
+### Property 19: Error Code Correctness
+
+*For any* file operation on a non-existent path, the error SHALL have code ENOENT. *For any* file operation with insufficient permissions, the error SHALL have code EACCES.
+
+**Validates: Requirements 29.1, 29.4, 29.5**
+
+### Property 20: Feature Flag Exclusion
+
+*For any* disabled feature flag F, attempting to use APIs from that feature SHALL result in a compile-time error (feature not enabled).
+
+**Validates: Requirements 1.3, 1.4**
+
+## Error Handling
+
+### Error Propagation Strategy
+
+1. **Rust Result Types**: All fallible operations return `Result<T, E>` where E implements `std::error::Error`
+2. **Error Conversion**: Errors are converted to JavaScript-compatible error objects with:
+   - `message`: Human-readable error description
+   - `code`: Node.js-compatible error code (ENOENT, EACCES, etc.)
+   - `stack`: Stack trace when available
+3. **Async Error Handling**: Async operations propagate errors through the Future chain
+
+### Error Categories
+
+| Category | Rust Error Type | JS Error Type | Example Codes |
+|----------|-----------------|---------------|---------------|
+| File System | `FsError` | `Error` | ENOENT, EACCES, EISDIR |
+| Network | `NetworkError` | `Error` | ECONNREFUSED, ETIMEDOUT |
+| SQLite | `SqliteError` | `Error` | SQLITE_CONSTRAINT, SQLITE_BUSY |
+| S3 | `S3Error` | `Error` | NoSuchKey, AccessDenied |
+| FFI | `FfiError` | `Error` | InvalidPointer, LibraryNotFound |
+| Validation | `ValidationError` | `TypeError` | InvalidArgument |
+
+### Error Recovery Patterns
+
+```rust
+/// Example error handling pattern
+pub async fn safe_read_file(path: &Path) -> Result<Bytes, FsError> {
+    match fs::read_file(path).await {
+        Ok(data) => Ok(data),
+        Err(e) if e.kind() == ErrorKind::NotFound => {
+            Err(FsError::new(ErrorCode::ENOENT, format!("File not found: {}", path.display())))
+        }
+        Err(e) if e.kind() == ErrorKind::PermissionDenied => {
+            Err(FsError::new(ErrorCode::EACCES, format!("Permission denied: {}", path.display())))
+        }
+        Err(e) => Err(FsError::from(e)),
+    }
+}
+```
+
+## Testing Strategy
+
+### Dual Testing Approach
+
+The testing strategy employs both unit tests and property-based tests for comprehensive coverage:
+
+1. **Unit Tests**: Verify specific examples, edge cases, and error conditions
+2. **Property-Based Tests**: Verify universal properties across all valid inputs using the `proptest` crate
+
+### Property-Based Testing Configuration
+
+- **Framework**: `proptest` crate for Rust
+- **Minimum Iterations**: 100 per property test
+- **Shrinking**: Enabled for minimal failing examples
+- **Seed**: Configurable for reproducibility
+
+### Test Organization
+
+```
+crates/dx-js-compatibility/
+├── tests/
+│   ├── node/
+│   │   ├── fs_tests.rs           # Unit tests for fs module
+│   │   ├── fs_props.rs           # Property tests for fs module
+│   │   ├── path_tests.rs         # Unit tests for path module
+│   │   ├── buffer_tests.rs       # Unit tests for buffer module
+│   │   ├── buffer_props.rs       # Property tests for buffer module
+│   │   └── ...
+│   ├── web/
+│   │   ├── fetch_tests.rs        # Unit tests for fetch API
+│   │   ├── streams_tests.rs      # Unit tests for streams
+│   │   ├── streams_props.rs      # Property tests for streams
+│   │   └── ...
+│   ├── bun/
+│   │   ├── serve_tests.rs        # Unit tests for Bun.serve()
+│   │   ├── file_tests.rs         # Unit tests for Bun.file()
+│   │   ├── file_props.rs         # Property tests for Bun.file()
+│   │   ├── hash_tests.rs         # Unit tests for hashing
+│   │   ├── hash_props.rs         # Property tests for hashing
+│   │   ├── compression_props.rs  # Property tests for compression
+│   │   └── ...
+│   ├── sqlite/
+│   │   ├── database_tests.rs     # Unit tests for SQLite
+│   │   ├── database_props.rs     # Property tests for SQLite
+│   │   └── ...
+│   └── integration/
+│       ├── compat_tests.rs       # Cross-module integration tests
+│       └── benchmark_tests.rs    # Performance regression tests
+└── benches/
+    ├── fs_bench.rs               # File system benchmarks
+    ├── http_bench.rs             # HTTP server benchmarks
+    ├── sqlite_bench.rs           # SQLite benchmarks
+    └── hash_bench.rs             # Hashing benchmarks
+```
+
+### Property Test Example
+
+```rust
+use proptest::prelude::*;
+
+proptest! {
+    /// Feature: dx-js-compatibility, Property 5: Compression Round-Trip
+    /// Validates: Requirements 18.1, 18.2, 18.3, 18.4, 18.5, 18.6
+    #[test]
+    fn compression_round_trip(data in prop::collection::vec(any::<u8>(), 0..10000)) {
+        // Gzip round-trip
+        let compressed = gzip_sync(&data, None).unwrap();
+        let decompressed = gunzip_sync(&compressed).unwrap();
+        prop_assert_eq!(&data, &decompressed);
+
+        // Deflate round-trip
+        let compressed = deflate_sync(&data, None).unwrap();
+        let decompressed = inflate_sync(&compressed).unwrap();
+        prop_assert_eq!(&data, &decompressed);
+
+        // Brotli round-trip
+        let compressed = brotli_compress_sync(&data, None).unwrap();
+        let decompressed = brotli_decompress_sync(&compressed).unwrap();
+        prop_assert_eq!(&data, &decompressed);
+
+        // Zstd round-trip
+        let compressed = zstd_compress_sync(&data, None).unwrap();
+        let decompressed = zstd_decompress_sync(&compressed).unwrap();
+        prop_assert_eq!(&data, &decompressed);
+    }
+
+    /// Feature: dx-js-compatibility, Property 4: Buffer Encoding Round-Trip
+    /// Validates: Requirements 4.2, 4.7
+    #[test]
+    fn buffer_encoding_round_trip(s in "\\PC*") {
+        // UTF-8 round-trip
+        let buf = Buffer::from_string(&s, Encoding::Utf8);
+        let result = buf.to_string(Encoding::Utf8);
+        prop_assert_eq!(&s, &result);
+
+        // Base64 round-trip
+        let buf = Buffer::from_string(&s, Encoding::Utf8);
+        let base64 = buf.to_string(Encoding::Base64);
+        let buf2 = Buffer::from_string(&base64, Encoding::Base64);
+        let result = buf2.to_string(Encoding::Utf8);
+        prop_assert_eq!(&s, &result);
+    }
+
+    /// Feature: dx-js-compatibility, Property 7: Hash Consistency
+    /// Validates: Requirements 16.1, 16.2, 16.3, 16.4, 16.5, 16.6
+    #[test]
+    fn hash_consistency(data in prop::collection::vec(any::<u8>(), 0..10000)) {
+        // Same input should always produce same output
+        let hash1 = hash(&data);
+        let hash2 = hash(&data);
+        prop_assert_eq!(hash1, hash2);
+
+        let crc1 = crc32(&data);
+        let crc2 = crc32(&data);
+        prop_assert_eq!(crc1, crc2);
+    }
+}
+```
+
+### Performance Benchmarks
+
+Performance tests validate the requirements from Requirement 28:
+
+```rust
+use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+
+fn http_benchmark(c: &mut Criterion) {
+    let mut group = c.benchmark_group("http_server");
+    group.throughput(Throughput::Elements(1));
+    
+    group.bench_function("requests_per_second",
