@@ -17,8 +17,11 @@ use crate::params::{ParamValue, Parameters};
 // ============================================================================
 
 /// Template rendering mode.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum RenderMode {
+    /// Automatically select based on template analysis.
+    #[default]
+    Auto,
     /// Static templates: direct memory copy with patching.
     Micro,
     /// Dynamic templates: bytecode interpreter.
@@ -516,14 +519,22 @@ impl Renderer {
         }
     }
 
+    /// Create a renderer with a preferred mode.
+    #[must_use]
+    pub fn with_mode(_mode: RenderMode) -> Self {
+        // Mode is selected per-template, so this is just a hint
+        Self::new()
+    }
+
     /// Render a template, automatically selecting the mode.
     pub fn render<'a>(
         &mut self,
         template: &BinaryTemplate,
         params: &Parameters<'a>,
     ) -> Result<&RenderOutput> {
-        match RenderMode::select(template) {
-            RenderMode::Micro => self.micro.render(template, params),
+        let mode = RenderMode::select(template);
+        match mode {
+            RenderMode::Auto | RenderMode::Micro => self.micro.render(template, params),
             RenderMode::Macro => self.r#macro.render(template, params),
         }
     }

@@ -16,6 +16,10 @@ license = "MIT"
 name = "dx_js_monorepo"
 path = "src/lib.rs"
 
+[[bin]]
+name = "dx-monorepo"
+path = "src/bin/dx-monorepo.rs"
+
 [dependencies]
 # Zero-copy memory mapping
 memmap2 = "0.9"

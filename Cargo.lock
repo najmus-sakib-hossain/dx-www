@@ -2315,6 +2315,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "dx-generator"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "bumpalo",
+ "bytemuck",
+ "bytes",
+ "criterion",
+ "ed25519-dalek",
+ "memmap2",
+ "parking_lot",
+ "rayon",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.17",
+ "xxhash-rust",
+]
+
+[[package]]
 name = "dx-guard"
 version = "0.1.0"
 dependencies = [

@@ -33,6 +33,7 @@ pub mod fusion;
 pub mod ghost;
 pub mod watch;
 pub mod remote;
+pub mod cli;
 
 // Property-based tests
 #[cfg(test)]
@@ -51,6 +52,7 @@ pub use fusion::FusionAnalyzer;
 pub use ghost::GhostDetector;
 pub use watch::WatchManager;
 pub use remote::RemoteCacheClient;
+pub use cli::{Cli, Command, CliResult};
 
 /// Magic bytes for Binary Workspace Manifest
 pub const BWM_MAGIC: [u8; 4] = *b"DXWM";

@@ -71,6 +71,9 @@ members = [
     # NEW: Binary-first monorepo management
     "crates/dx-js-monorepo",
     
+    # NEW: Binary Dawn Code Generator
+    "crates/dx-generator",
+    
     # Examples & Playground
     "examples/hello-world",
 ]
