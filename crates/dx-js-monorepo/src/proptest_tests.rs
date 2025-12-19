@@ -481,6 +481,329 @@ proptest! {
 }
 
 // ============================================================================
+// Property 13: Cache Signature Tamper Detection
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(30))]
+
+    /// Property 13: Modifying any byte of cache content causes signature verification to fail
+    /// For any DXC cache entry, modifying any byte of the content SHALL cause
+    /// signature verification to fail.
+    #[test]
+    fn prop_cache_tamper_detection(
+        file_content in prop::collection::vec(any::<u8>(), 10..100),
+        tamper_position in 0usize..100
+    ) {
+        use crate::dxc::CacheEntry;
+        use crate::cache::CacheManager;
+        use ed25519_dalek::{SigningKey, Signer};
+        use tempfile::TempDir;
+
+        // Create a cache entry with content
+        let task_hash = blake3::hash(&file_content);
+        let mut entry = CacheEntry::new(*task_hash.as_bytes());
+        entry.add_file("test.txt".to_string(), file_content.clone(), 0o644);
+
+        // Generate a signing key
+        let signing_key = SigningKey::from_bytes(&[42u8; 32]);
+        let verifying_key = signing_key.verifying_key();
+
+        // Sign the entry
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(&entry.task_hash);
+        for file in &entry.files {
+            hasher.update(file.path.as_bytes());
+            hasher.update(&file.content);
+        }
+        let content_hash = hasher.finalize();
+        let signature = signing_key.sign(content_hash.as_bytes());
+
+        entry.signature = Some(signature.to_bytes());
+        entry.public_key = Some(verifying_key.to_bytes());
+
+        // Create cache manager and verify original entry
+        let temp = TempDir::new().unwrap();
+        let cache = CacheManager::new(temp.path().to_path_buf(), 1024 * 1024);
+        
+        // Original entry should verify
+        let verify_result = cache.verify(&entry);
+        prop_assert!(verify_result.is_ok() && verify_result.unwrap(),
+            "Original entry should verify successfully");
+
+        // Tamper with the content
+        let tamper_idx = tamper_position % file_content.len();
+        let mut tampered_entry = entry.clone();
+        tampered_entry.files[0].content[tamper_idx] ^= 0xFF; // Flip all bits
+
+        // Tampered entry should fail verification
+        let tampered_result = cache.verify(&tampered_entry);
+        prop_assert!(tampered_result.is_err() || !tampered_result.unwrap(),
+            "Tampered entry should fail verification");
+    }
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(20))]
+
+    /// Property 13 (continued): Tampering with signature itself is detected
+    #[test]
+    fn prop_signature_tamper_detection(
+        file_content in prop::collection::vec(any::<u8>(), 10..50),
+        sig_tamper_position in 0usize..64
+    ) {
+        use crate::dxc::CacheEntry;
+        use crate::cache::CacheManager;
+        use ed25519_dalek::{SigningKey, Signer};
+        use tempfile::TempDir;
+
+        // Create and sign entry
+        let task_hash = blake3::hash(&file_content);
+        let mut entry = CacheEntry::new(*task_hash.as_bytes());
+        entry.add_file("test.txt".to_string(), file_content.clone(), 0o644);
+
+        let signing_key = SigningKey::from_bytes(&[42u8; 32]);
+        let verifying_key = signing_key.verifying_key();
+
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(&entry.task_hash);
+        for file in &entry.files {
+            hasher.update(file.path.as_bytes());
+            hasher.update(&file.content);
+        }
+        let content_hash = hasher.finalize();
+        let signature = signing_key.sign(content_hash.as_bytes());
+
+        entry.signature = Some(signature.to_bytes());
+        entry.public_key = Some(verifying_key.to_bytes());
+
+        // Tamper with the signature itself
+        let mut tampered_entry = entry.clone();
+        let mut tampered_sig = tampered_entry.signature.unwrap();
+        tampered_sig[sig_tamper_position % 64] ^= 0xFF;
+        tampered_entry.signature = Some(tampered_sig);
+
+        // Tampered signature should fail verification
+        let temp = TempDir::new().unwrap();
+        let cache = CacheManager::new(temp.path().to_path_buf(), 1024 * 1024);
+        let result = cache.verify(&tampered_entry);
+        
+        prop_assert!(result.is_err() || !result.unwrap(),
+            "Entry with tampered signature should fail verification");
+    }
+}
+
+// ============================================================================
+// Property 9: Import Detection Completeness
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(50))]
+
+    /// Property 9: Import detection identifies all import types
+    /// For any JavaScript/TypeScript file, the SIMD-accelerated import detection SHALL
+    /// identify all import statements (ES6 imports, CommonJS requires, dynamic imports)
+    /// with correct file paths and line numbers.
+    #[test]
+    fn prop_import_detection_completeness(
+        module_name in "[a-z][a-z0-9-]{0,15}",
+        import_type in 0u8..4
+    ) {
+        use crate::change::ChangeDetector;
+        use crate::types::ImportKind;
+
+        let detector = ChangeDetector::new();
+
+        // Generate different import types based on import_type
+        let (content, expected_kind) = match import_type {
+            0 => {
+                // ES6 import
+                let content = format!("import foo from '{}';", module_name);
+                (content, ImportKind::Es6Import)
+            }
+            1 => {
+                // CommonJS require
+                let content = format!("const foo = require('{}');", module_name);
+                (content, ImportKind::CommonJsRequire)
+            }
+            2 => {
+                // Dynamic import
+                let content = format!("const foo = await import('{}');", module_name);
+                (content, ImportKind::DynamicImport)
+            }
+            _ => {
+                // Export from
+                let content = format!("export {{ foo }} from '{}';", module_name);
+                (content, ImportKind::Es6ExportFrom)
+            }
+        };
+
+        let imports = detector.detect_imports(content.as_bytes());
+
+        // Should detect exactly one import
+        prop_assert_eq!(imports.len(), 1,
+            "Should detect exactly one import in: {}", content);
+
+        let import = &imports[0];
+        
+        // Verify specifier matches
+        prop_assert_eq!(&import.specifier, &module_name,
+            "Import specifier should match module name");
+
+        // Verify import kind
+        prop_assert_eq!(import.kind, expected_kind,
+            "Import kind should match expected type");
+
+        // Verify line number is 1 (single line content)
+        prop_assert_eq!(import.line, 1,
+            "Import should be on line 1");
+
+        // Verify column is positive
+        prop_assert!(import.column > 0,
+            "Import column should be positive");
+    }
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(30))]
+
+    /// Property 9 (continued): Multiple imports are all detected
+    #[test]
+    fn prop_multiple_imports_detected(
+        import_count in 1usize..10
+    ) {
+        use crate::change::ChangeDetector;
+
+        let detector = ChangeDetector::new();
+
+        // Generate multiple imports
+        let mut content = String::new();
+        for i in 0..import_count {
+            content.push_str(&format!("import pkg{} from 'package-{}';\n", i, i));
+        }
+
+        let imports = detector.detect_imports(content.as_bytes());
+
+        // Should detect all imports
+        prop_assert_eq!(imports.len(), import_count,
+            "Should detect {} imports, found {}", import_count, imports.len());
+
+        // Verify each import has correct line number
+        for (i, import) in imports.iter().enumerate() {
+            prop_assert_eq!(import.line, (i + 1) as u32,
+                "Import {} should be on line {}", i, i + 1);
+            prop_assert_eq!(&import.specifier, &format!("package-{}", i),
+                "Import {} should have correct specifier", i);
+        }
+    }
+}
+
+// ============================================================================
+// Property 7: Frame Budget Yield Behavior
+// ============================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(50))]
+
+    /// Property 7: Tasks yield when frame budget is exceeded
+    /// For any task with a configured frame budget, if execution time exceeds the budget,
+    /// the Task_Executor SHALL yield within 1ms of the budget threshold.
+    #[test]
+    fn prop_frame_budget_yield_behavior(
+        frame_budget_us in 1000u32..100000, // 1ms to 100ms budget
+        elapsed_factor in 0.5f64..2.0 // Factor of budget elapsed
+    ) {
+        use crate::executor::TaskExecutor;
+        use crate::btg::{BtgSerializer, TaskGraphData, TaskData};
+
+        // Create a task with the specified frame budget
+        let mut data = TaskGraphData {
+            tasks: vec![TaskData {
+                name: "test-task".to_string(),
+                package_idx: 0,
+                command: "npm test".to_string(),
+                definition_hash: [0; 8],
+                frame_budget_us,
+                cacheable: true,
+            }],
+            dependency_edges: Vec::new(),
+            topological_order: vec![0],
+            parallel_groups: Vec::new(),
+        };
+        data.compute_parallel_groups();
+
+        let bytes = BtgSerializer::serialize(&data).unwrap();
+        let mut executor = TaskExecutor::new();
+        executor.load_from_bytes(&bytes).unwrap();
+
+        // Create task instance and start it
+        let mut instance = executor.clone_task(0);
+        let start_ns = 0u64;
+        instance.start(start_ns);
+
+        // Calculate elapsed time based on factor
+        let elapsed_us = (frame_budget_us as f64 * elapsed_factor) as u64;
+        let now_ns = start_ns + elapsed_us * 1000; // Convert to nanoseconds
+
+        let should_yield = executor.should_yield(&instance, now_ns);
+
+        if elapsed_factor >= 1.0 {
+            // If elapsed time >= budget, should yield
+            prop_assert!(should_yield,
+                "Task should yield when elapsed ({} us) >= budget ({} us)",
+                elapsed_us, frame_budget_us);
+        } else {
+            // If elapsed time < budget, should not yield
+            prop_assert!(!should_yield,
+                "Task should not yield when elapsed ({} us) < budget ({} us)",
+                elapsed_us, frame_budget_us);
+        }
+    }
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(30))]
+
+    /// Property 7 (continued): Tasks with no frame budget never yield
+    #[test]
+    fn prop_no_frame_budget_never_yields(
+        elapsed_us in 0u64..1_000_000_000 // Up to 1000 seconds
+    ) {
+        use crate::executor::TaskExecutor;
+        use crate::btg::{BtgSerializer, TaskGraphData, TaskData};
+
+        // Create a task with NO frame budget (0 = unlimited)
+        let mut data = TaskGraphData {
+            tasks: vec![TaskData {
+                name: "unlimited-task".to_string(),
+                package_idx: 0,
+                command: "npm run long-task".to_string(),
+                definition_hash: [0; 8],
+                frame_budget_us: 0, // No budget
+                cacheable: true,
+            }],
+            dependency_edges: Vec::new(),
+            topological_order: vec![0],
+            parallel_groups: Vec::new(),
+        };
+        data.compute_parallel_groups();
+
+        let bytes = BtgSerializer::serialize(&data).unwrap();
+        let mut executor = TaskExecutor::new();
+        executor.load_from_bytes(&bytes).unwrap();
+
+        let mut instance = executor.clone_task(0);
+        instance.start(0);
+
+        let now_ns = elapsed_us * 1000;
+        let should_yield = executor.should_yield(&instance, now_ns);
+
+        prop_assert!(!should_yield,
+            "Task with no frame budget should never yield, even after {} us", elapsed_us);
+    }
+}
+
+// ============================================================================
 // Property 6: Task Cloning Zero-Allocation
 // ============================================================================
 

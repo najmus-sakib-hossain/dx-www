@@ -355,6 +355,90 @@ impl DxlSerializer {
     }
 }
 
+/// Lockfile Resolver for O(1) package resolution
+pub struct LockfileResolver {
+    /// Loaded lockfile data
+    data: Option<LockfileData>,
+    /// Package name to index lookup (for O(1) resolution)
+    name_index: rustc_hash::FxHashMap<String, usize>,
+    /// Workspace package versions (for workspace:* resolution)
+    workspace_versions: rustc_hash::FxHashMap<String, (u16, u16, u16)>,
+}
+
+impl LockfileResolver {
+    /// Create a new lockfile resolver
+    pub fn new() -> Self {
+        Self {
+            data: None,
+            name_index: rustc_hash::FxHashMap::default(),
+            workspace_versions: rustc_hash::FxHashMap::default(),
+        }
+    }
+
+    /// Load lockfile from serialized bytes
+    pub fn load_from_bytes(&mut self, bytes: &[u8]) -> Result<(), LockfileError> {
+        let data = DxlSerializer::deserialize(bytes)?;
+        self.build_name_index(&data);
+        self.data = Some(data);
+        Ok(())
+    }
+
+    /// Build name-to-index lookup table for O(1) resolution
+    fn build_name_index(&mut self, data: &LockfileData) {
+        self.name_index.clear();
+        for (idx, pkg) in data.packages.iter().enumerate() {
+            self.name_index.insert(pkg.name.clone(), idx);
+        }
+    }
+
+    /// Register workspace package version (for workspace:* resolution)
+    pub fn register_workspace_package(&mut self, name: &str, version: (u16, u16, u16)) {
+        self.workspace_versions.insert(name.to_string(), version);
+    }
+
+    /// Resolve package with O(1) lookup
+    pub fn resolve(&self, name: &str) -> Option<&PackageResolution> {
+        let idx = *self.name_index.get(name)?;
+        self.data.as_ref()?.packages.get(idx)
+    }
+
+    /// Resolve package by name and version requirement
+    /// For simplicity, this returns the first match (real impl would check version)
+    pub fn resolve_with_version(&self, name: &str, _version_req: &str) -> Option<&PackageResolution> {
+        self.resolve(name)
+    }
+
+    /// Get pre-resolved workspace protocol reference
+    pub fn resolve_workspace(&self, name: &str) -> Option<(u16, u16, u16)> {
+        self.workspace_versions.get(name).copied()
+    }
+
+    /// Get all resolved packages
+    pub fn packages(&self) -> &[PackageResolution] {
+        self.data.as_ref()
+            .map(|d| d.packages.as_slice())
+            .unwrap_or(&[])
+    }
+
+    /// Get package count
+    pub fn package_count(&self) -> usize {
+        self.data.as_ref()
+            .map(|d| d.packages.len())
+            .unwrap_or(0)
+    }
+
+    /// Check if lockfile is loaded
+    pub fn is_loaded(&self) -> bool {
+        self.data.is_some()
+    }
+}
+
+impl Default for LockfileResolver {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -424,5 +508,71 @@ mod tests {
         
         assert_eq!(lockfile1.packages.len(), 2);
         assert_eq!(lockfile1.vector_clock, [1, 1, 0, 0, 0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn test_lockfile_resolver_o1_lookup() {
+        let data = LockfileData {
+            packages: vec![
+                PackageResolution {
+                    name: "lodash".to_string(),
+                    version: (4, 17, 21),
+                    integrity: [1; 32],
+                    tarball_url: "https://registry.npmjs.org/lodash".to_string(),
+                    dependencies: vec![],
+                },
+                PackageResolution {
+                    name: "react".to_string(),
+                    version: (18, 2, 0),
+                    integrity: [2; 32],
+                    tarball_url: "https://registry.npmjs.org/react".to_string(),
+                    dependencies: vec![],
+                },
+                PackageResolution {
+                    name: "typescript".to_string(),
+                    version: (5, 0, 0),
+                    integrity: [3; 32],
+                    tarball_url: "https://registry.npmjs.org/typescript".to_string(),
+                    dependencies: vec![],
+                },
+            ],
+            vector_clock: [1, 0, 0, 0, 0, 0, 0, 0],
+        };
+
+        let bytes = DxlSerializer::serialize(&data).unwrap();
+        let mut resolver = LockfileResolver::new();
+        resolver.load_from_bytes(&bytes).unwrap();
+
+        // O(1) lookup by name
+        let lodash = resolver.resolve("lodash").unwrap();
+        assert_eq!(lodash.version, (4, 17, 21));
+
+        let react = resolver.resolve("react").unwrap();
+        assert_eq!(react.version, (18, 2, 0));
+
+        let ts = resolver.resolve("typescript").unwrap();
+        assert_eq!(ts.version, (5, 0, 0));
+
+        // Non-existent package
+        assert!(resolver.resolve("nonexistent").is_none());
+    }
+
+    #[test]
+    fn test_lockfile_resolver_workspace_protocol() {
+        let mut resolver = LockfileResolver::new();
+        
+        // Register workspace packages
+        resolver.register_workspace_package("@myorg/core", (1, 0, 0));
+        resolver.register_workspace_package("@myorg/utils", (1, 2, 3));
+
+        // Resolve workspace:* references
+        let core_version = resolver.resolve_workspace("@myorg/core").unwrap();
+        assert_eq!(core_version, (1, 0, 0));
+
+        let utils_version = resolver.resolve_workspace("@myorg/utils").unwrap();
+        assert_eq!(utils_version, (1, 2, 3));
+
+        // Non-existent workspace package
+        assert!(resolver.resolve_workspace("@myorg/nonexistent").is_none());
     }
 }

@@ -88,14 +88,14 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - Create stack-allocated TaskInstance structure
     - Implement clone_task() without heap allocation
     - _Requirements: 2.5, 2.6_
-  - [-] 6.3 Write property test for task cloning zero-allocation
+  - [x] 6.3 Write property test for task cloning zero-allocation
     - **Property 6: Task Cloning Zero-Allocation**
     - **Validates: Requirements 2.5, 2.6**
   - [x] 6.4 Implement frame budget scheduling
     - Track task execution time
     - Yield when frame budget exceeded
     - _Requirements: 2.7_
-  - [ ] 6.5 Write property test for frame budget yield behavior
+  - [x] 6.5 Write property test for frame budget yield behavior
     - **Property 7: Frame Budget Yield Behavior**
     - **Validates: Requirements 2.7**
   - [x] 6.6 Implement task execution with parallel scheduling
@@ -124,7 +124,7 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - Use AVX2 pattern matching for import statements
     - Detect ES6 imports, CommonJS requires, dynamic imports
     - _Requirements: 3.4_
-  - [ ] 8.6 Write property test for import detection completeness
+  - [x] 8.6 Write property test for import detection completeness
     - **Property 9: Import Detection Completeness**
     - **Validates: Requirements 3.4, 7.5**
   - [x] 8.7 Implement incremental file hashing
@@ -151,7 +151,7 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - Sign cache entries on store
     - Verify signatures on retrieve
     - _Requirements: 4.5_
-  - [ ] 10.4 Write property test for tamper detection
+  - [x] 10.4 Write property test for tamper detection
     - **Property 13: Cache Signature Tamper Detection**
     - **Validates: Requirements 4.5**
   - [x] 10.5 Implement XOR differential patching
@@ -199,23 +199,23 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - Compute optimal node_modules structure
     - Store in lockfile
     - _Requirements: 5.4_
-  - [ ] 13.5 Implement CRDT merge for lockfiles
+  - [x] 13.5 Implement CRDT merge for lockfiles
     - Use vector clocks for conflict detection
     - Implement automatic merge resolution
     - _Requirements: 5.5_
-  - [ ] 13.6 Write property test for CRDT merge commutativity
+  - [x] 13.6 Write property test for CRDT merge commutativity
     - **Property 15: CRDT Merge Commutativity**
     - **Validates: Requirements 5.5**
 
-- [ ] 14. Implement Lockfile Resolver
-  - [ ] 14.1 Implement O(1) package resolution
+- [x] 14. Implement Lockfile Resolver
+  - [x] 14.1 Implement O(1) package resolution
     - Use binary index for constant-time lookup
     - _Requirements: 5.1_
-  - [ ] 14.2 Implement workspace protocol resolution
+  - [x] 14.2 Implement workspace protocol resolution
     - Resolve workspace:* at lock time
     - _Requirements: 5.2_
 
-- [ ] 15. Checkpoint - Lockfile complete
+- [x] 15. Checkpoint - Lockfile complete
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 16. Implement Binary Affected Graph (BAG)

@@ -45,6 +45,7 @@ pub use executor::TaskExecutor;
 pub use cache::CacheManager;
 pub use change::ChangeDetector;
 pub use affected::AffectedDetector;
+pub use dxl::LockfileResolver;
 
 /// Magic bytes for Binary Workspace Manifest
 pub const BWM_MAGIC: [u8; 4] = *b"DXWM";
