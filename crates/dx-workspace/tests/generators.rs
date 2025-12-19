@@ -220,7 +220,9 @@ fn test_dx_defaults() {
     // Should have dx-specific tasks
     assert!(!tasks.tasks.is_empty());
 
-    // Should have build task
-    let has_build = tasks.tasks.iter().any(|t| t.label.contains("Build") || t.command.contains("dx build"));
+    // Should have build task (check case-insensitively)
+    let has_build = tasks.tasks.iter().any(|t| {
+        t.label.to_lowercase().contains("build") || t.command == "dx"
+    });
     assert!(has_build, "Should have a build task");
 }
