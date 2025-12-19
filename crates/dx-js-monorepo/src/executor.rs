@@ -7,7 +7,7 @@ use std::time::Instant;
 use memmap2::Mmap;
 use bitvec::prelude::*;
 use crate::error::TaskError;
-use crate::types::{TaskEntry, TaskInstance, TaskState};
+use crate::types::TaskInstance;
 use crate::btg::{BtgHeader, BtgSerializer, TaskGraphData, TaskData};
 
 /// Task output from execution
@@ -242,7 +242,7 @@ impl Default for TaskExecutor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::btg::ParallelGroup;
+    use crate::types::TaskState;
 
     fn create_test_graph() -> TaskGraphData {
         let mut data = TaskGraphData {

@@ -100,7 +100,7 @@ impl BwmSerializer {
         buffer.extend_from_slice(bytemuck::bytes_of(&header));
         
         // Write package entries
-        for (i, pkg) in config.packages.iter().enumerate() {
+        for (_i, pkg) in config.packages.iter().enumerate() {
             let entry = PackageEntry::new(
                 string_indices[&pkg.name] as u32,
                 string_indices[&pkg.path] as u32,
@@ -126,8 +126,9 @@ impl BwmSerializer {
         buffer.extend_from_slice(&string_table);
         
         // Compute content hash
+        // content_hash offset in packed BwmHeader: 4 + 4 + 4 + 8 + 8 + 8 + 8 = 44
         let content_hash = blake3::hash(&buffer[BwmHeader::SIZE..]);
-        buffer[56..88].copy_from_slice(content_hash.as_bytes());
+        buffer[44..76].copy_from_slice(content_hash.as_bytes());
         
         Ok(buffer)
     }
@@ -212,20 +213,20 @@ impl BwmSerializer {
         
         let mut table = Vec::new();
         let mut indices = HashMap::new();
-        let mut offset = 0usize;
+        let mut string_index = 0usize;
         
         for pkg in &config.packages {
             if !indices.contains_key(&pkg.name) {
-                indices.insert(pkg.name.clone(), offset);
+                indices.insert(pkg.name.clone(), string_index);
                 table.extend_from_slice(pkg.name.as_bytes());
                 table.push(0); // null terminator
-                offset = table.len();
+                string_index += 1;
             }
             if !indices.contains_key(&pkg.path) {
-                indices.insert(pkg.path.clone(), offset);
+                indices.insert(pkg.path.clone(), string_index);
                 table.extend_from_slice(pkg.path.as_bytes());
                 table.push(0);
-                offset = table.len();
+                string_index += 1;
             }
         }
         
@@ -338,7 +339,8 @@ mod tests {
 
     #[test]
     fn test_bwm_header_size() {
-        assert_eq!(BwmHeader::SIZE, 88);
+        // Packed struct size: 4 + 4 + 4 + 8 + 8 + 8 + 8 + 32 = 76 bytes
+        assert_eq!(BwmHeader::SIZE, 76);
     }
 
     #[test]

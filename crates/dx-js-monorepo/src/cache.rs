@@ -2,7 +2,7 @@
 //!
 //! Manages local DXC cache storage with memory-mapped access.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::collections::HashMap;
 use crate::error::CacheError;
 use crate::dxc::{CacheEntry, XorPatch};
@@ -358,7 +358,7 @@ mod tests {
 
         let hash1 = [1u8; 32];
         let hash2 = [2u8; 32];
-        let hash3 = [3u8; 32];
+        let _hash3 = [3u8; 32];
 
         // Add hash1 and hash2
         cache.bloom_add(&hash1);

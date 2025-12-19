@@ -90,7 +90,7 @@ impl DxlHeader {
 }
 
 /// Resolved package entry
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct ResolvedPackage {
     /// Index into string table for name
@@ -222,10 +222,10 @@ impl DxlSerializer {
         
         // Calculate offsets
         let index_offset = DxlHeader::SIZE as u64;
-        let index_size = data.packages.len() * 8; // (hash, offset) pairs
+        let index_size = data.packages.len() * 16; // (hash: u64, offset: u64) pairs
         let entries_offset = index_offset + index_size as u64;
         let entries_size = data.packages.len() * ResolvedPackage::SIZE;
-        let strings_offset = entries_offset + entries_size as u64;
+        let _strings_offset = entries_offset + entries_size as u64;
         
         // Create header
         let mut header = DxlHeader::new(data.packages.len() as u32);
@@ -266,8 +266,9 @@ impl DxlSerializer {
         buffer.extend_from_slice(&string_table);
         
         // Compute content hash
+        // content_hash offset in packed DxlHeader: 4 + 4 + 4 + 8 + 8 + 8 + 8 + 64 = 108
         let content_hash = blake3::hash(&buffer[DxlHeader::SIZE..]);
-        buffer[96..128].copy_from_slice(content_hash.as_bytes());
+        buffer[108..140].copy_from_slice(content_hash.as_bytes());
         
         Ok(buffer)
     }
@@ -321,15 +322,15 @@ impl DxlSerializer {
         
         let mut table = Vec::new();
         let mut indices = HashMap::new();
-        let mut offset = 0usize;
+        let mut string_index = 0usize;
         
         for pkg in &data.packages {
             for s in [&pkg.name, &pkg.tarball_url] {
                 if !indices.contains_key(s) {
-                    indices.insert(s.clone(), offset);
+                    indices.insert(s.clone(), string_index);
                     table.extend_from_slice(s.as_bytes());
                     table.push(0);
-                    offset = table.len();
+                    string_index += 1;
                 }
             }
         }
@@ -360,7 +361,8 @@ mod tests {
 
     #[test]
     fn test_dxl_header_size() {
-        assert_eq!(DxlHeader::SIZE, 128);
+        // Packed struct size: 4 + 4 + 4 + 8 + 8 + 8 + 8 + 64 + 32 = 140 bytes
+        assert_eq!(DxlHeader::SIZE, 140);
     }
 
     #[test]
@@ -371,7 +373,9 @@ mod tests {
         let other = [0, 5, 1, 4, 0, 0, 0, 0];
         header.merge_clocks(&other);
         
-        assert_eq!(header.vector_clock, [1, 5, 3, 4, 0, 0, 0, 0]);
+        // Copy to avoid unaligned access on packed struct
+        let clock = header.vector_clock;
+        assert_eq!(clock, [1, 5, 3, 4, 0, 0, 0, 0]);
     }
 
     #[test]

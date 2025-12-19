@@ -415,8 +415,8 @@ mod tests {
 
     #[test]
     fn test_package_entry_size() {
-        // Ensure PackageEntry is exactly 32 bytes for efficient memory mapping
-        assert_eq!(PackageEntry::SIZE, 32);
+        // Ensure PackageEntry is packed (28 bytes with packing)
+        assert_eq!(PackageEntry::SIZE, 28);
     }
 
     #[test]

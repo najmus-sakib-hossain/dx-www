@@ -79,6 +79,8 @@ pub struct XorPatch {
     pub base_hash: [u8; 32],
     /// Target entry hash
     pub target_hash: [u8; 32],
+    /// Target length (needed when target is shorter than base)
+    pub target_len: usize,
     /// Sparse XOR blocks: (offset, data)
     pub blocks: Vec<XorBlock>,
 }
@@ -101,11 +103,11 @@ impl XorPatch {
         let mut blocks = Vec::new();
         let mut current_block: Option<(u64, Vec<u8>)> = None;
         
-        let max_len = base.len().max(target.len());
-        
-        for i in 0..max_len {
+        // Only iterate up to target length - we store target_len separately
+        // to handle truncation when base is longer than target
+        for i in 0..target.len() {
             let base_byte = base.get(i).copied().unwrap_or(0);
-            let target_byte = target.get(i).copied().unwrap_or(0);
+            let target_byte = target[i];
             let xor_byte = base_byte ^ target_byte;
             
             if xor_byte != 0 {
@@ -125,19 +127,27 @@ impl XorPatch {
         Self {
             base_hash: *base_hash.as_bytes(),
             target_hash: *target_hash.as_bytes(),
+            target_len: target.len(),
             blocks,
         }
     }
 
     /// Apply patch to base data
     pub fn apply(&self, base: &[u8]) -> Vec<u8> {
-        let mut result = base.to_vec();
+        // Start with base, but resize to target length
+        let mut result = if self.target_len > base.len() {
+            let mut r = base.to_vec();
+            r.resize(self.target_len, 0);
+            r
+        } else {
+            base[..self.target_len].to_vec()
+        };
         
         for block in &self.blocks {
             let start = block.offset as usize;
             let end = start + block.data.len();
             
-            // Extend if necessary
+            // Extend if necessary (shouldn't happen with correct target_len)
             if end > result.len() {
                 result.resize(end, 0);
             }
@@ -152,7 +162,8 @@ impl XorPatch {
 
     /// Calculate patch size
     pub fn size(&self) -> usize {
-        64 + self.blocks.iter().map(|b| 8 + b.data.len()).sum::<usize>()
+        // 64 bytes for hashes + 8 bytes for target_len + blocks
+        72 + self.blocks.iter().map(|b| 8 + b.data.len()).sum::<usize>()
     }
 
     /// Calculate efficiency (patch size / target size)
@@ -216,7 +227,8 @@ mod tests {
 
     #[test]
     fn test_dxc_header_size() {
-        assert_eq!(DxcHeader::SIZE, 168);
+        // Packed struct size: 4 + 4 + 32 + 64 + 32 + 8 + 8 + 4 + 8 = 164 bytes
+        assert_eq!(DxcHeader::SIZE, 164);
     }
 
     #[test]

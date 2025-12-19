@@ -6,7 +6,7 @@ use bytemuck::{Pod, Zeroable};
 use crate::{BAG_MAGIC, FORMAT_VERSION};
 
 /// Binary Affected Graph header
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct BagHeader {
     /// Magic bytes: "DXAG"
@@ -44,7 +44,7 @@ impl BagHeader {
 }
 
 /// Inverse dependency entry
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct InverseDepsEntry {
     /// Package index
@@ -58,7 +58,7 @@ pub struct InverseDepsEntry {
 }
 
 /// File-to-package mapping entry
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct FileMapEntry {
     /// Hash of file path
@@ -84,22 +84,26 @@ pub struct AffectedGraphData {
 
 impl AffectedGraphData {
     /// Create from dependency edges
+    /// 
+    /// Edges are (from, to) meaning "from depends on to".
+    /// When package X changes, all packages that depend on X (directly or transitively) are affected.
     pub fn from_edges(package_count: u32, edges: &[(u32, u32)]) -> Self {
         let n = package_count as usize;
         
-        // Build inverse dependency index
-        let mut inverse_deps = vec![Vec::new(); n];
+        // Build dependents index: dependents[i] = packages that depend on i
+        // If edge is (from, to) meaning "from depends on to", then from is in dependents[to]
+        let mut dependents = vec![Vec::new(); n];
         for &(from, to) in edges {
-            inverse_deps[to as usize].push(from);
+            dependents[to as usize].push(from);
         }
         
-        // Compute transitive closure using Floyd-Warshall-like approach
-        let mut transitive_closure = inverse_deps.clone();
+        // Compute transitive closure: for each package, find all packages affected when it changes
+        // If X changes, all packages that depend on X (directly or transitively) are affected
+        let mut transitive_closure = vec![Vec::new(); n];
         
-        // For each package, compute all transitive dependents
         for i in 0..n {
             let mut visited = vec![false; n];
-            let mut stack = inverse_deps[i].clone();
+            let mut stack = dependents[i].clone();
             
             while let Some(pkg) = stack.pop() {
                 if visited[pkg as usize] {
@@ -107,7 +111,8 @@ impl AffectedGraphData {
                 }
                 visited[pkg as usize] = true;
                 
-                for &dep in &inverse_deps[pkg as usize] {
+                // Also add packages that depend on this one
+                for &dep in &dependents[pkg as usize] {
                     if !visited[dep as usize] {
                         stack.push(dep);
                     }
@@ -121,7 +126,7 @@ impl AffectedGraphData {
         
         Self {
             package_count,
-            inverse_deps,
+            inverse_deps: dependents,
             transitive_closure,
             file_map: Vec::new(),
         }
@@ -162,37 +167,41 @@ mod tests {
 
     #[test]
     fn test_bag_header_size() {
-        assert_eq!(BagHeader::SIZE, 72);
+        // Packed struct size: 4 + 4 + 4 + 8 + 8 + 8 + 32 = 68 bytes
+        assert_eq!(BagHeader::SIZE, 68);
     }
 
     #[test]
     fn test_inverse_deps() {
-        // a -> b -> c
+        // a -> b -> c means: a depends on b, b depends on c
+        // Edges: (from, to) means "from depends on to"
         let edges = vec![(0, 1), (1, 2)];
         let graph = AffectedGraphData::from_edges(3, &edges);
         
-        // b depends on a, so a is in inverse_deps[1]
+        // a depends on b, so a is in dependents(1) (packages that depend on b)
         assert!(graph.dependents(1).contains(&0));
-        // c depends on b, so b is in inverse_deps[2]
+        // b depends on c, so b is in dependents(2) (packages that depend on c)
         assert!(graph.dependents(2).contains(&1));
-        // a has no dependents
+        // c has no packages depending on it directly except b
+        // a has no packages depending on it
         assert!(graph.dependents(0).is_empty());
     }
 
     #[test]
     fn test_transitive_closure() {
-        // a -> b -> c
+        // a -> b -> c means: a depends on b, b depends on c
+        // Edges: (from, to) means "from depends on to"
         let edges = vec![(0, 1), (1, 2)];
         let graph = AffectedGraphData::from_edges(3, &edges);
         
-        // Changing c affects nothing
-        assert!(graph.transitive_dependents(2).is_empty());
-        // Changing b affects c
-        assert!(graph.transitive_dependents(1).contains(&2));
-        // Changing a affects b and c
-        let a_deps = graph.transitive_dependents(0);
-        assert!(a_deps.contains(&1));
-        assert!(a_deps.contains(&2));
+        // Changing a affects nothing (nothing depends on a)
+        assert!(graph.transitive_dependents(0).is_empty());
+        // Changing b affects a (a depends on b)
+        assert!(graph.transitive_dependents(1).contains(&0));
+        // Changing c affects both a and b (b depends on c, a depends on b)
+        let c_deps = graph.transitive_dependents(2);
+        assert!(c_deps.contains(&0));
+        assert!(c_deps.contains(&1));
     }
 
     #[test]

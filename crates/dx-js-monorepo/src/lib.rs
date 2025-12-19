@@ -33,6 +33,10 @@ pub mod fusion;
 pub mod ghost;
 pub mod watch;
 
+// Property-based tests
+#[cfg(test)]
+mod proptest_tests;
+
 // Re-exports
 pub use error::{WorkspaceError, TaskError, CacheError, LockfileError};
 pub use types::{PackageEntry, TaskEntry, FileHash, TaskInstance};

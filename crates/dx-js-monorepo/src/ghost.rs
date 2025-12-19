@@ -85,7 +85,7 @@ impl GhostDetector {
     pub fn scan(&self) -> Result<GhostReport, ScanError> {
         let mut report = GhostReport::default();
 
-        for (&package_idx, path) in &self.package_paths {
+        for (&package_idx, _path) in &self.package_paths {
             let ghosts = self.scan_package(package_idx)?;
             report.ghosts.extend(ghosts);
         }
@@ -185,7 +185,7 @@ impl GhostDetector {
     fn scan_file(
         &self,
         path: &Path,
-        package_idx: u32,
+        _package_idx: u32,
         declared: &HashSet<String>,
         ghosts: &mut Vec<GhostDependency>,
     ) -> Result<(), ScanError> {
@@ -250,7 +250,7 @@ impl GhostDetector {
         BUILTINS.contains(&package)
     }
 
-    fn detect_hoisting_accidents(&self, ghosts: &[GhostDependency]) -> Vec<HoistingAccident> {
+    fn detect_hoisting_accidents(&self, _ghosts: &[GhostDependency]) -> Vec<HoistingAccident> {
         // In a real implementation, this would check if the ghost dependency
         // is declared by another package in the workspace and works due to hoisting
         Vec::new()

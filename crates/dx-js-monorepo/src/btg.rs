@@ -147,8 +147,9 @@ impl BtgSerializer {
         buffer.extend_from_slice(&string_table);
         
         // Compute content hash
+        // content_hash offset in packed BtgHeader: 4 + 4 + 4 + 8 + 8 + 4 + 8 + 8 + 8 = 56
         let content_hash = blake3::hash(&buffer[BtgHeader::SIZE..]);
-        buffer[72..104].copy_from_slice(content_hash.as_bytes());
+        buffer[56..88].copy_from_slice(content_hash.as_bytes());
         
         Ok(buffer)
     }
@@ -244,15 +245,15 @@ impl BtgSerializer {
         
         let mut table = Vec::new();
         let mut indices = HashMap::new();
-        let mut offset = 0usize;
+        let mut string_index = 0usize;
         
         for task in &data.tasks {
             for s in [&task.name, &task.command] {
                 if !indices.contains_key(s) {
-                    indices.insert(s.clone(), offset);
+                    indices.insert(s.clone(), string_index);
                     table.extend_from_slice(s.as_bytes());
                     table.push(0);
-                    offset = table.len();
+                    string_index += 1;
                 }
             }
         }
@@ -373,7 +374,8 @@ mod tests {
 
     #[test]
     fn test_btg_header_size() {
-        assert_eq!(BtgHeader::SIZE, 104);
+        // Packed struct size: 4 + 4 + 4 + 8 + 8 + 4 + 8 + 8 + 8 + 32 = 88 bytes
+        assert_eq!(BtgHeader::SIZE, 88);
     }
 
     #[test]
@@ -414,9 +416,14 @@ mod tests {
         
         // Should have 2 levels: [a, b] at level 0, [c] at level 1
         assert_eq!(data.parallel_groups.len(), 2);
-        assert_eq!(data.parallel_groups[0].level, 0);
-        assert_eq!(data.parallel_groups[0].task_count, 2);
-        assert_eq!(data.parallel_groups[1].level, 1);
-        assert_eq!(data.parallel_groups[1].task_count, 1);
+        // Copy field values to avoid unaligned access on packed struct
+        let level0 = { data.parallel_groups[0].level };
+        let count0 = { data.parallel_groups[0].task_count };
+        let level1 = { data.parallel_groups[1].level };
+        let count1 = { data.parallel_groups[1].task_count };
+        assert_eq!(level0, 0);
+        assert_eq!(count0, 2);
+        assert_eq!(level1, 1);
+        assert_eq!(count1, 1);
     }
 }

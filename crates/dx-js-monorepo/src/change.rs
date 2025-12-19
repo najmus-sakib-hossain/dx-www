@@ -9,6 +9,7 @@ use crate::types::{FileHash, ImportStatement, ImportKind};
 /// Change Detector for file hashing and import detection
 pub struct ChangeDetector {
     /// Number of parallel threads to use
+    #[allow(dead_code)]
     thread_count: usize,
 }
 

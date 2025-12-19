@@ -5,7 +5,6 @@
 use std::path::{Path, PathBuf};
 use memmap2::Mmap;
 use crate::error::WorkspaceError;
-use crate::types::PackageEntry;
 use crate::bwm::{BwmHeader, BwmSerializer, WorkspaceData};
 
 /// Workspace Manager for loading and querying workspace manifests

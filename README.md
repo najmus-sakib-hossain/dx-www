@@ -700,6 +700,13 @@ dx/
 │   ├── client-tiny/          # Minimal runtime (338 bytes Micro mode)
 │   ├── core/                 # Linear memory manager (~390 lines)
 │   ├── dom/                  # HTIP renderer (~350 lines)
+│   ├── driven/               # **AI-Assisted Development Orchestrator** (NEW!)
+│   │   ├── binary/           # DX ∞ infinity format (73% smaller)
+│   │   ├── fusion/           # Pre-compiled templates (71x faster)
+│   │   ├── streaming/        # XOR patching (95% bandwidth savings)
+│   │   ├── security/         # Ed25519 signing & sandbox
+│   │   ├── state/            # Dirty-bit tracking & snapshots
+│   │   └── cli/              # Sign, Benchmark, Cache commands
 │   │
 │   ├── dx-a11y/              # Compile-time accessibility auditor
 │   ├── dx-auth/              # Ed25519 authentication + passkey support

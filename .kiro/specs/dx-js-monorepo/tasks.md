@@ -6,31 +6,31 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
 
 ## Tasks
 
-- [-] 1. Set up project structure and core types
+- [x] 1. Set up project structure and core types
   - Create `crates/dx-js-monorepo` directory structure
   - Define core error types (WorkspaceError, TaskError, CacheError, LockfileError)
   - Set up proptest dependency and test configuration
   - Create shared types module with PackageEntry, TaskEntry, FileHash
   - _Requirements: 1.1, 2.1, 4.1, 5.1_
 
-- [ ] 2. Implement Binary Workspace Manifest (BWM)
-  - [ ] 2.1 Implement BWM serialization format
+- [x] 2. Implement Binary Workspace Manifest (BWM)
+  - [x] 2.1 Implement BWM serialization format
     - Define BinaryWorkspaceManifest header structure with magic bytes "DXWM"
     - Implement PackageEntry fixed-size format for O(1) indexing
     - Create string table for package names and paths
     - Implement dependency graph storage with u32 indices
     - _Requirements: 1.3, 1.4_
-  - [ ] 2.2 Write property test for BWM round-trip consistency
+  - [x] 2.2 Write property test for BWM round-trip consistency
     - **Property 1: Binary Workspace Manifest Round-Trip Consistency**
     - **Validates: Requirements 1.3, 1.4, 1.5**
-  - [ ] 2.3 Implement topological sort for dependency graph
+  - [x] 2.3 Implement topological sort for dependency graph
     - Compute topological order during serialization
     - Store pre-computed order in BWM format
     - _Requirements: 1.3_
-  - [ ] 2.4 Write property test for topological order validity
+  - [x] 2.4 Write property test for topological order validity
     - **Property 2: Topological Order Validity**
     - **Validates: Requirements 1.3, 2.3**
-  - [ ] 2.5 Implement workspace protocol resolution
+  - [x] 2.5 Implement workspace protocol resolution
     - Parse workspace:* references during manifest generation
     - Resolve to concrete versions from workspace packages
     - _Requirements: 1.5_
@@ -38,164 +38,164 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
     - **Property 16: Workspace Protocol Resolution Completeness**
     - **Validates: Requirements 1.5, 5.2**
 
-- [ ] 3. Implement Workspace Manager
-  - [ ] 3.1 Implement memory-mapped BWM loading
+- [x] 3. Implement Workspace Manager
+  - [x] 3.1 Implement memory-mapped BWM loading
     - Use memmap2 for zero-copy file access
     - Implement load() with <5ms target for 500 packages
     - _Requirements: 1.1_
-  - [ ] 3.2 Implement O(1) package lookup
+  - [x] 3.2 Implement O(1) package lookup
     - Create binary search index for package names
     - Implement get_package() and get_package_by_index()
     - _Requirements: 1.4_
   - [ ] 3.3 Write property test for O(1) lookup time invariance
     - **Property 4: O(1) Lookup Time Invariance**
     - **Validates: Requirements 1.4, 5.1, 7.2**
-  - [ ] 3.4 Implement incremental manifest updates
+  - [x] 3.4 Implement incremental manifest updates
     - Detect package.json changes
     - Update only affected package entries
     - _Requirements: 1.2_
   - [ ] 3.5 Write property test for incremental update isolation
     - **Property 3: Incremental Manifest Update Isolation**
     - **Validates: Requirements 1.2**
-  - [ ] 3.6 Implement manifest regeneration on corruption
+  - [x] 3.6 Implement manifest regeneration on corruption
     - Detect corrupted/missing manifest via hash verification
     - Regenerate from source package.json files
     - _Requirements: 1.6_
 
-- [ ] 4. Checkpoint - Workspace Manager complete
+- [x] 4. Checkpoint - Workspace Manager complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement Binary Task Graph (BTG)
-  - [ ] 5.1 Implement BTG serialization format
+- [x] 5. Implement Binary Task Graph (BTG)
+  - [x] 5.1 Implement BTG serialization format
     - Define BinaryTaskGraph header with magic bytes "DXTG"
     - Implement TaskEntry fixed-size format with u32 indices
     - Store dependency edges as u32 pairs
     - _Requirements: 2.2, 2.3_
-  - [ ] 5.2 Implement parallel execution map
+  - [x] 5.2 Implement parallel execution map
     - Compute which tasks can run simultaneously
     - Store parallel groups in BTG format
     - _Requirements: 2.4_
-  - [ ] 5.3 Write property test for parallel execution map correctness
+  - [x] 5.3 Write property test for parallel execution map correctness
     - **Property 5: Task Graph Parallel Execution Map Correctness**
     - **Validates: Requirements 2.4**
 
-- [ ] 6. Implement Task Executor
-  - [ ] 6.1 Implement memory-mapped BTG loading
+- [x] 6. Implement Task Executor
+  - [x] 6.1 Implement memory-mapped BTG loading
     - Use memmap2 for zero-copy access
     - Target <2ms load time for 1000 nodes
     - _Requirements: 2.1_
-  - [ ] 6.2 Implement zero-allocation task cloning
+  - [x] 6.2 Implement zero-allocation task cloning
     - Create stack-allocated TaskInstance structure
     - Implement clone_task() without heap allocation
     - _Requirements: 2.5, 2.6_
   - [ ] 6.3 Write property test for task cloning zero-allocation
     - **Property 6: Task Cloning Zero-Allocation**
     - **Validates: Requirements 2.5, 2.6**
-  - [ ] 6.4 Implement frame budget scheduling
+  - [x] 6.4 Implement frame budget scheduling
     - Track task execution time
     - Yield when frame budget exceeded
     - _Requirements: 2.7_
   - [ ] 6.5 Write property test for frame budget yield behavior
     - **Property 7: Frame Budget Yield Behavior**
     - **Validates: Requirements 2.7**
-  - [ ] 6.6 Implement task execution with parallel scheduling
+  - [x] 6.6 Implement task execution with parallel scheduling
     - Execute tasks respecting dependency order
     - Run independent tasks in parallel
     - _Requirements: 2.1, 2.4_
 
-- [ ] 7. Checkpoint - Task Executor complete
+- [x] 7. Checkpoint - Task Executor complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement Change Detector with SIMD
-  - [ ] 8.1 Implement Blake3 SIMD file hashing
+- [x] 8. Implement Change Detector with SIMD
+  - [x] 8.1 Implement Blake3 SIMD file hashing
     - Use blake3 crate with SIMD features
     - Implement hash_file() and hash_files_parallel()
     - _Requirements: 3.1_
-  - [ ] 8.2 Write property test for Blake3 hash determinism
+  - [x] 8.2 Write property test for Blake3 hash determinism
     - **Property 8: Blake3 Hash Determinism**
     - **Validates: Requirements 3.1**
-  - [ ] 8.3 Implement 64-byte binary fingerprints
+  - [x] 8.3 Implement 64-byte binary fingerprints
     - Generate fixed-size fingerprints for any input
     - _Requirements: 3.5_
-  - [ ] 8.4 Write property test for fingerprint size invariance
+  - [x] 8.4 Write property test for fingerprint size invariance
     - **Property 10: Binary Fingerprint Size Invariance**
     - **Validates: Requirements 3.5**
-  - [ ] 8.5 Implement SIMD import detection
+  - [x] 8.5 Implement SIMD import detection
     - Use AVX2 pattern matching for import statements
     - Detect ES6 imports, CommonJS requires, dynamic imports
     - _Requirements: 3.4_
   - [ ] 8.6 Write property test for import detection completeness
     - **Property 9: Import Detection Completeness**
     - **Validates: Requirements 3.4, 7.5**
-  - [ ] 8.7 Implement incremental file hashing
+  - [x] 8.7 Implement incremental file hashing
     - Track file regions that changed
     - Rehash only modified regions
     - _Requirements: 3.2_
-  - [ ] 8.8 Implement Merkle tree construction
+  - [x] 8.8 Implement Merkle tree construction
     - Build hash trees for directories
     - Use parallel computation
     - _Requirements: 3.6_
 
-- [ ] 9. Checkpoint - Change Detector complete
+- [x] 9. Checkpoint - Change Detector complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Implement DXC Cache Format
-  - [ ] 10.1 Implement DXC serialization
+- [x] 10. Implement DXC Cache Format
+  - [x] 10.1 Implement DXC serialization
     - Define DxcHeader with magic bytes "DXC\0"
     - Store task outputs with file entries
     - _Requirements: 4.3_
-  - [ ] 10.2 Write property test for DXC round-trip consistency
+  - [x] 10.2 Write property test for DXC round-trip consistency
     - **Property 11: DXC Cache Round-Trip Consistency**
     - **Validates: Requirements 4.3, 4.5**
-  - [ ] 10.3 Implement Ed25519 signing
+  - [x] 10.3 Implement Ed25519 signing
     - Sign cache entries on store
     - Verify signatures on retrieve
     - _Requirements: 4.5_
   - [ ] 10.4 Write property test for tamper detection
     - **Property 13: Cache Signature Tamper Detection**
     - **Validates: Requirements 4.5**
-  - [ ] 10.5 Implement XOR differential patching
+  - [x] 10.5 Implement XOR differential patching
     - Compute XOR patches between similar entries
     - Apply patches for efficient updates
     - _Requirements: 4.4_
-  - [ ] 10.6 Write property test for XOR patch efficiency
+  - [x] 10.6 Write property test for XOR patch efficiency
     - **Property 12: XOR Patch Efficiency**
     - **Validates: Requirements 4.4, 6.2**
 
-- [ ] 11. Implement Cache Manager
-  - [ ] 11.1 Implement memory-mapped cache access
+- [x] 11. Implement Cache Manager
+  - [x] 11.1 Implement memory-mapped cache access
     - Use memmap2 for zero-copy cache reads
     - Target <0.5ms cache hit resolution
     - _Requirements: 4.1_
-  - [ ] 11.2 Implement fast cache miss detection
+  - [x] 11.2 Implement fast cache miss detection
     - Use bloom filter for quick negative lookups
     - Target <0.1ms miss detection
     - _Requirements: 4.2_
-  - [ ] 11.3 Implement cache storage with LRU eviction
+  - [x] 11.3 Implement cache storage with LRU eviction
     - Store entries in content-addressable format
     - Evict least recently used when full
     - _Requirements: 4.1, 4.2_
-  - [ ] 11.4 Implement zero-disk mode
+  - [x] 11.4 Implement zero-disk mode
     - Serve cached outputs via virtual filesystem
     - No disk writes in this mode
     - _Requirements: 4.6_
 
-- [ ] 12. Checkpoint - Cache Manager complete
+- [x] 12. Checkpoint - Cache Manager complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 13. Implement DXL-Workspace Lockfile
-  - [ ] 13.1 Implement DXL-Workspace serialization
+- [x] 13. Implement DXL-Workspace Lockfile
+  - [x] 13.1 Implement DXL-Workspace serialization
     - Define DxlWorkspaceHeader with magic bytes "DXLW"
     - Create binary index for O(1) package lookup
     - _Requirements: 5.1, 5.6_
-  - [ ] 13.2 Write property test for DXL-Workspace round-trip
+  - [x] 13.2 Write property test for DXL-Workspace round-trip
     - **Property 14: DXL-Workspace Round-Trip Consistency**
     - **Validates: Requirements 5.6**
-  - [ ] 13.3 Implement peer dependency conflict matrix
+  - [x] 13.3 Implement peer dependency conflict matrix
     - Pre-compute conflicts during serialization
     - Store in binary format for fast lookup
     - _Requirements: 5.3_
-  - [ ] 13.4 Implement hoisting strategy embedding
+  - [x] 13.4 Implement hoisting strategy embedding
     - Compute optimal node_modules structure
     - Store in lockfile
     - _Requirements: 5.4_
