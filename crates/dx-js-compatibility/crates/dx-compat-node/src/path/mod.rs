@@ -7,9 +7,10 @@ use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 /// Platform-specific path separator.
 pub const SEP: char = MAIN_SEPARATOR;
 
-/// Platform-specific path delimiter (: on Unix, ; on Windows).
+/// Platform-specific path delimiter (`:` on Unix, `;` on Windows).
 #[cfg(unix)]
 pub const DELIMITER: char = ':';
+/// Platform-specific path delimiter (`:` on Unix, `;` on Windows).
 #[cfg(windows)]
 pub const DELIMITER: char = ';';
 

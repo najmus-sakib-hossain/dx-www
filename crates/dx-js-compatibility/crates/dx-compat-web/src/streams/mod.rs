@@ -83,7 +83,7 @@ impl WritableStream {
     }
 
     /// Get a writer.
-    pub fn get_writer(&mut self) -> WritableStreamWriter {
+    pub fn get_writer(&mut self) -> WritableStreamWriter<'_> {
         WritableStreamWriter { stream: self }
     }
 

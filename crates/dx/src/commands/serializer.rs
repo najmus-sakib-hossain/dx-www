@@ -249,7 +249,7 @@ async fn run_validate(theme: &Theme) -> Result<()> {
         if passed {
             spinner.success(check);
         } else {
-            spinner.fail(check);
+            spinner.error(check);
         }
     }
 

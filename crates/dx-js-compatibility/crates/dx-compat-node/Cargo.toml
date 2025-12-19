@@ -43,12 +43,12 @@ chacha20poly1305 = "0.10"
 rand = "0.8"
 getrandom = "0.2"
 
-# HTTP (for node:http)
-hyper = { version = "1.5", features = ["full"] }
-hyper-util = { version = "0.1", features = ["full"] }
+# HTTP (for node:http) - minimal for now, full implementation pending
 http = "1.1"
-rustls = "0.23"
-tokio-rustls = "0.26"
+# hyper = { version = "1.5", features = ["full"] }
+# hyper-util = { version = "0.1", features = ["full"] }
+# rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+# tokio-rustls = "0.26"
 
 [dev-dependencies]
 proptest = "1.4"

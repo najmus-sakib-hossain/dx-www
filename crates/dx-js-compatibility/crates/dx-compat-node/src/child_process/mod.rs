@@ -1,6 +1,6 @@
 //! Process spawning.
 
-use crate::error::{NodeError, NodeResult};
+use crate::error::NodeResult;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::process::Command;

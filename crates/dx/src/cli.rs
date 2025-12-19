@@ -1,4 +1,23 @@
 //! CLI definition and command routing
+//!
+//! DX CLI: The 10 Core Tools
+//! ========================
+//!
+//! ASSET TOOLS:
+//!   style      - Binary CSS (B-CSS) compiler
+//!   media      - Image/video optimization (WebP, AVIF)
+//!   font       - Font subsetting and WOFF2 optimization
+//!   icon       - SVG icon system with binary encoding
+//!
+//! INFRASTRUCTURE:
+//!   forge      - Package manager + orchestrator for all dx-* crates
+//!   serializer - World-record data format (DX ∞)
+//!   stack      - Unified JS/TS development stack
+//!
+//! DEVELOPMENT:
+//!   driven     - AI agents control
+//!   generator  - Code generation tools
+//!   workspace  - Code editors + preinstall and setup
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -39,62 +58,55 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Initialize a new DX project
-    #[command(visible_alias = "create", visible_alias = "new")]
-    Init(commands::init::InitArgs),
+    // ═══════════════════════════════════════════════════════════════════
+    //  ASSET TOOLS
+    // ═══════════════════════════════════════════════════════════════════
 
-    /// Start the development server with hot reload
-    #[command(visible_alias = "serve")]
-    Dev(commands::dev::DevArgs),
-
-    /// Build for production
-    Build(commands::build::BuildArgs),
-
-    /// Run a file with dx-js-runtime
-    Run(commands::run::RunArgs),
-
-    /// Bundle files with dx-js-bundler
-    Bundle(commands::bundle::BundleArgs),
-
-    /// Install dependencies
-    #[command(visible_alias = "i")]
-    Install(commands::install::InstallArgs),
-
-    /// Add a dependency
-    Add(commands::install::AddArgs),
-
-    /// Remove a dependency
-    #[command(visible_alias = "rm", visible_alias = "uninstall")]
-    Remove(commands::install::RemoveArgs),
-
-    /// Run tests with dx-js-test-runner
-    #[command(visible_alias = "t")]
-    Test(commands::test::TestArgs),
-
-    /// Work with dx-style (Binary CSS)
+    /// Binary CSS (B-CSS) compiler - 98% smaller, 80x faster
+    #[command(visible_alias = "css")]
     Style(commands::style::StyleArgs),
 
-    /// Manage dx-media (Image/Video optimization)
+    /// Image/video optimization - WebP, AVIF, responsive srcsets
+    #[command(visible_alias = "img")]
     Media(commands::media::MediaArgs),
 
-    /// Manage dx-font (Font subsetting)
+    /// Font subsetting and WOFF2 optimization
     Font(commands::font::FontArgs),
 
-    /// Manage dx-icon (SVG icon system)
+    /// SVG icon system with binary encoding and sprite generation
     Icon(commands::icon::IconArgs),
 
-    /// Run dx-forge build orchestration
+    // ═══════════════════════════════════════════════════════════════════
+    //  INFRASTRUCTURE
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// Package manager + orchestrator for all dx-* crates
+    #[command(visible_alias = "f")]
     Forge(commands::forge::ForgeArgs),
 
-    /// Display system and project information
-    Info(commands::info::InfoArgs),
+    /// World-record data format (DX ∞) - 73% smaller, 4x faster
+    #[command(visible_alias = "ser", visible_alias = "data")]
+    Serializer(commands::serializer::SerializerArgs),
 
-    /// Clean build artifacts and caches
-    Clean(commands::clean::CleanArgs),
+    /// Unified JS/TS development stack (runtime, bundler, test, pkg)
+    #[command(visible_alias = "js", visible_alias = "ts")]
+    Stack(commands::stack::StackArgs),
 
-    /// Upgrade DX to the latest version
-    #[command(hide = true)]
-    Upgrade(commands::upgrade::UpgradeArgs),
+    // ═══════════════════════════════════════════════════════════════════
+    //  DEVELOPMENT
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// AI agents control - review, refactor, test generation
+    #[command(visible_alias = "ai")]
+    Driven(commands::driven::DrivenArgs),
+
+    /// Code generation tools - components, APIs, forms, CRUD
+    #[command(visible_alias = "gen", visible_alias = "g")]
+    Generator(commands::generator::GeneratorArgs),
+
+    /// Code editors + preinstall and setup
+    #[command(visible_alias = "ws", visible_alias = "ide")]
+    Workspace(commands::workspace::WorkspaceArgs),
 }
 
 impl Cli {
@@ -106,23 +118,21 @@ impl Cli {
         }
 
         match self.command {
-            Commands::Init(args) => commands::init::run(args, &theme).await,
-            Commands::Dev(args) => commands::dev::run(args, &theme).await,
-            Commands::Build(args) => commands::build::run(args, &theme).await,
-            Commands::Run(args) => commands::run::run(args, &theme).await,
-            Commands::Bundle(args) => commands::bundle::run(args, &theme).await,
-            Commands::Install(args) => commands::install::run_install(args, &theme).await,
-            Commands::Add(args) => commands::install::run_add(args, &theme).await,
-            Commands::Remove(args) => commands::install::run_remove(args, &theme).await,
-            Commands::Test(args) => commands::test::run(args, &theme).await,
+            // Asset Tools
             Commands::Style(args) => commands::style::run(args, &theme).await,
             Commands::Media(args) => commands::media::run(args, &theme).await,
             Commands::Font(args) => commands::font::run(args, &theme).await,
             Commands::Icon(args) => commands::icon::run(args, &theme).await,
+
+            // Infrastructure
             Commands::Forge(args) => commands::forge::run(args, &theme).await,
-            Commands::Info(args) => commands::info::run(args, &theme).await,
-            Commands::Clean(args) => commands::clean::run(args, &theme).await,
-            Commands::Upgrade(args) => commands::upgrade::run(args, &theme).await,
+            Commands::Serializer(args) => commands::serializer::run(args, &theme).await,
+            Commands::Stack(args) => commands::stack::run(args, &theme).await,
+
+            // Development
+            Commands::Driven(args) => commands::driven::run(args, &theme).await,
+            Commands::Generator(args) => commands::generator::run(args, &theme).await,
+            Commands::Workspace(args) => commands::workspace::run(args, &theme).await,
         }
     }
 }
