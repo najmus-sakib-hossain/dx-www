@@ -15,6 +15,8 @@ members = [
     "crates/debug",
     "crates/error",
     "crates/stack",
+    "crates/i18n",
+    "crates/serializer",
     
     # =========================================================================
     # DX CLI (main entry points)
@@ -40,7 +42,6 @@ members = [
     # Binary Protocol
     "crates/dx-www-binary",
     "crates/dx-www-packet",
-    "crates/dx-www-serializer",
     
     # Client Runtimes (WASM)
     "crates/dx-www-client",
@@ -70,7 +71,6 @@ members = [
     "crates/dx-www-a11y",
     "crates/dx-www-print",
     "crates/dx-www-rtl",
-    "crates/dx-www-i18n",
     
     # Compiler (transpiler-to-binary pipeline)
     "crates/dx-www",
@@ -87,7 +87,6 @@ exclude = [
     "crates/dx-js-test-runner",     # Has own workspace
     "crates/dx-js-package-manager", # Has 12 internal crates
     "crates/dx-js-compatibility",   # Has 12 internal sub-crates
-    "crates/oxc",                   # External submodule
     "playground",                   # Experiments
     "benchmarks",                   # Performance tests
 ]
@@ -179,6 +178,8 @@ driven = { path = "crates/driven" }
 debug = { path = "crates/debug" }
 error = { path = "crates/error" }
 stack = { path = "crates/stack" }
+i18n = { path = "crates/i18n" }
+serializer = { path = "crates/serializer" }
 
 # =========================================================================
 # DX WWW
@@ -190,7 +191,6 @@ dx-www-sched = { path = "crates/dx-www-sched" }
 dx-www = { path = "crates/dx-www" }
 dx-www-binary = { path = "crates/dx-www-binary" }
 dx-www-packet = { path = "crates/dx-www-packet" }
-dx-www-serializer = { path = "crates/dx-www-serializer" }
 dx-www-client = { path = "crates/dx-www-client" }
 dx-www-client-tiny = { path = "crates/dx-www-client-tiny" }
 dx-www-server = { path = "crates/dx-www-server" }
@@ -208,7 +208,6 @@ dx-www-fallback = { path = "crates/dx-www-fallback" }
 dx-www-a11y = { path = "crates/dx-www-a11y" }
 dx-www-print = { path = "crates/dx-www-print" }
 dx-www-rtl = { path = "crates/dx-www-rtl" }
-dx-www-i18n = { path = "crates/dx-www-i18n" }
 
 
 # ============================================================================

@@ -29,7 +29,7 @@
 - **Architecture:** Stack-only execution (no GC), output optimization, constant folding
 - **See:** [How We Achieved 10x](docs/HOW_WE_ACHIEVED_10X.md) | [Benchmarks](docs/FINAL_BENCHMARK_RESULTS.md)
 
-### dx-serializer: **World Record Data Format** 
+### serializer: **World Record Data Format** 
 - **37.2% smaller than TOON** (186 bytes vs 296 bytes) - the previous record holder
 - **73.4% smaller than JSON** (186 bytes vs 699 bytes)
 - **Parse Speed:** ~1.9µs (4-5x faster than JavaScript parsers)
@@ -65,7 +65,7 @@
 - **Bun/Node.js → dx-js-runtime:** 10x faster JavaScript/TypeScript execution
 - **npm/pnpm → dx-package-manager:** Binary package format (50x target)
 - **Tailwind → dx-style:** Binary CSS with integer class IDs
-- **JSON → dx-serializer:** World record 37% better than TOON
+- **JSON → serializer:** World record 37% better than TOON
 
 ### ⚡ Zero-Cost Abstractions
 - **Zero Parse:** Binary formats eliminate text parsing overhead
@@ -80,7 +80,7 @@
 
 ### 🌍 Production-Ready Stack
 - **Full-Stack:** Client (WASM), Server (Axum), Database (PostgreSQL), Auth (Ed25519)
-- **Internationalization:** dx-i18n with translation and text-to-speech
+- **Internationalization:** i18n with translation and text-to-speech
 - **Offline-First:** dx-offline with CRDT sync, dx-sync WebSocket protocol
 - **Developer Experience:** dx-cli orchestrator, dx-debug DevTools bridge
 
@@ -105,6 +105,10 @@
 - **Server Costs:** Binary streaming reduces compute by 95% vs JSON parsing
 
 ## Latest Updates (Dec 19, 2025)
+
+**✅ Workspace Restructure (Tooling Alignment)**
+- Moved **i18n** and **serializer** into the **Dx Tools** category (no dx-www prefix) to reflect their cross-cutting use.
+- Removed the local `crates/oxc` checkout; the workspace now consumes upstream `oxc_parser` from crates.io directly.
 
 **✅ PRODUCTION READY: WORKSPACE COMPILES CLEANLY**
 - **Status:** `cargo check --workspace` passes with 0 errors
@@ -289,7 +293,7 @@ dx stack -l python run main.py
 |-------|---------|-------|--------|
 | **binary** | Binary protocol implementation (HTIP v1) | ~600 | ✅ Complete |
 | **packet** | Zero-dependency network packet types | ~400 | ✅ Complete |
-| **dx-serializer** | **World record data format (37% better than TOON)** | ~2400 | ✅ Complete |
+| **serializer** | **World record data format (37% better than TOON)** | ~2400 | ✅ Complete |
 | | DX ∞ format: 186 bytes vs JSON 699 bytes | ~1.9µs parse | |
 
 ### 🎨 Style System
@@ -325,7 +329,7 @@ dx stack -l python run main.py
 ### 🌍 Internationalization & Accessibility  
 | Crate | Purpose | Lines | Status |
 |-------|---------|-------|--------|
-| **dx-i18n** | Translation engine with text-to-speech | ~650 | ✅ Complete |
+| **i18n** | Translation engine with text-to-speech | ~650 | ✅ Complete |
 | **dx-a11y** | Compile-time accessibility auditor | ~320 | ✅ Complete |
 | **dx-rtl** | Right-to-left language support | ~200 | 🚧 In Progress |
 
@@ -366,7 +370,7 @@ dx/
 │   │── [Binary Protocols (4 crates)]
 │   ├── binary/                # HTIP v1 binary protocol
 │   ├── packet/                # Network packet types
-│   ├── dx-serializer/         # World record format (37% better than TOON)
+│   ├── serializer/            # World record format (37% better than TOON)
 │   ├── cache/                 # Browser caching (IndexedDB + ETags)
 │   │
 │   │── [Compiler & Tools (11 crates)]
@@ -412,7 +416,7 @@ dx/
 │   ├── dx-offline/            # CRDT offline-first engine
 │   │
 │   │── [Internationalization (3 crates)]
-│   ├── dx-i18n/               # Translation + TTS
+│   ├── i18n/                  # Translation + TTS
 │   ├── dx-a11y/               # Accessibility auditor
 │   ├── dx-rtl/                # Right-to-left support
 │   │
@@ -580,7 +584,7 @@ dx/
 - ✅ dx-offline: CRDT offline-first sync
 
 **Internationalization**
-- ✅ dx-i18n: Translation engine + text-to-speech
+- ✅ i18n: Translation engine + text-to-speech
 - ✅ dx-a11y: Compile-time accessibility auditor
 
 **Quality & Documentation**
@@ -795,7 +799,7 @@ dx/
 │   ├── dx-forge/             # Build orchestration and asset pipeline (~800 lines)
 │   ├── dx-form/              # Binary validation engine with compile-time schemas
 │   ├── dx-guard/             # DOM integrity protection (MutationObserver)
-│   ├── dx-i18n/              # Translation engine + text-to-speech support
+│   ├── i18n/                 # Translation engine + text-to-speech support
 │   ├── dx-icon/              # SVG icon system with binary encoding
 │   ├── dx-interaction/       # Touch/gesture recognition and haptics
 │   ├── dx-js-bundler/        # **3.8x faster than Bun** (10.05ms) - PRODUCTION READY
@@ -807,7 +811,7 @@ dx/
 │   ├── dx-print/             # Print stylesheet optimization
 │   ├── dx-query/             # Binary RPC data fetching (zero-parse)
 │   ├── dx-rtl/               # Right-to-left language support
-│   ├── dx-serializer/        # **World record data format** (37% better than TOON)
+│   ├── serializer/           # **World record data format** (37% better than TOON)
 │   ├── dx-server/            # SSR & binary streaming server (Axum-based)
 │   ├── dx-state/             # Global state management (SharedArrayBuffer)
 │   ├── dx-style/             # Binary CSS (B-CSS) - **98% smaller, 80x faster**

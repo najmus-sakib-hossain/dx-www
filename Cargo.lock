@@ -2327,31 +2327,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dx-www-i18n"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64 0.21.7",
- "chrono",
- "futures",
- "futures-util",
- "html-escape",
- "lazy_static",
- "regex",
- "reqwest 0.11.27",
- "scraper 0.18.1",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "thiserror 1.0.69",
- "tokio",
- "tokio-tungstenite 0.21.0",
- "url",
- "urlencoding",
- "uuid",
-]
-
-[[package]]
 name = "dx-www-interaction"
 version = "0.1.0"
 dependencies = [
@@ -2431,22 +2406,6 @@ dependencies = [
  "js-sys",
  "wasm-bindgen",
  "web-sys",
-]
-
-[[package]]
-name = "dx-www-serializer"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "bytes",
- "criterion",
- "memchr",
- "rustc-hash 1.1.0",
- "serde",
- "serde_json",
- "serde_yaml",
- "thiserror 2.0.17",
- "toml 0.8.23",
 ]
 
 [[package]]
@@ -3887,6 +3846,31 @@ dependencies = [
  "tower-service",
  "tracing",
  "windows-registry",
+]
+
+[[package]]
+name = "i18n"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64 0.21.7",
+ "chrono",
+ "futures",
+ "futures-util",
+ "html-escape",
+ "lazy_static",
+ "regex",
+ "reqwest 0.11.27",
+ "scraper 0.18.1",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-tungstenite 0.21.0",
+ "url",
+ "urlencoding",
+ "uuid",
 ]
 
 [[package]]
@@ -7205,6 +7189,22 @@ dependencies = [
  "ryu",
  "serde",
  "unsafe-libyaml",
+]
+
+[[package]]
+name = "serializer"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "bytes",
+ "criterion",
+ "memchr",
+ "rustc-hash 1.1.0",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror 2.0.17",
+ "toml 0.8.23",
 ]
 
 [[package]]
