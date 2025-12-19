@@ -2679,6 +2679,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "dx-workspace"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "console",
+ "memmap2",
+ "pathdiff",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tempfile",
+ "thiserror 1.0.69",
+ "toml 0.8.23",
+ "walkdir",
+]
+
+[[package]]
 name = "dx-www"
 version = "0.1.0"
 dependencies = [

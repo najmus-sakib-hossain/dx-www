@@ -74,6 +74,9 @@ members = [
     # NEW: Binary Dawn Code Generator
     "crates/dx-generator",
     
+    # NEW: Universal Development Environment Configuration
+    "crates/dx-workspace",
+    
     # Examples & Playground
     "examples/hello-world",
 ]
