@@ -152,6 +152,16 @@ pub fn multiselect<T: Clone>(prompt: impl Into<String>) -> MultiSelect<T> {
     MultiSelect::new(prompt.into())
 }
 
+/// Creates a new spinner for async operations.
+pub fn spinner(message: impl Into<String>) -> Spinner {
+    Spinner::new(message)
+}
+
+/// Creates a new progress bar.
+pub fn progress(message: impl Into<String>, total: u64) -> ProgressBar {
+    ProgressBar::new(message, total)
+}
+
 /// Log messages with different styles
 pub mod log {
     use super::*;

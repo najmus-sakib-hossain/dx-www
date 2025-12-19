@@ -3,7 +3,7 @@
 use super::{S_BAR, S_BAR_END, S_STEP_ACTIVE, S_STEP_SUBMIT, THEME};
 use console::Term;
 use owo_colors::OwoColorize;
-use std::io::{self, Write};
+use std::io;
 
 /// A progress bar for tracking completion of tasks.
 pub struct ProgressBar {
