@@ -10,7 +10,7 @@ mod rule_schema;
 mod simd_tokenizer;
 mod string_table;
 
-pub use checksum::{verify_blake3, Blake3Checksum};
+pub use checksum::{compute_blake3, verify_blake3, Blake3Checksum, Blake3Hasher};
 pub use infinity_format::{InfinityHeader, InfinityRule, INFINITY_MAGIC};
 pub use memory_map::{MappedRule, RuleMapping};
 pub use rule_schema::{BinaryRule, BinaryStep, RuleFlags, SectionOffsets};

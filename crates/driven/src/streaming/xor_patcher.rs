@@ -192,6 +192,7 @@ impl XorPatcher {
 
         XorPatch {
             block_size: self.block_size,
+            target_len: new.len() as u32,
             block_count: blocks.len() as u32,
             blocks,
         }

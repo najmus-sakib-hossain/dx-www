@@ -3,15 +3,21 @@
 //! Individual command implementations for the driven CLI.
 
 mod analyze;
+mod benchmark;
+mod cache;
 mod convert;
 mod init;
+mod sign;
 mod sync;
 mod template;
 mod validate;
 
 pub use analyze::AnalyzeCommand;
+pub use benchmark::{BenchmarkCommand, BenchmarkResults};
+pub use cache::{CacheCommand, CacheStats};
 pub use convert::ConvertCommand;
 pub use init::InitCommand;
+pub use sign::{generate_keypair, SignCommand};
 pub use sync::SyncCommand;
 pub use template::TemplateCommand;
 pub use validate::ValidateCommand;

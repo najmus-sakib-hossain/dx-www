@@ -68,6 +68,9 @@ members = [
     # NEW: AI-Assisted Development Orchestrator
     "crates/driven",
     
+    # NEW: Binary-first monorepo management
+    "crates/dx-js-monorepo",
+    
     # Examples & Playground
     "examples/hello-world",
 ]

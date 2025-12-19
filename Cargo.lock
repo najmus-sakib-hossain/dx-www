@@ -771,6 +771,7 @@ dependencies = [
  "cc",
  "cfg-if",
  "constant_time_eq",
+ "rayon-core",
 ]
 
 [[package]]
@@ -2363,6 +2364,30 @@ name = "dx-interaction"
 version = "0.1.0"
 dependencies = [
  "web-sys",
+]
+
+[[package]]
+name = "dx-js-monorepo"
+version = "0.1.0"
+dependencies = [
+ "bitvec",
+ "blake3",
+ "bytemuck",
+ "bytes",
+ "criterion",
+ "ed25519-dalek",
+ "memmap2",
+ "notify 6.1.1",
+ "proptest",
+ "rand 0.8.5",
+ "rayon",
+ "rustc-hash 1.1.0",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.17",
+ "toml 0.8.23",
+ "xxhash-rust",
 ]
 
 [[package]]

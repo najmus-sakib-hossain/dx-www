@@ -6,7 +6,7 @@ This implementation plan breaks down dx-js-monorepo into incremental tasks, star
 
 ## Tasks
 
-- [ ] 1. Set up project structure and core types
+- [-] 1. Set up project structure and core types
   - Create `crates/dx-js-monorepo` directory structure
   - Define core error types (WorkspaceError, TaskError, CacheError, LockfileError)
   - Set up proptest dependency and test configuration
