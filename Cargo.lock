@@ -1954,6 +1954,7 @@ dependencies = [
  "console",
  "ctrlc",
  "dialoguer",
+ "fuzzy-matcher",
  "glob",
  "home",
  "human_bytes",
@@ -1962,12 +1963,14 @@ dependencies = [
  "indicatif",
  "libc",
  "notify 6.1.1",
+ "once_cell",
  "open",
  "owo-colors",
  "predicates",
  "serde",
  "serde_json",
  "tempfile",
+ "textwrap",
  "thiserror 2.0.17",
  "tokio",
  "toml 0.8.23",
@@ -1977,6 +1980,7 @@ dependencies = [
  "walkdir",
  "which",
  "winapi",
+ "zeroize",
 ]
 
 [[package]]
