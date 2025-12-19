@@ -114,6 +114,10 @@ pub mod auto_update;
 pub mod cache;
 pub mod profiler;
 
+// DX Tool Cache Management (v2.0.0)
+pub mod dx_cache;
+pub mod dx_executor;
+
 // Binary Dawn: Sovereign Orchestration Engine
 pub mod sovereign;
 
@@ -168,6 +172,19 @@ pub use sovereign::{
     BackgroundTask, BackgroundWorker, DxForge, DxToolDefinition,
     Orchestrator as SovereignOrchestrator, ToolStatus as SovereignToolStatus, TrafficLight,
     TrafficManager,
+};
+
+// ========================================================================
+// DX Tool Cache Management exports (v2.0.0)
+// ========================================================================
+
+pub use dx_cache::{
+    CacheEntry, CacheStats as DxCacheStats, DxToolCacheManager, DxToolId, SyncResult,
+    WarmStartResult,
+};
+pub use dx_executor::{
+    BundlerTool, DxToolExecutable, DxToolExecutor, PackageManagerTool, StyleTool, TestRunnerTool,
+    ToolConfig, ToolResult, ExecutionContext as DxExecutionContext,
 };
 
 // ========================================================================

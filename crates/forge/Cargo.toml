@@ -75,6 +75,10 @@ path = "examples/traffic_branch_and_lsp.rs"
 name = "web_ui"
 path = "examples/web_ui.rs"
 
+[[example]]
+name = "dx_orchestrator_demo"
+path = "examples/dx_orchestrator_demo.rs"
+
 [dependencies]
 # Core async runtime
 tokio = { version = "1.48.0", features = ["full"] }
@@ -156,6 +160,10 @@ num_cpus = "1.16.0"
 
 # Hashing
 sha2 = "0.10.9"
+blake3 = "1.8.2"
+
+# Logging
+log = "0.4"
 
 # Username
 whoami = "1.5.2"
