@@ -1,6 +1,6 @@
 //! Aider rules parser (.aider files, aider.conf.yml)
 
-use super::{extract_bullet_points, RuleParser, UnifiedRule};
+use super::{RuleParser, UnifiedRule, extract_bullet_points};
 use crate::{DrivenError, Editor, Result};
 use std::path::Path;
 
@@ -17,9 +17,8 @@ impl AiderParser {
 
 impl RuleParser for AiderParser {
     fn parse_file(&self, path: &Path) -> Result<Vec<UnifiedRule>> {
-        let content = std::fs::read_to_string(path).map_err(|e| {
-            DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e))
-        })?;
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e)))?;
 
         // Check if it's YAML
         if path.extension().map_or(false, |ext| ext == "yml" || ext == "yaml") {
@@ -81,10 +80,8 @@ impl AiderParser {
 
                 if let Some(read_only) = mapping.get("read_only_files") {
                     if let Some(seq) = read_only.as_sequence() {
-                        let patterns: Vec<String> = seq
-                            .iter()
-                            .filter_map(|v| v.as_str().map(String::from))
-                            .collect();
+                        let patterns: Vec<String> =
+                            seq.iter().filter_map(|v| v.as_str().map(String::from)).collect();
 
                         if !patterns.is_empty() {
                             rules.push(UnifiedRule::Context {

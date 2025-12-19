@@ -2,13 +2,13 @@
 //!
 //! Loads the Binary Task Graph and executes tasks with parallel scheduling.
 
-use std::path::{Path, PathBuf};
-use std::time::Instant;
-use memmap2::Mmap;
-use bitvec::prelude::*;
+use crate::btg::{BtgHeader, BtgSerializer, TaskData, TaskGraphData};
 use crate::error::TaskError;
 use crate::types::TaskInstance;
-use crate::btg::{BtgHeader, BtgSerializer, TaskGraphData, TaskData};
+use bitvec::prelude::*;
+use memmap2::Mmap;
+use std::path::{Path, PathBuf};
+use std::time::Instant;
 
 /// Task output from execution
 #[derive(Debug, Clone)]
@@ -53,10 +53,9 @@ impl TaskExecutor {
 
     /// Load task graph from memory-mapped file
     pub fn load(&mut self, path: &Path) -> Result<(), TaskError> {
-        let file = std::fs::File::open(path)
-            .map_err(|_| TaskError::GraphNotFound { 
-                path: path.to_path_buf() 
-            })?;
+        let file = std::fs::File::open(path).map_err(|_| TaskError::GraphNotFound {
+            path: path.to_path_buf(),
+        })?;
 
         let mmap = unsafe { Mmap::map(&file) }?;
 
@@ -94,10 +93,7 @@ impl TaskExecutor {
     fn build_task_index(&mut self, data: &TaskGraphData) {
         self.task_index.clear();
         for (idx, task) in data.tasks.iter().enumerate() {
-            self.task_index.insert(
-                (task.package_idx, task.name.clone()),
-                idx as u32,
-            );
+            self.task_index.insert((task.package_idx, task.name.clone()), idx as u32);
         }
     }
 
@@ -127,7 +123,9 @@ impl TaskExecutor {
             }
 
             // Check if all dependencies are completed
-            let deps_complete = data.dependency_edges.iter()
+            let deps_complete = data
+                .dependency_edges
+                .iter()
                 .filter(|(_, to)| *to == idx as u32)
                 .all(|(from, _)| self.completed[*from as usize]);
 
@@ -167,17 +165,15 @@ impl TaskExecutor {
 
     /// Execute a task
     pub fn execute(&mut self, task_idx: u32) -> Result<TaskOutput, TaskError> {
-        let data = self.data.as_ref()
-            .ok_or_else(|| TaskError::ExecutionFailed {
-                exit_code: -1,
-                stderr: "no task graph loaded".to_string(),
-            })?;
+        let data = self.data.as_ref().ok_or_else(|| TaskError::ExecutionFailed {
+            exit_code: -1,
+            stderr: "no task graph loaded".to_string(),
+        })?;
 
-        let task = data.tasks.get(task_idx as usize)
-            .ok_or_else(|| TaskError::TaskNotFound {
-                package: "unknown".to_string(),
-                task: format!("index {}", task_idx),
-            })?;
+        let task = data.tasks.get(task_idx as usize).ok_or_else(|| TaskError::TaskNotFound {
+            package: "unknown".to_string(),
+            task: format!("index {}", task_idx),
+        })?;
 
         let start = Instant::now();
 
@@ -215,16 +211,12 @@ impl TaskExecutor {
 
     /// Check if task is completed
     pub fn is_completed(&self, task_idx: u32) -> bool {
-        self.completed.get(task_idx as usize)
-            .map(|b| *b)
-            .unwrap_or(false)
+        self.completed.get(task_idx as usize).map(|b| *b).unwrap_or(false)
     }
 
     /// Get number of tasks
     pub fn task_count(&self) -> usize {
-        self.data.as_ref()
-            .map(|d| d.tasks.len())
-            .unwrap_or(0)
+        self.data.as_ref().map(|d| d.tasks.len()).unwrap_or(0)
     }
 
     /// Reset all tasks to not completed
@@ -333,12 +325,12 @@ mod tests {
     #[test]
     fn test_task_instance_zero_allocation() {
         let executor = TaskExecutor::new();
-        
+
         // This should be stack-allocated
         let instance = executor.clone_task(5);
         assert_eq!(instance.task_idx, 5);
         assert_eq!(instance.state, TaskState::Pending);
-        
+
         // Verify size is reasonable for stack allocation
         assert!(TaskInstance::SIZE <= 96);
     }

@@ -85,8 +85,14 @@ pub enum IconCommands {
 pub async fn run(args: IconArgs, theme: &Theme) -> Result<()> {
     match args.command {
         IconCommands::Add { pack } => run_add(&pack, theme).await,
-        IconCommands::Optimize { input: _, output: _ } => run_optimize(theme).await,
-        IconCommands::Sprite { input: _, output: _ } => run_sprite(theme).await,
+        IconCommands::Optimize {
+            input: _,
+            output: _,
+        } => run_optimize(theme).await,
+        IconCommands::Sprite {
+            input: _,
+            output: _,
+        } => run_sprite(theme).await,
         IconCommands::List { pack } => run_list(pack, theme).await,
         IconCommands::Search { query } => run_search(&query, theme).await,
         IconCommands::Analyze { dir: _ } => run_analyze(theme).await,
@@ -146,10 +152,7 @@ async fn run_optimize(theme: &Theme) -> Result<()> {
     for (icon, before, after, reduction) in icons {
         let spinner = Spinner::dots(&format!("Optimizing {}...", icon));
         tokio::time::sleep(std::time::Duration::from_millis(30)).await;
-        spinner.success(&format!(
-            "{} ({} → {}, {}% smaller)",
-            icon, before, after, reduction
-        ));
+        spinner.success(&format!("{} ({} → {}, {}% smaller)", icon, before, after, reduction));
     }
 
     eprintln!();
@@ -196,10 +199,7 @@ async fn run_sprite(theme: &Theme) -> Result<()> {
 
     eprintln!("  {} Usage:", "│".bright_black());
     eprintln!();
-    eprintln!(
-        "    {}",
-        "<Icon name=\"arrow-right\" />".cyan()
-    );
+    eprintln!("    {}", "<Icon name=\"arrow-right\" />".cyan());
     eprintln!();
 
     Ok(())
@@ -235,12 +235,7 @@ async fn run_list(pack: Option<String>, theme: &Theme) -> Result<()> {
             eprintln!("  {} {}", "■".cyan().bold(), icon_pack.white().bold());
         }
 
-        eprintln!(
-            "    {} {} {}",
-            "├".bright_black(),
-            symbol,
-            name.cyan()
-        );
+        eprintln!("    {} {} {}", "├".bright_black(), symbol, name.cyan());
     }
 
     eprintln!();
@@ -275,11 +270,7 @@ async fn run_search(query: &str, theme: &Theme) -> Result<()> {
     }
 
     eprintln!();
-    eprintln!(
-        "  {} Use {} to add a pack",
-        "→".cyan(),
-        "dx icon add <pack>".cyan().bold()
-    );
+    eprintln!("  {} Use {} to add a pack", "→".cyan(), "dx icon add <pack>".cyan().bold());
     eprintln!();
 
     Ok(())
@@ -344,7 +335,12 @@ async fn run_types(output: &str, theme: &Theme) -> Result<()> {
     eprintln!("      {} {};", "|".bright_black(), "\"arrow-right\"".green());
     eprintln!("      {} {};", "|".bright_black(), "\"arrow-left\"".green());
     eprintln!("      {} {};", "|".bright_black(), "\"check\"".green());
-    eprintln!("      {} {} {};", "|".bright_black(), "\"...\"".bright_black(), "// 42 more".bright_black());
+    eprintln!(
+        "      {} {} {};",
+        "|".bright_black(),
+        "\"...\"".bright_black(),
+        "// 42 more".bright_black()
+    );
     eprintln!();
 
     theme.print_success(&format!("Written to {}", output));

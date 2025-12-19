@@ -1,9 +1,10 @@
 // Ecosystem integration module for dx-compiler
 
-pub mod schema_parser;
+// Use the schema_parser from the crate root
+use crate::schema_parser;
+use crate::schema_parser::{parse_query_definitions, QueryDefinition};
 
 use anyhow::Result;
-use schema_parser::{parse_query_definitions, QueryDefinition};
 
 /// Initialize ecosystem features
 pub fn init() {

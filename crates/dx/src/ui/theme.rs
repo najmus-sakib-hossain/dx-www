@@ -43,31 +43,18 @@ impl Theme {
         let version = env!("CARGO_PKG_VERSION");
 
         eprintln!();
-        eprintln!(
-            "  {}  {}",
-            "▲".cyan().bold(),
-            format!("DX v{version}").bright_white().bold()
-        );
+        eprintln!("  {}  {}", "▲".cyan().bold(), format!("DX v{version}").bright_white().bold());
         eprintln!();
     }
 
     /// Print a section header
     pub fn print_section(&self, title: &str) {
-        eprintln!(
-            "  {} {}",
-            "│".bright_black(),
-            title.bright_white().bold()
-        );
+        eprintln!("  {} {}", "│".bright_black(), title.bright_white().bold());
     }
 
     /// Print an info line
     pub fn print_info(&self, label: &str, value: &str) {
-        eprintln!(
-            "  {} {}: {}",
-            "│".bright_black(),
-            label.bright_black(),
-            value.white()
-        );
+        eprintln!("  {} {}: {}", "│".bright_black(), label.bright_black(), value.white());
     }
 
     /// Print a success message
@@ -101,21 +88,12 @@ impl Theme {
     /// Print a command hint
     pub fn print_hint(&self, command: &str) {
         eprintln!();
-        eprintln!(
-            "  {} Run {} to get started",
-            "→".cyan(),
-            format!("`{command}`").cyan().bold()
-        );
+        eprintln!("  {} Run {} to get started", "→".cyan(), format!("`{command}`").cyan().bold());
     }
 
     /// Print a link
     pub fn print_link(&self, label: &str, url: &str) {
-        eprintln!(
-            "  {} {}: {}",
-            "│".bright_black(),
-            label.bright_black(),
-            url.cyan().underline()
-        );
+        eprintln!("  {} {}: {}", "│".bright_black(), label.bright_black(), url.cyan().underline());
     }
 
     /// Print a divider line
@@ -132,17 +110,9 @@ impl Theme {
     /// Print ready message for dev server
     pub fn print_ready(&self, url: &str, time_ms: u64) {
         eprintln!();
-        eprintln!(
-            "  {} Ready in {}",
-            "✓".green().bold(),
-            format!("{time_ms}ms").cyan().bold()
-        );
+        eprintln!("  {} Ready in {}", "✓".green().bold(), format!("{time_ms}ms").cyan().bold());
         eprintln!();
-        eprintln!(
-            "  {} Local:   {}",
-            "→".cyan(),
-            url.cyan().bold().underline()
-        );
+        eprintln!("  {} Local:   {}", "→".cyan(), url.cyan().bold().underline());
         eprintln!();
     }
 

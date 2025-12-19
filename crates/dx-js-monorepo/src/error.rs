@@ -14,10 +14,7 @@ pub enum WorkspaceError {
 
     /// Manifest file is corrupted or invalid
     #[error("workspace manifest corrupted: {reason}")]
-    ManifestCorrupted {
-        reason: String,
-        hash_mismatch: bool,
-    },
+    ManifestCorrupted { reason: String, hash_mismatch: bool },
 
     /// Referenced package does not exist
     #[error("package not found: {name}")]

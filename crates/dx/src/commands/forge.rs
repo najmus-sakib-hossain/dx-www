@@ -272,11 +272,7 @@ async fn run_status(verbose: bool, theme: &Theme) -> Result<()> {
     let installed_count = active_tools.iter().filter(|(_, active)| *active).count();
     let total_count = active_tools.len();
 
-    eprintln!(
-        "  {} Project: {}",
-        "│".bright_black(),
-        "my-dx-app".cyan().bold()
-    );
+    eprintln!("  {} Project: {}", "│".bright_black(), "my-dx-app".cyan().bold());
     eprintln!(
         "  {} Tools: {}/{} active",
         "│".bright_black(),
@@ -309,11 +305,7 @@ async fn run_status(verbose: bool, theme: &Theme) -> Result<()> {
     eprintln!();
 
     if !verbose {
-        eprintln!(
-            "  {} Use {} for all tools",
-            "→".cyan(),
-            "--verbose".cyan().bold()
-        );
+        eprintln!("  {} Use {} for all tools", "→".cyan(), "--verbose".cyan().bold());
         eprintln!();
     }
 
@@ -451,11 +443,7 @@ async fn run_check(fix: bool, theme: &Theme) -> Result<()> {
     if fix {
         theme.print_info("Auto-fix", "Applied 1 fix");
     } else {
-        eprintln!(
-            "  {} Use {} to auto-fix issues",
-            "→".cyan(),
-            "--fix".cyan().bold()
-        );
+        eprintln!("  {} Use {} to auto-fix issues", "→".cyan(), "--fix".cyan().bold());
     }
     eprintln!();
 
@@ -490,17 +478,18 @@ async fn run_sync(force: bool, theme: &Theme) -> Result<()> {
     Ok(())
 }
 
-async fn run_build(config: &str, target: Option<String>, dry_run: bool, theme: &Theme) -> Result<()> {
+async fn run_build(
+    config: &str,
+    target: Option<String>,
+    dry_run: bool,
+    theme: &Theme,
+) -> Result<()> {
     let start = Instant::now();
 
     theme.print_section("dx-forge: Orchestrated Build");
     eprintln!();
 
-    eprintln!(
-        "  {} Configuration: {}",
-        "│".bright_black(),
-        config.cyan()
-    );
+    eprintln!("  {} Configuration: {}", "│".bright_black(), config.cyan());
 
     if let Some(ref t) = target {
         eprintln!("  {} Target: {}", "│".bright_black(), t.cyan());
@@ -602,11 +591,7 @@ async fn run_config(tool: Option<String>, theme: &Theme) -> Result<()> {
     eprintln!();
 
     if let Some(t) = tool {
-        eprintln!(
-            "  {} Configuration for {}",
-            "│".bright_black(),
-            t.cyan().bold()
-        );
+        eprintln!("  {} Configuration for {}", "│".bright_black(), t.cyan().bold());
         eprintln!();
 
         table::print_kv_list(&[

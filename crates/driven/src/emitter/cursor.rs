@@ -1,7 +1,7 @@
 //! Cursor .cursorrules emitter
 
-use super::{ensure_parent_dir, format_bullet_list, format_heading, RuleEmitter};
-use crate::{parser::UnifiedRule, Editor, Result};
+use super::{RuleEmitter, ensure_parent_dir, format_bullet_list, format_heading};
+use crate::{Editor, Result, parser::UnifiedRule};
 use std::path::Path;
 
 /// Emitter for Cursor .cursorrules format
@@ -127,10 +127,7 @@ impl RuleEmitter for CursorEmitter {
                 } = rule
                 {
                     let cat_name = format!("{:?}", category);
-                    by_category
-                        .entry(cat_name)
-                        .or_default()
-                        .push(description);
+                    by_category.entry(cat_name).or_default().push(description);
                 }
             }
 

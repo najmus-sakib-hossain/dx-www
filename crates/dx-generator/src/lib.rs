@@ -78,19 +78,19 @@ pub mod template;
 pub mod token;
 
 // Re-exports for convenience
-pub use binary::{BinaryTemplate, DxtHeader, DXT_MAGIC};
-pub use cache::{TemplateCache, CacheEntry};
+pub use binary::{BinaryTemplate, DXT_MAGIC, DxtHeader};
+pub use cache::{CacheEntry, TemplateCache};
 pub use capability::{Capability, CapabilityManifest};
-pub use compiler::{Compiler, CompileOptions};
+pub use compiler::{CompileOptions, Compiler};
 pub use dirty::DirtyMask;
 pub use error::{GeneratorError, Result};
 pub use fusion::{FusionBundle, FusionTemplate};
 pub use generator::{Generator, GeneratorConfig};
-pub use params::{Parameters, ParamValue};
-pub use patcher::{XorPatcher, Patch};
+pub use params::{ParamValue, Parameters};
+pub use patcher::{Patch, XorPatcher};
 pub use pool::TemplatePool;
-pub use render::{MicroRenderer, MacroRenderer, RenderMode};
-pub use scanner::{PlaceholderScanner, Placeholder};
+pub use render::{MacroRenderer, MicroRenderer, RenderMode};
+pub use scanner::{Placeholder, PlaceholderScanner};
 pub use session::{Session, SessionSnapshot};
 pub use template::Template;
 pub use token::{Token, TokenRegistry};

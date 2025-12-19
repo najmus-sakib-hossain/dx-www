@@ -17,9 +17,14 @@ pub mod dev_server;
 pub mod linker;
 pub mod loader;
 pub mod packer;
+pub mod parser;
 pub mod pwa;
 pub mod rpc;
+pub mod schema_parser;
 pub mod splitter;
+
+// OXC-based parser (optional - requires oxc feature)
+#[cfg(feature = "oxc")]
 pub mod swc_parser;
 
 // Ecosystem integrations

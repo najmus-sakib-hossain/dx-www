@@ -122,11 +122,7 @@ impl ChunkStreamer {
                 flags.set(ChunkFlags::LAST);
             }
 
-            chunks.push(StreamChunk::new(
-                self.sequence,
-                flags,
-                chunk_data.to_vec(),
-            ));
+            chunks.push(StreamChunk::new(self.sequence, flags, chunk_data.to_vec()));
             self.sequence += 1;
         }
 

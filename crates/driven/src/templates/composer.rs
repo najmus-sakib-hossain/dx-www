@@ -1,7 +1,7 @@
 //! Template composition engine
 
 use super::{Template, TemplateRegistry};
-use crate::{parser::UnifiedRule, Result};
+use crate::{Result, parser::UnifiedRule};
 
 /// Composes multiple templates into a unified rule set
 #[derive(Debug)]
@@ -91,9 +91,7 @@ mod tests {
         let registry = TemplateRegistry::new();
         let composer = TemplateComposer::new(&registry);
 
-        let rules = composer
-            .compose(&["architect", "rust-idioms", "testing"])
-            .unwrap();
+        let rules = composer.compose(&["architect", "rust-idioms", "testing"]).unwrap();
         assert!(!rules.is_empty());
     }
 }

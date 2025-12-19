@@ -85,7 +85,10 @@ impl FirebaseStudioGenerator {
 
         if config.detected_features.is_cargo_project {
             lines.push("        cargo-fetch = \"cargo fetch\";".to_string());
-            lines.push("        install-wasm-target = \"rustup target add wasm32-unknown-unknown\";".to_string());
+            lines.push(
+                "        install-wasm-target = \"rustup target add wasm32-unknown-unknown\";"
+                    .to_string(),
+            );
         }
 
         lines.push("      };".to_string());

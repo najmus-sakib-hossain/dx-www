@@ -25,9 +25,7 @@ pub fn find_project_root() -> Option<PathBuf> {
 /// Get the DX home directory (~/.dx)
 #[allow(dead_code)]
 pub fn dx_home() -> PathBuf {
-    home::home_dir()
-        .map(|h| h.join(".dx"))
-        .unwrap_or_else(|| PathBuf::from(".dx"))
+    home::home_dir().map(|h| h.join(".dx")).unwrap_or_else(|| PathBuf::from(".dx"))
 }
 
 /// Get the cache directory

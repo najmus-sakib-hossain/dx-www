@@ -17,7 +17,7 @@ pub use benchmark::{BenchmarkCommand, BenchmarkResults};
 pub use cache::{CacheCommand, CacheStats};
 pub use convert::ConvertCommand;
 pub use init::InitCommand;
-pub use sign::{generate_keypair, SignCommand};
+pub use sign::{SignCommand, generate_keypair};
 pub use sync::SyncCommand;
 pub use template::TemplateCommand;
 pub use validate::ValidateCommand;
@@ -90,11 +90,7 @@ pub fn create_spinner(message: &str) -> indicatif::ProgressBar {
     use indicatif::{ProgressBar, ProgressStyle};
 
     let pb = ProgressBar::new_spinner();
-    pb.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap(),
-    );
+    pb.set_style(ProgressStyle::default_spinner().template("{spinner:.green} {msg}").unwrap());
     pb.set_message(message.to_string());
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
     pb
@@ -104,7 +100,8 @@ pub fn create_spinner(message: &str) -> indicatif::ProgressBar {
 pub fn resolve_project_root(path: Option<&Path>) -> Result<std::path::PathBuf> {
     match path {
         Some(p) => Ok(p.to_path_buf()),
-        None => std::env::current_dir()
-            .map_err(|e| crate::DrivenError::Config(format!("Failed to get current directory: {}", e))),
+        None => std::env::current_dir().map_err(|e| {
+            crate::DrivenError::Config(format!("Failed to get current directory: {}", e))
+        }),
     }
 }

@@ -52,9 +52,7 @@ impl<'a> StringTable<'a> {
 
         let offset_table_size = (count as usize) * 4;
         if bytes.len() < 8 + offset_table_size {
-            return Err(DrivenError::InvalidBinary(
-                "String table offset table truncated".into(),
-            ));
+            return Err(DrivenError::InvalidBinary("String table offset table truncated".into()));
         }
 
         // Safety: We've verified the size
@@ -64,9 +62,7 @@ impl<'a> StringTable<'a> {
         let data_start = 8 + offset_table_size;
         let data_end = data_start + total_size as usize;
         if bytes.len() < data_end {
-            return Err(DrivenError::InvalidBinary(
-                "String table data truncated".into(),
-            ));
+            return Err(DrivenError::InvalidBinary("String table data truncated".into()));
         }
 
         let data = &bytes[data_start..data_end];

@@ -1,6 +1,6 @@
 //! Convention extractor
 
-use super::{scanner::ScanResult, NamingConventions, NamingStyle};
+use super::{NamingConventions, NamingStyle, scanner::ScanResult};
 use crate::Result;
 
 /// Extracts coding conventions from a project

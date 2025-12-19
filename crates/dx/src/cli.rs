@@ -61,7 +61,6 @@ pub enum Commands {
     // ═══════════════════════════════════════════════════════════════════
     //  ASSET TOOLS
     // ═══════════════════════════════════════════════════════════════════
-
     /// Binary CSS (B-CSS) compiler - 98% smaller, 80x faster
     #[command(visible_alias = "css")]
     Style(commands::style::StyleArgs),
@@ -79,7 +78,6 @@ pub enum Commands {
     // ═══════════════════════════════════════════════════════════════════
     //  INFRASTRUCTURE
     // ═══════════════════════════════════════════════════════════════════
-
     /// Package manager + orchestrator for all dx-* crates
     #[command(visible_alias = "f")]
     Forge(commands::forge::ForgeArgs),
@@ -95,7 +93,6 @@ pub enum Commands {
     // ═══════════════════════════════════════════════════════════════════
     //  DEVELOPMENT
     // ═══════════════════════════════════════════════════════════════════
-
     /// AI agents control - review, refactor, test generation
     #[command(visible_alias = "ai")]
     Driven(commands::driven::DrivenArgs),

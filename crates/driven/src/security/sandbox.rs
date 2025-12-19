@@ -34,7 +34,7 @@ impl SandboxConfig {
             write_paths: HashSet::new(),
             env_vars: HashSet::new(),
             max_memory: 64 * 1024 * 1024, // 64MB
-            max_time_ms: 5000,             // 5 seconds
+            max_time_ms: 5000,            // 5 seconds
             allow_network: false,
             allow_spawn: false,
         }
@@ -47,7 +47,7 @@ impl SandboxConfig {
             write_paths: HashSet::new(),
             env_vars: HashSet::new(),
             max_memory: 512 * 1024 * 1024, // 512MB
-            max_time_ms: 30000,             // 30 seconds
+            max_time_ms: 30000,            // 30 seconds
             allow_network: true,
             allow_spawn: true,
         }
@@ -215,9 +215,11 @@ impl Sandbox {
         }
 
         // Check if path is under any allowed path
-        let allowed = self.config.read_paths.iter().any(|allowed| {
-            path.starts_with(allowed) || path == allowed
-        });
+        let allowed = self
+            .config
+            .read_paths
+            .iter()
+            .any(|allowed| path.starts_with(allowed) || path == allowed);
 
         if !allowed {
             self.record_violation(
@@ -239,9 +241,11 @@ impl Sandbox {
             return false;
         }
 
-        let allowed = self.config.write_paths.iter().any(|allowed| {
-            path.starts_with(allowed) || path == allowed
-        });
+        let allowed = self
+            .config
+            .write_paths
+            .iter()
+            .any(|allowed| path.starts_with(allowed) || path == allowed);
 
         if !allowed {
             self.record_violation(
@@ -256,20 +260,14 @@ impl Sandbox {
     /// Check if environment variable access is allowed
     pub fn check_env(&mut self, var: &str) -> bool {
         if self.config.env_vars.is_empty() {
-            self.record_violation(
-                ViolationKind::EnvDenied,
-                &format!("Env access denied: {}", var),
-            );
+            self.record_violation(ViolationKind::EnvDenied, &format!("Env access denied: {}", var));
             return false;
         }
 
         let allowed = self.config.env_vars.contains(var);
 
         if !allowed {
-            self.record_violation(
-                ViolationKind::EnvDenied,
-                &format!("Env access denied: {}", var),
-            );
+            self.record_violation(ViolationKind::EnvDenied, &format!("Env access denied: {}", var));
         }
 
         allowed
@@ -348,8 +346,7 @@ mod tests {
 
     #[test]
     fn test_sandbox_file_access() {
-        let config = SandboxConfig::restricted()
-            .allow_read("/home/user/project");
+        let config = SandboxConfig::restricted().allow_read("/home/user/project");
 
         let mut sandbox = Sandbox::new(config);
         sandbox.start();
@@ -361,8 +358,7 @@ mod tests {
 
     #[test]
     fn test_sandbox_memory() {
-        let config = SandboxConfig::restricted()
-            .with_memory_limit(1024);
+        let config = SandboxConfig::restricted().with_memory_limit(1024);
 
         let mut sandbox = Sandbox::new(config);
         sandbox.start();

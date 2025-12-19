@@ -7,11 +7,11 @@
 use proptest::prelude::*;
 use std::collections::HashSet;
 
-use crate::bwm::{BwmSerializer, WorkspaceData, PackageData};
-use crate::btg::{TaskGraphData, TaskData};
-use crate::dxl::{DxlSerializer, LockfileData, PackageResolution};
-use crate::dxc::XorPatch;
 use crate::bag::AffectedGraphData;
+use crate::btg::{TaskData, TaskGraphData};
+use crate::bwm::{BwmSerializer, PackageData, WorkspaceData};
+use crate::dxc::XorPatch;
+use crate::dxl::{DxlSerializer, LockfileData, PackageResolution};
 use crate::types::PackageEntry;
 
 // ============================================================================
@@ -31,14 +31,15 @@ fn arb_version() -> impl Strategy<Value = (u16, u16, u16)> {
 }
 
 fn arb_package_data() -> impl Strategy<Value = PackageData> {
-    (arb_package_name(), arb_package_path(), arb_version())
-        .prop_map(|(name, path, version)| PackageData {
+    (arb_package_name(), arb_package_path(), arb_version()).prop_map(|(name, path, version)| {
+        PackageData {
             name,
             path,
             version,
             dependencies: Vec::new(),
             is_private: false,
-        })
+        }
+    })
 }
 
 // Note: These generators are available for future property tests
@@ -64,15 +65,16 @@ fn arb_command() -> impl Strategy<Value = String> {
 
 #[allow(dead_code)]
 fn arb_task_data(max_pkg_idx: u32) -> impl Strategy<Value = TaskData> {
-    (arb_task_name(), 0..=max_pkg_idx, arb_command())
-        .prop_map(|(name, package_idx, command)| TaskData {
+    (arb_task_name(), 0..=max_pkg_idx, arb_command()).prop_map(|(name, package_idx, command)| {
+        TaskData {
             name,
             package_idx,
             command,
             definition_hash: [0; 8],
             frame_budget_us: 0,
             cacheable: true,
-        })
+        }
+    })
 }
 
 // ============================================================================
@@ -92,7 +94,7 @@ proptest! {
         let packages: Vec<_> = packages.into_iter()
             .filter(|p| seen.insert(p.name.clone()))
             .collect();
-        
+
         if packages.is_empty() {
             return Ok(());
         }
@@ -169,7 +171,7 @@ proptest! {
         for (from, to) in &edges {
             let from_pos = position.get(from).unwrap();
             let to_pos = position.get(to).unwrap();
-            prop_assert!(from_pos < to_pos, 
+            prop_assert!(from_pos < to_pos,
                 "Edge ({}, {}) violates topological order: {} at pos {}, {} at pos {}",
                 from, to, from, from_pos, to, to_pos);
         }
@@ -220,7 +222,7 @@ proptest! {
         for group in &data.parallel_groups {
             let task_count_in_group = { group.task_count };
             // In a chain, each group should have exactly 1 task
-            prop_assert_eq!(task_count_in_group, 1, 
+            prop_assert_eq!(task_count_in_group, 1,
                 "Chain should have single-task groups");
         }
     }
@@ -303,13 +305,13 @@ proptest! {
         }
 
         let patch = XorPatch::create(&base, &target);
-        
+
         // Patch should be smaller than full target for similar content
         // The overhead is ~72 bytes for headers, so for small changes the patch
         // should still be much smaller than the full content
         let efficiency = patch.efficiency(target.len());
-        prop_assert!(efficiency < 1.0, 
-            "Patch efficiency {} should be < 1.0 for similar content (patch size: {}, target size: {})", 
+        prop_assert!(efficiency < 1.0,
+            "Patch efficiency {} should be < 1.0 for similar content (patch size: {}, target size: {})",
             efficiency, patch.size(), target.len());
     }
 }
@@ -345,7 +347,7 @@ proptest! {
         let deserialized = DxlSerializer::deserialize(&serialized).unwrap();
 
         prop_assert_eq!(data.packages.len(), deserialized.packages.len());
-        
+
         for (orig, deser) in data.packages.iter().zip(deserialized.packages.iter()) {
             prop_assert_eq!(&orig.name, &deser.name);
             prop_assert_eq!(orig.version, deser.version);
@@ -399,7 +401,7 @@ proptest! {
 
         // Vector clocks should be the same
         prop_assert_eq!(result_ab.vector_clock, result_ba.vector_clock);
-        
+
         // Package sets should be the same (order may differ)
         let names_ab: HashSet<_> = result_ab.packages.iter().map(|p| &p.name).collect();
         let names_ba: HashSet<_> = result_ba.packages.iter().map(|p| &p.name).collect();
@@ -432,12 +434,12 @@ proptest! {
         // Changing the last package (n-1) should affect all packages 0..n-1
         let last_pkg = (chain_length - 1) as u32;
         let affected = graph.transitive_dependents(last_pkg);
-        
+
         for i in 0..chain_length - 1 {
             prop_assert!(affected.contains(&(i as u32)),
                 "Package {} should be affected when package {} changes", i, last_pkg);
         }
-        
+
         // Changing package 0 should affect nothing (it's the root, nothing depends on it)
         let affected_by_0 = graph.transitive_dependents(0);
         prop_assert!(affected_by_0.is_empty(),
@@ -525,7 +527,7 @@ proptest! {
         // Create cache manager and verify original entry
         let temp = TempDir::new().unwrap();
         let cache = CacheManager::new(temp.path().to_path_buf(), 1024 * 1024);
-        
+
         // Original entry should verify
         let verify_result = cache.verify(&entry);
         prop_assert!(verify_result.is_ok() && verify_result.unwrap(),
@@ -587,7 +589,7 @@ proptest! {
         let temp = TempDir::new().unwrap();
         let cache = CacheManager::new(temp.path().to_path_buf(), 1024 * 1024);
         let result = cache.verify(&tampered_entry);
-        
+
         prop_assert!(result.is_err() || !result.unwrap(),
             "Entry with tampered signature should fail verification");
     }
@@ -645,7 +647,7 @@ proptest! {
             "Should detect exactly one import in: {}", content);
 
         let import = &imports[0];
-        
+
         // Verify specifier matches
         prop_assert_eq!(&import.specifier, &module_name,
             "Import specifier should match module name");
@@ -1023,7 +1025,7 @@ proptest! {
         // Allow up to 3x variance due to cache effects and system noise
         // (10% variance is too strict for property testing with timing)
         let ratio = large_time.as_nanos() as f64 / small_time.as_nanos().max(1) as f64;
-        
+
         prop_assert!(ratio < 3.0,
             "Large workspace lookup ({:?}) should not be >3x slower than small ({:?}), ratio: {:.2}",
             large_time, small_time, ratio);
@@ -1127,7 +1129,6 @@ proptest! {
     }
 }
 
-
 // ============================================================================
 // Property 17: Single Request Multi-Entry Fetch
 // ============================================================================
@@ -1165,7 +1166,7 @@ proptest! {
 
         // Serialize and verify it's a single message
         let serialized = request.serialize();
-        
+
         // Deserialize and verify integrity
         let deserialized = DxrcRequest::deserialize(&serialized).unwrap();
         prop_assert_eq!(deserialized.task_hashes.len(), entry_count,
@@ -1263,7 +1264,7 @@ proptest! {
         for pkg in &declared {
             prop_assert!(detector.is_declared(0, pkg),
                 "Declared package '{}' should be recognized as declared", pkg);
-            
+
             // Also test with subpath
             let with_subpath = format!("{}/submodule", pkg);
             prop_assert!(detector.is_declared(0, &with_subpath),

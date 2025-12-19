@@ -5,8 +5,8 @@ use console::Term;
 use owo_colors::OwoColorize;
 use std::io::{self, Write};
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
     Arc,
+    atomic::{AtomicBool, Ordering},
 };
 use std::thread;
 use std::time::Duration;
@@ -47,10 +47,7 @@ impl Spinner {
             let mut frame_idx = 0;
 
             while running.load(Ordering::SeqCst) {
-                let spinner = theme
-                    .primary
-                    .apply_to(SPINNER_FRAMES[frame_idx])
-                    .to_string();
+                let spinner = theme.primary.apply_to(SPINNER_FRAMES[frame_idx]).to_string();
 
                 let _ = term.clear_line();
                 let _ = write!(&term, "\r{} {} {}", spinner, message.bold(), bar);

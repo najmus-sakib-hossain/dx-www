@@ -3,11 +3,11 @@
 //! Caches rendered output keyed by template ID and parameter hash.
 //! Uses dirty-bit tracking for O(1) invalidation decisions.
 
-use std::collections::HashMap;
-use std::sync::Arc;
-use parking_lot::RwLock;
 use crate::dirty::DirtyMask;
 use crate::error::{GeneratorError, Result};
+use parking_lot::RwLock;
+use std::collections::HashMap;
+use std::sync::Arc;
 
 // ============================================================================
 // Cache Entry
@@ -74,7 +74,10 @@ impl CacheKey {
     /// Create a new cache key.
     #[must_use]
     pub fn new(template_id: u32, param_hash: [u8; 32]) -> Self {
-        Self { template_id, param_hash }
+        Self {
+            template_id,
+            param_hash,
+        }
     }
 
     /// Create from template ID and parameters.
@@ -83,7 +86,10 @@ impl CacheKey {
         let hash = blake3::hash(&params.encode());
         let mut param_hash = [0u8; 32];
         param_hash.copy_from_slice(hash.as_bytes());
-        Self { template_id, param_hash }
+        Self {
+            template_id,
+            param_hash,
+        }
     }
 }
 
@@ -260,10 +266,7 @@ impl TemplateCache {
             && !entries.is_empty()
         {
             // Find LRU entry
-            let lru_key = entries
-                .iter()
-                .min_by_key(|(_, e)| e.timestamp)
-                .map(|(k, _)| k.clone());
+            let lru_key = entries.iter().min_by_key(|(_, e)| e.timestamp).map(|(k, _)| k.clone());
 
             if let Some(key) = lru_key {
                 if let Some(entry) = entries.remove(&key) {

@@ -1,7 +1,7 @@
 //! Claude Code emitter (.claude/, CLAUDE.md)
 
-use super::{ensure_parent_dir, format_bullet_list, format_heading, RuleEmitter};
-use crate::{parser::UnifiedRule, Editor, Result};
+use super::{RuleEmitter, ensure_parent_dir, format_bullet_list, format_heading};
+use crate::{Editor, Result, parser::UnifiedRule};
 use std::path::Path;
 
 /// Emitter for Claude Code format
@@ -34,7 +34,9 @@ impl RuleEmitter for ClaudeEmitter {
 
         for rule in rules {
             match rule {
-                UnifiedRule::Persona { role, principles, .. } => {
+                UnifiedRule::Persona {
+                    role, principles, ..
+                } => {
                     output.push_str(&format_heading(2, "Role"));
                     output.push_str(role);
                     output.push_str("\n\n");
@@ -46,7 +48,9 @@ impl RuleEmitter for ClaudeEmitter {
                 UnifiedRule::Standard { description, .. } => {
                     instructions.push(description.clone());
                 }
-                UnifiedRule::Context { focus, includes, .. } => {
+                UnifiedRule::Context {
+                    focus, includes, ..
+                } => {
                     context.extend(focus.clone());
                     context.extend(includes.clone());
                 }

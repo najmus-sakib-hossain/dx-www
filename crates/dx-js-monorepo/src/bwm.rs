@@ -2,10 +2,10 @@
 //!
 //! Memory-mapped workspace structure with pre-computed dependency graphs.
 
-use bytemuck::{Pod, Zeroable};
-use crate::{BWM_MAGIC, FORMAT_VERSION};
 use crate::error::WorkspaceError;
 use crate::types::PackageEntry;
+use crate::{BWM_MAGIC, FORMAT_VERSION};
+use bytemuck::{Pod, Zeroable};
 
 /// Binary Workspace Manifest header
 #[repr(C, packed)]
@@ -74,31 +74,31 @@ impl BwmSerializer {
     /// Serialize a workspace configuration to BWM format
     pub fn serialize(config: &WorkspaceData) -> Result<Vec<u8>, WorkspaceError> {
         let mut buffer = Vec::new();
-        
+
         // Calculate offsets
         let header_size = BwmHeader::SIZE;
         let packages_size = config.packages.len() * PackageEntry::SIZE;
         let graph_size = config.dependency_edges.len() * 8; // u32 pairs
         let topo_size = config.packages.len() * 4; // u32 indices
-        
+
         let packages_offset = header_size as u64;
         let graph_offset = packages_offset + packages_size as u64;
         let topo_order_offset = graph_offset + graph_size as u64;
         let strings_offset = topo_order_offset + topo_size as u64;
-        
+
         // Build string table
         let (string_table, string_indices) = Self::build_string_table(config);
-        
+
         // Create header
         let mut header = BwmHeader::new(config.packages.len() as u32);
         header.packages_offset = packages_offset;
         header.graph_offset = graph_offset;
         header.topo_order_offset = topo_order_offset;
         header.strings_offset = strings_offset;
-        
+
         // Write header
         buffer.extend_from_slice(bytemuck::bytes_of(&header));
-        
+
         // Write package entries
         for (_i, pkg) in config.packages.iter().enumerate() {
             let entry = PackageEntry::new(
@@ -110,26 +110,26 @@ impl BwmSerializer {
             );
             buffer.extend_from_slice(bytemuck::bytes_of(&entry));
         }
-        
+
         // Write dependency edges
         for (from, to) in &config.dependency_edges {
             buffer.extend_from_slice(&from.to_le_bytes());
             buffer.extend_from_slice(&to.to_le_bytes());
         }
-        
+
         // Write topological order
         for idx in &config.topological_order {
             buffer.extend_from_slice(&idx.to_le_bytes());
         }
-        
+
         // Write string table
         buffer.extend_from_slice(&string_table);
-        
+
         // Compute content hash
         // content_hash offset in packed BwmHeader: 4 + 4 + 4 + 8 + 8 + 8 + 8 = 44
         let content_hash = blake3::hash(&buffer[BwmHeader::SIZE..]);
         buffer[44..76].copy_from_slice(content_hash.as_bytes());
-        
+
         Ok(buffer)
     }
 
@@ -162,13 +162,12 @@ impl BwmSerializer {
         // Read package entries
         let packages_start = header.packages_offset as usize;
         let mut packages = Vec::with_capacity(header.package_count as usize);
-        
+
         for i in 0..header.package_count as usize {
             let offset = packages_start + i * PackageEntry::SIZE;
-            let entry: &PackageEntry = bytemuck::from_bytes(
-                &data[offset..offset + PackageEntry::SIZE]
-            );
-            
+            let entry: &PackageEntry =
+                bytemuck::from_bytes(&data[offset..offset + PackageEntry::SIZE]);
+
             packages.push(PackageData {
                 name: string_table[entry.name_idx as usize].clone(),
                 path: string_table[entry.path_idx as usize].clone(),
@@ -183,7 +182,7 @@ impl BwmSerializer {
         let topo_start = header.topo_order_offset as usize;
         let edge_count = (topo_start - graph_start) / 8;
         let mut dependency_edges = Vec::with_capacity(edge_count);
-        
+
         for i in 0..edge_count {
             let offset = graph_start + i * 8;
             let from = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap());
@@ -194,7 +193,7 @@ impl BwmSerializer {
         // Read topological order
         let topo_count = header.package_count as usize;
         let mut topological_order = Vec::with_capacity(topo_count);
-        
+
         for i in 0..topo_count {
             let offset = topo_start + i * 4;
             let idx = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap());
@@ -208,13 +207,15 @@ impl BwmSerializer {
         })
     }
 
-    fn build_string_table(config: &WorkspaceData) -> (Vec<u8>, std::collections::HashMap<String, usize>) {
+    fn build_string_table(
+        config: &WorkspaceData,
+    ) -> (Vec<u8>, std::collections::HashMap<String, usize>) {
         use std::collections::HashMap;
-        
+
         let mut table = Vec::new();
         let mut indices = HashMap::new();
         let mut string_index = 0usize;
-        
+
         for pkg in &config.packages {
             if !indices.contains_key(&pkg.name) {
                 indices.insert(pkg.name.clone(), string_index);
@@ -229,14 +230,14 @@ impl BwmSerializer {
                 string_index += 1;
             }
         }
-        
+
         (table, indices)
     }
 
     fn parse_string_table(data: &[u8]) -> Vec<String> {
         let mut strings = Vec::new();
         let mut start = 0;
-        
+
         for (i, &byte) in data.iter().enumerate() {
             if byte == 0 {
                 if let Ok(s) = std::str::from_utf8(&data[start..i]) {
@@ -245,7 +246,7 @@ impl BwmSerializer {
                 start = i + 1;
             }
         }
-        
+
         strings
     }
 }
@@ -291,18 +292,16 @@ impl WorkspaceData {
         let n = self.packages.len();
         let mut in_degree = vec![0u32; n];
         let mut adj: Vec<Vec<u32>> = vec![Vec::new(); n];
-        
+
         for &(from, to) in &self.dependency_edges {
             adj[from as usize].push(to);
             in_degree[to as usize] += 1;
         }
-        
-        let mut queue: Vec<u32> = (0..n as u32)
-            .filter(|&i| in_degree[i as usize] == 0)
-            .collect();
-        
+
+        let mut queue: Vec<u32> = (0..n as u32).filter(|&i| in_degree[i as usize] == 0).collect();
+
         let mut order = Vec::with_capacity(n);
-        
+
         while let Some(node) = queue.pop() {
             order.push(node);
             for &neighbor in &adj[node as usize] {
@@ -312,7 +311,7 @@ impl WorkspaceData {
                 }
             }
         }
-        
+
         if order.len() != n {
             // Find cycle for error message
             let in_cycle: Vec<String> = (0..n)
@@ -321,7 +320,7 @@ impl WorkspaceData {
                 .collect();
             return Err(WorkspaceError::CyclicDependency { cycle: in_cycle });
         }
-        
+
         self.topological_order = order;
         Ok(())
     }
@@ -385,12 +384,12 @@ mod tests {
         };
 
         data.compute_topological_order().unwrap();
-        
+
         // a should come before b, b before c
         let pos_a = data.topological_order.iter().position(|&x| x == 0).unwrap();
         let pos_b = data.topological_order.iter().position(|&x| x == 1).unwrap();
         let pos_c = data.topological_order.iter().position(|&x| x == 2).unwrap();
-        
+
         assert!(pos_a < pos_b);
         assert!(pos_b < pos_c);
     }

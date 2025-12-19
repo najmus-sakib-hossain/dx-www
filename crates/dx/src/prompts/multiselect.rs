@@ -100,9 +100,7 @@ impl<T: Clone> MultiSelect<T> {
         let item = if hint_str.is_empty() {
             MultiSelectItem::new(value, label).selected(selected)
         } else {
-            MultiSelectItem::new(value, label)
-                .hint(hint_str)
-                .selected(selected)
+            MultiSelectItem::new(value, label).hint(hint_str).selected(selected)
         };
         self.items.push(item);
         self.filtered_indices.push(self.items.len() - 1);
@@ -333,15 +331,9 @@ impl<T: Clone> PromptInteraction for MultiSelect<T> {
 
                 // Hint line
                 let selected = self.selected_count();
-                let hint_text = format!(
-                    "↑/↓ navigate • space select • a toggle all • {} selected",
-                    selected
-                );
-                term.write_line(&format!(
-                    "{}  {}",
-                    bar,
-                    theme.dim.apply_to(hint_text)
-                ))?;
+                let hint_text =
+                    format!("↑/↓ navigate • space select • a toggle all • {} selected", selected);
+                term.write_line(&format!("{}  {}", bar, theme.dim.apply_to(hint_text)))?;
                 lines += 1;
 
                 // Bottom bar
@@ -351,12 +343,8 @@ impl<T: Clone> PromptInteraction for MultiSelect<T> {
             }
             State::Submit => {
                 let symbol = theme.success.apply_to(S_STEP_SUBMIT);
-                let selected: Vec<_> = self
-                    .items
-                    .iter()
-                    .filter(|i| i.selected)
-                    .map(|i| i.label.clone())
-                    .collect();
+                let selected: Vec<_> =
+                    self.items.iter().filter(|i| i.selected).map(|i| i.label.clone()).collect();
                 let display = if selected.is_empty() {
                     "none".to_string()
                 } else {
@@ -397,11 +385,7 @@ impl<T: Clone> PromptInteraction for MultiSelect<T> {
     }
 
     fn value(&self) -> Vec<T> {
-        self.items
-            .iter()
-            .filter(|i| i.selected)
-            .map(|i| i.value.clone())
-            .collect()
+        self.items.iter().filter(|i| i.selected).map(|i| i.value.clone()).collect()
     }
 }
 

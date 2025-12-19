@@ -113,7 +113,8 @@ impl ContainerGenerator for DockerComposeGenerator {
         files.push(GeneratedFile::new("docker-compose.yml", compose_content.clone()));
 
         let compose_path = output_dir.join("docker-compose.yml");
-        fs::write(&compose_path, &compose_content).map_err(|e| crate::Error::io(&compose_path, e))?;
+        fs::write(&compose_path, &compose_content)
+            .map_err(|e| crate::Error::io(&compose_path, e))?;
 
         // Generate Dockerfile.dev
         let dockerfile_content = self.generate_dockerfile(config);
@@ -127,8 +128,7 @@ impl ContainerGenerator for DockerComposeGenerator {
     }
 
     fn exists(&self, project_dir: &Path) -> bool {
-        project_dir.join("docker-compose.yml").exists()
-            || project_dir.join("compose.yaml").exists()
+        project_dir.join("docker-compose.yml").exists() || project_dir.join("compose.yaml").exists()
     }
 
     fn clean(&self, project_dir: &Path) -> Result<()> {

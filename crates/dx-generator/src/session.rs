@@ -141,7 +141,10 @@ impl SessionSnapshot {
 
         // Params data
         let params_len = u32::from_le_bytes([
-            data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
         ]) as usize;
         offset += 4;
         let params_data = data[offset..offset + params_len].to_vec();
@@ -158,8 +161,14 @@ impl SessionSnapshot {
 
         // Timestamp
         let timestamp = u64::from_le_bytes([
-            data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
-            data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7],
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+            data[offset + 4],
+            data[offset + 5],
+            data[offset + 6],
+            data[offset + 7],
         ]);
 
         Ok(Self {
@@ -201,15 +210,18 @@ impl Session {
     /// Create a new session.
     #[must_use]
     pub fn new(template_name: impl Into<String>) -> Self {
-        let id = format!("{:016x}", xxhash_rust::xxh64::xxh64(
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_nanos()
-                .to_le_bytes()
-                .as_slice(),
-            0,
-        ));
+        let id = format!(
+            "{:016x}",
+            xxhash_rust::xxh64::xxh64(
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_nanos()
+                    .to_le_bytes()
+                    .as_slice(),
+                0,
+            )
+        );
 
         Self {
             id,

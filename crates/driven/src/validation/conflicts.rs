@@ -1,7 +1,7 @@
 //! Conflict detection
 
 use super::Conflict;
-use crate::{parser::UnifiedRule, Result};
+use crate::{Result, parser::UnifiedRule};
 
 /// Detects conflicts between rules
 #[derive(Debug, Default)]
@@ -33,7 +33,10 @@ impl ConflictDetector {
         for rule in rules {
             if let UnifiedRule::Standard { description, .. } = rule {
                 let lower = description.to_lowercase();
-                if lower.contains("snake_case") || lower.contains("camelcase") || lower.contains("pascalcase") {
+                if lower.contains("snake_case")
+                    || lower.contains("camelcase")
+                    || lower.contains("pascalcase")
+                {
                     naming_rules.push(description);
                 }
             }
@@ -102,14 +105,10 @@ impl ConflictDetector {
                         || (r1_lower.contains(negative) && r2_lower.contains(positive))
                     {
                         // Check for similar topics (simple word overlap)
-                        let r1_words: std::collections::HashSet<_> = r1_lower
-                            .split_whitespace()
-                            .filter(|w| w.len() > 4)
-                            .collect();
-                        let r2_words: std::collections::HashSet<_> = r2_lower
-                            .split_whitespace()
-                            .filter(|w| w.len() > 4)
-                            .collect();
+                        let r1_words: std::collections::HashSet<_> =
+                            r1_lower.split_whitespace().filter(|w| w.len() > 4).collect();
+                        let r2_words: std::collections::HashSet<_> =
+                            r2_lower.split_whitespace().filter(|w| w.len() > 4).collect();
 
                         let overlap: Vec<_> = r1_words.intersection(&r2_words).collect();
                         if overlap.len() >= 2 {

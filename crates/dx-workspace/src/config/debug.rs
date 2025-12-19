@@ -24,9 +24,7 @@ impl DebugConfig {
     pub fn validate(&self) -> crate::Result<()> {
         for config in &self.launch_configs {
             if config.name.is_empty() {
-                return Err(crate::Error::validation(
-                    "Launch configuration name cannot be empty",
-                ));
+                return Err(crate::Error::validation("Launch configuration name cannot be empty"));
             }
         }
 
@@ -309,10 +307,7 @@ mod tests {
     fn test_dx_defaults() {
         let config = DebugConfig::dx_defaults();
         assert!(!config.launch_configs.is_empty());
-        assert!(config
-            .launch_configs
-            .iter()
-            .any(|c| c.name == "dx dev"));
+        assert!(config.launch_configs.iter().any(|c| c.name == "dx dev"));
     }
 
     #[test]

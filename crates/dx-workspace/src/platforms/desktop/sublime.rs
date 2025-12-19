@@ -2,7 +2,7 @@
 
 use super::{DesktopGenerator, GeneratedFile};
 use crate::{Result, WorkspaceConfig};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use std::fs;
 use std::path::Path;
 
@@ -35,10 +35,7 @@ impl SublimeGenerator {
         // Settings
         let mut settings = Map::new();
         settings.insert("tab_size".to_string(), json!(config.editor.tab_size));
-        settings.insert(
-            "translate_tabs_to_spaces".to_string(),
-            json!(config.editor.insert_spaces),
-        );
+        settings.insert("translate_tabs_to_spaces".to_string(), json!(config.editor.insert_spaces));
 
         if let Some(ref font) = config.editor.font_family {
             settings.insert("font_face".to_string(), json!(font));

@@ -21,7 +21,7 @@ use core::{
 /// with the theme style. Used by [`DynamicColor`] to resolve into a color.
 ///
 /// [`DynamicColor`]: super::DynamicColor
-#[derive(Clone, PartialOrd)]
+#[derive(Clone)]
 pub struct DynamicScheme {
     /// The source color of the theme in HCT.
     pub source_color_hct: Hct,
@@ -369,7 +369,25 @@ impl DynamicScheme {
 
 impl Ord for DynamicScheme {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
+        match self.source_color_hct.cmp(&other.source_color_hct) {
+            Ordering::Equal => {},
+            ord => return ord,
+        }
+        match self.variant.cmp(&other.variant) {
+            Ordering::Equal => {},
+            ord => return ord,
+        }
+        match self.is_dark.cmp(&other.is_dark) {
+            Ordering::Equal => {},
+            ord => return ord,
+        }
+        self.contrast_level.partial_cmp(&other.contrast_level).unwrap_or(Ordering::Equal)
+    }
+}
+
+impl PartialOrd for DynamicScheme {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 

@@ -2,10 +2,10 @@
 //!
 //! Monitors file system events with intelligent debouncing.
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use std::collections::HashMap;
 
 /// File change type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -136,13 +136,13 @@ impl WatchManager {
         if self.debounce_config.coalesce {
             // Check if we should coalesce with existing change
             let mut last_times = self.last_change_time.lock().unwrap();
-            
+
             if let Some(last_time) = last_times.get(&path) {
                 let elapsed = now.duration_since(*last_time);
                 if elapsed < Duration::from_millis(self.debounce_config.min_wait_ms as u64) {
                     // Update timestamp but don't add new change
                     last_times.insert(path.clone(), now);
-                    
+
                     // Update existing pending change
                     let mut pending = self.pending_changes.lock().unwrap();
                     if let Some(change) = pending.get_mut(&path) {
@@ -152,17 +152,20 @@ impl WatchManager {
                     return;
                 }
             }
-            
+
             last_times.insert(path.clone(), now);
         }
 
         // Add new change
         let mut pending = self.pending_changes.lock().unwrap();
-        pending.insert(path.clone(), FileChange {
-            path,
-            change_type,
-            timestamp_ns,
-        });
+        pending.insert(
+            path.clone(),
+            FileChange {
+                path,
+                change_type,
+                timestamp_ns,
+            },
+        );
     }
 
     /// Get tasks to run for a file change (using predictive callback)
@@ -226,10 +229,10 @@ mod tests {
     #[test]
     fn test_start_stop() {
         let mut manager = WatchManager::new();
-        
+
         manager.start().unwrap();
         assert!(manager.is_watching());
-        
+
         manager.stop();
         assert!(!manager.is_watching());
     }
@@ -237,11 +240,8 @@ mod tests {
     #[test]
     fn test_record_change() {
         let manager = WatchManager::new();
-        
-        manager.record_change(
-            PathBuf::from("src/index.ts"),
-            ChangeType::Modified,
-        );
+
+        manager.record_change(PathBuf::from("src/index.ts"), ChangeType::Modified);
 
         let pending = manager.pending_changes();
         assert_eq!(pending.len(), 1);
@@ -299,7 +299,7 @@ mod tests {
     #[test]
     fn test_predictive_callback() {
         let mut manager = WatchManager::new();
-        
+
         manager.on_predicted_change(|path| {
             if path.to_string_lossy().contains("src") {
                 vec![0, 1, 2] // Build tasks
@@ -318,7 +318,7 @@ mod tests {
     #[test]
     fn test_debounce_config() {
         let mut manager = WatchManager::new();
-        
+
         manager.set_debounce(DebounceConfig {
             min_wait_ms: 200,
             max_wait_ms: 1000,
@@ -328,10 +328,10 @@ mod tests {
         // With coalesce disabled, each change should be recorded
         let path = PathBuf::from("test.ts");
         manager.record_change(path.clone(), ChangeType::Modified);
-        
+
         // Wait a bit
         thread::sleep(Duration::from_millis(10));
-        
+
         manager.record_change(path.clone(), ChangeType::Modified);
 
         // Both changes recorded (coalesce disabled, but same key overwrites)

@@ -108,7 +108,9 @@ impl BinaryCache {
                             key,
                             path: path.clone(),
                             size: metadata.len(),
-                            created: metadata.created().unwrap_or(std::time::SystemTime::UNIX_EPOCH),
+                            created: metadata
+                                .created()
+                                .unwrap_or(std::time::SystemTime::UNIX_EPOCH),
                         };
                         self.current_size += cache_entry.size;
                         self.index.insert(key.template_hash, cache_entry);
@@ -200,11 +202,7 @@ impl BinaryCache {
 
     /// Evict oldest entry
     fn evict_oldest(&mut self) -> Result<()> {
-        let oldest = self
-            .index
-            .iter()
-            .min_by_key(|(_, e)| e.created)
-            .map(|(k, _)| *k);
+        let oldest = self.index.iter().min_by_key(|(_, e)| e.created).map(|(k, _)| *k);
 
         if let Some(key) = oldest {
             self.remove(key)?;

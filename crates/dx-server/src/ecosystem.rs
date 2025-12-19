@@ -17,10 +17,13 @@ use dx_fallback::HTMLGenerator;
 
 use std::sync::Arc;
 
+/// Cached query result type
+pub type CachedResult = Vec<u8>;
+
 /// Server ecosystem state
 pub struct EcosystemState {
     #[cfg(feature = "query")]
-    pub query_cache: Option<Arc<QueryCache>>,
+    pub query_cache: Option<Arc<QueryCache<CachedResult>>>,
 
     #[cfg(feature = "db")]
     pub db_pool: Option<Arc<DbPool>>,
@@ -37,7 +40,7 @@ impl EcosystemState {
     pub fn new() -> Self {
         Self {
             #[cfg(feature = "query")]
-            query_cache: Some(Arc::new(QueryCache::new(1000))),
+            query_cache: Some(Arc::new(QueryCache::<CachedResult>::new(1000))),
 
             #[cfg(feature = "db")]
             db_pool: None, // Initialized later with config

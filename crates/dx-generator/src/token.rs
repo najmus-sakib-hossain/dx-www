@@ -495,13 +495,17 @@ mod tests {
 
     #[test]
     fn test_command_builder() {
-        let cmd = CommandBuilder::new()
-            .generate()
-            .component()
-            .with_state()
-            .with_tests();
+        let cmd = CommandBuilder::new().generate().component().with_state().with_tests();
 
         let ids = cmd.ids();
-        assert_eq!(ids, vec![TOKEN_GENERATE, TOKEN_COMPONENT, TOKEN_WITH_STATE, TOKEN_WITH_TESTS]);
+        assert_eq!(
+            ids,
+            vec![
+                TOKEN_GENERATE,
+                TOKEN_COMPONENT,
+                TOKEN_WITH_STATE,
+                TOKEN_WITH_TESTS
+            ]
+        );
     }
 }

@@ -47,8 +47,8 @@ pub async fn handle_rpc(
     // Cache result
     #[cfg(feature = "query")]
     if let Some(ref cache) = state.query_cache {
-        let query_hash = hash_query(&req.query_id, &req.params);
-        cache.set(query_hash, data.clone(), 300); // 5 min TTL
+        let key = dx_query::QueryKey::from_bytes(req.query_id.as_bytes());
+        cache.set_with_ttl(key, data.clone(), 300); // 5 min TTL
     }
 
     (

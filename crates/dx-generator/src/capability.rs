@@ -3,8 +3,8 @@
 //! Templates have explicit capability manifests with Ed25519 signing.
 //! Prevents malicious templates from generating harmful code.
 
-use ed25519_dalek::{Signature, SigningKey, VerifyingKey, Signer, Verifier};
 use crate::error::{GeneratorError, Result};
+use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 
 // ============================================================================
 // Capabilities
@@ -73,10 +73,7 @@ impl Capability {
     pub const fn is_dangerous(&self) -> bool {
         matches!(
             self,
-            Self::DeleteFiles
-                | Self::ExecuteShell
-                | Self::GenerateUnsafe
-                | Self::NetworkAccess
+            Self::DeleteFiles | Self::ExecuteShell | Self::GenerateUnsafe | Self::NetworkAccess
         )
     }
 }
@@ -422,8 +419,7 @@ mod tests {
 
     #[test]
     fn test_require_capability() {
-        let manifest = CapabilityManifest::new()
-            .with_capability(Capability::CreateFiles);
+        let manifest = CapabilityManifest::new().with_capability(Capability::CreateFiles);
 
         assert!(manifest.require(Capability::CreateFiles).is_ok());
         assert!(manifest.require(Capability::DeleteFiles).is_err());
@@ -474,16 +470,13 @@ mod tests {
 
     #[test]
     fn test_capability_checker() {
-        let manifest = CapabilityManifest::new()
-            .with_capability(Capability::CreateFiles);
+        let manifest = CapabilityManifest::new().with_capability(Capability::CreateFiles);
 
-        let checker = CapabilityChecker::new()
-            .require(Capability::CreateFiles);
+        let checker = CapabilityChecker::new().require(Capability::CreateFiles);
 
         assert!(checker.check(&manifest).is_ok());
 
-        let checker2 = CapabilityChecker::new()
-            .require(Capability::DeleteFiles);
+        let checker2 = CapabilityChecker::new().require(Capability::DeleteFiles);
 
         assert!(checker2.check(&manifest).is_err());
     }

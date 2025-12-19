@@ -2,15 +2,15 @@
 //!
 //! Command-line interface for dx-monorepo workspace management.
 
-use std::path::PathBuf;
-use std::env;
-use crate::workspace::WorkspaceManager;
-use crate::executor::TaskExecutor;
 use crate::affected::AffectedDetector;
+use crate::bag::AffectedGraphData;
+use crate::cache::CacheManager;
+use crate::executor::TaskExecutor;
 use crate::ghost::{GhostDetector, GhostReport};
 use crate::watch::WatchManager;
-use crate::cache::CacheManager;
-use crate::bag::AffectedGraphData;
+use crate::workspace::WorkspaceManager;
+use std::env;
+use std::path::PathBuf;
 
 /// CLI command types
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -30,13 +30,9 @@ pub enum Command {
     /// Detect ghost dependencies
     Ghost,
     /// Watch mode
-    Watch {
-        task: String,
-    },
+    Watch { task: String },
     /// Cache management
-    Cache {
-        subcommand: CacheSubcommand,
-    },
+    Cache { subcommand: CacheSubcommand },
     /// Show help
     Help,
     /// Show version
@@ -142,7 +138,9 @@ impl Cli {
                 if args.len() < 2 {
                     return Err("watch command requires a task name".to_string());
                 }
-                Ok(Command::Watch { task: args[1].clone() })
+                Ok(Command::Watch {
+                    task: args[1].clone(),
+                })
             }
             "cache" => {
                 if args.len() < 2 {
@@ -187,7 +185,6 @@ impl Cli {
             Command::Version => self.cmd_version(),
         }
     }
-
 
     /// Initialize workspace (Task 25.1)
     fn cmd_init(&mut self) -> CliResult {
@@ -306,9 +303,9 @@ impl Cli {
             if let Some(pkg) = self.workspace.get_package_by_index(idx) {
                 detector.add_workspace_package(pkg.name.clone());
                 detector.set_package_path(idx, self.cwd.join(&pkg.path));
-                
+
                 // Set declared dependencies
-                let deps: std::collections::HashSet<String> = 
+                let deps: std::collections::HashSet<String> =
                     pkg.dependencies.iter().cloned().collect();
                 detector.set_declared_deps(idx, deps);
             }
@@ -358,7 +355,8 @@ impl Cli {
         // Initialize cache if needed
         if self.cache.is_none() {
             let cache_dir = self.cwd.join(".dx-monorepo").join("cache");
-            self.cache = Some(CacheManager::new(cache_dir, 1024 * 1024 * 1024)); // 1GB
+            self.cache = Some(CacheManager::new(cache_dir, 1024 * 1024 * 1024));
+            // 1GB
         }
 
         let cache = self.cache.as_mut().unwrap();
@@ -369,12 +367,10 @@ impl Cli {
                 let size_mb = size as f64 / (1024.0 * 1024.0);
                 CliResult::success(format!("Cache size: {:.2} MB", size_mb))
             }
-            CacheSubcommand::Clear => {
-                match cache.clear() {
-                    Ok(()) => CliResult::success("Cache cleared"),
-                    Err(e) => CliResult::error(1, format!("Failed to clear cache: {}", e)),
-                }
-            }
+            CacheSubcommand::Clear => match cache.clear() {
+                Ok(()) => CliResult::success("Cache cleared"),
+                Err(e) => CliResult::error(1, format!("Failed to clear cache: {}", e)),
+            },
         }
     }
 
@@ -418,13 +414,12 @@ EXAMPLES:
         CliResult::success(format!("dx-monorepo {}", env!("CARGO_PKG_VERSION")))
     }
 
-
     // Helper methods
 
     /// Filter packages by pattern
     fn filter_packages(&self, pattern: &str) -> Vec<u32> {
         let mut result = Vec::new();
-        
+
         for idx in 0..self.workspace.package_count() as u32 {
             if let Some(pkg) = self.workspace.get_package_by_index(idx) {
                 if Self::matches_pattern(&pkg.name, pattern) {
@@ -432,7 +427,7 @@ EXAMPLES:
                 }
             }
         }
-        
+
         result
     }
 
@@ -442,15 +437,15 @@ EXAMPLES:
         if pattern == "*" {
             return true;
         }
-        
+
         if let Some(prefix) = pattern.strip_suffix("*") {
             return name.starts_with(prefix);
         }
-        
+
         if let Some(suffix) = pattern.strip_prefix("*") {
             return name.ends_with(suffix);
         }
-        
+
         name == pattern
     }
 
@@ -480,12 +475,10 @@ EXAMPLES:
             .output();
 
         match output {
-            Ok(output) if output.status.success() => {
-                String::from_utf8_lossy(&output.stdout)
-                    .lines()
-                    .map(|line| self.cwd.join(line))
-                    .collect()
-            }
+            Ok(output) if output.status.success() => String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .map(|line| self.cwd.join(line))
+                .collect(),
             _ => Vec::new(),
         }
     }
@@ -493,7 +486,7 @@ EXAMPLES:
     /// Build affected graph from workspace
     fn build_affected_graph(&self) -> AffectedGraphData {
         let pkg_count = self.workspace.package_count();
-        
+
         // Collect dependency edges
         let mut edges = Vec::new();
         for idx in 0..pkg_count as u32 {
@@ -544,8 +537,7 @@ EXAMPLES:
             for accident in &report.hoisting_accidents {
                 output.push_str(&format!(
                     "  {} (declared by {})\n",
-                    accident.dependency,
-                    accident.declared_by
+                    accident.dependency, accident.declared_by
                 ));
             }
         }
@@ -558,9 +550,7 @@ EXAMPLES:
             for vuln in &report.vulnerabilities {
                 output.push_str(&format!(
                     "  {} [{}]: {}\n",
-                    vuln.package,
-                    vuln.severity,
-                    vuln.description
+                    vuln.package, vuln.severity, vuln.description
                 ));
             }
         }
@@ -578,7 +568,7 @@ impl Default for Cli {
 /// Run CLI with command line arguments
 pub fn run(args: &[String]) -> CliResult {
     let mut cli = Cli::new();
-    
+
     match Cli::parse_args(args) {
         Ok(command) => cli.execute(command),
         Err(e) => CliResult::error(1, e),
@@ -589,7 +579,7 @@ pub fn run(args: &[String]) -> CliResult {
 pub fn main() -> i32 {
     let args: Vec<String> = env::args().skip(1).collect();
     let result = run(&args);
-    
+
     if !result.message.is_empty() {
         if result.exit_code == 0 {
             println!("{}", result.message);
@@ -597,7 +587,7 @@ pub fn main() -> i32 {
             eprintln!("{}", result.message);
         }
     }
-    
+
     result.exit_code
 }
 
@@ -614,7 +604,13 @@ mod tests {
     #[test]
     fn test_parse_run() {
         let cmd = Cli::parse_args(&["run".to_string(), "build".to_string()]).unwrap();
-        assert_eq!(cmd, Command::Run { task: "build".to_string(), filter: None });
+        assert_eq!(
+            cmd,
+            Command::Run {
+                task: "build".to_string(),
+                filter: None
+            }
+        );
     }
 
     #[test]
@@ -624,17 +620,27 @@ mod tests {
             "build".to_string(),
             "--filter".to_string(),
             "@myorg/*".to_string(),
-        ]).unwrap();
-        assert_eq!(cmd, Command::Run { 
-            task: "build".to_string(), 
-            filter: Some("@myorg/*".to_string()) 
-        });
+        ])
+        .unwrap();
+        assert_eq!(
+            cmd,
+            Command::Run {
+                task: "build".to_string(),
+                filter: Some("@myorg/*".to_string())
+            }
+        );
     }
 
     #[test]
     fn test_parse_affected() {
         let cmd = Cli::parse_args(&["affected".to_string()]).unwrap();
-        assert_eq!(cmd, Command::Affected { base: None, head: None });
+        assert_eq!(
+            cmd,
+            Command::Affected {
+                base: None,
+                head: None
+            }
+        );
     }
 
     #[test]
@@ -645,11 +651,15 @@ mod tests {
             "main".to_string(),
             "--head".to_string(),
             "feature".to_string(),
-        ]).unwrap();
-        assert_eq!(cmd, Command::Affected { 
-            base: Some("main".to_string()), 
-            head: Some("feature".to_string()) 
-        });
+        ])
+        .unwrap();
+        assert_eq!(
+            cmd,
+            Command::Affected {
+                base: Some("main".to_string()),
+                head: Some("feature".to_string())
+            }
+        );
     }
 
     #[test]
@@ -661,19 +671,34 @@ mod tests {
     #[test]
     fn test_parse_watch() {
         let cmd = Cli::parse_args(&["watch".to_string(), "test".to_string()]).unwrap();
-        assert_eq!(cmd, Command::Watch { task: "test".to_string() });
+        assert_eq!(
+            cmd,
+            Command::Watch {
+                task: "test".to_string()
+            }
+        );
     }
 
     #[test]
     fn test_parse_cache_status() {
         let cmd = Cli::parse_args(&["cache".to_string(), "status".to_string()]).unwrap();
-        assert_eq!(cmd, Command::Cache { subcommand: CacheSubcommand::Status });
+        assert_eq!(
+            cmd,
+            Command::Cache {
+                subcommand: CacheSubcommand::Status
+            }
+        );
     }
 
     #[test]
     fn test_parse_cache_clear() {
         let cmd = Cli::parse_args(&["cache".to_string(), "clear".to_string()]).unwrap();
-        assert_eq!(cmd, Command::Cache { subcommand: CacheSubcommand::Clear });
+        assert_eq!(
+            cmd,
+            Command::Cache {
+                subcommand: CacheSubcommand::Clear
+            }
+        );
     }
 
     #[test]
@@ -714,12 +739,12 @@ mod tests {
         assert!(Cli::matches_pattern("@myorg/pkg-a", "@myorg/*"));
         assert!(Cli::matches_pattern("@myorg/pkg-b", "@myorg/*"));
         assert!(!Cli::matches_pattern("@other/pkg", "@myorg/*"));
-        
+
         assert!(Cli::matches_pattern("anything", "*"));
-        
+
         assert!(Cli::matches_pattern("pkg-utils", "*-utils"));
         assert!(!Cli::matches_pattern("pkg-core", "*-utils"));
-        
+
         assert!(Cli::matches_pattern("exact-match", "exact-match"));
         assert!(!Cli::matches_pattern("not-match", "exact-match"));
     }
@@ -745,7 +770,7 @@ mod tests {
     fn test_cli_cache_status() {
         let temp = tempfile::TempDir::new().unwrap();
         let mut cli = Cli::with_cwd(temp.path().to_path_buf());
-        
+
         let result = cli.cmd_cache(CacheSubcommand::Status);
         assert_eq!(result.exit_code, 0);
         assert!(result.message.contains("Cache size"));
@@ -755,7 +780,7 @@ mod tests {
     fn test_cli_cache_clear() {
         let temp = tempfile::TempDir::new().unwrap();
         let mut cli = Cli::with_cwd(temp.path().to_path_buf());
-        
+
         let result = cli.cmd_cache(CacheSubcommand::Clear);
         assert_eq!(result.exit_code, 0);
         assert!(result.message.contains("cleared"));

@@ -32,7 +32,12 @@ pub struct Placeholder {
 impl Placeholder {
     /// Create a new placeholder.
     #[must_use]
-    pub fn new(start: usize, end: usize, placeholder_type: PlaceholderType, content: String) -> Self {
+    pub fn new(
+        start: usize,
+        end: usize,
+        placeholder_type: PlaceholderType,
+        content: String,
+    ) -> Self {
         Self {
             start,
             end,
@@ -148,12 +153,7 @@ impl PlaceholderScanner {
         let content = &input[start + 2..close_idx];
         let content_str = String::from_utf8_lossy(content).trim().to_string();
 
-        Some(Placeholder::new(
-            start,
-            close_idx + 2,
-            PlaceholderType::Variable,
-            content_str,
-        ))
+        Some(Placeholder::new(start, close_idx + 2, PlaceholderType::Variable, content_str))
     }
 
     /// Parse a control placeholder: {% if/for/etc %}
@@ -184,12 +184,7 @@ impl PlaceholderScanner {
             PlaceholderType::Conditional // Default to conditional for unknown
         };
 
-        Some(Placeholder::new(
-            start,
-            close_idx + 2,
-            placeholder_type,
-            content_str,
-        ))
+        Some(Placeholder::new(start, close_idx + 2, placeholder_type, content_str))
     }
 
     /// Parse a comment placeholder: {# ... #}
@@ -198,12 +193,7 @@ impl PlaceholderScanner {
         let content = &input[start + 2..close_idx];
         let content_str = String::from_utf8_lossy(content).trim().to_string();
 
-        Some(Placeholder::new(
-            start,
-            close_idx + 2,
-            PlaceholderType::Comment,
-            content_str,
-        ))
+        Some(Placeholder::new(start, close_idx + 2, PlaceholderType::Comment, content_str))
     }
 
     /// Find closing marker (e.g., `}}` or `%}` or `#}`)

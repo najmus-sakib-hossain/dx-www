@@ -1,7 +1,7 @@
 //! Logging utilities
 
 use owo_colors::OwoColorize;
-use tracing_subscriber::{fmt, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt};
 
 /// Logger initialization helper
 pub struct Logger;
@@ -9,14 +9,9 @@ pub struct Logger;
 impl Logger {
     /// Initialize the logger
     pub fn init() {
-        let filter =
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn"));
+        let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn"));
 
-        let _ = fmt()
-            .with_env_filter(filter)
-            .with_target(false)
-            .without_time()
-            .try_init();
+        let _ = fmt().with_env_filter(filter).with_target(false).without_time().try_init();
     }
 }
 

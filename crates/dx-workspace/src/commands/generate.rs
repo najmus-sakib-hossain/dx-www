@@ -1,7 +1,7 @@
 //! Generate platform configurations.
 
 use crate::{Generator, Platform, Result, WorkspaceConfig};
-use console::{style, Emoji};
+use console::{Emoji, style};
 use std::path::PathBuf;
 
 static GEAR: Emoji<'_, '_> = Emoji("⚙️ ", "");
@@ -42,11 +42,7 @@ impl GenerateCommand {
             crate::ProjectDetector::new(&project_dir).detect()?
         };
 
-        println!(
-            "{} {}Generating configurations...",
-            style("[dx-workspace]").bold().cyan(),
-            GEAR
-        );
+        println!("{} {}Generating configurations...", style("[dx-workspace]").bold().cyan(), GEAR);
 
         // Determine platforms
         let platforms = if options.all {
@@ -87,12 +83,7 @@ impl GenerateCommand {
                     generated.push(*platform);
                 }
                 Err(e) => {
-                    println!(
-                        "  {} {} - {}",
-                        style("✗").red(),
-                        platform.display_name(),
-                        e
-                    );
+                    println!("  {} {} - {}", style("✗").red(), platform.display_name(), e);
                 }
             }
         }

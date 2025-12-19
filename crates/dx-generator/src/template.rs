@@ -3,11 +3,11 @@
 //! High-level interface for loading and working with binary templates.
 //! Supports memory-mapped loading for zero-copy access.
 
-use std::path::Path;
-use std::sync::Arc;
-use memmap2::Mmap;
 use crate::binary::{BinaryTemplate, DxtHeader, HEADER_SIZE};
 use crate::error::{GeneratorError, Result};
+use memmap2::Mmap;
+use std::path::Path;
+use std::sync::Arc;
 
 // ============================================================================
 // Template Source
@@ -96,7 +96,7 @@ impl Template {
 
         // Safety: We're memory-mapping a read-only file
         let mmap = unsafe { Mmap::map(&file)? };
-        
+
         Self::from_source(TemplateSource::Mmap(mmap))
     }
 
@@ -113,13 +113,13 @@ impl Template {
     /// Create a template from a source.
     fn from_source(source: TemplateSource) -> Result<Self> {
         let bytes = source.as_ref();
-        
+
         // Validate header
         let header = DxtHeader::from_bytes(bytes)?;
-        
+
         // Parse the template
         let inner = Self::parse_template(bytes, header)?;
-        
+
         // Generate template ID from name hash
         let id = xxhash_rust::xxh64::xxh64(inner.name.as_bytes(), 0) as u32;
 
@@ -146,7 +146,8 @@ impl Template {
         if bytes.len() < offset + strings_size {
             return Err(GeneratorError::invalid_template("Truncated string table"));
         }
-        let strings = crate::binary::StringTable::from_bytes(&bytes[offset..offset + strings_size])?;
+        let strings =
+            crate::binary::StringTable::from_bytes(&bytes[offset..offset + strings_size])?;
         offset += strings_size;
 
         // Read placeholder count
@@ -222,7 +223,8 @@ impl Template {
             if bytes.len() < offset + param_len {
                 return Err(GeneratorError::invalid_template("Truncated param name"));
             }
-            let param_name = String::from_utf8_lossy(&bytes[offset..offset + param_len]).into_owned();
+            let param_name =
+                String::from_utf8_lossy(&bytes[offset..offset + param_len]).into_owned();
             param_names.push(param_name);
             offset += param_len;
         }
@@ -307,7 +309,11 @@ impl TemplateHandle {
     /// Create a new template handle.
     #[must_use]
     pub const fn new(id: u32, slot: u16, generation: u16) -> Self {
-        Self { id, slot, generation }
+        Self {
+            id,
+            slot,
+            generation,
+        }
     }
 
     /// Create a null handle.

@@ -101,16 +101,12 @@ impl EditorConfig {
     /// Validate editor configuration.
     pub fn validate(&self) -> crate::Result<()> {
         if self.tab_size == 0 || self.tab_size > 16 {
-            return Err(crate::Error::validation(
-                "Tab size must be between 1 and 16",
-            ));
+            return Err(crate::Error::validation("Tab size must be between 1 and 16"));
         }
 
         if let Some(size) = self.font_size {
             if size < 6 || size > 72 {
-                return Err(crate::Error::validation(
-                    "Font size must be between 6 and 72",
-                ));
+                return Err(crate::Error::validation("Font size must be between 6 and 72"));
             }
         }
 

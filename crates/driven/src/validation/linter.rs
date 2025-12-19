@@ -1,6 +1,6 @@
 //! Rule linter
 
-use crate::{parser::UnifiedRule, Result};
+use crate::{Result, parser::UnifiedRule};
 
 /// Lints rules for common issues
 #[derive(Debug, Default)]
@@ -184,9 +184,7 @@ mod tests {
 
         let results = linter.lint(&rules).unwrap();
         assert!(!results.is_empty());
-        assert!(results
-            .iter()
-            .any(|r| r.message.contains("Duplicate")));
+        assert!(results.iter().any(|r| r.message.contains("Duplicate")));
     }
 
     #[test]

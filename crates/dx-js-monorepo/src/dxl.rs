@@ -2,9 +2,9 @@
 //!
 //! O(1) dependency resolution with CRDT merge support.
 
-use bytemuck::{Pod, Zeroable};
-use crate::{DXL_MAGIC, FORMAT_VERSION};
 use crate::error::LockfileError;
+use crate::{DXL_MAGIC, FORMAT_VERSION};
+use bytemuck::{Pod, Zeroable};
 
 /// DXL-Workspace lockfile header
 #[repr(C, packed)]
@@ -75,7 +75,7 @@ impl DxlHeader {
     pub fn is_concurrent(&self, other: &[u64; 8]) -> bool {
         let mut less = false;
         let mut greater = false;
-        
+
         for i in 0..8 {
             if self.vector_clock[i] < other[i] {
                 less = true;
@@ -84,7 +84,7 @@ impl DxlHeader {
                 greater = true;
             }
         }
-        
+
         less && greater
     }
 }
@@ -187,18 +187,18 @@ impl LockfileData {
         // Merge packages (last-write-wins based on vector clock)
         use std::collections::HashMap;
         let mut package_map: HashMap<String, &PackageResolution> = HashMap::new();
-        
+
         for pkg in &self.packages {
             package_map.insert(pkg.name.clone(), pkg);
         }
-        
+
         for pkg in &other.packages {
             // Simple LWW merge - in practice would use more sophisticated CRDT
             package_map.insert(pkg.name.clone(), pkg);
         }
-        
+
         self.packages = package_map.values().map(|&p| p.clone()).collect();
-        
+
         Ok(())
     }
 }
@@ -216,26 +216,26 @@ impl DxlSerializer {
     /// Serialize lockfile to DXL format
     pub fn serialize(data: &LockfileData) -> Result<Vec<u8>, LockfileError> {
         let mut buffer = Vec::new();
-        
+
         // Build string table
         let (string_table, string_indices) = Self::build_string_table(data);
-        
+
         // Calculate offsets
         let index_offset = DxlHeader::SIZE as u64;
         let index_size = data.packages.len() * 16; // (hash: u64, offset: u64) pairs
         let entries_offset = index_offset + index_size as u64;
         let entries_size = data.packages.len() * ResolvedPackage::SIZE;
         let _strings_offset = entries_offset + entries_size as u64;
-        
+
         // Create header
         let mut header = DxlHeader::new(data.packages.len() as u32);
         header.index_offset = index_offset;
         header.entries_offset = entries_offset;
         header.vector_clock = data.vector_clock;
-        
+
         // Write header
         buffer.extend_from_slice(bytemuck::bytes_of(&header));
-        
+
         // Write index (name hash -> entry offset)
         for (i, pkg) in data.packages.iter().enumerate() {
             let name_hash = xxhash_rust::xxh3::xxh3_64(pkg.name.as_bytes());
@@ -243,13 +243,13 @@ impl DxlSerializer {
             buffer.extend_from_slice(&name_hash.to_le_bytes());
             buffer.extend_from_slice(&entry_offset.to_le_bytes());
         }
-        
+
         // Write package entries
         for pkg in &data.packages {
             let version_packed = ((pkg.version.0 as u32) << 20)
                 | ((pkg.version.1 as u32 & 0x3FF) << 10)
                 | (pkg.version.2 as u32 & 0x3FF);
-            
+
             let entry = ResolvedPackage {
                 name_idx: string_indices[&pkg.name] as u32,
                 version_packed,
@@ -261,15 +261,15 @@ impl DxlSerializer {
             };
             buffer.extend_from_slice(bytemuck::bytes_of(&entry));
         }
-        
+
         // Write string table
         buffer.extend_from_slice(&string_table);
-        
+
         // Compute content hash
         // content_hash offset in packed DxlHeader: 4 + 4 + 4 + 8 + 8 + 8 + 8 + 64 = 108
         let content_hash = blake3::hash(&buffer[DxlHeader::SIZE..]);
         buffer[108..140].copy_from_slice(content_hash.as_bytes());
-        
+
         Ok(buffer)
     }
 
@@ -285,26 +285,24 @@ impl DxlSerializer {
         header.validate_magic()?;
 
         // Read string table (at end of file)
-        let entries_end = header.entries_offset as usize 
-            + header.package_count as usize * ResolvedPackage::SIZE;
+        let entries_end =
+            header.entries_offset as usize + header.package_count as usize * ResolvedPackage::SIZE;
         let string_table = Self::parse_string_table(&data[entries_end..]);
 
         // Read package entries
         let mut packages = Vec::with_capacity(header.package_count as usize);
-        
+
         for i in 0..header.package_count as usize {
             let offset = header.entries_offset as usize + i * ResolvedPackage::SIZE;
-            let entry: &ResolvedPackage = bytemuck::from_bytes(
-                &data[offset..offset + ResolvedPackage::SIZE]
-            );
-            
+            let entry: &ResolvedPackage =
+                bytemuck::from_bytes(&data[offset..offset + ResolvedPackage::SIZE]);
+
             packages.push(PackageResolution {
-                name: string_table.get(entry.name_idx as usize)
-                    .cloned()
-                    .unwrap_or_default(),
+                name: string_table.get(entry.name_idx as usize).cloned().unwrap_or_default(),
                 version: entry.version(),
                 integrity: entry.integrity_hash,
-                tarball_url: string_table.get(entry.tarball_url_idx as usize)
+                tarball_url: string_table
+                    .get(entry.tarball_url_idx as usize)
                     .cloned()
                     .unwrap_or_default(),
                 dependencies: Vec::new(),
@@ -317,13 +315,15 @@ impl DxlSerializer {
         })
     }
 
-    fn build_string_table(data: &LockfileData) -> (Vec<u8>, std::collections::HashMap<String, usize>) {
+    fn build_string_table(
+        data: &LockfileData,
+    ) -> (Vec<u8>, std::collections::HashMap<String, usize>) {
         use std::collections::HashMap;
-        
+
         let mut table = Vec::new();
         let mut indices = HashMap::new();
         let mut string_index = 0usize;
-        
+
         for pkg in &data.packages {
             for s in [&pkg.name, &pkg.tarball_url] {
                 if !indices.contains_key(s) {
@@ -334,14 +334,14 @@ impl DxlSerializer {
                 }
             }
         }
-        
+
         (table, indices)
     }
 
     fn parse_string_table(data: &[u8]) -> Vec<String> {
         let mut strings = Vec::new();
         let mut start = 0;
-        
+
         for (i, &byte) in data.iter().enumerate() {
             if byte == 0 {
                 if let Ok(s) = std::str::from_utf8(&data[start..i]) {
@@ -350,7 +350,7 @@ impl DxlSerializer {
                 start = i + 1;
             }
         }
-        
+
         strings
     }
 }
@@ -404,7 +404,11 @@ impl LockfileResolver {
 
     /// Resolve package by name and version requirement
     /// For simplicity, this returns the first match (real impl would check version)
-    pub fn resolve_with_version(&self, name: &str, _version_req: &str) -> Option<&PackageResolution> {
+    pub fn resolve_with_version(
+        &self,
+        name: &str,
+        _version_req: &str,
+    ) -> Option<&PackageResolution> {
         self.resolve(name)
     }
 
@@ -415,16 +419,12 @@ impl LockfileResolver {
 
     /// Get all resolved packages
     pub fn packages(&self) -> &[PackageResolution] {
-        self.data.as_ref()
-            .map(|d| d.packages.as_slice())
-            .unwrap_or(&[])
+        self.data.as_ref().map(|d| d.packages.as_slice()).unwrap_or(&[])
     }
 
     /// Get package count
     pub fn package_count(&self) -> usize {
-        self.data.as_ref()
-            .map(|d| d.packages.len())
-            .unwrap_or(0)
+        self.data.as_ref().map(|d| d.packages.len()).unwrap_or(0)
     }
 
     /// Check if lockfile is loaded
@@ -453,10 +453,10 @@ mod tests {
     fn test_vector_clock_merge() {
         let mut header = DxlHeader::new(0);
         header.vector_clock = [1, 2, 3, 0, 0, 0, 0, 0];
-        
+
         let other = [0, 5, 1, 4, 0, 0, 0, 0];
         header.merge_clocks(&other);
-        
+
         // Copy to avoid unaligned access on packed struct
         let clock = header.vector_clock;
         assert_eq!(clock, [1, 5, 3, 4, 0, 0, 0, 0]);
@@ -466,11 +466,11 @@ mod tests {
     fn test_concurrent_detection() {
         let mut header = DxlHeader::new(0);
         header.vector_clock = [1, 2, 0, 0, 0, 0, 0, 0];
-        
+
         // Concurrent: one is ahead in some components, behind in others
         let concurrent = [0, 3, 0, 0, 0, 0, 0, 0];
         assert!(header.is_concurrent(&concurrent));
-        
+
         // Not concurrent: one dominates
         let dominated = [0, 1, 0, 0, 0, 0, 0, 0];
         assert!(!header.is_concurrent(&dominated));
@@ -479,33 +479,29 @@ mod tests {
     #[test]
     fn test_lockfile_merge() {
         let mut lockfile1 = LockfileData {
-            packages: vec![
-                PackageResolution {
-                    name: "pkg-a".to_string(),
-                    version: (1, 0, 0),
-                    integrity: [0; 32],
-                    tarball_url: "https://example.com/a".to_string(),
-                    dependencies: vec![],
-                },
-            ],
+            packages: vec![PackageResolution {
+                name: "pkg-a".to_string(),
+                version: (1, 0, 0),
+                integrity: [0; 32],
+                tarball_url: "https://example.com/a".to_string(),
+                dependencies: vec![],
+            }],
             vector_clock: [1, 0, 0, 0, 0, 0, 0, 0],
         };
 
         let lockfile2 = LockfileData {
-            packages: vec![
-                PackageResolution {
-                    name: "pkg-b".to_string(),
-                    version: (2, 0, 0),
-                    integrity: [1; 32],
-                    tarball_url: "https://example.com/b".to_string(),
-                    dependencies: vec![],
-                },
-            ],
+            packages: vec![PackageResolution {
+                name: "pkg-b".to_string(),
+                version: (2, 0, 0),
+                integrity: [1; 32],
+                tarball_url: "https://example.com/b".to_string(),
+                dependencies: vec![],
+            }],
             vector_clock: [0, 1, 0, 0, 0, 0, 0, 0],
         };
 
         lockfile1.merge(&lockfile2).unwrap();
-        
+
         assert_eq!(lockfile1.packages.len(), 2);
         assert_eq!(lockfile1.vector_clock, [1, 1, 0, 0, 0, 0, 0, 0]);
     }
@@ -560,7 +556,7 @@ mod tests {
     #[test]
     fn test_lockfile_resolver_workspace_protocol() {
         let mut resolver = LockfileResolver::new();
-        
+
         // Register workspace packages
         resolver.register_workspace_package("@myorg/core", (1, 0, 0));
         resolver.register_workspace_package("@myorg/utils", (1, 2, 3));

@@ -1,6 +1,6 @@
 //! Claude Code rules parser (.claude/ folder, CLAUDE.md)
 
-use super::{extract_bullet_points, parse_markdown_sections, RuleParser, UnifiedRule};
+use super::{RuleParser, UnifiedRule, extract_bullet_points, parse_markdown_sections};
 use crate::{DrivenError, Editor, Result};
 use std::path::Path;
 
@@ -22,9 +22,8 @@ impl RuleParser for ClaudeParser {
             return self.parse_directory(path);
         }
 
-        let content = std::fs::read_to_string(path).map_err(|e| {
-            DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e))
-        })?;
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e)))?;
         self.parse_content(&content)
     }
 

@@ -7,9 +7,9 @@
 //! - .vscode/extensions.json
 
 use super::{DesktopGenerator, GeneratedFile};
-use crate::config::{TaskGroup, TaskReveal, TaskPanel};
+use crate::config::{TaskGroup, TaskPanel, TaskReveal};
 use crate::{Result, WorkspaceConfig};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use std::fs;
 use std::path::Path;
 
@@ -70,10 +70,7 @@ impl VsCodeGenerator {
                 crate::config::MinimapSide::Right => "right",
             }),
         );
-        settings.insert(
-            "editor.minimap.maxColumn".to_string(),
-            json!(editor.minimap.max_column),
-        );
+        settings.insert("editor.minimap.maxColumn".to_string(), json!(editor.minimap.max_column));
 
         // Breadcrumbs
         settings.insert("breadcrumbs.enabled".to_string(), json!(editor.breadcrumbs_enabled));
@@ -85,21 +82,15 @@ impl VsCodeGenerator {
 
         // Search exclusions
         if !project.search_exclude.is_empty() {
-            let exclude: Map<String, Value> = project
-                .search_exclude
-                .iter()
-                .map(|p| (p.clone(), json!(true)))
-                .collect();
+            let exclude: Map<String, Value> =
+                project.search_exclude.iter().map(|p| (p.clone(), json!(true))).collect();
             settings.insert("search.exclude".to_string(), json!(exclude));
         }
 
         // Watcher exclusions
         if !project.watcher_exclude.is_empty() {
-            let exclude: Map<String, Value> = project
-                .watcher_exclude
-                .iter()
-                .map(|p| (p.clone(), json!(true)))
-                .collect();
+            let exclude: Map<String, Value> =
+                project.watcher_exclude.iter().map(|p| (p.clone(), json!(true))).collect();
             settings.insert("files.watcherExclude".to_string(), json!(exclude));
         }
 
@@ -126,22 +117,12 @@ impl VsCodeGenerator {
 
         // Rust-analyzer settings for dx projects
         if config.detected_features.is_cargo_project {
-            settings.insert(
-                "rust-analyzer.cargo.features".to_string(),
-                json!("all"),
-            );
-            settings.insert(
-                "rust-analyzer.checkOnSave.command".to_string(),
-                json!("clippy"),
-            );
-            settings.insert(
-                "rust-analyzer.inlayHints.chainingHints.enable".to_string(),
-                json!(true),
-            );
-            settings.insert(
-                "rust-analyzer.inlayHints.parameterHints.enable".to_string(),
-                json!(true),
-            );
+            settings.insert("rust-analyzer.cargo.features".to_string(), json!("all"));
+            settings.insert("rust-analyzer.checkOnSave.command".to_string(), json!("clippy"));
+            settings
+                .insert("rust-analyzer.inlayHints.chainingHints.enable".to_string(), json!(true));
+            settings
+                .insert("rust-analyzer.inlayHints.parameterHints.enable".to_string(), json!(true));
         }
 
         // dx-specific settings
@@ -460,9 +441,7 @@ mod tests {
         let settings = generator.generate_settings(&config);
 
         assert_eq!(settings["editor.tabSize"], 2);
-        assert!(settings["rust-analyzer.checkOnSave.command"]
-            .as_str()
-            .is_some());
+        assert!(settings["rust-analyzer.checkOnSave.command"].as_str().is_some());
     }
 
     #[test]

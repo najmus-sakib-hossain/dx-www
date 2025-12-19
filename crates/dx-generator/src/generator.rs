@@ -4,7 +4,7 @@
 //! single, cohesive code generation system.
 
 use crate::binary::BinaryTemplate;
-use crate::compiler::{Compiler, CompileOptions};
+use crate::compiler::{CompileOptions, Compiler};
 use crate::dirty::DirtyTracker;
 use crate::error::{GeneratorError, Result};
 use crate::fusion::{FusionBundle, FusionOutput};
@@ -255,11 +255,7 @@ impl Generator {
     }
 
     /// Compile and load a text template.
-    pub fn compile_template(
-        &mut self,
-        name: impl Into<String>,
-        source: &str,
-    ) -> Result<()> {
+    pub fn compile_template(&mut self, name: impl Into<String>, source: &str) -> Result<()> {
         let name = name.into();
         let options = CompileOptions::default();
         let compiled = self.compiler.compile(source.as_bytes(), options)?;
@@ -279,14 +275,20 @@ impl Generator {
     // ========================================================================
 
     /// Generate output from a template.
-    pub fn generate(&mut self, template_name: &str, params: &Parameters<'_>) -> Result<RenderOutput> {
+    pub fn generate(
+        &mut self,
+        template_name: &str,
+        params: &Parameters<'_>,
+    ) -> Result<RenderOutput> {
         let start = std::time::Instant::now();
 
         // Get template
-        let template = self.templates.get(template_name)
-            .ok_or_else(|| GeneratorError::TemplateNotFound {
-                path: template_name.to_string(),
-            })?;
+        let template =
+            self.templates
+                .get(template_name)
+                .ok_or_else(|| GeneratorError::TemplateNotFound {
+                    path: template_name.to_string(),
+                })?;
 
         // Render
         let output = self.renderer.render(template, params)?;
@@ -355,8 +357,8 @@ impl Generator {
         bundle_name: &str,
         params: &Parameters<'_>,
     ) -> Result<Vec<FusionOutput>> {
-        let bundle = self.bundles.get(bundle_name)
-            .ok_or_else(|| GeneratorError::TemplateNotFound {
+        let bundle =
+            self.bundles.get(bundle_name).ok_or_else(|| GeneratorError::TemplateNotFound {
                 path: bundle_name.to_string(),
             })?;
 
@@ -369,7 +371,9 @@ impl Generator {
         bundle_name: &str,
         params: &Parameters<'_>,
     ) -> Result<Vec<PathBuf>> {
-        let bundle = self.bundles.get(bundle_name)
+        let bundle = self
+            .bundles
+            .get(bundle_name)
             .ok_or_else(|| GeneratorError::TemplateNotFound {
                 path: bundle_name.to_string(),
             })?
@@ -405,8 +409,8 @@ impl Generator {
 
     /// Complete a session and generate output.
     pub fn complete_session(&mut self, session_id: &str) -> Result<RenderOutput> {
-        let session = self.sessions.get(session_id)
-            .ok_or_else(|| GeneratorError::SessionCorrupted {
+        let session =
+            self.sessions.get(session_id).ok_or_else(|| GeneratorError::SessionCorrupted {
                 reason: "Session not found".to_string(),
             })?;
 

@@ -61,8 +61,13 @@ impl NixFlakesGenerator {
             lines.push("        overlays = [ inputs.rust-overlay.overlays.default ];".to_string());
             lines.push("        pkgs = import nixpkgs { inherit system overlays; };".to_string());
             lines.push(String::new());
-            lines.push("        rustToolchain = pkgs.rust-bin.stable.latest.default.override {".to_string());
-            lines.push("          extensions = [ \"rust-src\" \"rust-analyzer\" \"clippy\" ];".to_string());
+            lines.push(
+                "        rustToolchain = pkgs.rust-bin.stable.latest.default.override {"
+                    .to_string(),
+            );
+            lines.push(
+                "          extensions = [ \"rust-src\" \"rust-analyzer\" \"clippy\" ];".to_string(),
+            );
 
             if config.detected_features.has_dx_client {
                 lines.push("          targets = [ \"wasm32-unknown-unknown\" ];".to_string());

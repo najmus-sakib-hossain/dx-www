@@ -110,11 +110,7 @@ pub fn intro(title: impl Display) -> io::Result<()> {
 /// Prints a footer for the prompt sequence.
 pub fn outro(message: impl Display) -> io::Result<()> {
     let theme = THEME.read().unwrap();
-    term_write(format!(
-        "{}  {}\n",
-        theme.dim.apply_to(S_BAR_END),
-        message,
-    ))
+    term_write(format!("{}  {}\n", theme.dim.apply_to(S_BAR_END), message,))
 }
 
 /// Prints a cancelled footer for the prompt sequence.
@@ -133,7 +129,9 @@ pub fn input(prompt: impl Into<String>) -> input::Input<fn(&str) -> interaction:
 }
 
 /// Creates a new password prompt.
-pub fn password(prompt: impl Into<String>) -> password::Password<fn(&str) -> interaction::Validate<String>> {
+pub fn password(
+    prompt: impl Into<String>,
+) -> password::Password<fn(&str) -> interaction::Validate<String>> {
     password::password(prompt.into())
 }
 

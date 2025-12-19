@@ -167,11 +167,7 @@ impl HotCache {
 
     fn evict_one(&mut self) {
         // LRU eviction: find oldest entry
-        let oldest = self
-            .entries
-            .iter()
-            .min_by_key(|(_, e)| e.last_access)
-            .map(|(k, _)| *k);
+        let oldest = self.entries.iter().min_by_key(|(_, e)| e.last_access).map(|(k, _)| *k);
 
         if let Some(key) = oldest {
             if let Some(entry) = self.entries.remove(&key) {

@@ -10,12 +10,12 @@
 
 use argon2::{
     Argon2,
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
+    password_hash::{PasswordHash, PasswordHasher as Argon2PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use chrono::{DateTime, Duration, Utc};
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 /// Token format (64 bytes total)
 ///
@@ -96,12 +96,12 @@ impl BinaryToken {
 
     /// Encode to base64 for HTTP headers
     pub fn to_base64(&self) -> String {
-        base64::encode(&self.to_bytes())
+        BASE64.encode(&self.to_bytes())
     }
 
     /// Decode from base64
     pub fn from_base64(s: &str) -> Option<Self> {
-        let bytes = base64::decode(s).ok()?;
+        let bytes = BASE64.decode(s).ok()?;
         Self::from_bytes(&bytes)
     }
 }
@@ -215,16 +215,15 @@ impl TokenVerifier {
 }
 
 /// Password hasher using Argon2
-pub struct PasswordHasher;
+pub struct DxPasswordHasher;
 
-impl PasswordHasher {
+impl DxPasswordHasher {
     /// Hash password
     pub fn hash(password: &str) -> Result<String, String> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
 
-        argon2
-            .hash_password(password.as_bytes(), &salt)
+        Argon2PasswordHasher::hash_password(&argon2, password.as_bytes(), &salt)
             .map(|hash| hash.to_string())
             .map_err(|e| format!("Hash error: {}", e))
     }

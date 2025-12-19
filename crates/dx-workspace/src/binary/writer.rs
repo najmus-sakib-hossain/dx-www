@@ -77,9 +77,7 @@ impl BinaryWriter {
             .map_err(|e| Error::io("string_table", e))?;
 
         // Write config data
-        writer
-            .write_all(&config_json)
-            .map_err(|e| Error::io("config_data", e))?;
+        writer.write_all(&config_json).map_err(|e| Error::io("config_data", e))?;
 
         Ok(())
     }

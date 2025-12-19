@@ -2,10 +2,10 @@
 //!
 //! Manages local DXC cache storage with memory-mapped access.
 
-use std::path::PathBuf;
-use std::collections::HashMap;
-use crate::error::CacheError;
 use crate::dxc::{CacheEntry, XorPatch};
+use crate::error::CacheError;
+use std::collections::HashMap;
+use std::path::PathBuf;
 
 /// Cache Manager for task output caching
 pub struct CacheManager {
@@ -101,13 +101,18 @@ impl CacheManager {
     }
 
     /// Apply XOR patch to update cache entry
-    pub fn apply_patch(&mut self, task_hash: &[u8; 32], patch: &XorPatch) -> Result<(), CacheError> {
-        let base_entry = self.get(&patch.base_hash)
-            .ok_or(CacheError::EntryNotFound { hash: patch.base_hash })?;
+    pub fn apply_patch(
+        &mut self,
+        task_hash: &[u8; 32],
+        patch: &XorPatch,
+    ) -> Result<(), CacheError> {
+        let base_entry = self.get(&patch.base_hash).ok_or(CacheError::EntryNotFound {
+            hash: patch.base_hash,
+        })?;
 
         // Apply patch to each file
         let mut new_entry = CacheEntry::new(*task_hash);
-        
+
         for file in &base_entry.files {
             let patched_content = patch.apply(&file.content);
             new_entry.add_file(file.path.clone(), patched_content, file.mode);
@@ -123,10 +128,10 @@ impl CacheManager {
             _ => return Ok(false), // No signature to verify
         };
 
-        use ed25519_dalek::{Signature, VerifyingKey, Verifier};
+        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
-        let verifying_key = VerifyingKey::from_bytes(&public_key)
-            .map_err(|_| CacheError::SignatureInvalid)?;
+        let verifying_key =
+            VerifyingKey::from_bytes(&public_key).map_err(|_| CacheError::SignatureInvalid)?;
 
         let sig = Signature::from_bytes(&signature);
 
@@ -139,7 +144,8 @@ impl CacheManager {
         }
         let content_hash = hasher.finalize();
 
-        verifying_key.verify(content_hash.as_bytes(), &sig)
+        verifying_key
+            .verify(content_hash.as_bytes(), &sig)
             .map(|_| true)
             .map_err(|_| CacheError::SignatureInvalid)
     }
@@ -177,18 +183,16 @@ impl CacheManager {
 
     fn hash_to_path(&self, hash: &[u8; 32]) -> PathBuf {
         let hex: String = hash.iter().map(|b| format!("{:02x}", b)).collect();
-        self.cache_dir
-            .join(&hex[0..2])
-            .join(&hex[2..4])
-            .join(&hex)
+        self.cache_dir.join(&hex[0..2]).join(&hex[2..4]).join(&hex)
     }
 
     fn bloom_add(&mut self, hash: &[u8; 32]) {
         let h1 = u64::from_le_bytes(hash[0..8].try_into().unwrap());
         let h2 = u64::from_le_bytes(hash[8..16].try_into().unwrap());
-        
+
         for i in 0..4 {
-            let idx = ((h1.wrapping_add(i as u64 * h2)) % (self.bloom_filter.len() as u64 * 64)) as usize;
+            let idx =
+                ((h1.wrapping_add(i as u64 * h2)) % (self.bloom_filter.len() as u64 * 64)) as usize;
             let word = idx / 64;
             let bit = idx % 64;
             self.bloom_filter[word] |= 1 << bit;
@@ -198,9 +202,10 @@ impl CacheManager {
     fn bloom_check(&self, hash: &[u8; 32]) -> bool {
         let h1 = u64::from_le_bytes(hash[0..8].try_into().unwrap());
         let h2 = u64::from_le_bytes(hash[8..16].try_into().unwrap());
-        
+
         for i in 0..4 {
-            let idx = ((h1.wrapping_add(i as u64 * h2)) % (self.bloom_filter.len() as u64 * 64)) as usize;
+            let idx =
+                ((h1.wrapping_add(i as u64 * h2)) % (self.bloom_filter.len() as u64 * 64)) as usize;
             let word = idx / 64;
             let bit = idx % 64;
             if self.bloom_filter[word] & (1 << bit) == 0 {
@@ -226,15 +231,15 @@ impl CacheManager {
     fn serialize_cache_entry(&self, entry: &CacheEntry) -> Vec<u8> {
         // Simple serialization format
         let mut data = Vec::new();
-        
+
         // Header
         data.extend_from_slice(b"DXC\0");
         data.extend_from_slice(&1u32.to_le_bytes()); // version
         data.extend_from_slice(&entry.task_hash);
-        
+
         // File count
         data.extend_from_slice(&(entry.files.len() as u32).to_le_bytes());
-        
+
         // Files
         for file in &entry.files {
             data.extend_from_slice(&(file.path.len() as u32).to_le_bytes());
@@ -243,7 +248,7 @@ impl CacheManager {
             data.extend_from_slice(&file.content);
             data.extend_from_slice(&file.mode.to_le_bytes());
         }
-        
+
         data
     }
 
@@ -267,38 +272,39 @@ impl CacheManager {
             if offset + 4 > data.len() {
                 return None;
             }
-            
+
             let path_len = u32::from_le_bytes(data[offset..offset + 4].try_into().ok()?) as usize;
             offset += 4;
-            
+
             if offset + path_len > data.len() {
                 return None;
             }
-            
+
             let path = std::str::from_utf8(&data[offset..offset + path_len]).ok()?.to_string();
             offset += path_len;
-            
+
             if offset + 8 > data.len() {
                 return None;
             }
-            
-            let content_len = u64::from_le_bytes(data[offset..offset + 8].try_into().ok()?) as usize;
+
+            let content_len =
+                u64::from_le_bytes(data[offset..offset + 8].try_into().ok()?) as usize;
             offset += 8;
-            
+
             if offset + content_len > data.len() {
                 return None;
             }
-            
+
             let content = data[offset..offset + content_len].to_vec();
             offset += content_len;
-            
+
             if offset + 4 > data.len() {
                 return None;
             }
-            
+
             let mode = u32::from_le_bytes(data[offset..offset + 4].try_into().ok()?);
             offset += 4;
-            
+
             entry.add_file(path, content, mode);
         }
 

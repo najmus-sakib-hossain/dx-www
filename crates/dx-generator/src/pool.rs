@@ -3,12 +3,12 @@
 //! Memory pool for templates using SharedArrayBuffer-style linear memory.
 //! Enables zero-copy template access and parallel generation.
 
-use std::sync::Arc;
-use parking_lot::RwLock;
+use crate::MAX_POOL_SIZE;
 use crate::binary::BinaryTemplate;
 use crate::error::{GeneratorError, Result};
 use crate::template::{Template, TemplateHandle};
-use crate::{MAX_POOL_SIZE};
+use parking_lot::RwLock;
+use std::sync::Arc;
 
 // ============================================================================
 // Pool Slot

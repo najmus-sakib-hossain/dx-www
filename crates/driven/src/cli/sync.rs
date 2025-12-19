@@ -1,6 +1,6 @@
 //! Sync command - synchronize rules across editors
 
-use crate::{sync::SyncEngine, DrivenConfig, Result};
+use crate::{DrivenConfig, Result, sync::SyncEngine};
 use std::path::Path;
 
 /// Sync command handler
@@ -19,10 +19,7 @@ impl SyncCommand {
 
         // Report results
         if report.is_success() {
-            super::print_success(&format!(
-                "Synced rules to {} editors",
-                report.synced_count()
-            ));
+            super::print_success(&format!("Synced rules to {} editors", report.synced_count()));
             for synced in &report.synced {
                 println!("  {} → {}", synced.editor, synced.path.display());
             }

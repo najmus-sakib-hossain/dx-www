@@ -11,19 +11,14 @@ pub fn command_exists(cmd: &str) -> bool {
 pub fn available_memory() -> Option<u64> {
     #[cfg(target_os = "linux")]
     {
-        std::fs::read_to_string("/proc/meminfo")
-            .ok()
-            .and_then(|content| {
-                content
-                    .lines()
-                    .find(|line| line.starts_with("MemAvailable:"))
-                    .and_then(|line| {
-                        line.split_whitespace()
-                            .nth(1)
-                            .and_then(|s| s.parse::<u64>().ok())
-                            .map(|kb| kb * 1024)
-                    })
+        std::fs::read_to_string("/proc/meminfo").ok().and_then(|content| {
+            content.lines().find(|line| line.starts_with("MemAvailable:")).and_then(|line| {
+                line.split_whitespace()
+                    .nth(1)
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .map(|kb| kb * 1024)
             })
+        })
     }
 
     #[cfg(target_os = "macos")]
@@ -33,9 +28,7 @@ pub fn available_memory() -> Option<u64> {
             .output()
             .ok()
             .and_then(|output| {
-                String::from_utf8(output.stdout)
-                    .ok()
-                    .and_then(|s| s.trim().parse().ok())
+                String::from_utf8(output.stdout).ok().and_then(|s| s.trim().parse().ok())
             })
     }
 
@@ -54,9 +47,7 @@ pub fn available_memory() -> Option<u64> {
 /// Get the number of available CPU cores
 #[allow(dead_code)]
 pub fn cpu_count() -> usize {
-    std::thread::available_parallelism()
-        .map(|p| p.get())
-        .unwrap_or(1)
+    std::thread::available_parallelism().map(|p| p.get()).unwrap_or(1)
 }
 
 /// Check if running in a CI environment

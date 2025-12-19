@@ -1,7 +1,7 @@
 //! Validate workspace configuration.
 
 use crate::{Result, WorkspaceConfig};
-use console::{style, Emoji};
+use console::{Emoji, style};
 use std::path::PathBuf;
 
 static CHECK: Emoji<'_, '_> = Emoji("✓ ", "");
@@ -71,10 +71,7 @@ impl ValidateCommand {
                     Self::check_config(&config, &mut result);
 
                     result.info.push(format!("Project: {}", config.name));
-                    result.info.push(format!(
-                        "Schema version: {}",
-                        config.schema_version
-                    ));
+                    result.info.push(format!("Schema version: {}", config.schema_version));
                 }
                 Err(e) => {
                     result.valid = false;
@@ -101,20 +98,20 @@ impl ValidateCommand {
 
         if features.has_dx_client && !features.has_dx_www {
             result.info.push(
-                "dx-client detected without dx-www. This is valid for WASM-only projects.".to_string()
+                "dx-client detected without dx-www. This is valid for WASM-only projects."
+                    .to_string(),
             );
         }
 
         if config.extensions.core.is_empty() && config.extensions.recommended.is_empty() {
-            result.warnings.push(
-                "No extension recommendations configured.".to_string()
-            );
+            result.warnings.push("No extension recommendations configured.".to_string());
         }
 
         // Check for existing but possibly outdated configs
         if features.has_vscode_config {
             result.info.push(
-                "Existing .vscode configuration detected. Use 'dx workspace sync' to synchronize.".to_string()
+                "Existing .vscode configuration detected. Use 'dx workspace sync' to synchronize."
+                    .to_string(),
             );
         }
     }

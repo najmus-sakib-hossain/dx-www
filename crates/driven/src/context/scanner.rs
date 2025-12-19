@@ -205,8 +205,17 @@ impl ProjectScanner {
     fn is_key_directory(&self, name: &str) -> bool {
         matches!(
             name,
-            "src" | "lib" | "crates" | "packages" | "apps" | "components" | "api" | "server"
-                | "client" | "frontend" | "backend"
+            "src"
+                | "lib"
+                | "crates"
+                | "packages"
+                | "apps"
+                | "components"
+                | "api"
+                | "server"
+                | "client"
+                | "frontend"
+                | "backend"
         )
     }
 
@@ -259,10 +268,7 @@ mod tests {
     fn test_extension_to_language() {
         let scanner = ProjectScanner::new();
         assert_eq!(scanner.extension_to_language("rs"), Some("Rust".to_string()));
-        assert_eq!(
-            scanner.extension_to_language("ts"),
-            Some("TypeScript".to_string())
-        );
+        assert_eq!(scanner.extension_to_language("ts"), Some("TypeScript".to_string()));
         assert_eq!(scanner.extension_to_language("unknown"), None);
     }
 }

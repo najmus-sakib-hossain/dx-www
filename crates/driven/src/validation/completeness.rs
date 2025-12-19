@@ -1,6 +1,6 @@
 //! Coverage analysis
 
-use crate::{format::RuleCategory, parser::UnifiedRule, Result};
+use crate::{Result, format::RuleCategory, parser::UnifiedRule};
 
 /// Analyzes rule coverage
 #[derive(Debug, Default)]
@@ -48,7 +48,10 @@ impl CoverageAnalyzer {
         Ok(gaps)
     }
 
-    fn get_covered_categories(&self, rules: &[UnifiedRule]) -> std::collections::HashSet<RuleCategory> {
+    fn get_covered_categories(
+        &self,
+        rules: &[UnifiedRule],
+    ) -> std::collections::HashSet<RuleCategory> {
         rules
             .iter()
             .filter_map(|r| {

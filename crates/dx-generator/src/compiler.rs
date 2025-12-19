@@ -4,11 +4,11 @@
 //! Zero runtime parsing—templates are memory-mapped directly.
 
 use crate::binary::{
-    BinaryTemplate, BinaryTemplateBuilder, Opcode, PlaceholderEntry, PlaceholderType,
-    FLAG_DEDUPED, FLAG_OPTIMIZED, FLAG_STATIC,
+    BinaryTemplate, BinaryTemplateBuilder, FLAG_DEDUPED, FLAG_OPTIMIZED, FLAG_STATIC, Opcode,
+    PlaceholderEntry, PlaceholderType,
 };
 use crate::error::{GeneratorError, Result};
-use crate::scanner::{extract_static_segments, Placeholder, PlaceholderScanner};
+use crate::scanner::{Placeholder, PlaceholderScanner, extract_static_segments};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -156,7 +156,14 @@ impl Compiler {
             builder.set_static(true);
         } else {
             // Macro mode: generate bytecode
-            self.compile_macro(&mut builder, source, &placeholders, &segments, &param_map, &string_map)?;
+            self.compile_macro(
+                &mut builder,
+                source,
+                &placeholders,
+                &segments,
+                &param_map,
+                &string_map,
+            )?;
             builder.set_static(false);
         }
 
@@ -173,7 +180,11 @@ impl Compiler {
     }
 
     /// Compile a template from a file.
-    pub fn compile_file(&self, path: impl AsRef<Path>, options: CompileOptions) -> Result<BinaryTemplate> {
+    pub fn compile_file(
+        &self,
+        path: impl AsRef<Path>,
+        options: CompileOptions,
+    ) -> Result<BinaryTemplate> {
         let path = path.as_ref();
         let source = std::fs::read(path)?;
 
@@ -183,7 +194,13 @@ impl Compiler {
                 .unwrap_or_else(|| "template".to_string())
         });
 
-        self.compile(&source, CompileOptions { name: Some(name), ..options })
+        self.compile(
+            &source,
+            CompileOptions {
+                name: Some(name),
+                ..options
+            },
+        )
     }
 
     /// Check if any placeholder requires control flow.
@@ -191,9 +208,7 @@ impl Compiler {
         placeholders.iter().any(|ph| {
             matches!(
                 ph.placeholder_type,
-                PlaceholderType::Conditional
-                    | PlaceholderType::Loop
-                    | PlaceholderType::Include
+                PlaceholderType::Conditional | PlaceholderType::Loop | PlaceholderType::Include
             )
         })
     }
@@ -375,9 +390,7 @@ mod tests {
         let compiler = Compiler::new();
         let source = b"Hello, {{ name }}!";
 
-        let template = compiler
-            .compile(source, CompileOptions::with_name("test"))
-            .unwrap();
+        let template = compiler.compile(source, CompileOptions::with_name("test")).unwrap();
 
         assert_eq!(template.name, "test");
         assert!(template.is_micro_eligible());
@@ -389,9 +402,7 @@ mod tests {
         let compiler = Compiler::new();
         let source = b"{% if admin %}Admin{% endif %}";
 
-        let template = compiler
-            .compile(source, CompileOptions::with_name("test"))
-            .unwrap();
+        let template = compiler.compile(source, CompileOptions::with_name("test")).unwrap();
 
         assert!(!template.is_micro_eligible());
     }
@@ -401,9 +412,7 @@ mod tests {
         let compiler = Compiler::new();
         let source = b"{{ greeting }}, {{ name }}!";
 
-        let template = compiler
-            .compile(source, CompileOptions::with_name("test"))
-            .unwrap();
+        let template = compiler.compile(source, CompileOptions::with_name("test")).unwrap();
 
         assert_eq!(template.param_names.len(), 2);
         assert!(template.param_names.contains(&"greeting".to_string()));
@@ -415,9 +424,8 @@ mod tests {
         let compiler = Compiler::new();
         let source = b"Hello, {{ name }}! Today is {{ day }}.";
 
-        let (template, stats) = compiler
-            .compile_with_stats(source, CompileOptions::with_name("test"))
-            .unwrap();
+        let (template, stats) =
+            compiler.compile_with_stats(source, CompileOptions::with_name("test")).unwrap();
 
         assert_eq!(template.param_names.len(), 2);
         assert!(stats.compile_time_us < 10_000); // Should be fast

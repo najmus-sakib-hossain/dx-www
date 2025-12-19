@@ -1,7 +1,7 @@
 //! Context provider for AI agents
 
 use super::{ProjectContext, ProjectScanner};
-use crate::{parser::UnifiedRule, Result};
+use crate::{Result, parser::UnifiedRule};
 use std::path::Path;
 
 /// Provides context to AI agents

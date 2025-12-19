@@ -182,11 +182,7 @@ version = "0.1.0"
 
     // Create existing .vscode settings
     fs::create_dir(project_dir.join(".vscode")).unwrap();
-    fs::write(
-        project_dir.join(".vscode/settings.json"),
-        r#"{"editor.tabSize": 4}"#,
-    )
-    .unwrap();
+    fs::write(project_dir.join(".vscode/settings.json"), r#"{"editor.tabSize": 4}"#).unwrap();
 
     let detector = ProjectDetector::new(project_dir);
     let config = detector.detect().unwrap();
@@ -239,11 +235,8 @@ version = "0.1.0"
     .unwrap();
 
     fs::create_dir(project_dir.join(".devcontainer")).unwrap();
-    fs::write(
-        project_dir.join(".devcontainer/devcontainer.json"),
-        r#"{"name": "Rust Dev"}"#,
-    )
-    .unwrap();
+    fs::write(project_dir.join(".devcontainer/devcontainer.json"), r#"{"name": "Rust Dev"}"#)
+        .unwrap();
 
     let detector = ProjectDetector::new(project_dir);
     let config = detector.detect().unwrap();

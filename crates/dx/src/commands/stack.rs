@@ -192,8 +192,16 @@ async fn run_bundle(minify: bool, sourcemap: bool, theme: &Theme) -> Result<()> 
     eprintln!(
         "  {} Minify: {} │ Sourcemap: {}",
         "│".bright_black(),
-        if minify { "yes".green().to_string() } else { "no".bright_black().to_string() },
-        if sourcemap { "yes".green().to_string() } else { "no".bright_black().to_string() }
+        if minify {
+            "yes".green().to_string()
+        } else {
+            "no".bright_black().to_string()
+        },
+        if sourcemap {
+            "yes".green().to_string()
+        } else {
+            "no".bright_black().to_string()
+        }
     );
     eprintln!();
 
@@ -424,11 +432,7 @@ async fn run_build(output: &str, theme: &Theme) -> Result<()> {
     theme.print_section("dx stack: Build");
     eprintln!();
 
-    eprintln!(
-        "  {} Output: {}",
-        "│".bright_black(),
-        output.cyan()
-    );
+    eprintln!("  {} Output: {}", "│".bright_black(), output.cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Type checking...");

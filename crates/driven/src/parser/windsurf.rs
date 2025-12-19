@@ -1,6 +1,6 @@
 //! Windsurf rules parser (.windsurfrules)
 
-use super::{extract_bullet_points, parse_markdown_sections, RuleParser, UnifiedRule};
+use super::{RuleParser, UnifiedRule, extract_bullet_points, parse_markdown_sections};
 use crate::{DrivenError, Editor, Result};
 use std::path::Path;
 
@@ -17,9 +17,8 @@ impl WindsurfParser {
 
 impl RuleParser for WindsurfParser {
     fn parse_file(&self, path: &Path) -> Result<Vec<UnifiedRule>> {
-        let content = std::fs::read_to_string(path).map_err(|e| {
-            DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e))
-        })?;
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e)))?;
         self.parse_content(&content)
     }
 

@@ -70,17 +70,17 @@ impl Capability {
         if *self == Self::System {
             return true;
         }
-        
+
         // FileWrite implies FileRead
         if *self == Self::FileWrite && *other == Self::FileRead {
             return true;
         }
-        
+
         // Process implies Execute
         if *self == Self::Process && *other == Self::Execute {
             return true;
         }
-        
+
         *self == *other
     }
 }
@@ -178,8 +178,8 @@ impl CapabilityManifest {
         if self.denied.iter().any(|d| d.implies(&cap)) {
             return false;
         }
-        self.required.iter().any(|r| r.implies(&cap)) ||
-            self.optional.iter().any(|o| o.implies(&cap))
+        self.required.iter().any(|r| r.implies(&cap))
+            || self.optional.iter().any(|o| o.implies(&cap))
     }
 
     /// Check if capability is denied
@@ -198,7 +198,10 @@ impl CapabilityManifest {
     }
 
     /// Get restrictions for a capability
-    pub fn restrictions_for(&self, cap: Capability) -> impl Iterator<Item = &CapabilityRestriction> {
+    pub fn restrictions_for(
+        &self,
+        cap: Capability,
+    ) -> impl Iterator<Item = &CapabilityRestriction> {
         self.restrictions.iter().filter(move |r| r.capability == cap)
     }
 
@@ -208,7 +211,8 @@ impl CapabilityManifest {
             return false;
         }
 
-        let restrictions: Vec<_> = self.restrictions_for(cap)
+        let restrictions: Vec<_> = self
+            .restrictions_for(cap)
             .filter(|r| r.restriction == RestrictionType::Path)
             .collect();
 
@@ -220,8 +224,8 @@ impl CapabilityManifest {
         // Check if path matches any allowed pattern
         restrictions.iter().any(|r| {
             r.allowed.iter().any(|allowed| {
-                path.starts_with(allowed) || 
-                    globset::Glob::new(allowed)
+                path.starts_with(allowed)
+                    || globset::Glob::new(allowed)
                         .ok()
                         .and_then(|g| g.compile_matcher().is_match(path).then_some(()))
                         .is_some()

@@ -22,7 +22,7 @@ use core::{
 
 /// A convenience class for retrieving colors that are constant in hue and
 /// chroma, but vary in tone.
-#[derive(Clone, Copy, Debug, PartialOrd)]
+#[derive(Clone, Copy, Debug)]
 
 pub struct TonalPalette {
     _hue: f64,
@@ -140,7 +140,17 @@ impl TonalPalette {
 
 impl Ord for TonalPalette {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
+        match self._hue.partial_cmp(&other._hue) {
+            Some(Ordering::Equal) | None => {},
+            ord => return ord.unwrap_or(Ordering::Equal),
+        }
+        self._chroma.partial_cmp(&other._chroma).unwrap_or(Ordering::Equal)
+    }
+}
+
+impl PartialOrd for TonalPalette {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 

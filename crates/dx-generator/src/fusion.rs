@@ -11,7 +11,7 @@
 use crate::binary::BinaryTemplate;
 use crate::error::{GeneratorError, Result};
 use crate::params::Parameters;
-use crate::render::{Renderer, RenderOutput};
+use crate::render::{RenderOutput, Renderer};
 use crate::template::Template;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -71,7 +71,11 @@ pub struct FusionTemplate {
 impl FusionTemplate {
     /// Create a new fusion template.
     #[must_use]
-    pub fn new(name: impl Into<String>, output_path: impl Into<String>, template: BinaryTemplate) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        output_path: impl Into<String>,
+        template: BinaryTemplate,
+    ) -> Self {
         Self {
             name: name.into(),
             output_path: output_path.into(),
@@ -116,10 +120,7 @@ impl FusionTemplate {
     pub fn should_generate(&self, params: &Parameters<'_>) -> bool {
         match &self.condition {
             None => true,
-            Some(param) => params
-                .get(param)
-                .map(|v| v.as_bool().unwrap_or(false))
-                .unwrap_or(false),
+            Some(param) => params.get(param).map(|v| v.as_bool().unwrap_or(false)).unwrap_or(false),
         }
     }
 }
@@ -258,7 +259,7 @@ pub mod bundles {
     pub fn component_full() -> FusionBundle {
         FusionBundle::new("component-full")
             .with_description("Full component scaffold with tests, docs, and benchmarks")
-            // Note: In real usage, these would be loaded from .dxt files
+        // Note: In real usage, these would be loaded from .dxt files
     }
 
     /// Create a route-crud fusion bundle.
@@ -266,8 +267,7 @@ pub mod bundles {
     /// Generates: Handler + Query + Form + Test for CRUD operations
     #[must_use]
     pub fn route_crud() -> FusionBundle {
-        FusionBundle::new("route-crud")
-            .with_description("Complete CRUD route scaffold")
+        FusionBundle::new("route-crud").with_description("Complete CRUD route scaffold")
     }
 
     /// Create a crate-complete fusion bundle.
@@ -275,8 +275,7 @@ pub mod bundles {
     /// Generates: Cargo.toml + lib.rs + mod.rs + docs + tests
     #[must_use]
     pub fn crate_complete() -> FusionBundle {
-        FusionBundle::new("crate-complete")
-            .with_description("Complete Rust crate scaffold")
+        FusionBundle::new("crate-complete").with_description("Complete Rust crate scaffold")
     }
 }
 
@@ -352,16 +351,13 @@ mod tests {
 
     #[test]
     fn test_fusion_template_condition() {
-        let template = FusionTemplate::new("test", "tests/{name}_test.rs", make_test_template("test"))
-            .when("with_tests");
+        let template =
+            FusionTemplate::new("test", "tests/{name}_test.rs", make_test_template("test"))
+                .when("with_tests");
 
-        let params_with = Parameters::new()
-            .set("name", "counter")
-            .set("with_tests", true);
+        let params_with = Parameters::new().set("name", "counter").set("with_tests", true);
 
-        let params_without = Parameters::new()
-            .set("name", "counter")
-            .set("with_tests", false);
+        let params_without = Parameters::new().set("name", "counter").set("with_tests", false);
 
         assert!(template.should_generate(&params_with));
         assert!(!template.should_generate(&params_without));
@@ -371,12 +367,12 @@ mod tests {
     fn test_fusion_bundle_generate() {
         let bundle = FusionBundle::new("test-bundle")
             .add(FusionTemplate::new("main", "src/{name}.rs", make_test_template("main")))
-            .add(FusionTemplate::new("test", "tests/{name}_test.rs", make_test_template("test"))
-                .when("with_tests"));
+            .add(
+                FusionTemplate::new("test", "tests/{name}_test.rs", make_test_template("test"))
+                    .when("with_tests"),
+            );
 
-        let params = Parameters::new()
-            .set("name", "counter")
-            .set("with_tests", true);
+        let params = Parameters::new().set("name", "counter").set("with_tests", true);
 
         let outputs = bundle.generate(&params).unwrap();
 
@@ -389,12 +385,12 @@ mod tests {
     fn test_fusion_bundle_conditional() {
         let bundle = FusionBundle::new("test-bundle")
             .add(FusionTemplate::new("main", "src/{name}.rs", make_test_template("main")))
-            .add(FusionTemplate::new("test", "tests/{name}_test.rs", make_test_template("test"))
-                .when("with_tests"));
+            .add(
+                FusionTemplate::new("test", "tests/{name}_test.rs", make_test_template("test"))
+                    .when("with_tests"),
+            );
 
-        let params = Parameters::new()
-            .set("name", "counter")
-            .set("with_tests", false);
+        let params = Parameters::new().set("name", "counter").set("with_tests", false);
 
         let outputs = bundle.generate(&params).unwrap();
 

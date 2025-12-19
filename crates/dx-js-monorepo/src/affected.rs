@@ -2,10 +2,10 @@
 //!
 //! Queries the Binary Affected Graph for impact detection.
 
-use std::path::{Path, PathBuf};
 use crate::bag::AffectedGraphData;
 use crate::change::ChangeDetector;
 use crate::types::ImportStatement;
+use std::path::{Path, PathBuf};
 
 /// Affected Detector for determining which packages are affected by changes
 pub struct AffectedDetector {
@@ -78,12 +78,12 @@ mod tests {
     fn create_test_graph() -> AffectedGraphData {
         // a -> b -> c (a depends on b, b depends on c)
         let mut graph = AffectedGraphData::from_edges(3, &[(0, 1), (1, 2)]);
-        
+
         // Add file mappings
         graph.add_file_mapping("packages/a/src/index.ts", 0);
         graph.add_file_mapping("packages/b/src/index.ts", 1);
         graph.add_file_mapping("packages/c/src/index.ts", 2);
-        
+
         graph
     }
 
@@ -94,7 +94,7 @@ mod tests {
 
         // Changing c affects a and b (they depend on c)
         let affected = detector.affected(&[PathBuf::from("packages/c/src/index.ts")]);
-        
+
         // c itself plus a and b
         assert!(affected.contains(&2)); // c
         assert!(affected.contains(&1)); // b depends on c
@@ -118,10 +118,10 @@ mod tests {
 
         // c has b as dependent (b depends on c)
         assert!(detector.dependents(2).contains(&1));
-        
+
         // b has a as dependent
         assert!(detector.dependents(1).contains(&0));
-        
+
         // a has no dependents
         assert!(detector.dependents(0).is_empty());
     }

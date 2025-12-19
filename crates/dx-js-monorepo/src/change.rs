@@ -2,9 +2,9 @@
 //!
 //! SIMD-accelerated Blake3 hashing and import detection.
 
-use std::path::{Path, PathBuf};
+use crate::types::{FileHash, ImportKind, ImportStatement};
 use rayon::prelude::*;
-use crate::types::{FileHash, ImportStatement, ImportKind};
+use std::path::{Path, PathBuf};
 
 /// Change Detector for file hashing and import detection
 pub struct ChangeDetector {
@@ -34,22 +34,22 @@ impl ChangeDetector {
 
     /// Hash multiple files in parallel
     pub fn hash_files_parallel(&self, paths: &[PathBuf]) -> std::io::Result<Vec<FileHash>> {
-        paths.par_iter()
+        paths
+            .par_iter()
             .map(|path| {
                 let content = std::fs::read(path)?;
                 let content_hash = *blake3::hash(&content).as_bytes();
                 let path_hash = xxhash_rust::xxh3::xxh3_64(path.to_string_lossy().as_bytes());
                 let metadata = std::fs::metadata(path)?;
-                let mtime_ns = metadata.modified()
-                    .map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos() as u64)
+                let mtime_ns = metadata
+                    .modified()
+                    .map(|t| {
+                        t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos()
+                            as u64
+                    })
                     .unwrap_or(0);
 
-                Ok(FileHash::new(
-                    path_hash,
-                    content_hash,
-                    metadata.len(),
-                    mtime_ns,
-                ))
+                Ok(FileHash::new(path_hash, content_hash, metadata.len(), mtime_ns))
             })
             .collect()
     }
@@ -70,7 +70,8 @@ impl ChangeDetector {
         let path_bytes = path_hash.to_le_bytes();
 
         // Next 8 bytes: mtime
-        let mtime = metadata.modified()
+        let mtime = metadata
+            .modified()
             .map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos() as u64)
             .unwrap_or(0);
         let mtime_bytes = mtime.to_le_bytes();
@@ -95,7 +96,7 @@ impl ChangeDetector {
         };
 
         let mut imports = Vec::new();
-        
+
         for (line_num, line) in text.lines().enumerate() {
             let line_num = (line_num + 1) as u32;
             let trimmed = line.trim();
@@ -172,7 +173,7 @@ impl ChangeDetector {
         // const x = require('y')
         let require_pos = line.find("require(")?;
         let after_require = &line[require_pos + 8..];
-        
+
         let specifier = self.extract_string_literal(after_require)?;
         let column = (require_pos + 9) as u32;
 
@@ -188,7 +189,7 @@ impl ChangeDetector {
         // import('y')
         // But not "import " (static import)
         let import_pos = line.find("import(")?;
-        
+
         // Make sure it's not a static import
         if import_pos > 0 {
             let before = &line[..import_pos];
@@ -214,12 +215,13 @@ impl ChangeDetector {
 
     fn extract_string_literal(&self, text: &str) -> Option<String> {
         // Find opening quote
-        let (start, quote) = text.char_indices()
-            .find(|(_, c)| *c == '\'' || *c == '"' || *c == '`')?;
-        
+        let (start, quote) =
+            text.char_indices().find(|(_, c)| *c == '\'' || *c == '"' || *c == '`')?;
+
         // Find closing quote
         let content_start = start + 1;
-        let end = text[content_start..].char_indices()
+        let end = text[content_start..]
+            .char_indices()
             .find(|(_, c)| *c == quote)
             .map(|(i, _)| content_start + i)?;
 
@@ -285,9 +287,7 @@ impl ChangeDetector {
         let mut child_hashes = Vec::new();
         let mut child_indices = Vec::new();
 
-        let mut entries: Vec<_> = std::fs::read_dir(path)?
-            .filter_map(|e| e.ok())
-            .collect();
+        let mut entries: Vec<_> = std::fs::read_dir(path)?.filter_map(|e| e.ok()).collect();
         entries.sort_by_key(|e| e.path());
 
         for entry in entries {
@@ -326,8 +326,8 @@ impl ChangeDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::fs;
+    use tempfile::TempDir;
 
     #[test]
     fn test_hash_file() {
@@ -359,7 +359,7 @@ mod tests {
     #[test]
     fn test_detect_es6_imports() {
         let detector = ChangeDetector::new();
-        
+
         let content = br#"
 import React from 'react';
 import { useState } from 'react';
@@ -368,17 +368,23 @@ import './styles.css';
 "#;
 
         let imports = detector.detect_imports(content);
-        
+
         assert_eq!(imports.len(), 4);
-        assert!(imports.iter().any(|i| i.specifier == "react" && i.kind == ImportKind::Es6Import));
-        assert!(imports.iter().any(|i| i.specifier == "lodash" && i.kind == ImportKind::Es6Import));
-        assert!(imports.iter().any(|i| i.specifier == "./styles.css" && i.kind == ImportKind::Es6Import));
+        assert!(imports
+            .iter()
+            .any(|i| i.specifier == "react" && i.kind == ImportKind::Es6Import));
+        assert!(imports
+            .iter()
+            .any(|i| i.specifier == "lodash" && i.kind == ImportKind::Es6Import));
+        assert!(imports
+            .iter()
+            .any(|i| i.specifier == "./styles.css" && i.kind == ImportKind::Es6Import));
     }
 
     #[test]
     fn test_detect_commonjs_require() {
         let detector = ChangeDetector::new();
-        
+
         let content = br#"
 const fs = require('fs');
 const path = require("path");
@@ -386,7 +392,7 @@ const custom = require('./custom');
 "#;
 
         let imports = detector.detect_imports(content);
-        
+
         assert_eq!(imports.len(), 3);
         assert!(imports.iter().all(|i| i.kind == ImportKind::CommonJsRequire));
         assert!(imports.iter().any(|i| i.specifier == "fs"));
@@ -397,37 +403,45 @@ const custom = require('./custom');
     #[test]
     fn test_detect_dynamic_import() {
         let detector = ChangeDetector::new();
-        
+
         let content = br#"
 const module = await import('./dynamic');
 import('./lazy').then(m => m.default);
 "#;
 
         let imports = detector.detect_imports(content);
-        
-        assert!(imports.iter().any(|i| i.specifier == "./dynamic" && i.kind == ImportKind::DynamicImport));
-        assert!(imports.iter().any(|i| i.specifier == "./lazy" && i.kind == ImportKind::DynamicImport));
+
+        assert!(imports
+            .iter()
+            .any(|i| i.specifier == "./dynamic" && i.kind == ImportKind::DynamicImport));
+        assert!(imports
+            .iter()
+            .any(|i| i.specifier == "./lazy" && i.kind == ImportKind::DynamicImport));
     }
 
     #[test]
     fn test_detect_export_from() {
         let detector = ChangeDetector::new();
-        
+
         let content = br#"
 export { foo } from './foo';
 export * from './bar';
 "#;
 
         let imports = detector.detect_imports(content);
-        
-        assert!(imports.iter().any(|i| i.specifier == "./foo" && i.kind == ImportKind::Es6ExportFrom));
-        assert!(imports.iter().any(|i| i.specifier == "./bar" && i.kind == ImportKind::Es6ExportFrom));
+
+        assert!(imports
+            .iter()
+            .any(|i| i.specifier == "./foo" && i.kind == ImportKind::Es6ExportFrom));
+        assert!(imports
+            .iter()
+            .any(|i| i.specifier == "./bar" && i.kind == ImportKind::Es6ExportFrom));
     }
 
     #[test]
     fn test_merkle_tree() {
         let temp = TempDir::new().unwrap();
-        
+
         // Create directory structure
         fs::create_dir(temp.path().join("src")).unwrap();
         fs::write(temp.path().join("src/a.ts"), b"const a = 1;").unwrap();
@@ -439,7 +453,7 @@ export * from './bar';
 
         // Should have nodes for: a.ts, b.ts, src/, package.json, root
         assert!(tree.nodes.len() >= 4);
-        
+
         // Root hash should be deterministic
         let tree2 = detector.build_merkle_tree(temp.path()).unwrap();
         assert_eq!(tree.root_hash, tree2.root_hash);
@@ -448,7 +462,7 @@ export * from './bar';
     #[test]
     fn test_parallel_hashing() {
         let temp = TempDir::new().unwrap();
-        
+
         // Create multiple files
         let mut paths = Vec::new();
         for i in 0..10 {
@@ -461,11 +475,9 @@ export * from './bar';
         let hashes = detector.hash_files_parallel(&paths).unwrap();
 
         assert_eq!(hashes.len(), 10);
-        
+
         // Each hash should be unique
-        let unique: std::collections::HashSet<_> = hashes.iter()
-            .map(|h| h.content_hash)
-            .collect();
+        let unique: std::collections::HashSet<_> = hashes.iter().map(|h| h.content_hash).collect();
         assert_eq!(unique.len(), 10);
     }
 }

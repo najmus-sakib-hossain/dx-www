@@ -174,9 +174,7 @@ impl MicroRenderer {
         for ph in &template.placeholders {
             // Only handle variables in Micro mode
             if ph.get_type()? != PlaceholderType::Variable {
-                return Err(GeneratorError::render_failed(
-                    "Micro mode cannot handle control flow",
-                ));
+                return Err(GeneratorError::render_failed("Micro mode cannot handle control flow"));
             }
 
             // Write static segment before this placeholder
@@ -184,15 +182,15 @@ impl MicroRenderer {
             // For now, we just substitute variables
 
             // Get variable value
-            let value = params
-                .get_by_index(ph.variable_id as usize)
-                .ok_or_else(|| GeneratorError::MissingParameter {
+            let value = params.get_by_index(ph.variable_id as usize).ok_or_else(|| {
+                GeneratorError::MissingParameter {
                     name: template
                         .param_names
                         .get(ph.variable_id as usize)
                         .cloned()
                         .unwrap_or_else(|| format!("param_{}", ph.variable_id)),
-                })?;
+                }
+            })?;
 
             // Write value
             self.write_value(value)?;
@@ -212,16 +210,14 @@ impl MicroRenderer {
 
         for ph in &template.placeholders {
             if ph.get_type()? != PlaceholderType::Variable {
-                return Err(GeneratorError::render_failed(
-                    "Micro mode cannot handle control flow",
-                ));
+                return Err(GeneratorError::render_failed("Micro mode cannot handle control flow"));
             }
 
-            let value = params
-                .get_by_index(ph.variable_id as usize)
-                .ok_or_else(|| GeneratorError::MissingParameter {
+            let value = params.get_by_index(ph.variable_id as usize).ok_or_else(|| {
+                GeneratorError::MissingParameter {
                     name: format!("param_{}", ph.variable_id),
-                })?;
+                }
+            })?;
 
             Self::write_value_to(value, output)?;
         }
@@ -239,14 +235,10 @@ impl MicroRenderer {
             ParamValue::Float(f) => self.output.write_str(&f.to_string()),
             ParamValue::String(s) => self.output.write_str(s),
             ParamValue::Array(_) => {
-                return Err(GeneratorError::render_failed(
-                    "Micro mode cannot render arrays",
-                ));
+                return Err(GeneratorError::render_failed("Micro mode cannot render arrays"));
             }
             ParamValue::Object(_) => {
-                return Err(GeneratorError::render_failed(
-                    "Micro mode cannot render objects",
-                ));
+                return Err(GeneratorError::render_failed("Micro mode cannot render objects"));
             }
         }
         Ok(())
@@ -581,12 +573,7 @@ mod tests {
     fn test_micro_render_simple() {
         let mut builder = BinaryTemplate::builder("test");
         let _var_id = builder.add_param("name");
-        builder.add_placeholder(PlaceholderEntry::new(
-            0,
-            64,
-            PlaceholderType::Variable,
-            0,
-        ));
+        builder.add_placeholder(PlaceholderEntry::new(0, 64, PlaceholderType::Variable, 0));
         builder.set_static(true);
         let template = builder.build();
 

@@ -1,6 +1,6 @@
 //! Conversion benchmarks
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 fn benchmark_conversion(c: &mut Criterion) {
     c.bench_function("markdown_to_binary", |b| {
@@ -12,9 +12,7 @@ You are an expert engineer.
 ### Style
 - Use consistent formatting
 "#;
-        b.iter(|| {
-            black_box(markdown.len())
-        })
+        b.iter(|| black_box(markdown.len()))
     });
 }
 

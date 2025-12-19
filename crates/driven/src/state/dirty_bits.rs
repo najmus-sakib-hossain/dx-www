@@ -150,10 +150,8 @@ impl DirtyBits {
         self.standards.clear_all();
         self.workflow.clear_all();
         self.context.clear_all();
-        self.last_sync.store(
-            self.change_counter.load(Ordering::SeqCst),
-            Ordering::SeqCst,
-        );
+        self.last_sync
+            .store(self.change_counter.load(Ordering::SeqCst), Ordering::SeqCst);
     }
 
     /// Get change count

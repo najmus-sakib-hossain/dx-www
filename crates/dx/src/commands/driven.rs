@@ -228,17 +228,16 @@ async fn run_review(depth: &str, theme: &Theme) -> Result<()> {
     let findings = [
         ("⚡", "Performance", "Consider memoizing expensive computation in utils.ts:45"),
         ("🔒", "Security", "Validate user input before database query in api.ts:89"),
-        ("📝", "Readability", "Extract complex logic into named function in handler.ts:23"),
+        (
+            "📝",
+            "Readability",
+            "Extract complex logic into named function in handler.ts:23",
+        ),
         ("✨", "Best Practice", "Use const instead of let in config.ts:12"),
     ];
 
     for (icon, category, message) in findings {
-        eprintln!(
-            "    {} {} {}",
-            icon,
-            format!("[{}]", category).cyan(),
-            message.white()
-        );
+        eprintln!("    {} {} {}", icon, format!("[{}]", category).cyan(), message.white());
     }
 
     eprintln!();
@@ -375,11 +374,7 @@ async fn run_audit(theme: &Theme) -> Result<()> {
 
     eprintln!();
     theme.print_divider();
-    eprintln!(
-        "  {} Security Score: {}/100",
-        "🔒".white(),
-        "94".green().bold()
-    );
+    eprintln!("  {} Security Score: {}/100", "🔒".white(), "94".green().bold());
     theme.print_divider();
     eprintln!();
 

@@ -1,7 +1,7 @@
 //! Template command - manage rule templates
 
-use crate::{templates::TemplateRegistry, Result};
-use dialoguer::{theme::ColorfulTheme, Select};
+use crate::{Result, templates::TemplateRegistry};
+use dialoguer::{Select, theme::ColorfulTheme};
 use std::path::Path;
 
 /// Template command handler
@@ -50,9 +50,9 @@ impl TemplateCommand {
     pub fn apply(project_root: &Path, template_name: &str) -> Result<()> {
         let registry = TemplateRegistry::new();
 
-        let template = registry
-            .get(template_name)
-            .ok_or_else(|| crate::DrivenError::Template(format!("Template not found: {}", template_name)))?;
+        let template = registry.get(template_name).ok_or_else(|| {
+            crate::DrivenError::Template(format!("Template not found: {}", template_name))
+        })?;
 
         let spinner = super::create_spinner(&format!("Applying template '{}'...", template_name));
 
@@ -62,15 +62,21 @@ impl TemplateCommand {
         // Write to rules file
         let rules_path = project_root.join(".driven/rules.md");
         if let Some(parent) = rules_path.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|e| crate::DrivenError::Template(format!("Failed to create directory: {}", e)))?;
+            std::fs::create_dir_all(parent).map_err(|e| {
+                crate::DrivenError::Template(format!("Failed to create directory: {}", e))
+            })?;
         }
 
-        std::fs::write(&rules_path, content)
-            .map_err(|e| crate::DrivenError::Template(format!("Failed to write template: {}", e)))?;
+        std::fs::write(&rules_path, content).map_err(|e| {
+            crate::DrivenError::Template(format!("Failed to write template: {}", e))
+        })?;
 
         spinner.finish_and_clear();
-        super::print_success(&format!("Applied template '{}' to {}", template_name, rules_path.display()));
+        super::print_success(&format!(
+            "Applied template '{}' to {}",
+            template_name,
+            rules_path.display()
+        ));
 
         Ok(())
     }
@@ -81,10 +87,8 @@ impl TemplateCommand {
         let templates = registry.list();
         let theme = ColorfulTheme::default();
 
-        let items: Vec<_> = templates
-            .iter()
-            .map(|t| format!("{} - {}", t.name, t.description))
-            .collect();
+        let items: Vec<_> =
+            templates.iter().map(|t| format!("{} - {}", t.name, t.description)).collect();
 
         let selection = Select::with_theme(&theme)
             .with_prompt("Select a template")

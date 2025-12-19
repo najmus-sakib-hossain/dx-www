@@ -6,7 +6,7 @@
 
 use super::{CloudGenerator, GeneratedFile};
 use crate::{Result, WorkspaceConfig};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use std::fs;
 use std::path::Path;
 
@@ -47,15 +47,11 @@ impl CodespacesGenerator {
                 }),
             );
         } else if config.detected_features.is_cargo_project {
-            devcontainer.insert(
-                "image".to_string(),
-                json!("mcr.microsoft.com/devcontainers/rust:latest"),
-            );
+            devcontainer
+                .insert("image".to_string(), json!("mcr.microsoft.com/devcontainers/rust:latest"));
         } else {
-            devcontainer.insert(
-                "image".to_string(),
-                json!("mcr.microsoft.com/devcontainers/base:ubuntu"),
-            );
+            devcontainer
+                .insert("image".to_string(), json!("mcr.microsoft.com/devcontainers/base:ubuntu"));
         }
 
         // Features
@@ -72,10 +68,8 @@ impl CodespacesGenerator {
         }
 
         if config.detected_features.has_dx_client {
-            features.insert(
-                "ghcr.io/aspect-build/devcontainer-features/wasm:1".to_string(),
-                json!({}),
-            );
+            features
+                .insert("ghcr.io/aspect-build/devcontainer-features/wasm:1".to_string(), json!({}));
         }
 
         if !features.is_empty() {
@@ -101,24 +95,12 @@ impl CodespacesGenerator {
 
         // Settings from workspace config
         let mut settings = Map::new();
-        settings.insert(
-            "editor.tabSize".to_string(),
-            json!(config.editor.tab_size),
-        );
-        settings.insert(
-            "editor.insertSpaces".to_string(),
-            json!(config.editor.insert_spaces),
-        );
+        settings.insert("editor.tabSize".to_string(), json!(config.editor.tab_size));
+        settings.insert("editor.insertSpaces".to_string(), json!(config.editor.insert_spaces));
 
         if config.detected_features.is_cargo_project {
-            settings.insert(
-                "rust-analyzer.cargo.features".to_string(),
-                json!("all"),
-            );
-            settings.insert(
-                "rust-analyzer.checkOnSave.command".to_string(),
-                json!("clippy"),
-            );
+            settings.insert("rust-analyzer.cargo.features".to_string(), json!("all"));
+            settings.insert("rust-analyzer.checkOnSave.command".to_string(), json!("clippy"));
         }
 
         vscode.insert("settings".to_string(), json!(settings));
@@ -132,10 +114,8 @@ impl CodespacesGenerator {
 
         // Post-create command
         if config.detected_features.is_cargo_project {
-            devcontainer.insert(
-                "postCreateCommand".to_string(),
-                json!("cargo fetch && cargo build"),
-            );
+            devcontainer
+                .insert("postCreateCommand".to_string(), json!("cargo fetch && cargo build"));
         }
 
         // On create commands
@@ -191,15 +171,13 @@ impl CloudGenerator for CodespacesGenerator {
         let mut files = Vec::new();
 
         let devcontainer_dir = output_dir.join(".devcontainer");
-        fs::create_dir_all(&devcontainer_dir).map_err(|e| crate::Error::io(&devcontainer_dir, e))?;
+        fs::create_dir_all(&devcontainer_dir)
+            .map_err(|e| crate::Error::io(&devcontainer_dir, e))?;
 
         // Generate devcontainer.json
         let devcontainer_json = self.generate_config(config);
         let json_content = serde_json::to_string_pretty(&devcontainer_json).unwrap_or_default();
-        files.push(GeneratedFile::new(
-            ".devcontainer/devcontainer.json",
-            json_content.clone(),
-        ));
+        files.push(GeneratedFile::new(".devcontainer/devcontainer.json", json_content.clone()));
 
         let json_path = devcontainer_dir.join("devcontainer.json");
         fs::write(&json_path, &json_content).map_err(|e| crate::Error::io(&json_path, e))?;
@@ -207,10 +185,7 @@ impl CloudGenerator for CodespacesGenerator {
         // Generate Dockerfile if requested
         if self.custom_dockerfile {
             let dockerfile = self.generate_dockerfile(config);
-            files.push(GeneratedFile::new(
-                ".devcontainer/Dockerfile",
-                dockerfile.clone(),
-            ));
+            files.push(GeneratedFile::new(".devcontainer/Dockerfile", dockerfile.clone()));
 
             let docker_path = devcontainer_dir.join("Dockerfile");
             fs::write(&docker_path, &dockerfile).map_err(|e| crate::Error::io(&docker_path, e))?;
@@ -248,10 +223,7 @@ mod tests {
         let devcontainer = generator.generate_config(&config);
 
         assert_eq!(devcontainer["name"], "test-project");
-        assert!(devcontainer["image"]
-            .as_str()
-            .unwrap()
-            .contains("rust"));
+        assert!(devcontainer["image"].as_str().unwrap().contains("rust"));
         assert!(devcontainer["customizations"]["vscode"]["extensions"].is_array());
     }
 

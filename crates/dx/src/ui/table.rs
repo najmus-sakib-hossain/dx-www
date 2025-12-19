@@ -39,11 +39,7 @@ impl Table {
         eprint!("  ");
         for (i, header) in self.headers.iter().enumerate() {
             let width = self.column_widths.get(i).copied().unwrap_or(0);
-            eprint!(
-                "{:width$}  ",
-                header.bright_black().bold().to_string(),
-                width = width
-            );
+            eprint!("{:width$}  ", header.bright_black().bold().to_string(), width = width);
         }
         eprintln!();
 

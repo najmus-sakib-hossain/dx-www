@@ -23,10 +23,7 @@ impl HelixGenerator {
         lines.push(String::new());
 
         lines.push("[editor]".to_string());
-        lines.push(format!(
-            "line-number = \"{}\"",
-            "relative"
-        ));
+        lines.push(format!("line-number = \"{}\"", "relative"));
         lines.push("mouse = true".to_string());
         lines.push("auto-format = true".to_string());
         lines.push("auto-save = false".to_string());
@@ -112,10 +109,7 @@ impl DesktopGenerator for HelixGenerator {
 
         // Generate languages.toml
         let languages_content = self.generate_languages(config);
-        files.push(GeneratedFile::new(
-            ".helix/languages.toml",
-            languages_content.clone(),
-        ));
+        files.push(GeneratedFile::new(".helix/languages.toml", languages_content.clone()));
 
         let languages_path = helix_dir.join("languages.toml");
         fs::write(&languages_path, &languages_content)

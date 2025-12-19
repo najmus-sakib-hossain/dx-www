@@ -2,11 +2,11 @@
 //!
 //! This module detects project characteristics to generate intelligent defaults.
 
+use crate::Result;
 use crate::config::{
     DebugConfig, DetectedFeatures, EditorConfig, ExtensionRecommendations, ProjectStructureConfig,
     TaskConfig, WorkspaceConfig,
 };
-use crate::Result;
 use std::path::{Path, PathBuf};
 
 /// Detects project characteristics for intelligent configuration defaults.
@@ -113,8 +113,7 @@ impl ProjectDetector {
         }
 
         // Check for Git
-        features.has_git = self.root.join(".git").exists()
-            || self.root.join(".gitignore").exists();
+        features.has_git = self.root.join(".git").exists() || self.root.join(".gitignore").exists();
 
         // Check for TypeScript
         features.uses_typescript = self.root.join("tsconfig.json").exists()
@@ -192,7 +191,10 @@ impl ProjectDetector {
     }
 
     /// Create project structure configuration.
-    fn create_project_structure_config(&self, features: &DetectedFeatures) -> ProjectStructureConfig {
+    fn create_project_structure_config(
+        &self,
+        features: &DetectedFeatures,
+    ) -> ProjectStructureConfig {
         let mut config = ProjectStructureConfig::default();
 
         // File associations
@@ -209,10 +211,7 @@ impl ProjectDetector {
         ];
 
         // Watcher exclusions (more aggressive)
-        config.watcher_exclude = vec![
-            "**/target/**".to_string(),
-            "**/node_modules/**".to_string(),
-        ];
+        config.watcher_exclude = vec!["**/target/**".to_string(), "**/node_modules/**".to_string()];
 
         // File nesting for Rust projects
         if features.is_cargo_project {
@@ -221,10 +220,10 @@ impl ProjectDetector {
                 "Cargo.toml".to_string(),
                 vec!["Cargo.lock".to_string(), ".cargo".to_string()],
             );
-            config.file_nesting.patterns.insert(
-                "*.rs".to_string(),
-                vec!["$(capture).generated.rs".to_string()],
-            );
+            config
+                .file_nesting
+                .patterns
+                .insert("*.rs".to_string(), vec!["$(capture).generated.rs".to_string()]);
         }
 
         config

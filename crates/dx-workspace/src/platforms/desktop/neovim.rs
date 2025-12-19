@@ -22,17 +22,15 @@ impl NeovimGenerator {
         let mut lines = Vec::new();
 
         lines.push("-- dx-workspace generated Neovim configuration".to_string());
-        lines.push("-- This file is auto-generated. Manual changes may be overwritten.".to_string());
+        lines
+            .push("-- This file is auto-generated. Manual changes may be overwritten.".to_string());
         lines.push(String::new());
 
         // Basic settings
         lines.push("-- Editor settings".to_string());
         lines.push(format!("vim.opt_local.tabstop = {}", config.editor.tab_size));
         lines.push(format!("vim.opt_local.shiftwidth = {}", config.editor.tab_size));
-        lines.push(format!(
-            "vim.opt_local.expandtab = {}",
-            config.editor.insert_spaces
-        ));
+        lines.push(format!("vim.opt_local.expandtab = {}", config.editor.insert_spaces));
 
         lines.push(String::new());
 
@@ -60,16 +58,19 @@ impl NeovimGenerator {
         // Key mappings for dx commands
         lines.push("-- dx command keybindings".to_string());
         lines.push(
-            "vim.keymap.set('n', '<leader>db', ':!dx build<CR>', { desc = 'dx build' })".to_string(),
+            "vim.keymap.set('n', '<leader>db', ':!dx build<CR>', { desc = 'dx build' })"
+                .to_string(),
         );
         lines.push(
             "vim.keymap.set('n', '<leader>dd', ':!dx dev<CR>', { desc = 'dx dev' })".to_string(),
         );
         lines.push(
-            "vim.keymap.set('n', '<leader>dc', ':!dx check<CR>', { desc = 'dx check' })".to_string(),
+            "vim.keymap.set('n', '<leader>dc', ':!dx check<CR>', { desc = 'dx check' })"
+                .to_string(),
         );
         lines.push(
-            "vim.keymap.set('n', '<leader>df', ':!dx forge<CR>', { desc = 'dx forge' })".to_string(),
+            "vim.keymap.set('n', '<leader>df', ':!dx forge<CR>', { desc = 'dx forge' })"
+                .to_string(),
         );
 
         lines.join("\n")

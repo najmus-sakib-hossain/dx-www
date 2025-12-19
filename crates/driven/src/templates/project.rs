@@ -1,7 +1,7 @@
 //! Project structure templates
 
 use super::{Template, TemplateCategory};
-use crate::{parser::UnifiedRule, Result};
+use crate::{Result, parser::UnifiedRule};
 
 /// Project template definition
 #[derive(Debug, Clone)]
@@ -26,10 +26,7 @@ impl ProjectTemplate {
                 "Cargo.toml".to_string(),
                 "Cargo.lock".to_string(),
             ],
-            excludes: vec![
-                "target/**".to_string(),
-                "**/*.log".to_string(),
-            ],
+            excludes: vec!["target/**".to_string(), "**/*.log".to_string()],
             focus: vec![
                 "This is a Rust workspace with multiple crates".to_string(),
                 "Use idiomatic Rust patterns".to_string(),
@@ -37,7 +34,11 @@ impl ProjectTemplate {
                 "Run cargo fmt and cargo clippy before commits".to_string(),
                 "Write documentation for public APIs".to_string(),
             ],
-            tags: vec!["rust".to_string(), "cargo".to_string(), "workspace".to_string()],
+            tags: vec![
+                "rust".to_string(),
+                "cargo".to_string(),
+                "workspace".to_string(),
+            ],
         }
     }
 
@@ -65,7 +66,11 @@ impl ProjectTemplate {
                 "Use ESLint and Prettier for formatting".to_string(),
                 "Write tests with Vitest or Jest".to_string(),
             ],
-            tags: vec!["typescript".to_string(), "monorepo".to_string(), "node".to_string()],
+            tags: vec![
+                "typescript".to_string(),
+                "monorepo".to_string(),
+                "node".to_string(),
+            ],
         }
     }
 
@@ -93,7 +98,11 @@ impl ProjectTemplate {
                 "Consider security at every layer".to_string(),
                 "Write integration tests for critical paths".to_string(),
             ],
-            tags: vec!["fullstack".to_string(), "web".to_string(), "api".to_string()],
+            tags: vec![
+                "fullstack".to_string(),
+                "web".to_string(),
+                "api".to_string(),
+            ],
         }
     }
 
@@ -102,13 +111,8 @@ impl ProjectTemplate {
         Self {
             name: "cli-tool".to_string(),
             description: "Command-line interface tool".to_string(),
-            includes: vec![
-                "src/**".to_string(),
-                "Cargo.toml".to_string(),
-            ],
-            excludes: vec![
-                "target/**".to_string(),
-            ],
+            includes: vec!["src/**".to_string(), "Cargo.toml".to_string()],
+            excludes: vec!["target/**".to_string()],
             focus: vec![
                 "This is a CLI tool".to_string(),
                 "Focus on user experience and helpful error messages".to_string(),
@@ -116,7 +120,11 @@ impl ProjectTemplate {
                 "Consider exit codes and scripting use cases".to_string(),
                 "Write comprehensive help text".to_string(),
             ],
-            tags: vec!["cli".to_string(), "tool".to_string(), "command-line".to_string()],
+            tags: vec![
+                "cli".to_string(),
+                "tool".to_string(),
+                "command-line".to_string(),
+            ],
         }
     }
 
@@ -125,14 +133,8 @@ impl ProjectTemplate {
         Self {
             name: "library".to_string(),
             description: "Reusable library crate".to_string(),
-            includes: vec![
-                "src/**".to_string(),
-                "Cargo.toml".to_string(),
-            ],
-            excludes: vec![
-                "target/**".to_string(),
-                "examples/**".to_string(),
-            ],
+            includes: vec!["src/**".to_string(), "Cargo.toml".to_string()],
+            excludes: vec!["target/**".to_string(), "examples/**".to_string()],
             focus: vec![
                 "This is a library crate for reuse".to_string(),
                 "Design clean and intuitive public APIs".to_string(),
@@ -141,7 +143,11 @@ impl ProjectTemplate {
                 "Consider semver compatibility".to_string(),
                 "Write comprehensive tests".to_string(),
             ],
-            tags: vec!["library".to_string(), "crate".to_string(), "reusable".to_string()],
+            tags: vec![
+                "library".to_string(),
+                "crate".to_string(),
+                "reusable".to_string(),
+            ],
         }
     }
 }

@@ -7,6 +7,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use chrono;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -39,16 +40,16 @@ pub async fn handle_login(
     // Generate token
     #[cfg(feature = "auth")]
     if let Some(ref generator) = state.token_generator {
-        let token = generator.generate_token(
-            req.email.as_bytes(),
-            &[0x01], // Role bitmask
-            3600,    // 1 hour
+        let token = generator.generate(
+            1, // user_id (would come from DB)
+            &[dx_auth::UserRole::User], // Roles
+            chrono::Duration::hours(1),   // TTL
         );
 
         return (
             StatusCode::OK,
             Json(Some(LoginResponse {
-                token: token.to_vec(),
+                token: token.to_bytes().to_vec(),
                 expires_at: chrono::Utc::now().timestamp() + 3600,
             })),
         );

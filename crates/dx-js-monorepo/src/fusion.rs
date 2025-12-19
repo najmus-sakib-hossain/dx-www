@@ -2,9 +2,9 @@
 //!
 //! Analyzes task pipelines for merge opportunities.
 
-use std::path::PathBuf;
 use crate::error::TaskError;
 use crate::executor::TaskOutput;
+use std::path::PathBuf;
 
 /// Fusion plan for merged task execution
 #[derive(Debug, Clone)]
@@ -179,10 +179,9 @@ mod tests {
 
         // tsc tasks should be fused together
         assert!(!plan.fused_groups.is_empty());
-        
+
         // Find the tsc group
-        let tsc_group = plan.fused_groups.iter()
-            .find(|g| g.tasks.len() >= 2);
+        let tsc_group = plan.fused_groups.iter().find(|g| g.tasks.len() >= 2);
         assert!(tsc_group.is_some());
     }
 
@@ -207,7 +206,7 @@ mod tests {
     #[test]
     fn test_execute_fused() {
         let mut analyzer = FusionAnalyzer::new();
-        
+
         let group = FusedTaskGroup {
             tasks: vec![0, 1, 2],
             shared_file_handles: Vec::new(),
@@ -215,7 +214,7 @@ mod tests {
         };
 
         let outputs = analyzer.execute_fused(&group).unwrap();
-        
+
         assert_eq!(outputs.len(), 3);
         assert!(outputs.iter().all(|o| o.exit_code == 0));
     }

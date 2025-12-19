@@ -40,10 +40,12 @@ impl RuleDiffer {
         match (a, b) {
             (
                 UnifiedRule::Standard {
-                    description: desc_a, ..
+                    description: desc_a,
+                    ..
                 },
                 UnifiedRule::Standard {
-                    description: desc_b, ..
+                    description: desc_b,
+                    ..
                 },
             ) => desc_a == desc_b,
             (

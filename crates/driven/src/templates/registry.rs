@@ -1,6 +1,6 @@
 //! Template registry for discovery and loading
 
-use super::{builtin, Template, TemplateCategory};
+use super::{Template, TemplateCategory, builtin};
 use crate::{DrivenError, Result};
 use std::collections::HashMap;
 use std::path::Path;

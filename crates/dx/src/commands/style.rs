@@ -59,10 +59,7 @@ pub async fn run(args: StyleArgs, theme: &Theme) -> Result<()> {
 
             eprintln!();
             theme.print_divider();
-            eprintln!(
-                "  {} 98% smaller │ 80x faster application",
-                "✓".green().bold()
-            );
+            eprintln!("  {} 98% smaller │ 80x faster application", "✓".green().bold());
             theme.print_divider();
             eprintln!();
         }

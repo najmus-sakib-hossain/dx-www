@@ -85,7 +85,10 @@ impl ETag {
             strong[i] = u8::from_str_radix(hex, 16).ok()?;
         }
 
-        Some(Self { strong, weak: version })
+        Some(Self {
+            strong,
+            weak: version,
+        })
     }
 }
 

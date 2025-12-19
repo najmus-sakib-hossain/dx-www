@@ -2,9 +2,9 @@
 //!
 //! Zero-copy task output caching with XOR differential updates.
 
-use bytemuck::{Pod, Zeroable};
-use crate::{DXC_MAGIC, FORMAT_VERSION};
 use crate::error::CacheError;
+use crate::{DXC_MAGIC, FORMAT_VERSION};
+use bytemuck::{Pod, Zeroable};
 
 /// DXC Cache entry header
 #[repr(C, packed)]
@@ -99,17 +99,17 @@ impl XorPatch {
     pub fn create(base: &[u8], target: &[u8]) -> Self {
         let base_hash = blake3::hash(base);
         let target_hash = blake3::hash(target);
-        
+
         let mut blocks = Vec::new();
         let mut current_block: Option<(u64, Vec<u8>)> = None;
-        
+
         // Only iterate up to target length - we store target_len separately
         // to handle truncation when base is longer than target
         for i in 0..target.len() {
             let base_byte = base.get(i).copied().unwrap_or(0);
             let target_byte = target[i];
             let xor_byte = base_byte ^ target_byte;
-            
+
             if xor_byte != 0 {
                 match &mut current_block {
                     Some((_, data)) => data.push(xor_byte),
@@ -119,11 +119,11 @@ impl XorPatch {
                 blocks.push(XorBlock { offset, data });
             }
         }
-        
+
         if let Some((offset, data)) = current_block {
             blocks.push(XorBlock { offset, data });
         }
-        
+
         Self {
             base_hash: *base_hash.as_bytes(),
             target_hash: *target_hash.as_bytes(),
@@ -142,21 +142,21 @@ impl XorPatch {
         } else {
             base[..self.target_len].to_vec()
         };
-        
+
         for block in &self.blocks {
             let start = block.offset as usize;
             let end = start + block.data.len();
-            
+
             // Extend if necessary (shouldn't happen with correct target_len)
             if end > result.len() {
                 result.resize(end, 0);
             }
-            
+
             for (i, &xor_byte) in block.data.iter().enumerate() {
                 result[start + i] ^= xor_byte;
             }
         }
-        
+
         result
     }
 
@@ -212,7 +212,11 @@ impl CacheEntry {
 
     /// Add a file to the cache entry
     pub fn add_file(&mut self, path: String, content: Vec<u8>, mode: u32) {
-        self.files.push(CacheFile { path, content, mode });
+        self.files.push(CacheFile {
+            path,
+            content,
+            mode,
+        });
     }
 
     /// Calculate total content size
@@ -235,10 +239,10 @@ mod tests {
     fn test_xor_patch_creation() {
         let base = b"Hello, World!";
         let target = b"Hello, Rust!!";
-        
+
         let patch = XorPatch::create(base, target);
         let result = patch.apply(base);
-        
+
         assert_eq!(result, target);
     }
 
@@ -248,9 +252,9 @@ mod tests {
         let base = vec![0u8; 1000];
         let mut target = base.clone();
         target[500] = 1; // Change one byte
-        
+
         let patch = XorPatch::create(&base, &target);
-        
+
         // Patch should be much smaller than full content
         assert!(patch.size() < 100);
         assert!(patch.efficiency(target.len()) < 0.1);
@@ -260,10 +264,10 @@ mod tests {
     fn test_xor_patch_different_sizes() {
         let base = b"short";
         let target = b"much longer string";
-        
+
         let patch = XorPatch::create(base, target);
         let result = patch.apply(base);
-        
+
         assert_eq!(result, target);
     }
 
@@ -272,7 +276,7 @@ mod tests {
         let mut entry = CacheEntry::new([1; 32]);
         entry.add_file("dist/index.js".to_string(), b"console.log('hi')".to_vec(), 0o644);
         entry.add_file("dist/index.d.ts".to_string(), b"export {}".to_vec(), 0o644);
-        
+
         assert_eq!(entry.files.len(), 2);
         assert_eq!(entry.total_size(), 26);
     }

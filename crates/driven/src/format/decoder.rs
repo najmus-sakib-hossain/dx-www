@@ -1,13 +1,13 @@
 //! Binary decoder for .drv format
 
 use super::{
+    DRV_MAGIC, SectionType,
     schema::{
         ContextSection, DrvHeader, PersonaSection, RuleCategory, RuleEntry, StandardsSection,
         WorkflowSection, WorkflowStep,
     },
-    SectionType, DRV_MAGIC,
 };
-use crate::{parser::UnifiedRule, DrivenError, Result};
+use crate::{DrivenError, Result, parser::UnifiedRule};
 use bytes::Buf;
 use std::io::Cursor;
 
@@ -26,9 +26,7 @@ impl<'a> DrvDecoder<'a> {
     /// Create a new decoder from binary data
     pub fn new(data: &'a [u8]) -> Result<Self> {
         if data.len() < 16 {
-            return Err(DrivenError::InvalidBinary(
-                "Data too short for header".to_string(),
-            ));
+            return Err(DrivenError::InvalidBinary("Data too short for header".to_string()));
         }
 
         // Parse header
@@ -68,9 +66,7 @@ impl<'a> DrvDecoder<'a> {
 
         // Read section type
         if cursor.remaining() < 1 {
-            return Err(DrivenError::InvalidBinary(
-                "Missing string table section".to_string(),
-            ));
+            return Err(DrivenError::InvalidBinary("Missing string table section".to_string()));
         }
 
         let section_type = cursor.get_u8();
@@ -83,9 +79,7 @@ impl<'a> DrvDecoder<'a> {
 
         // Read count
         if cursor.remaining() < 4 {
-            return Err(DrivenError::InvalidBinary(
-                "Missing string table count".to_string(),
-            ));
+            return Err(DrivenError::InvalidBinary("Missing string table count".to_string()));
         }
         let count = cursor.get_u32_le() as usize;
 
@@ -101,8 +95,7 @@ impl<'a> DrvDecoder<'a> {
                 ));
             }
 
-            let len =
-                u16::from_le_bytes([self.data[offset], self.data[offset + 1]]) as usize;
+            let len = u16::from_le_bytes([self.data[offset], self.data[offset + 1]]) as usize;
             offset += 2;
 
             if offset + len > self.data.len() {
@@ -368,10 +361,7 @@ impl<'a> DrvDecoder<'a> {
             });
         }
 
-        Ok((
-            WorkflowSection { name_idx, steps },
-            offset + cursor.position() as usize,
-        ))
+        Ok((WorkflowSection { name_idx, steps }, offset + cursor.position() as usize))
     }
 }
 

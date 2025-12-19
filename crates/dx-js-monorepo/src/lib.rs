@@ -17,42 +17,42 @@ pub mod error;
 pub mod types;
 
 // Binary format modules
-pub mod bwm;
+pub mod bag;
 pub mod btg;
+pub mod bwm;
 pub mod dxc;
 pub mod dxl;
-pub mod bag;
 
 // Core components
-pub mod workspace;
-pub mod executor;
+pub mod affected;
 pub mod cache;
 pub mod change;
-pub mod affected;
+pub mod cli;
+pub mod executor;
 pub mod fusion;
 pub mod ghost;
-pub mod watch;
 pub mod remote;
-pub mod cli;
+pub mod watch;
+pub mod workspace;
 
 // Property-based tests
 #[cfg(test)]
 mod proptest_tests;
 
 // Re-exports
-pub use error::{WorkspaceError, TaskError, CacheError, LockfileError};
-pub use types::{PackageEntry, TaskEntry, FileHash, TaskInstance};
-pub use workspace::WorkspaceManager;
-pub use executor::TaskExecutor;
+pub use affected::AffectedDetector;
 pub use cache::CacheManager;
 pub use change::ChangeDetector;
-pub use affected::AffectedDetector;
+pub use cli::{Cli, CliResult, Command};
 pub use dxl::LockfileResolver;
+pub use error::{CacheError, LockfileError, TaskError, WorkspaceError};
+pub use executor::TaskExecutor;
 pub use fusion::FusionAnalyzer;
 pub use ghost::GhostDetector;
-pub use watch::WatchManager;
 pub use remote::RemoteCacheClient;
-pub use cli::{Cli, Command, CliResult};
+pub use types::{FileHash, PackageEntry, TaskEntry, TaskInstance};
+pub use watch::WatchManager;
+pub use workspace::WorkspaceManager;
 
 /// Magic bytes for Binary Workspace Manifest
 pub const BWM_MAGIC: [u8; 4] = *b"DXWM";

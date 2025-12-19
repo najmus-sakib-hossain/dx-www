@@ -433,9 +433,7 @@ mod tests {
 
     #[test]
     fn test_dirty_mask_categories() {
-        let mask = DirtyMask::clean()
-            .mark_simple_dirty()
-            .mark_structural_dirty();
+        let mask = DirtyMask::clean().mark_simple_dirty().mark_structural_dirty();
 
         assert!(mask.has_simple_changes());
         assert!(mask.has_structural_changes());
@@ -445,10 +443,7 @@ mod tests {
 
     #[test]
     fn test_dirty_iterator() {
-        let mask = DirtyMask::clean()
-            .mark_dirty(0)
-            .mark_dirty(3)
-            .mark_dirty(7);
+        let mask = DirtyMask::clean().mark_dirty(0).mark_dirty(3).mark_dirty(7);
 
         let dirty: Vec<u8> = mask.iter_dirty().collect();
         assert_eq!(dirty, vec![0, 3, 7]);

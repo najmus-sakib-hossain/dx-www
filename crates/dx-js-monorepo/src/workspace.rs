@@ -2,10 +2,10 @@
 //!
 //! Loads and maintains the Binary Workspace Manifest.
 
-use std::path::{Path, PathBuf};
-use memmap2::Mmap;
-use crate::error::WorkspaceError;
 use crate::bwm::{BwmHeader, BwmSerializer, WorkspaceData};
+use crate::error::WorkspaceError;
+use memmap2::Mmap;
+use std::path::{Path, PathBuf};
 
 /// Workspace Manager for loading and querying workspace manifests
 pub struct WorkspaceManager {
@@ -32,10 +32,9 @@ impl WorkspaceManager {
 
     /// Load workspace manifest from memory-mapped file
     pub fn load(&mut self, path: &Path) -> Result<(), WorkspaceError> {
-        let file = std::fs::File::open(path)
-            .map_err(|_| WorkspaceError::ManifestNotFound { 
-                path: path.to_path_buf() 
-            })?;
+        let file = std::fs::File::open(path).map_err(|_| WorkspaceError::ManifestNotFound {
+            path: path.to_path_buf(),
+        })?;
 
         // Memory-map the file
         let mmap = unsafe { Mmap::map(&file) }?;
@@ -101,9 +100,7 @@ impl WorkspaceManager {
 
     /// Get all packages in topological order
     pub fn topological_order(&self) -> &[u32] {
-        self.data.as_ref()
-            .map(|d| d.topological_order.as_slice())
-            .unwrap_or(&[])
+        self.data.as_ref().map(|d| d.topological_order.as_slice()).unwrap_or(&[])
     }
 
     /// Get direct dependencies of a package
@@ -113,7 +110,8 @@ impl WorkspaceManager {
             None => return Vec::new(),
         };
 
-        data.dependency_edges.iter()
+        data.dependency_edges
+            .iter()
             .filter(|(from, _)| *from == pkg_idx)
             .map(|(_, to)| *to)
             .collect()
@@ -121,9 +119,7 @@ impl WorkspaceManager {
 
     /// Get number of packages
     pub fn package_count(&self) -> usize {
-        self.data.as_ref()
-            .map(|d| d.packages.len())
-            .unwrap_or(0)
+        self.data.as_ref().map(|d| d.packages.len()).unwrap_or(0)
     }
 
     /// Incrementally update manifest when package.json changes

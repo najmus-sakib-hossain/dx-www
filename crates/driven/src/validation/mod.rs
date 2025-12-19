@@ -8,9 +8,9 @@ mod linter;
 
 pub use completeness::CoverageAnalyzer;
 pub use conflicts::ConflictDetector;
-pub use linter::{Linter, LintResult, LintSeverity};
+pub use linter::{LintResult, LintSeverity, Linter};
 
-use crate::{parser::UnifiedRule, Result};
+use crate::{Result, parser::UnifiedRule};
 
 /// Result of validating rules
 #[derive(Debug, Default)]
@@ -26,10 +26,7 @@ pub struct ValidationResult {
 impl ValidationResult {
     /// Check if validation passed (no errors)
     pub fn is_valid(&self) -> bool {
-        !self
-            .lint_issues
-            .iter()
-            .any(|i| matches!(i.severity, LintSeverity::Error))
+        !self.lint_issues.iter().any(|i| matches!(i.severity, LintSeverity::Error))
             && self.conflicts.is_empty()
     }
 

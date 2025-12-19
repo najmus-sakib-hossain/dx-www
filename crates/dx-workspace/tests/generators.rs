@@ -221,8 +221,9 @@ fn test_dx_defaults() {
     assert!(!tasks.tasks.is_empty());
 
     // Should have build task (check case-insensitively)
-    let has_build = tasks.tasks.iter().any(|t| {
-        t.label.to_lowercase().contains("build") || t.command == "dx"
-    });
+    let has_build = tasks
+        .tasks
+        .iter()
+        .any(|t| t.label.to_lowercase().contains("build") || t.command == "dx");
     assert!(has_build, "Should have a build task");
 }

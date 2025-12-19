@@ -66,9 +66,7 @@ impl BinaryReader {
         // Read config data
         let config_size = (header.total_size - header.config_data_offset) as usize;
         let mut config_bytes = vec![0u8; config_size];
-        reader
-            .read_exact(&mut config_bytes)
-            .map_err(|e| Error::io(path, e))?;
+        reader.read_exact(&mut config_bytes).map_err(|e| Error::io(path, e))?;
 
         // Deserialize config
         let config: WorkspaceConfig =
@@ -135,9 +133,7 @@ impl BinaryReader {
 
         let config_size = (header.total_size - header.config_data_offset) as usize;
         let mut config_bytes = vec![0u8; config_size];
-        reader
-            .read_exact(&mut config_bytes)
-            .map_err(|e| Error::io(path, e))?;
+        reader.read_exact(&mut config_bytes).map_err(|e| Error::io(path, e))?;
 
         let computed_hash = blake3::hash(&config_bytes);
         Ok(*computed_hash.as_bytes() == header.content_hash)
@@ -165,8 +161,7 @@ impl BinaryReader {
             return Ok(StringTable::new());
         }
 
-        let string_table_size =
-            (header.config_data_offset - header.string_table_offset) as usize;
+        let string_table_size = (header.config_data_offset - header.string_table_offset) as usize;
         StringTable::read_from(&mut reader, string_table_size)
     }
 }

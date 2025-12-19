@@ -1,6 +1,6 @@
 //! Parser benchmarks
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 fn benchmark_parsers(c: &mut Criterion) {
     c.bench_function("parse_markdown", |b| {
@@ -12,9 +12,7 @@ You are an expert.
 ### Style
 - Format code
 "#;
-        b.iter(|| {
-            black_box(input.lines().count())
-        })
+        b.iter(|| black_box(input.lines().count()))
     });
 }
 

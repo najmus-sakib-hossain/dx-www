@@ -10,6 +10,10 @@ license = "MIT OR Apache-2.0"
 name = "dx_compiler"
 path = "src/lib.rs"
 
+[features]
+default = []
+oxc = ["oxc_parser", "oxc_allocator", "oxc_ast", "oxc_span"]
+
 [dependencies]
 # CLI & Terminal
 clap = { version = "4.5", features = ["derive", "cargo"] }
@@ -18,6 +22,12 @@ indicatif = "0.17"  # Loading bars
 
 # Parsing (The Heavy Lifting)
 regex = "1.10"
+
+# OXC Parser (optional - fastest JS/TS parser)
+oxc_parser = { version = "0.49", optional = true }
+oxc_allocator = { version = "0.49", optional = true }
+oxc_ast = { version = "0.49", optional = true }
+oxc_span = { version = "0.49", optional = true }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

@@ -117,9 +117,11 @@ pub enum WorkspaceCommands {
 
 pub async fn run(args: WorkspaceArgs, theme: &Theme) -> Result<()> {
     match args.command {
-        WorkspaceCommands::Init { name, template, yes } => {
-            run_init(name, &template, yes, theme).await
-        }
+        WorkspaceCommands::Init {
+            name,
+            template,
+            yes,
+        } => run_init(name, &template, yes, theme).await,
         WorkspaceCommands::Setup { force } => run_setup(force, theme).await,
         WorkspaceCommands::Ide { editor } => run_ide(editor, theme).await,
         WorkspaceCommands::Extensions { list } => run_extensions(list, theme).await,
@@ -134,21 +136,12 @@ pub async fn run(args: WorkspaceArgs, theme: &Theme) -> Result<()> {
     }
 }
 
-async fn run_init(
-    name: Option<String>,
-    template: &str,
-    _yes: bool,
-    theme: &Theme,
-) -> Result<()> {
+async fn run_init(name: Option<String>, template: &str, _yes: bool, theme: &Theme) -> Result<()> {
     let project_name = name.as_deref().unwrap_or("my-dx-project");
     theme.print_section(&format!("dx workspace: Init {}", project_name));
     eprintln!();
 
-    eprintln!(
-        "  {} Template: {}",
-        "│".bright_black(),
-        template.cyan()
-    );
+    eprintln!("  {} Template: {}", "│".bright_black(), template.cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Creating project structure...");
@@ -221,10 +214,7 @@ async fn run_setup(force: bool, theme: &Theme) -> Result<()> {
 
     eprintln!();
     theme.print_divider();
-    eprintln!(
-        "  {} Development environment ready!",
-        "✓".green().bold()
-    );
+    eprintln!("  {} Development environment ready!", "✓".green().bold());
     theme.print_divider();
     eprintln!();
 
@@ -304,11 +294,7 @@ async fn run_extensions(list: bool, theme: &Theme) -> Result<()> {
     Ok(())
 }
 
-async fn run_env(
-    environment: Option<String>,
-    from: Option<String>,
-    theme: &Theme,
-) -> Result<()> {
+async fn run_env(environment: Option<String>, from: Option<String>, theme: &Theme) -> Result<()> {
     let env_name = environment.as_deref().unwrap_or("dev");
     theme.print_section(&format!("dx workspace: Environment ({})", env_name));
     eprintln!();
@@ -326,8 +312,18 @@ async fn run_env(
     eprintln!();
     eprintln!("  {} Environment variables:", "│".bright_black());
     eprintln!("    {} {}: {}", "├".bright_black(), "NODE_ENV".cyan(), env_name.green());
-    eprintln!("    {} {}: {}", "├".bright_black(), "API_URL".cyan(), "http://localhost:3000".green());
-    eprintln!("    {} {}: {}", "├".bright_black(), "DATABASE_URL".cyan(), "postgres://...".green());
+    eprintln!(
+        "    {} {}: {}",
+        "├".bright_black(),
+        "API_URL".cyan(),
+        "http://localhost:3000".green()
+    );
+    eprintln!(
+        "    {} {}: {}",
+        "├".bright_black(),
+        "DATABASE_URL".cyan(),
+        "postgres://...".green()
+    );
     eprintln!("    {} {}: {}", "└".bright_black(), "DX_MODE".cyan(), "development".green());
     eprintln!();
 
@@ -477,12 +473,7 @@ async fn run_template(list: bool, create: Option<String>, theme: &Theme) -> Resu
 
         eprintln!("  {} Available templates:", "│".bright_black());
         for (name, desc) in templates {
-            eprintln!(
-                "    {} {} - {}",
-                "├".bright_black(),
-                name.cyan(),
-                desc.white()
-            );
+            eprintln!("    {} {} - {}", "├".bright_black(), name.cyan(), desc.white());
         }
         eprintln!();
     }
@@ -529,19 +520,11 @@ async fn run_doctor(theme: &Theme) -> Result<()> {
 
     eprintln!();
     theme.print_divider();
-    eprintln!(
-        "  {} {} issues found",
-        "⚠".yellow(),
-        "1".yellow().bold()
-    );
+    eprintln!("  {} {} issues found", "⚠".yellow(), "1".yellow().bold());
     theme.print_divider();
     eprintln!();
 
-    eprintln!(
-        "  {} Run {} to fix",
-        "→".cyan(),
-        "dx workspace extensions".cyan().bold()
-    );
+    eprintln!("  {} Run {} to fix", "→".cyan(), "dx workspace extensions".cyan().bold());
     eprintln!();
 
     Ok(())

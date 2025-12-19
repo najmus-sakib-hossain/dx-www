@@ -32,6 +32,7 @@ impl FormatVersion {
     }
 
     /// Check if this version is compatible with current
+    #[allow(clippy::absurd_extreme_comparisons)]
     pub fn is_compatible(&self) -> bool {
         self.major == Self::CURRENT.major && self.minor <= Self::CURRENT.minor
     }

@@ -2,8 +2,8 @@
 //!
 //! Manage binary cache and fusion templates.
 
-use crate::fusion::BinaryCache;
 use crate::Result;
+use crate::fusion::BinaryCache;
 use console::style;
 use std::path::Path;
 
@@ -34,7 +34,10 @@ impl CacheCommand {
 
         println!("  Directory: {}", cache_dir.display());
         println!("  Entries: {}", internal_stats.entries);
-        println!("  Size: {} bytes / {} max", internal_stats.size_bytes, internal_stats.max_size_bytes);
+        println!(
+            "  Size: {} bytes / {} max",
+            internal_stats.size_bytes, internal_stats.max_size_bytes
+        );
 
         if extended.oldest_entry.is_some() {
             println!(
@@ -74,19 +77,11 @@ impl CacheCommand {
 
     /// Clear the cache
     pub fn clear(cache_dir: &Path) -> Result<()> {
-        println!(
-            "{} Clearing cache at {}",
-            style("🗑").bold(),
-            cache_dir.display()
-        );
+        println!("{} Clearing cache at {}", style("🗑").bold(), cache_dir.display());
 
         let removed = Self::clear_cache_dir(cache_dir)?;
 
-        println!(
-            "{} Removed {} cache entries",
-            style("✓").green().bold(),
-            removed
-        );
+        println!("{} Removed {} cache entries", style("✓").green().bold(), removed);
 
         Ok(())
     }
@@ -116,13 +111,10 @@ impl CacheCommand {
             max_age_secs
         );
 
-        let removed = Self::prune_cache_dir(cache_dir, std::time::Duration::from_secs(max_age_secs))?;
+        let removed =
+            Self::prune_cache_dir(cache_dir, std::time::Duration::from_secs(max_age_secs))?;
 
-        println!(
-            "{} Removed {} old entries",
-            style("✓").green().bold(),
-            removed
-        );
+        println!("{} Removed {} old entries", style("✓").green().bold(), removed);
 
         Ok(())
     }
@@ -153,11 +145,7 @@ impl CacheCommand {
 
     /// Warm the cache with templates from source directory
     pub fn warm(cache_dir: &Path, source_dir: &Path) -> Result<()> {
-        println!(
-            "{} Warming cache from {}",
-            style("🔥").bold(),
-            source_dir.display()
-        );
+        println!("{} Warming cache from {}", style("🔥").bold(), source_dir.display());
 
         // Just scan and report for now
         let mut file_count = 0;
@@ -173,11 +161,7 @@ impl CacheCommand {
             }
         }
 
-        println!(
-            "{} Found {} template files in source",
-            style("✓").green().bold(),
-            file_count
-        );
+        println!("{} Found {} template files in source", style("✓").green().bold(), file_count);
         println!("  Cache directory: {}", cache_dir.display());
 
         Ok(())

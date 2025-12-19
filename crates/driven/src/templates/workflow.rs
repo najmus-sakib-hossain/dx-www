@@ -1,7 +1,10 @@
 //! Development workflow templates
 
 use super::{Template, TemplateCategory};
-use crate::{parser::{UnifiedRule, WorkflowStepData}, Result};
+use crate::{
+    Result,
+    parser::{UnifiedRule, WorkflowStepData},
+};
 
 /// Workflow template definition
 #[derive(Debug, Clone)]
@@ -101,7 +104,11 @@ impl WorkflowTemplate {
                     ],
                 },
             ],
-            tags: vec!["feature".to_string(), "development".to_string(), "process".to_string()],
+            tags: vec![
+                "feature".to_string(),
+                "development".to_string(),
+                "process".to_string(),
+            ],
         }
     }
 
@@ -154,7 +161,11 @@ impl WorkflowTemplate {
                     ],
                 },
             ],
-            tags: vec!["bug".to_string(), "fix".to_string(), "debugging".to_string()],
+            tags: vec![
+                "bug".to_string(),
+                "fix".to_string(),
+                "debugging".to_string(),
+            ],
         }
     }
 
@@ -196,7 +207,11 @@ impl WorkflowTemplate {
                     ],
                 },
             ],
-            tags: vec!["refactoring".to_string(), "cleanup".to_string(), "improvement".to_string()],
+            tags: vec![
+                "refactoring".to_string(),
+                "cleanup".to_string(),
+                "improvement".to_string(),
+            ],
         }
     }
 
@@ -240,7 +255,11 @@ impl WorkflowTemplate {
                     ],
                 },
             ],
-            tags: vec!["review".to_string(), "code-review".to_string(), "pr".to_string()],
+            tags: vec![
+                "review".to_string(),
+                "code-review".to_string(),
+                "pr".to_string(),
+            ],
         }
     }
 }

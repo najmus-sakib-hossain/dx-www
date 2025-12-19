@@ -1,7 +1,7 @@
 //! Windsurf .windsurfrules emitter
 
-use super::{ensure_parent_dir, format_bullet_list, format_heading, RuleEmitter};
-use crate::{parser::UnifiedRule, Editor, Result};
+use super::{RuleEmitter, ensure_parent_dir, format_bullet_list, format_heading};
+use crate::{Editor, Result, parser::UnifiedRule};
 use std::path::Path;
 
 /// Emitter for Windsurf .windsurfrules format
@@ -34,7 +34,9 @@ impl RuleEmitter for WindsurfEmitter {
 
         for rule in rules {
             match rule {
-                UnifiedRule::Persona { name, role, traits, .. } => {
+                UnifiedRule::Persona {
+                    name, role, traits, ..
+                } => {
                     output.push_str(&format_heading(2, &format!("Role: {}", name)));
                     output.push_str(role);
                     output.push_str("\n\n");
@@ -47,7 +49,9 @@ impl RuleEmitter for WindsurfEmitter {
                 UnifiedRule::Standard { description, .. } => {
                     standards.push(description.clone());
                 }
-                UnifiedRule::Context { focus, includes, .. } => {
+                UnifiedRule::Context {
+                    focus, includes, ..
+                } => {
                     context.extend(focus.clone());
                     context.extend(includes.clone());
                 }

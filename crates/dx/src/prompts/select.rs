@@ -1,7 +1,9 @@
 //! Single selection prompt
 
 use super::interaction::{Event, PromptInteraction, State};
-use super::{S_BAR, S_BAR_END, S_RADIO_ACTIVE, S_RADIO_INACTIVE, S_STEP_ACTIVE, S_STEP_SUBMIT, THEME};
+use super::{
+    S_BAR, S_BAR_END, S_RADIO_ACTIVE, S_RADIO_INACTIVE, S_STEP_ACTIVE, S_STEP_SUBMIT, THEME,
+};
 use console::Term;
 use owo_colors::OwoColorize;
 use std::io;
@@ -249,10 +251,8 @@ impl<T: Clone> PromptInteraction for Select<T> {
             }
             State::Submit => {
                 let symbol = theme.success.apply_to(S_STEP_SUBMIT);
-                let selected = self
-                    .selected_index()
-                    .map(|i| self.items[i].label.clone())
-                    .unwrap_or_default();
+                let selected =
+                    self.selected_index().map(|i| self.items[i].label.clone()).unwrap_or_default();
                 let display = theme.dim.apply_to(&selected);
                 term.write_line(&format!("{} {}  {}", symbol, self.message.bold(), display))?;
                 lines += 1;

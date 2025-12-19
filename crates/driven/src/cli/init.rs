@@ -1,7 +1,7 @@
 //! Init command - initialize driven in a project
 
 use crate::{DrivenConfig, Editor, Result};
-use dialoguer::{theme::ColorfulTheme, Confirm, MultiSelect, Select};
+use dialoguer::{Confirm, MultiSelect, Select, theme::ColorfulTheme};
 use std::path::Path;
 
 /// Init command handler
@@ -115,12 +115,14 @@ impl InitCommand {
 
     fn create_config(project_root: &Path, config: &DrivenConfig) -> Result<()> {
         let config_dir = project_root.join(".driven");
-        std::fs::create_dir_all(&config_dir)
-            .map_err(|e| crate::DrivenError::Config(format!("Failed to create .driven directory: {}", e)))?;
+        std::fs::create_dir_all(&config_dir).map_err(|e| {
+            crate::DrivenError::Config(format!("Failed to create .driven directory: {}", e))
+        })?;
 
         let config_path = config_dir.join("config.toml");
-        let toml = toml::to_string_pretty(config)
-            .map_err(|e| crate::DrivenError::Config(format!("Failed to serialize config: {}", e)))?;
+        let toml = toml::to_string_pretty(config).map_err(|e| {
+            crate::DrivenError::Config(format!("Failed to serialize config: {}", e))
+        })?;
 
         std::fs::write(&config_path, toml)
             .map_err(|e| crate::DrivenError::Config(format!("Failed to write config: {}", e)))?;
@@ -133,8 +135,9 @@ impl InitCommand {
 
         // Ensure parent directory exists
         if let Some(parent) = rules_path.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|e| crate::DrivenError::Config(format!("Failed to create rules directory: {}", e)))?;
+            std::fs::create_dir_all(parent).map_err(|e| {
+                crate::DrivenError::Config(format!("Failed to create rules directory: {}", e))
+            })?;
         }
 
         // Create initial markdown rules (can be converted to binary later)

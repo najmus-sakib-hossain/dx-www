@@ -69,11 +69,7 @@ impl PredictionEngine {
 
         predictions.sort_by(|a, b| b.1.cmp(&a.1));
 
-        predictions
-            .into_iter()
-            .take(max_predictions)
-            .map(|(hash, _)| hash)
-            .collect()
+        predictions.into_iter().take(max_predictions).map(|(hash, _)| hash).collect()
     }
 
     /// Get confidence for a specific transition

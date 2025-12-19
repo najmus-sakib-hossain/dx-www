@@ -1,6 +1,6 @@
 //! Binary format integration tests.
 
-use dx_workspace::{load_binary, save_binary, validate_binary, WorkspaceConfig};
+use dx_workspace::{WorkspaceConfig, load_binary, save_binary, validate_binary};
 use tempfile::tempdir;
 
 #[test]

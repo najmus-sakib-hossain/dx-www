@@ -1,7 +1,7 @@
 //! Generic markdown emitter
 
-use super::{ensure_parent_dir, format_bullet_list, format_heading, RuleEmitter};
-use crate::{parser::UnifiedRule, Editor, Result};
+use super::{RuleEmitter, ensure_parent_dir, format_bullet_list, format_heading};
+use crate::{Editor, Result, parser::UnifiedRule};
 use std::path::Path;
 
 /// Generic markdown emitter for unsupported editors
@@ -142,11 +142,7 @@ mod tests {
     fn test_emit_generic() {
         let rules = vec![
             UnifiedRule::persona("Test Agent", "Testing role"),
-            UnifiedRule::standard(
-                crate::format::RuleCategory::Style,
-                0,
-                "Test standard",
-            ),
+            UnifiedRule::standard(crate::format::RuleCategory::Style, 0, "Test standard"),
         ];
 
         let emitter = GenericEmitter::new();

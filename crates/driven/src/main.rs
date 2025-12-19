@@ -106,7 +106,11 @@ fn main() -> anyhow::Result<()> {
                 driven::cli::SyncCommand::run(&project_root)?;
             }
         }
-        Commands::Convert { input, output, editor } => {
+        Commands::Convert {
+            input,
+            output,
+            editor,
+        } => {
             let editor = editor.and_then(|e| match e.to_lowercase().as_str() {
                 "cursor" => Some(driven::Editor::Cursor),
                 "copilot" => Some(driven::Editor::Copilot),

@@ -17,7 +17,7 @@ pub mod cam16;
 pub mod solver;
 pub mod viewing_conditions;
 
-#[derive(Default, Clone, Copy, Debug, PartialOrd, serde::Serialize)]
+#[derive(Default, Clone, Copy, Debug, serde::Serialize)]
 
 pub struct Hct {
     _hue: f64,
@@ -178,7 +178,13 @@ impl fmt::Display for Hct {
 
 impl Ord for Hct {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
+        self._argb.cmp(&other._argb)
+    }
+}
+
+impl PartialOrd for Hct {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 

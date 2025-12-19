@@ -2,8 +2,8 @@
 //!
 //! Continuous integrity verification for rule files.
 
-use crate::binary::checksum::{compute_blake3, Blake3Checksum};
 use crate::Result;
+use crate::binary::checksum::{Blake3Checksum, compute_blake3};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -173,10 +173,7 @@ impl IntegrityGuard {
 
     /// Get status of a file
     pub fn status(&self, path: &Path) -> IntegrityStatus {
-        self.records
-            .get(path)
-            .map(|r| r.status)
-            .unwrap_or(IntegrityStatus::Unknown)
+        self.records.get(path).map(|r| r.status).unwrap_or(IntegrityStatus::Unknown)
     }
 
     /// Get all records

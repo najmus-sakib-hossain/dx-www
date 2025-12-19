@@ -1,7 +1,7 @@
 //! Synchronize workspace configuration.
 
 use crate::{Generator, Platform, Result, WorkspaceConfig};
-use console::{style, Emoji};
+use console::{Emoji, style};
 use std::path::PathBuf;
 
 static SYNC: Emoji<'_, '_> = Emoji("🔄 ", "");
@@ -72,11 +72,7 @@ impl SyncCommand {
         }
 
         println!();
-        println!(
-            "{} {}Synchronization complete!",
-            style("[dx-workspace]").bold().cyan(),
-            CHECK
-        );
+        println!("{} {}Synchronization complete!", style("[dx-workspace]").bold().cyan(), CHECK);
 
         Ok(())
     }
@@ -92,21 +88,14 @@ impl SyncCommand {
 
         let platforms = if options.platforms.is_empty() {
             // Sync to platforms that already exist
-            Platform::all()
-                .into_iter()
-                .filter(|p| generator.exists(*p))
-                .collect()
+            Platform::all().into_iter().filter(|p| generator.exists(*p)).collect()
         } else {
             options.platforms.clone()
         };
 
         for platform in &platforms {
             if options.dry_run {
-                println!(
-                    "    {} {} (would update)",
-                    style("→").dim(),
-                    platform.display_name()
-                );
+                println!("    {} {} (would update)", style("→").dim(), platform.display_name());
             } else {
                 match generator.generate(*platform) {
                     Ok(result) => {
@@ -118,12 +107,7 @@ impl SyncCommand {
                         );
                     }
                     Err(e) => {
-                        println!(
-                            "    {} {} - {}",
-                            style("✗").red(),
-                            platform.display_name(),
-                            e
-                        );
+                        println!("    {} {} - {}", style("✗").red(), platform.display_name(), e);
                     }
                 }
             }
@@ -137,25 +121,16 @@ impl SyncCommand {
         project_dir: &PathBuf,
         options: &SyncOptions,
     ) -> Result<()> {
-        println!(
-            "  {} Pulling changes from IDE files...",
-            style("→").dim()
-        );
+        println!("  {} Pulling changes from IDE files...", style("→").dim());
 
         // Check for VS Code settings changes
         let vscode_settings = project_dir.join(".vscode/settings.json");
         if vscode_settings.exists() {
             if options.dry_run {
-                println!(
-                    "    {} VS Code settings (would import)",
-                    style("→").dim()
-                );
+                println!("    {} VS Code settings (would import)", style("→").dim());
             } else {
                 // TODO: Implement settings import
-                println!(
-                    "    {} VS Code settings (import not yet implemented)",
-                    style("ℹ").blue()
-                );
+                println!("    {} VS Code settings (import not yet implemented)", style("ℹ").blue());
             }
         }
 
@@ -166,10 +141,7 @@ impl SyncCommand {
                 println!("    {} Gitpod config (would import)", style("→").dim());
             } else {
                 // TODO: Implement Gitpod import
-                println!(
-                    "    {} Gitpod config (import not yet implemented)",
-                    style("ℹ").blue()
-                );
+                println!("    {} Gitpod config (import not yet implemented)", style("ℹ").blue());
             }
         }
 

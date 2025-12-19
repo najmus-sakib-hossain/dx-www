@@ -1,7 +1,7 @@
 //! Initialize workspace configuration.
 
 use crate::{Generator, Platform, ProjectDetector, Result, WorkspaceConfig};
-use console::{style, Emoji};
+use console::{Emoji, style};
 use std::path::PathBuf;
 
 static SPARKLE: Emoji<'_, '_> = Emoji("✨ ", "");
@@ -30,8 +30,7 @@ impl InitCommand {
     /// Execute the init command.
     pub fn execute(options: InitOptions) -> Result<WorkspaceConfig> {
         let project_dir = options.path.unwrap_or_else(|| PathBuf::from("."));
-        let project_dir = std::fs::canonicalize(&project_dir)
-            .unwrap_or(project_dir);
+        let project_dir = std::fs::canonicalize(&project_dir).unwrap_or(project_dir);
 
         println!(
             "{} {}Initializing dx-workspace...",
@@ -40,12 +39,7 @@ impl InitCommand {
         );
 
         // Detect project
-        println!(
-            "  {} {}Scanning project at {}",
-            style("→").dim(),
-            FOLDER,
-            project_dir.display()
-        );
+        println!("  {} {}Scanning project at {}", style("→").dim(), FOLDER, project_dir.display());
 
         let detector = ProjectDetector::new(&project_dir);
         let config = detector.detect()?;
@@ -87,12 +81,7 @@ impl InitCommand {
                     );
                 }
                 Err(e) => {
-                    println!(
-                        "    {} {} - {}",
-                        style("✗").red(),
-                        platform.display_name(),
-                        e
-                    );
+                    println!("    {} {} - {}", style("✗").red(), platform.display_name(), e);
                 }
             }
         }
@@ -101,11 +90,7 @@ impl InitCommand {
         let config_path = project_dir.join("dx-workspace.json");
         config.save(&config_path)?;
         println!();
-        println!(
-            "  {} Saved configuration to {}",
-            style(CHECK).green(),
-            config_path.display()
-        );
+        println!("  {} Saved configuration to {}", style(CHECK).green(), config_path.display());
 
         println!();
         println!(

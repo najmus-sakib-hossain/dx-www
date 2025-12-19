@@ -1,7 +1,7 @@
 //! Clean generated configurations.
 
 use crate::{Generator, Platform, Result, WorkspaceConfig};
-use console::{style, Emoji};
+use console::{Emoji, style};
 use std::path::PathBuf;
 
 static CLEAN: Emoji<'_, '_> = Emoji("🧹 ", "");
@@ -54,10 +54,7 @@ impl CleanCommand {
             options.platforms
         } else {
             // Default: clean all existing
-            Platform::all()
-                .into_iter()
-                .filter(|p| generator.exists(*p))
-                .collect()
+            Platform::all().into_iter().filter(|p| generator.exists(*p)).collect()
         };
 
         let mut cleaned = Vec::new();
@@ -68,29 +65,16 @@ impl CleanCommand {
             }
 
             if options.dry_run {
-                println!(
-                    "  {} {} (would remove)",
-                    style("→").dim(),
-                    platform.display_name()
-                );
+                println!("  {} {} (would remove)", style("→").dim(), platform.display_name());
                 cleaned.push(*platform);
             } else {
                 match generator.clean(*platform) {
                     Ok(()) => {
-                        println!(
-                            "  {} {} removed",
-                            style(CHECK).green(),
-                            platform.display_name()
-                        );
+                        println!("  {} {} removed", style(CHECK).green(), platform.display_name());
                         cleaned.push(*platform);
                     }
                     Err(e) => {
-                        println!(
-                            "  {} {} - {}",
-                            style("✗").red(),
-                            platform.display_name(),
-                            e
-                        );
+                        println!("  {} {} - {}", style("✗").red(), platform.display_name(), e);
                     }
                 }
             }

@@ -122,7 +122,13 @@ impl ProgressBar {
             "{}  {} {}{}% ({}/{})",
             bar,
             format!("{}{}", filled_bar, empty_bar),
-            if percent < 10 { " " } else if percent < 100 { "" } else { "" },
+            if percent < 10 {
+                " "
+            } else if percent < 100 {
+                ""
+            } else {
+                ""
+            },
             percent,
             self.current,
             self.total

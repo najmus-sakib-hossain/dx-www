@@ -45,9 +45,7 @@ pub struct Parser {
 
 impl std::fmt::Debug for Parser {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Parser")
-            .field("editor", &self.inner.editor())
-            .finish()
+        f.debug_struct("Parser").field("editor", &self.inner.editor()).finish()
     }
 }
 
@@ -67,10 +65,7 @@ impl Parser {
 
     /// Auto-detect parser from file path
     pub fn detect(path: &Path) -> Result<Self> {
-        let file_name = path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("");
+        let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
         let editor = if file_name == ".cursorrules" || file_name.ends_with(".cursorrules") {
             Editor::Cursor

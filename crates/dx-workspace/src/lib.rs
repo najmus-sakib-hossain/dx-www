@@ -76,7 +76,7 @@ pub mod platforms;
 pub mod project;
 
 // Re-exports for convenience
-pub use binary::{load_binary, save_binary, validate_binary, BINARY_EXTENSION};
+pub use binary::{BINARY_EXTENSION, load_binary, save_binary, validate_binary};
 pub use config::WorkspaceConfig;
 pub use error::{Error, Result};
 pub use generator::Generator;

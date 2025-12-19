@@ -1,7 +1,7 @@
 //! Copilot copilot-instructions.md emitter
 
-use super::{ensure_parent_dir, format_bullet_list, format_heading, RuleEmitter};
-use crate::{parser::UnifiedRule, Editor, Result};
+use super::{RuleEmitter, ensure_parent_dir, format_bullet_list, format_heading};
+use crate::{Editor, Result, parser::UnifiedRule};
 use std::path::Path;
 
 /// Emitter for GitHub Copilot copilot-instructions.md format
@@ -36,7 +36,12 @@ impl RuleEmitter for CopilotEmitter {
 
         for rule in rules {
             match rule {
-                UnifiedRule::Persona { role, traits, principles, .. } => {
+                UnifiedRule::Persona {
+                    role,
+                    traits,
+                    principles,
+                    ..
+                } => {
                     output.push_str(&format_heading(2, "AI Role"));
                     output.push_str(role);
                     output.push_str("\n\n");
@@ -52,11 +57,17 @@ impl RuleEmitter for CopilotEmitter {
                         output.push('\n');
                     }
                 }
-                UnifiedRule::Context { focus, includes, .. } => {
+                UnifiedRule::Context {
+                    focus, includes, ..
+                } => {
                     focus_areas.extend(focus.clone());
                     focus_areas.extend(includes.clone());
                 }
-                UnifiedRule::Standard { category, description, .. } => {
+                UnifiedRule::Standard {
+                    category,
+                    description,
+                    ..
+                } => {
                     all_standards.push((format!("{:?}", category), description.clone()));
                 }
                 UnifiedRule::Workflow { name, steps } => {

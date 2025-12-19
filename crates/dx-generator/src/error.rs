@@ -234,7 +234,9 @@ impl GeneratorError {
     /// Create an invalid template error.
     #[must_use]
     pub fn invalid_template(reason: impl Into<String>) -> Self {
-        Self::InvalidTemplate { reason: reason.into() }
+        Self::InvalidTemplate {
+            reason: reason.into(),
+        }
     }
 
     /// Create a missing parameter error.
@@ -246,13 +248,17 @@ impl GeneratorError {
     /// Create a render failed error.
     #[must_use]
     pub fn render_failed(reason: impl Into<String>) -> Self {
-        Self::RenderFailed { reason: reason.into() }
+        Self::RenderFailed {
+            reason: reason.into(),
+        }
     }
 
     /// Create a capability violation error.
     #[must_use]
     pub fn capability_violation(capability: impl Into<String>) -> Self {
-        Self::CapabilityViolation { capability: capability.into() }
+        Self::CapabilityViolation {
+            capability: capability.into(),
+        }
     }
 
     /// Create a syntax error.
@@ -268,11 +274,7 @@ impl GeneratorError {
     /// Check if this error is recoverable.
     #[must_use]
     pub fn is_recoverable(&self) -> bool {
-        matches!(
-            self,
-            Self::CacheMiss { .. }
-                | Self::SessionNotFound { .. }
-        )
+        matches!(self, Self::CacheMiss { .. } | Self::SessionNotFound { .. })
     }
 
     /// Check if this error is a security violation.
@@ -280,9 +282,7 @@ impl GeneratorError {
     pub fn is_security_error(&self) -> bool {
         matches!(
             self,
-            Self::SignatureInvalid
-                | Self::CapabilityViolation { .. }
-                | Self::UntrustedTemplate
+            Self::SignatureInvalid | Self::CapabilityViolation { .. } | Self::UntrustedTemplate
         )
     }
 }

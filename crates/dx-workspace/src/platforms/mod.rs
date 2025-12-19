@@ -13,8 +13,8 @@ pub use container::ContainerGenerator;
 pub use desktop::DesktopGenerator;
 
 // Re-export specific generators
-pub use cloud::codespaces::CodespacesGenerator;
 pub use cloud::codesandbox::CodeSandboxGenerator;
+pub use cloud::codespaces::CodespacesGenerator;
 pub use cloud::firebase_studio::FirebaseStudioGenerator;
 pub use cloud::gitpod::GitpodGenerator;
 pub use cloud::replit::ReplitGenerator;

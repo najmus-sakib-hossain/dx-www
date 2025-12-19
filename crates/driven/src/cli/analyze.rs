@@ -1,6 +1,6 @@
 //! Analyze command - analyze codebase for context
 
-use crate::{context::ProjectScanner, Result};
+use crate::{Result, context::ProjectScanner};
 use std::path::Path;
 
 /// Analyze command handler
@@ -84,8 +84,9 @@ impl AnalyzeCommand {
         // Save index
         let index_path = project_root.join(".driven/index.bin");
         if let Some(parent) = index_path.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|e| crate::DrivenError::Context(format!("Failed to create directory: {}", e)))?;
+            std::fs::create_dir_all(parent).map_err(|e| {
+                crate::DrivenError::Context(format!("Failed to create directory: {}", e))
+            })?;
         }
 
         index.save(&index_path)?;

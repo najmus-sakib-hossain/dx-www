@@ -3,9 +3,9 @@
 //! Binary protocol for remote cache operations with XOR patch streaming,
 //! connection multiplexing, and resume-capable downloads.
 
-use std::collections::HashMap;
 use crate::dxc::{CacheEntry, XorPatch};
 use crate::error::CacheError;
+use std::collections::HashMap;
 
 /// Magic bytes for DXRC protocol
 pub const DXRC_MAGIC: [u8; 4] = *b"DXRC";
@@ -153,20 +153,20 @@ impl DxrcRequest {
     /// Serialize request to binary format
     pub fn serialize(&self) -> Vec<u8> {
         let mut buffer = Vec::new();
-        
+
         // Magic and version
         buffer.extend_from_slice(&DXRC_MAGIC);
         buffer.extend_from_slice(&DXRC_VERSION.to_le_bytes());
-        
+
         // Request type
         buffer.push(self.request_type as u8);
-        
+
         // Task hashes count and data
         buffer.extend_from_slice(&(self.task_hashes.len() as u32).to_le_bytes());
         for hash in &self.task_hashes {
             buffer.extend_from_slice(hash);
         }
-        
+
         // Client state (optional)
         if let Some(ref state) = self.client_state {
             buffer.push(1); // Has client state
@@ -178,13 +178,13 @@ impl DxrcRequest {
         } else {
             buffer.push(0); // No client state
         }
-        
+
         // Prefetch hints
         buffer.extend_from_slice(&(self.prefetch_hints.len() as u32).to_le_bytes());
         for hash in &self.prefetch_hints {
             buffer.extend_from_slice(hash);
         }
-        
+
         // Resume checkpoint (optional)
         if let Some(ref checkpoint) = self.resume_checkpoint {
             buffer.push(1); // Has checkpoint
@@ -194,7 +194,7 @@ impl DxrcRequest {
         } else {
             buffer.push(0); // No checkpoint
         }
-        
+
         buffer
     }
 
@@ -203,14 +203,14 @@ impl DxrcRequest {
         if data.len() < 9 {
             return Err(CacheError::IntegrityCheckFailed);
         }
-        
+
         // Verify magic
         if &data[0..4] != &DXRC_MAGIC {
             return Err(CacheError::IntegrityCheckFailed);
         }
-        
+
         let mut offset = 8; // Skip magic and version
-        
+
         // Request type
         let request_type = match data[offset] {
             0 => DxrcRequestType::Fetch,
@@ -220,13 +220,16 @@ impl DxrcRequest {
             _ => return Err(CacheError::IntegrityCheckFailed),
         };
         offset += 1;
-        
+
         // Task hashes
         let hash_count = u32::from_le_bytes([
-            data[offset], data[offset + 1], data[offset + 2], data[offset + 3]
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
         ]) as usize;
         offset += 4;
-        
+
         let mut task_hashes = Vec::with_capacity(hash_count);
         for _ in 0..hash_count {
             let mut hash = [0u8; 32];
@@ -234,17 +237,20 @@ impl DxrcRequest {
             task_hashes.push(hash);
             offset += 32;
         }
-        
+
         // Client state
         let has_client_state = data[offset] == 1;
         offset += 1;
-        
+
         let client_state = if has_client_state {
             let existing_count = u32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3]
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
             ]) as usize;
             offset += 4;
-            
+
             let mut existing_hashes = Vec::with_capacity(existing_count);
             for _ in 0..existing_count {
                 let mut hash = [0u8; 32];
@@ -252,24 +258,36 @@ impl DxrcRequest {
                 existing_hashes.push(hash);
                 offset += 32;
             }
-            
+
             let available_space = u64::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
-                data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
+                data[offset + 4],
+                data[offset + 5],
+                data[offset + 6],
+                data[offset + 7],
             ]);
             offset += 8;
-            
-            Some(CacheState { existing_hashes, available_space })
+
+            Some(CacheState {
+                existing_hashes,
+                available_space,
+            })
         } else {
             None
         };
-        
+
         // Prefetch hints
         let prefetch_count = u32::from_le_bytes([
-            data[offset], data[offset + 1], data[offset + 2], data[offset + 3]
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
         ]) as usize;
         offset += 4;
-        
+
         let mut prefetch_hints = Vec::with_capacity(prefetch_count);
         for _ in 0..prefetch_count {
             let mut hash = [0u8; 32];
@@ -277,25 +295,31 @@ impl DxrcRequest {
             prefetch_hints.push(hash);
             offset += 32;
         }
-        
+
         // Resume checkpoint
         let has_checkpoint = data[offset] == 1;
         offset += 1;
-        
+
         let resume_checkpoint = if has_checkpoint {
             let mut task_hash = [0u8; 32];
             task_hash.copy_from_slice(&data[offset..offset + 32]);
             offset += 32;
-            
+
             let bytes_received = u64::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
-                data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
+                data[offset + 4],
+                data[offset + 5],
+                data[offset + 6],
+                data[offset + 7],
             ]);
             offset += 8;
-            
+
             let mut partial_checksum = [0u8; 32];
             partial_checksum.copy_from_slice(&data[offset..offset + 32]);
-            
+
             Some(ResumeCheckpoint {
                 task_hash,
                 bytes_received,
@@ -304,7 +328,7 @@ impl DxrcRequest {
         } else {
             None
         };
-        
+
         Ok(Self {
             request_type,
             task_hashes,
@@ -410,14 +434,14 @@ impl RemoteCacheClient {
     pub fn fetch(&self, hashes: &[[u8; 32]]) -> Result<Vec<CacheEntry>, CacheError> {
         // Create single request for all hashes
         let request = DxrcRequest::fetch(hashes.to_vec());
-        
+
         // In a real implementation, this would:
         // 1. Serialize the request
         // 2. Send over multiplexed connection
         // 3. Receive and deserialize response
-        
+
         let _serialized = request.serialize();
-        
+
         // Simulate response (in real impl, would parse from network)
         Ok(Vec::new())
     }
@@ -426,17 +450,17 @@ impl RemoteCacheClient {
     pub fn store(&self, entries: &[CacheEntry]) -> Result<(), CacheError> {
         let hashes: Vec<_> = entries.iter().map(|e| e.task_hash).collect();
         let _request = DxrcRequest::store(hashes);
-        
+
         // In real implementation, would send entries with XOR patches
         // for similar existing entries
-        
+
         Ok(())
     }
 
     /// Check existence of multiple entries
     pub fn exists(&self, hashes: &[[u8; 32]]) -> Result<Vec<bool>, CacheError> {
         let _request = DxrcRequest::exists(hashes.to_vec());
-        
+
         // Simulate all not found
         Ok(vec![false; hashes.len()])
     }
@@ -451,9 +475,11 @@ impl RemoteCacheClient {
     /// Resume interrupted download
     pub fn resume(&self, checkpoint: &ResumeCheckpoint) -> Result<CacheEntry, CacheError> {
         let _request = DxrcRequest::resume(checkpoint.clone());
-        
+
         // In real implementation, would resume from checkpoint
-        Err(CacheError::EntryNotFound { hash: checkpoint.task_hash })
+        Err(CacheError::EntryNotFound {
+            hash: checkpoint.task_hash,
+        })
     }
 
     /// Get URL
@@ -516,13 +542,16 @@ impl MultiplexedConnection {
         let id = self.next_stream_id;
         self.next_stream_id += 1;
 
-        self.streams.insert(id, StreamState {
+        self.streams.insert(
             id,
-            task_hash,
-            bytes_transferred: 0,
-            total_bytes,
-            complete: false,
-        });
+            StreamState {
+                id,
+                task_hash,
+                bytes_transferred: 0,
+                total_bytes,
+                complete: false,
+            },
+        );
 
         Some(id)
     }
@@ -561,10 +590,10 @@ mod tests {
     fn test_request_serialization_roundtrip() {
         let hashes = vec![[1u8; 32], [2u8; 32], [3u8; 32]];
         let request = DxrcRequest::fetch(hashes.clone());
-        
+
         let serialized = request.serialize();
         let deserialized = DxrcRequest::deserialize(&serialized).unwrap();
-        
+
         assert_eq!(deserialized.request_type, DxrcRequestType::Fetch);
         assert_eq!(deserialized.task_hashes.len(), 3);
         assert_eq!(deserialized.task_hashes, hashes);
@@ -572,15 +601,14 @@ mod tests {
 
     #[test]
     fn test_request_with_client_state() {
-        let request = DxrcRequest::fetch(vec![[1u8; 32]])
-            .with_client_state(CacheState {
-                existing_hashes: vec![[2u8; 32]],
-                available_space: 1024 * 1024 * 1024,
-            });
-        
+        let request = DxrcRequest::fetch(vec![[1u8; 32]]).with_client_state(CacheState {
+            existing_hashes: vec![[2u8; 32]],
+            available_space: 1024 * 1024 * 1024,
+        });
+
         let serialized = request.serialize();
         let deserialized = DxrcRequest::deserialize(&serialized).unwrap();
-        
+
         assert!(deserialized.client_state.is_some());
         let state = deserialized.client_state.unwrap();
         assert_eq!(state.existing_hashes.len(), 1);
@@ -589,12 +617,12 @@ mod tests {
 
     #[test]
     fn test_request_with_prefetch_hints() {
-        let request = DxrcRequest::fetch(vec![[1u8; 32]])
-            .with_prefetch_hints(vec![[3u8; 32], [4u8; 32]]);
-        
+        let request =
+            DxrcRequest::fetch(vec![[1u8; 32]]).with_prefetch_hints(vec![[3u8; 32], [4u8; 32]]);
+
         let serialized = request.serialize();
         let deserialized = DxrcRequest::deserialize(&serialized).unwrap();
-        
+
         assert_eq!(deserialized.prefetch_hints.len(), 2);
     }
 
@@ -605,12 +633,12 @@ mod tests {
             bytes_received: 1024,
             partial_checksum: [6u8; 32],
         };
-        
+
         let request = DxrcRequest::resume(checkpoint);
-        
+
         let serialized = request.serialize();
         let deserialized = DxrcRequest::deserialize(&serialized).unwrap();
-        
+
         assert_eq!(deserialized.request_type, DxrcRequestType::Resume);
         assert!(deserialized.resume_checkpoint.is_some());
         let cp = deserialized.resume_checkpoint.unwrap();
@@ -623,7 +651,7 @@ mod tests {
             .with_token("secret".to_string())
             .with_prefetch(true)
             .with_connection_count(8);
-        
+
         assert_eq!(client.url(), "https://cache.example.com");
         assert!(client.is_authenticated());
         assert_eq!(client.connection_count(), 8);
@@ -633,17 +661,17 @@ mod tests {
     fn test_single_request_multi_entry_fetch() {
         // Property 17: Single Request Multi-Entry Fetch
         let client = RemoteCacheClient::new("https://cache.example.com".to_string());
-        
+
         let hashes = vec![[1u8; 32], [2u8; 32], [3u8; 32], [4u8; 32], [5u8; 32]];
-        
+
         // This should create exactly one request for all hashes
         let request = DxrcRequest::fetch(hashes.clone());
         let serialized = request.serialize();
-        
+
         // Verify single request contains all hashes
         let deserialized = DxrcRequest::deserialize(&serialized).unwrap();
         assert_eq!(deserialized.task_hashes.len(), 5);
-        
+
         // The fetch method should use single request
         let _result = client.fetch(&hashes);
     }
@@ -651,29 +679,29 @@ mod tests {
     #[test]
     fn test_multiplexed_connection() {
         let mut conn = MultiplexedConnection::new(4);
-        
+
         // Start multiple streams
         let id1 = conn.start_stream([1u8; 32], 1000).unwrap();
         let id2 = conn.start_stream([2u8; 32], 2000).unwrap();
         let id3 = conn.start_stream([3u8; 32], 3000).unwrap();
         let id4 = conn.start_stream([4u8; 32], 4000).unwrap();
-        
+
         assert_eq!(conn.active_streams(), 4);
         assert!(!conn.can_start_stream()); // At max
-        
+
         // Can't start more
         assert!(conn.start_stream([5u8; 32], 5000).is_none());
-        
+
         // Update and complete a stream
         conn.update_stream(id1, 500);
         conn.update_stream(id1, 500); // Now complete
-        
+
         let completed = conn.complete_stream(id1).unwrap();
         assert!(completed.complete);
-        
+
         // Now can start another
         assert!(conn.can_start_stream());
-        
+
         // Clean up
         conn.complete_stream(id2);
         conn.complete_stream(id3);
@@ -683,17 +711,17 @@ mod tests {
     #[test]
     fn test_response_types() {
         let entry = CacheEntry::new([1u8; 32]);
-        
+
         let ok_response = DxrcResponse::ok(vec![entry.clone()]);
         assert_eq!(ok_response.status, DxrcStatus::Ok);
         assert_eq!(ok_response.entries.len(), 1);
-        
+
         let partial_response = DxrcResponse::partial(vec![entry]);
         assert_eq!(partial_response.status, DxrcStatus::Partial);
-        
+
         let not_found = DxrcResponse::not_found();
         assert_eq!(not_found.status, DxrcStatus::NotFound);
-        
+
         let exists_response = DxrcResponse::exists_result(vec![true, false, true]);
         assert_eq!(exists_response.exists, vec![true, false, true]);
     }

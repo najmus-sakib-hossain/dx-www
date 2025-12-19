@@ -114,9 +114,7 @@ impl WorkspaceConfig {
         }
 
         // TODO: Implement binary format loading with dx-serializer
-        Err(crate::Error::invalid_config(
-            "Binary format not yet implemented",
-        ))
+        Err(crate::Error::invalid_config("Binary format not yet implemented"))
     }
 
     /// Save workspace configuration to a file.
@@ -124,8 +122,8 @@ impl WorkspaceConfig {
         let path = path.as_ref();
 
         // For now, save as pretty-printed JSON
-        let json = serde_json::to_string_pretty(self)
-            .map_err(|e| crate::Error::json_parse(path, e))?;
+        let json =
+            serde_json::to_string_pretty(self).map_err(|e| crate::Error::json_parse(path, e))?;
 
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| crate::Error::io(parent, e))?;

@@ -31,8 +31,8 @@
 //! └─────────────────────────────────────────┘
 //! ```
 
-use bytemuck::{Pod, Zeroable};
 use crate::error::{GeneratorError, Result};
+use bytemuck::{Pod, Zeroable};
 
 /// Magic number for DXT files: "DXT1"
 pub const DXT_MAGIC: [u8; 4] = *b"DXT1";
@@ -158,9 +158,7 @@ impl DxtHeader {
     /// Parse header from bytes.
     pub fn from_bytes(bytes: &[u8]) -> Result<&Self> {
         if bytes.len() < HEADER_SIZE {
-            return Err(GeneratorError::invalid_template(
-                "File too small for DXT header",
-            ));
+            return Err(GeneratorError::invalid_template("File too small for DXT header"));
         }
         let header: &Self = bytemuck::from_bytes(&bytes[..HEADER_SIZE]);
         header.validate()?;
@@ -265,9 +263,7 @@ impl StringTable {
         let entries_end = 4 + count * entry_size;
 
         if bytes.len() < entries_end {
-            return Err(GeneratorError::invalid_template(
-                "String table entries truncated",
-            ));
+            return Err(GeneratorError::invalid_template("String table entries truncated"));
         }
 
         let mut entries = Vec::with_capacity(count);
@@ -322,9 +318,9 @@ impl TryFrom<u8> for PlaceholderType {
             3 => Ok(Self::Include),
             4 => Ok(Self::Comment),
             5 => Ok(Self::Raw),
-            _ => Err(GeneratorError::invalid_template(format!(
-                "Invalid placeholder type: {value}"
-            ))),
+            _ => {
+                Err(GeneratorError::invalid_template(format!("Invalid placeholder type: {value}")))
+            }
         }
     }
 }

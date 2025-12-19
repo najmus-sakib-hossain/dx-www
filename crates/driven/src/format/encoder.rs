@@ -1,12 +1,12 @@
 //! Binary encoder for .drv format
 
 use super::{
+    DRV_VERSION, SectionType,
     schema::{
         ContextSection, DrvHeader, PersonaSection, RuleEntry, StandardsSection, WorkflowSection,
     },
-    SectionType, DRV_VERSION,
 };
-use crate::{parser::UnifiedRule, DrivenError, Result};
+use crate::{DrivenError, Result, parser::UnifiedRule};
 use bytes::{BufMut, BytesMut};
 use std::collections::HashMap;
 
@@ -179,10 +179,7 @@ impl DrvEncoder {
         for s in &self.string_table {
             let bytes = s.as_bytes();
             if bytes.len() > u16::MAX as usize {
-                return Err(DrivenError::Format(format!(
-                    "String too long: {} bytes",
-                    bytes.len()
-                )));
+                return Err(DrivenError::Format(format!("String too long: {} bytes", bytes.len())));
             }
             self.buffer.put_u16_le(bytes.len() as u16);
             self.buffer.put_slice(bytes);
@@ -228,14 +225,12 @@ impl DrvEncoder {
     fn write_context_section(&mut self, context: &ContextSection) -> Result<()> {
         self.buffer.put_u8(SectionType::Context as u8);
 
-        self.buffer
-            .put_u16_le(context.include_patterns.len() as u16);
+        self.buffer.put_u16_le(context.include_patterns.len() as u16);
         for &idx in &context.include_patterns {
             self.buffer.put_u32_le(idx);
         }
 
-        self.buffer
-            .put_u16_le(context.exclude_patterns.len() as u16);
+        self.buffer.put_u16_le(context.exclude_patterns.len() as u16);
         for &idx in &context.exclude_patterns {
             self.buffer.put_u32_le(idx);
         }

@@ -95,10 +95,7 @@ impl DesktopGenerator for IntelliJGenerator {
         fs::create_dir_all(&code_style_dir).map_err(|e| crate::Error::io(&code_style_dir, e))?;
 
         let code_style = self.generate_code_style(config);
-        files.push(GeneratedFile::new(
-            ".idea/codeStyles/Project.xml",
-            code_style.clone(),
-        ));
+        files.push(GeneratedFile::new(".idea/codeStyles/Project.xml", code_style.clone()));
 
         let style_path = code_style_dir.join("Project.xml");
         fs::write(&style_path, &code_style).map_err(|e| crate::Error::io(&style_path, e))?;
@@ -137,8 +134,6 @@ mod tests {
         let configs = generator.generate_run_config(&config);
 
         assert!(!configs.is_empty());
-        assert!(configs
-            .iter()
-            .any(|(name, _)| name.contains("dx_build")));
+        assert!(configs.iter().any(|(name, _)| name.contains("dx_build")));
     }
 }

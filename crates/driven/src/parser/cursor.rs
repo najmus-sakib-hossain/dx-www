@@ -1,6 +1,6 @@
 //! Cursor rules parser (.cursorrules)
 
-use super::{extract_bullet_points, parse_markdown_sections, RuleParser, UnifiedRule};
+use super::{RuleParser, UnifiedRule, extract_bullet_points, parse_markdown_sections};
 use crate::{DrivenError, Editor, Result};
 use std::path::Path;
 
@@ -29,9 +29,7 @@ impl CursorParser {
             || lower.contains("codebase")
         {
             SectionKind::Context
-        } else if lower.contains("workflow")
-            || lower.contains("process")
-            || lower.contains("steps")
+        } else if lower.contains("workflow") || lower.contains("process") || lower.contains("steps")
         {
             SectionKind::Workflow
         } else if lower.contains("style")
@@ -58,9 +56,8 @@ enum SectionKind {
 
 impl RuleParser for CursorParser {
     fn parse_file(&self, path: &Path) -> Result<Vec<UnifiedRule>> {
-        let content = std::fs::read_to_string(path).map_err(|e| {
-            DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e))
-        })?;
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e)))?;
         self.parse_content(&content)
     }
 
@@ -82,9 +79,8 @@ impl RuleParser for CursorParser {
             match kind {
                 SectionKind::Persona => {
                     let points = extract_bullet_points(&body);
-                    let (traits, principles): (Vec<_>, Vec<_>) = points
-                        .into_iter()
-                        .partition(|p| !p.to_lowercase().contains("principle"));
+                    let (traits, principles): (Vec<_>, Vec<_>) =
+                        points.into_iter().partition(|p| !p.to_lowercase().contains("principle"));
 
                     rules.push(UnifiedRule::Persona {
                         name: heading.clone(),
@@ -97,9 +93,8 @@ impl RuleParser for CursorParser {
                 }
                 SectionKind::Context => {
                     let points = extract_bullet_points(&body);
-                    let (includes, rest): (Vec<_>, Vec<_>) = points
-                        .into_iter()
-                        .partition(|p| p.contains("**") || p.contains("src/"));
+                    let (includes, rest): (Vec<_>, Vec<_>) =
+                        points.into_iter().partition(|p| p.contains("**") || p.contains("src/"));
 
                     rules.push(UnifiedRule::Context {
                         includes,
@@ -195,18 +190,9 @@ mod tests {
 
     #[test]
     fn test_detect_section_types() {
-        assert_eq!(
-            CursorParser::detect_section_type("AI Persona"),
-            SectionKind::Persona
-        );
-        assert_eq!(
-            CursorParser::detect_section_type("Coding Conventions"),
-            SectionKind::Standards
-        );
-        assert_eq!(
-            CursorParser::detect_section_type("Project Context"),
-            SectionKind::Context
-        );
+        assert_eq!(CursorParser::detect_section_type("AI Persona"), SectionKind::Persona);
+        assert_eq!(CursorParser::detect_section_type("Coding Conventions"), SectionKind::Standards);
+        assert_eq!(CursorParser::detect_section_type("Project Context"), SectionKind::Context);
         assert_eq!(
             CursorParser::detect_section_type("Development Workflow"),
             SectionKind::Workflow

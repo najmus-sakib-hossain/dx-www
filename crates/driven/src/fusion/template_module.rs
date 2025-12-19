@@ -66,9 +66,7 @@ impl FusionHeader {
         let header: &Self = bytemuck::from_bytes(&data[..Self::size()]);
 
         if &header.magic != FUSION_MAGIC {
-            return Err(DrivenError::InvalidBinary(
-                "Invalid fusion magic bytes".into(),
-            ));
+            return Err(DrivenError::InvalidBinary("Invalid fusion magic bytes".into()));
         }
 
         Ok(header)
@@ -260,11 +258,8 @@ impl FusionBuilder {
 
     /// Build the fusion module
     pub fn build(self) -> Vec<u8> {
-        let mut header = FusionHeader::new(
-            self.slots.len() as u32,
-            self.template_hash,
-            self.source_hash,
-        );
+        let mut header =
+            FusionHeader::new(self.slots.len() as u32, self.template_hash, self.source_hash);
 
         // Build string table
         let mut string_bytes = Vec::new();

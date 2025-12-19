@@ -80,7 +80,7 @@ pub fn decode_id_list(bytes: &[u8]) -> Result<Vec<u16>, &'static str> {
 /// Write varint stream to a Writer
 pub fn write_varint_stream<W: Write>(writer: &mut W, ids: &[u16]) -> io::Result<usize> {
     let encoded = encode_id_list(ids);
-    writer.write(&encoded)?;
+    writer.write_all(&encoded)?;
     Ok(encoded.len())
 }
 

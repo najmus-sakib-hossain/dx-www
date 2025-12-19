@@ -10,9 +10,9 @@
 //! - Type-safe binary schema validation
 //! - Compile-time parameter verification
 
-use std::collections::HashMap;
-use std::borrow::Cow;
 use crate::error::{GeneratorError, Result};
+use std::borrow::Cow;
+use std::collections::HashMap;
 
 // ============================================================================
 // Parameter Value Types
@@ -54,7 +54,9 @@ impl<'a> ParamValue<'a> {
 
     /// Create an object value.
     #[must_use]
-    pub fn object(pairs: impl IntoIterator<Item = (impl Into<Cow<'a, str>>, ParamValue<'a>)>) -> Self {
+    pub fn object(
+        pairs: impl IntoIterator<Item = (impl Into<Cow<'a, str>>, ParamValue<'a>)>,
+    ) -> Self {
         Self::Object(pairs.into_iter().map(|(k, v)| (k.into(), v)).collect())
     }
 
@@ -142,7 +144,9 @@ impl<'a> ParamValue<'a> {
             Self::Int(i) => ParamValue::Int(i),
             Self::Float(f) => ParamValue::Float(f),
             Self::String(s) => ParamValue::String(Cow::Owned(s.into_owned())),
-            Self::Array(arr) => ParamValue::Array(arr.into_iter().map(|v| v.into_owned()).collect()),
+            Self::Array(arr) => {
+                ParamValue::Array(arr.into_iter().map(|v| v.into_owned()).collect())
+            }
             Self::Object(obj) => ParamValue::Object(
                 obj.into_iter()
                     .map(|(k, v)| (Cow::Owned(k.into_owned()), v.into_owned()))
@@ -286,9 +290,9 @@ impl<'a> Parameters<'a> {
 
     /// Iterate over parameters in insertion order.
     pub fn iter(&self) -> impl Iterator<Item = (&str, &ParamValue<'a>)> {
-        self.order.iter().filter_map(|name| {
-            self.values.get(name).map(|v| (name.as_ref(), v))
-        })
+        self.order
+            .iter()
+            .filter_map(|name| self.values.get(name).map(|v| (name.as_ref(), v)))
     }
 
     /// Get required string parameter.
@@ -318,17 +322,13 @@ impl<'a> Parameters<'a> {
     /// Get optional string parameter with default.
     #[must_use]
     pub fn get_string_or(&self, name: &str, default: &'a str) -> &str {
-        self.get(name)
-            .and_then(ParamValue::as_str)
-            .unwrap_or(default)
+        self.get(name).and_then(ParamValue::as_str).unwrap_or(default)
     }
 
     /// Get optional bool parameter with default.
     #[must_use]
     pub fn get_bool_or(&self, name: &str, default: bool) -> bool {
-        self.get(name)
-            .and_then(ParamValue::as_bool)
-            .unwrap_or(default)
+        self.get(name).and_then(ParamValue::as_bool).unwrap_or(default)
     }
 
     /// Convert to owned version.
@@ -347,8 +347,8 @@ impl<'a> Parameters<'a> {
     /// Compute a hash for cache key purposes.
     #[must_use]
     pub fn hash(&self) -> u64 {
-        use std::hash::{Hash, Hasher};
         use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
 
         let mut hasher = DefaultHasher::new();
         for (name, value) in self.iter() {
@@ -510,21 +510,21 @@ impl<'a> Parameters<'a> {
     #[must_use]
     pub fn encode(&self) -> Vec<u8> {
         let mut out = Vec::with_capacity(self.len() * 16);
-        
+
         // Write count
         out.push(self.len() as u8);
-        
+
         // Write each parameter
         for (name, value) in self.iter() {
             // Write name
             let name_bytes = name.as_bytes();
             out.push(name_bytes.len().min(255) as u8);
             out.extend_from_slice(&name_bytes[..name_bytes.len().min(255)]);
-            
+
             // Write value
             value.encode(&mut out);
         }
-        
+
         out
     }
 }
@@ -544,10 +544,7 @@ mod tests {
 
     #[test]
     fn test_parameters_builder() {
-        let params = Parameters::new()
-            .set("name", "Test")
-            .set("count", 42)
-            .set("enabled", true);
+        let params = Parameters::new().set("name", "Test").set("count", 42).set("enabled", true);
 
         assert_eq!(params.len(), 3);
         assert_eq!(params.get("name").unwrap().as_str(), Some("Test"));
@@ -557,10 +554,7 @@ mod tests {
 
     #[test]
     fn test_parameters_index_access() {
-        let params = Parameters::new()
-            .set("first", "a")
-            .set("second", "b")
-            .set("third", "c");
+        let params = Parameters::new().set("first", "a").set("second", "b").set("third", "c");
 
         assert_eq!(params.get_by_index(0).unwrap().as_str(), Some("a"));
         assert_eq!(params.get_by_index(1).unwrap().as_str(), Some("b"));
@@ -569,9 +563,7 @@ mod tests {
 
     #[test]
     fn test_require_methods() {
-        let params = Parameters::new()
-            .set("name", "Test")
-            .set("count", 42);
+        let params = Parameters::new().set("name", "Test").set("count", 42);
 
         assert_eq!(params.require_string("name").unwrap(), "Test");
         assert!(params.require_string("missing").is_err());
@@ -592,9 +584,7 @@ mod tests {
 
     #[test]
     fn test_parameters_encode() {
-        let params = Parameters::new()
-            .set("name", "Test")
-            .set("enabled", true);
+        let params = Parameters::new().set("name", "Test").set("enabled", true);
 
         let encoded = params.encode();
         assert!(!encoded.is_empty());

@@ -153,11 +153,7 @@ async fn run_srcset(widths: &str, theme: &Theme) -> Result<()> {
     theme.print_section("dx-media: Responsive Variants");
     eprintln!();
 
-    eprintln!(
-        "  {} Widths: {}",
-        "│".bright_black(),
-        widths.cyan()
-    );
+    eprintln!("  {} Widths: {}", "│".bright_black(), widths.cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Generating variants...");
@@ -217,11 +213,7 @@ async fn run_preview(frames: u32, theme: &Theme) -> Result<()> {
     theme.print_section("dx-media: Video Preview");
     eprintln!();
 
-    eprintln!(
-        "  {} Frames: {}",
-        "│".bright_black(),
-        frames.to_string().cyan()
-    );
+    eprintln!("  {} Frames: {}", "│".bright_black(), frames.to_string().cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Extracting keyframes...");
@@ -291,12 +283,7 @@ async fn run_analyze(theme: &Theme) -> Result<()> {
     eprintln!();
 
     for (file, issue, suggestion) in issues {
-        eprintln!(
-            "  {} {} - {}",
-            "⚠".yellow(),
-            file.white().bold(),
-            issue.yellow()
-        );
+        eprintln!("  {} {} - {}", "⚠".yellow(), file.white().bold(), issue.yellow());
         eprintln!("      {} {}", "└".bright_black(), suggestion.bright_black());
     }
 

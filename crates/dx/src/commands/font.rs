@@ -90,7 +90,10 @@ pub async fn run(args: FontArgs, theme: &Theme) -> Result<()> {
             chars,
             output: _,
         } => run_subset(&chars, theme).await,
-        FontCommands::Convert { input: _, output: _ } => run_convert(theme).await,
+        FontCommands::Convert {
+            input: _,
+            output: _,
+        } => run_convert(theme).await,
         FontCommands::Analyze { dir: _ } => run_analyze(theme).await,
         FontCommands::Metrics { input: _ } => run_metrics(theme).await,
         FontCommands::Css { input: _, display } => run_css(&display, theme).await,
@@ -103,11 +106,7 @@ async fn run_subset(chars: &str, theme: &Theme) -> Result<()> {
     theme.print_section("dx-font: Font Subsetting");
     eprintln!();
 
-    eprintln!(
-        "  {} Character set: {}",
-        "│".bright_black(),
-        chars.cyan()
-    );
+    eprintln!("  {} Character set: {}", "│".bright_black(), chars.cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Analyzing font...");
@@ -212,11 +211,7 @@ async fn run_metrics(theme: &Theme) -> Result<()> {
     ]);
 
     eprintln!();
-    eprintln!(
-        "  {} CSS size-adjust: {}",
-        "→".cyan(),
-        "100.3%".cyan().bold()
-    );
+    eprintln!("  {} CSS size-adjust: {}", "→".cyan(), "100.3%".cyan().bold());
     eprintln!();
 
     Ok(())
@@ -226,11 +221,7 @@ async fn run_css(display: &str, theme: &Theme) -> Result<()> {
     theme.print_section("dx-font: Generate CSS");
     eprintln!();
 
-    eprintln!(
-        "  {} font-display: {}",
-        "│".bright_black(),
-        display.cyan()
-    );
+    eprintln!("  {} font-display: {}", "│".bright_black(), display.cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Generating @font-face rules...");

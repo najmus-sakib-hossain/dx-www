@@ -113,11 +113,7 @@ impl ExtensionRecommendations {
 
     /// Get required extension IDs.
     pub fn get_required_ids(&self) -> Vec<String> {
-        self.core
-            .iter()
-            .filter(|e| e.required)
-            .map(|e| e.id.clone())
-            .collect()
+        self.core.iter().filter(|e| e.required).map(|e| e.id.clone()).collect()
     }
 }
 

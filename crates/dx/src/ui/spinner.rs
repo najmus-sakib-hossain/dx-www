@@ -40,8 +40,7 @@ impl Spinner {
         pb.set_style(
             ProgressStyle::default_spinner()
                 .tick_strings(&[
-                    "   ⠋", "   ⠙", "   ⠹", "   ⠸", "   ⠼", "   ⠴", "   ⠦", "   ⠧", "   ⠇",
-                    "   ⠏",
+                    "   ⠋", "   ⠙", "   ⠹", "   ⠸", "   ⠼", "   ⠴", "   ⠦", "   ⠧", "   ⠇", "   ⠏",
                 ])
                 .template("  {spinner:.cyan} {msg}")
                 .unwrap(),

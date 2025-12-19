@@ -14,11 +14,7 @@ pub struct SignCommand;
 impl SignCommand {
     /// Execute sign command
     pub fn execute(path: &Path, _key_path: Option<&Path>) -> Result<()> {
-        println!(
-            "{} Signing rules in {}",
-            style("🔐").bold(),
-            path.display()
-        );
+        println!("{} Signing rules in {}", style("🔐").bold(), path.display());
 
         // Generate new keypair
         println!("  Generating Ed25519 keypair...");
@@ -27,10 +23,7 @@ impl SignCommand {
 
         // Get public key for display
         let public_key = key_pair.public_key();
-        println!(
-            "  Public key: {:02x?}...",
-            &public_key.0[..8]
-        );
+        println!("  Public key: {:02x?}...", &public_key.0[..8]);
 
         // Find and sign all .drv files
         let mut signed_count = 0;
@@ -77,11 +70,7 @@ impl SignCommand {
                 error_count
             );
         } else if signed_count > 0 {
-            println!(
-                "{} Successfully signed {} files",
-                style("✓").green().bold(),
-                signed_count
-            );
+            println!("{} Successfully signed {} files", style("✓").green().bold(), signed_count);
         } else {
             println!("{} No .drv files found to sign", style("ℹ").blue());
         }
@@ -104,11 +93,7 @@ impl SignCommand {
 
     /// Verify signed files
     pub fn verify(path: &Path, public_key_path: &Path) -> Result<()> {
-        println!(
-            "{} Verifying signatures in {}",
-            style("🔍").bold(),
-            path.display()
-        );
+        println!("{} Verifying signatures in {}", style("🔍").bold(), path.display());
 
         let public_key_bytes = std::fs::read(public_key_path)?;
         if public_key_bytes.len() != 32 {
@@ -146,7 +131,11 @@ impl SignCommand {
                                 verified += 1;
                             }
                             _ => {
-                                println!("  {} {} (INVALID)", style("✗").red(), file_path.display());
+                                println!(
+                                    "  {} {} (INVALID)",
+                                    style("✗").red(),
+                                    file_path.display()
+                                );
                                 failed += 1;
                             }
                         }
@@ -157,22 +146,10 @@ impl SignCommand {
 
         println!();
         if failed > 0 {
-            println!(
-                "{} Verified: {}, Failed: {}",
-                style("⚠").yellow().bold(),
-                verified,
-                failed
-            );
-            Err(DrivenError::Security(format!(
-                "{} signatures failed verification",
-                failed
-            )))
+            println!("{} Verified: {}, Failed: {}", style("⚠").yellow().bold(), verified, failed);
+            Err(DrivenError::Security(format!("{} signatures failed verification", failed)))
         } else {
-            println!(
-                "{} All {} signatures verified",
-                style("✓").green().bold(),
-                verified
-            );
+            println!("{} All {} signatures verified", style("✓").green().bold(), verified);
             Ok(())
         }
     }
@@ -192,10 +169,7 @@ pub fn generate_keypair(output_dir: &Path) -> Result<()> {
 
     println!("  Public key: {}", public_path.display());
     println!();
-    println!(
-        "{} Keypair generated!",
-        style("✓").green().bold()
-    );
+    println!("{} Keypair generated!", style("✓").green().bold());
 
     Ok(())
 }

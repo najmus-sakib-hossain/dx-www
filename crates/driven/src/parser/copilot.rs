@@ -1,6 +1,6 @@
 //! GitHub Copilot instructions parser (copilot-instructions.md)
 
-use super::{extract_bullet_points, parse_markdown_sections, RuleParser, UnifiedRule};
+use super::{RuleParser, UnifiedRule, extract_bullet_points, parse_markdown_sections};
 use crate::{DrivenError, Editor, Result};
 use std::path::Path;
 
@@ -17,9 +17,8 @@ impl CopilotParser {
 
 impl RuleParser for CopilotParser {
     fn parse_file(&self, path: &Path) -> Result<Vec<UnifiedRule>> {
-        let content = std::fs::read_to_string(path).map_err(|e| {
-            DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e))
-        })?;
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| DrivenError::Parse(format!("Failed to read {}: {}", path.display(), e)))?;
         self.parse_content(&content)
     }
 
@@ -66,8 +65,7 @@ impl RuleParser for CopilotParser {
                         pattern: None,
                     });
                 }
-            } else if lower_heading.contains("structure")
-                || lower_heading.contains("architecture")
+            } else if lower_heading.contains("structure") || lower_heading.contains("architecture")
             {
                 // Architecture standards
                 let points = extract_bullet_points(&body);
@@ -79,8 +77,7 @@ impl RuleParser for CopilotParser {
                         pattern: None,
                     });
                 }
-            } else if lower_heading.contains("test")
-            {
+            } else if lower_heading.contains("test") {
                 // Testing standards
                 let points = extract_bullet_points(&body);
                 for (i, point) in points.into_iter().enumerate() {
@@ -91,8 +88,7 @@ impl RuleParser for CopilotParser {
                         pattern: None,
                     });
                 }
-            } else if lower_heading.contains("doc")
-            {
+            } else if lower_heading.contains("doc") {
                 // Documentation standards
                 let points = extract_bullet_points(&body);
                 for (i, point) in points.into_iter().enumerate() {
@@ -151,7 +147,15 @@ This is a Rust project for binary-first web development.
 
         // Should have context, style standards, and testing standards
         let has_context = rules.iter().any(|r| matches!(r, UnifiedRule::Context { .. }));
-        let has_testing = rules.iter().any(|r| matches!(r, UnifiedRule::Standard { category: crate::format::RuleCategory::Testing, .. }));
+        let has_testing = rules.iter().any(|r| {
+            matches!(
+                r,
+                UnifiedRule::Standard {
+                    category: crate::format::RuleCategory::Testing,
+                    ..
+                }
+            )
+        });
 
         assert!(has_context);
         assert!(has_testing);

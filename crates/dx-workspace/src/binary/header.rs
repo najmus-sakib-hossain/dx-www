@@ -151,18 +151,14 @@ impl BinaryHeader {
     /// Read header from a reader.
     pub fn read_from<R: Read>(reader: &mut R) -> Result<Self> {
         let mut bytes = [0u8; HEADER_SIZE];
-        reader
-            .read_exact(&mut bytes)
-            .map_err(|e| Error::io("header", e))?;
+        reader.read_exact(&mut bytes).map_err(|e| Error::io("header", e))?;
         Self::from_bytes(&bytes)
     }
 
     /// Write header to a writer.
     pub fn write_to<W: Write>(&self, writer: &mut W) -> Result<()> {
         let bytes = self.to_bytes();
-        writer
-            .write_all(&bytes)
-            .map_err(|e| Error::io("header", e))?;
+        writer.write_all(&bytes).map_err(|e| Error::io("header", e))?;
         Ok(())
     }
 

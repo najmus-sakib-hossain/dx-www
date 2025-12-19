@@ -171,7 +171,9 @@ pub async fn run(args: GeneratorArgs, theme: &Theme) -> Result<()> {
         } => run_types(&format, theme).await,
         GeneratorCommands::Migration { name, auto } => run_migration(&name, auto, theme).await,
         GeneratorCommands::Crud { name, full } => run_crud(&name, full, theme).await,
-        GeneratorCommands::Template { template, name } => run_template(&template, name, theme).await,
+        GeneratorCommands::Template { template, name } => {
+            run_template(&template, name, theme).await
+        }
         GeneratorCommands::List => run_list(theme).await,
         GeneratorCommands::Config => run_config(theme).await,
     }
@@ -187,11 +189,7 @@ async fn run_component(
     theme.print_section(&format!("dx generator: Component {}", name));
     eprintln!();
 
-    eprintln!(
-        "  {} Type: {}",
-        "│".bright_black(),
-        kind.cyan()
-    );
+    eprintln!("  {} Type: {}", "│".bright_black(), kind.cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Generating component...");
@@ -235,11 +233,7 @@ async fn run_api(name: &str, methods: &str, with_validation: bool, theme: &Theme
     theme.print_section(&format!("dx generator: API {}", name));
     eprintln!();
 
-    eprintln!(
-        "  {} Methods: {}",
-        "│".bright_black(),
-        methods.cyan()
-    );
+    eprintln!("  {} Methods: {}", "│".bright_black(), methods.cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Generating route handler...");
@@ -259,12 +253,7 @@ async fn run_api(name: &str, methods: &str, with_validation: bool, theme: &Theme
     eprintln!();
     eprintln!("  {} Endpoints:", "│".bright_black());
     for method in methods.split(',') {
-        eprintln!(
-            "    {} {} /api/{}",
-            "├".bright_black(),
-            method.to_uppercase().cyan(),
-            name
-        );
+        eprintln!("    {} {} /api/{}", "├".bright_black(), method.to_uppercase().cyan(), name);
     }
     eprintln!();
 
@@ -284,11 +273,7 @@ async fn run_model(
     eprintln!();
 
     let field_str = fields.as_deref().unwrap_or("id:uuid,created_at:timestamp");
-    eprintln!(
-        "  {} Fields: {}",
-        "│".bright_black(),
-        field_str.cyan()
-    );
+    eprintln!("  {} Fields: {}", "│".bright_black(), field_str.cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Generating model...");
@@ -315,11 +300,7 @@ async fn run_model(
     for field in field_str.split(',') {
         let parts: Vec<&str> = field.split(':').collect();
         if parts.len() == 2 {
-            eprintln!(
-                "      {}: {};",
-                parts[0].cyan(),
-                parts[1].yellow()
-            );
+            eprintln!("      {}: {};", parts[0].cyan(), parts[1].yellow());
         }
     }
     eprintln!("    {}", "}".bright_black());
@@ -385,7 +366,12 @@ async fn run_types(format: &str, theme: &Theme) -> Result<()> {
     eprintln!("    {} {}", "├".bright_black(), "User".cyan());
     eprintln!("    {} {}", "├".bright_black(), "Post".cyan());
     eprintln!("    {} {}", "├".bright_black(), "Comment".cyan());
-    eprintln!("    {} {} {}", "└".bright_black(), "...".bright_black(), "9 more".bright_black());
+    eprintln!(
+        "    {} {} {}",
+        "└".bright_black(),
+        "...".bright_black(),
+        "9 more".bright_black()
+    );
     eprintln!();
 
     theme.print_success("Types generated");
@@ -413,10 +399,7 @@ async fn run_migration(name: &str, auto: bool, theme: &Theme) -> Result<()> {
     }
 
     eprintln!();
-    theme.print_info(
-        "File",
-        &format!("migrations/20251219_{}.sql", name.to_lowercase()),
-    );
+    theme.print_info("File", &format!("migrations/20251219_{}.sql", name.to_lowercase()));
     eprintln!();
 
     if auto {
@@ -510,12 +493,7 @@ async fn run_list(theme: &Theme) -> Result<()> {
     ];
 
     for (name, desc) in generators {
-        eprintln!(
-            "  {} {} - {}",
-            "├".bright_black(),
-            name.cyan(),
-            desc.white()
-        );
+        eprintln!("  {} {} - {}", "├".bright_black(), name.cyan(), desc.white());
     }
 
     eprintln!();

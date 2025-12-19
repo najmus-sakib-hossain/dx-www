@@ -33,9 +33,7 @@ impl DrvHeader {
     /// Validate the header
     pub fn validate(&self) -> crate::Result<()> {
         if &self.magic != b"DRV\0" {
-            return Err(crate::DrivenError::InvalidBinary(
-                "Invalid magic bytes".to_string(),
-            ));
+            return Err(crate::DrivenError::InvalidBinary("Invalid magic bytes".to_string()));
         }
         if self.version > super::DRV_VERSION {
             return Err(crate::DrivenError::InvalidBinary(format!(

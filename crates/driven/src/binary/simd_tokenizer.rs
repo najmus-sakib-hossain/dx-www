@@ -99,7 +99,8 @@ impl<'a> SimdTokenizer<'a> {
         }
 
         // Check for bullet
-        if self.starts_with(b"- ") || self.starts_with(b"* ") || self.starts_with(b"\xE2\x80\xA2 ") {
+        if self.starts_with(b"- ") || self.starts_with(b"* ") || self.starts_with(b"\xE2\x80\xA2 ")
+        {
             return Ok(self.tokenize_bullet(start));
         }
 
@@ -245,11 +246,7 @@ impl<'a> SimdTokenizer<'a> {
 
         if line.contains(&b':') {
             self.pos = line_end;
-            return Some(Token::new(
-                TokenType::KeyValue,
-                start,
-                (self.pos as u32) - start,
-            ));
+            return Some(Token::new(TokenType::KeyValue, start, (self.pos as u32) - start));
         }
 
         None

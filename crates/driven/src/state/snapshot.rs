@@ -147,8 +147,8 @@ impl RuleSnapshot {
         ]);
         pos += 8;
 
-        let rule_count = u32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]])
-            as usize;
+        let rule_count =
+            u32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]) as usize;
         pos += 4;
 
         let mut rules = HashMap::with_capacity(rule_count);
@@ -286,7 +286,9 @@ impl SnapshotManager {
         for entry in std::fs::read_dir(&self.directory)? {
             let entry = entry?;
             if let Some(name) = entry.file_name().to_str() {
-                if let Some(id_str) = name.strip_prefix("snapshot_").and_then(|s| s.strip_suffix(".drv")) {
+                if let Some(id_str) =
+                    name.strip_prefix("snapshot_").and_then(|s| s.strip_suffix(".drv"))
+                {
                     if let Ok(id) = id_str.parse() {
                         ids.push(id);
                     }
@@ -337,7 +339,9 @@ impl SnapshotManager {
             for entry in std::fs::read_dir(directory)? {
                 let entry = entry?;
                 if let Some(name) = entry.file_name().to_str() {
-                    if let Some(id_str) = name.strip_prefix("snapshot_").and_then(|s| s.strip_suffix(".drv")) {
+                    if let Some(id_str) =
+                        name.strip_prefix("snapshot_").and_then(|s| s.strip_suffix(".drv"))
+                    {
                         if let Ok(id) = id_str.parse::<u64>() {
                             highest = highest.max(id);
                         }

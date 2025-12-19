@@ -2,19 +2,19 @@
 //!
 //! Emits unified rules to editor-specific formats.
 
+mod claude;
 mod copilot;
 mod cursor;
 mod generic;
 mod windsurf;
-mod claude;
 
+pub use claude::ClaudeEmitter;
 pub use copilot::CopilotEmitter;
 pub use cursor::CursorEmitter;
 pub use generic::GenericEmitter;
 pub use windsurf::WindsurfEmitter;
-pub use claude::ClaudeEmitter;
 
-use crate::{parser::UnifiedRule, DrivenError, Editor, Result};
+use crate::{DrivenError, Editor, Result, parser::UnifiedRule};
 use std::path::Path;
 
 /// Trait for emitting rules to a specific format
@@ -36,9 +36,7 @@ pub struct Emitter {
 
 impl std::fmt::Debug for Emitter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Emitter")
-            .field("editor", &self.inner.editor())
-            .finish()
+        f.debug_struct("Emitter").field("editor", &self.inner.editor()).finish()
     }
 }
 
@@ -95,10 +93,7 @@ pub(crate) fn format_heading(level: usize, text: &str) -> String {
 
 /// Format bullet points for markdown
 pub(crate) fn format_bullet_list(items: &[String]) -> String {
-    items
-        .iter()
-        .map(|item| format!("- {}\n", item))
-        .collect()
+    items.iter().map(|item| format!("- {}\n", item)).collect()
 }
 
 #[cfg(test)]

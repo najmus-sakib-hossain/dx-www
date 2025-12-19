@@ -96,11 +96,7 @@ impl UnifiedRule {
     }
 
     /// Create a standard rule
-    pub fn standard(
-        category: RuleCategory,
-        priority: u8,
-        description: impl Into<String>,
-    ) -> Self {
+    pub fn standard(category: RuleCategory, priority: u8, description: impl Into<String>) -> Self {
         Self::Standard {
             category,
             priority,

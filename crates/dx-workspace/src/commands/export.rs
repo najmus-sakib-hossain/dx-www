@@ -1,7 +1,7 @@
 //! Export workspace configuration.
 
 use crate::{Generator, Platform, Result, WorkspaceConfig};
-use console::{style, Emoji};
+use console::{Emoji, style};
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
@@ -78,7 +78,9 @@ impl ExportCommand {
         match options.format {
             ExportFormat::Json => Self::export_json(&config, &output_path)?,
             ExportFormat::Yaml => Self::export_yaml(&config, &output_path)?,
-            ExportFormat::Archive => Self::export_archive(&config, &project_dir, &output_path, &options)?,
+            ExportFormat::Archive => {
+                Self::export_archive(&config, &project_dir, &output_path, &options)?
+            }
         }
 
         println!();
@@ -96,11 +98,10 @@ impl ExportCommand {
         let json = serde_json::to_string_pretty(config)
             .map_err(|e| crate::Error::json_parse(output_path, e))?;
 
-        let mut file = fs::File::create(output_path)
-            .map_err(|e| crate::Error::io(output_path, e))?;
+        let mut file =
+            fs::File::create(output_path).map_err(|e| crate::Error::io(output_path, e))?;
 
-        file.write_all(json.as_bytes())
-            .map_err(|e| crate::Error::io(output_path, e))?;
+        file.write_all(json.as_bytes()).map_err(|e| crate::Error::io(output_path, e))?;
 
         println!("  {} Exported as JSON", style(CHECK).green());
 
@@ -108,14 +109,13 @@ impl ExportCommand {
     }
 
     fn export_yaml(config: &WorkspaceConfig, output_path: &PathBuf) -> Result<()> {
-        let yaml = serde_yaml::to_string(config)
-            .map_err(|e| crate::Error::yaml_parse(output_path, e))?;
+        let yaml =
+            serde_yaml::to_string(config).map_err(|e| crate::Error::yaml_parse(output_path, e))?;
 
-        let mut file = fs::File::create(output_path)
-            .map_err(|e| crate::Error::io(output_path, e))?;
+        let mut file =
+            fs::File::create(output_path).map_err(|e| crate::Error::io(output_path, e))?;
 
-        file.write_all(yaml.as_bytes())
-            .map_err(|e| crate::Error::io(output_path, e))?;
+        file.write_all(yaml.as_bytes()).map_err(|e| crate::Error::io(output_path, e))?;
 
         println!("  {} Exported as YAML", style(CHECK).green());
 
@@ -140,10 +140,7 @@ impl ExportCommand {
         if options.include_generated {
             let generator = Generator::with_output_dir(config, project_dir);
             let platforms = if options.platforms.is_empty() {
-                Platform::all()
-                    .into_iter()
-                    .filter(|p| generator.exists(*p))
-                    .collect()
+                Platform::all().into_iter().filter(|p| generator.exists(*p)).collect()
             } else {
                 options.platforms.clone()
             };

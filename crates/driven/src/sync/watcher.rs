@@ -3,7 +3,7 @@
 use crate::{DrivenError, Result};
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::{Receiver, channel};
 
 /// Watches for file changes
 #[derive(Debug)]
@@ -52,11 +52,7 @@ impl FileWatcher {
 
     /// Wait for next event (blocking)
     pub fn wait_for_event(&self) -> Option<WatchEvent> {
-        self.rx
-            .recv()
-            .ok()
-            .and_then(|r| r.ok())
-            .map(WatchEvent::from_notify)
+        self.rx.recv().ok().and_then(|r| r.ok()).map(WatchEvent::from_notify)
     }
 }
 

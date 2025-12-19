@@ -75,15 +75,12 @@ impl SharedRules {
 
     /// Insert a new rule
     pub fn insert(&self, content: Vec<u8>) -> u32 {
-        let id = self
-            .next_id
-            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let id = self.next_id.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         let rule = RuleRef::new(id, content);
 
         self.rules.write().unwrap().insert(id, rule);
         self.dirty.dirty_standard((id % 64) as u8);
-        self.version
-            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        self.version.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
 
         id
     }
@@ -103,8 +100,7 @@ impl SharedRules {
                 version: rule.version + 1,
             };
             self.dirty.dirty_standard((id % 64) as u8);
-            self.version
-                .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            self.version.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             true
         } else {
             false
@@ -116,8 +112,7 @@ impl SharedRules {
         let removed = self.rules.write().unwrap().remove(&id);
         if removed.is_some() {
             self.dirty.dirty_standard((id % 64) as u8);
-            self.version
-                .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            self.version.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         }
         removed
     }

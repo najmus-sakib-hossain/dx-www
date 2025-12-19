@@ -2,9 +2,9 @@
 //!
 //! Performance benchmarking for DX Binary Dawn features.
 
-use crate::binary::{compute_blake3, StringTable, StringTableBuilder};
-use crate::streaming::XorPatcher;
 use crate::Result;
+use crate::binary::{StringTable, StringTableBuilder, compute_blake3};
+use crate::streaming::XorPatcher;
 use console::style;
 use std::path::Path;
 use std::time::Instant;
@@ -49,10 +49,7 @@ impl BenchmarkCommand {
         // Blake3 benchmark
         println!("  {} Blake3 Checksum...", style("▸").cyan());
         results.hash_throughput = Self::bench_blake3(iterations);
-        println!(
-            "    Throughput: {:.2} MB/s",
-            results.hash_throughput / 1_000_000.0
-        );
+        println!("    Throughput: {:.2} MB/s", results.hash_throughput / 1_000_000.0);
 
         println!();
         println!("{} Benchmarks complete!", style("✓").green().bold());
@@ -116,11 +113,7 @@ impl BenchmarkCommand {
 
     /// Run file-based benchmark
     pub fn bench_file(path: &Path) -> Result<()> {
-        println!(
-            "{} Benchmarking file: {}",
-            style("⚡").bold(),
-            path.display()
-        );
+        println!("{} Benchmarking file: {}", style("⚡").bold(), path.display());
 
         let data = std::fs::read(path)?;
         let size = data.len();

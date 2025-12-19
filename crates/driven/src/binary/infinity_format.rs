@@ -118,9 +118,7 @@ impl InfinityHeader {
     /// Parse header from bytes (zero-copy)
     pub fn from_bytes(data: &[u8]) -> Result<&Self> {
         if data.len() < std::mem::size_of::<Self>() {
-            return Err(DrivenError::InvalidBinary(
-                "Data too small for infinity header".into(),
-            ));
+            return Err(DrivenError::InvalidBinary("Data too small for infinity header".into()));
         }
 
         let header: &Self = bytemuck::from_bytes(&data[..std::mem::size_of::<Self>()]);
@@ -167,9 +165,7 @@ impl<'a> InfinityRule<'a> {
         let min_size = header_size + offsets_size;
 
         if data.len() < min_size {
-            return Err(DrivenError::InvalidBinary(
-                "Data too small for infinity rule".into(),
-            ));
+            return Err(DrivenError::InvalidBinary("Data too small for infinity rule".into()));
         }
 
         let header = InfinityHeader::from_bytes(data)?;

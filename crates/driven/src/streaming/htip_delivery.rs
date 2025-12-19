@@ -112,20 +112,16 @@ impl HtipDelivery {
 
     /// Start a batch operation
     pub fn begin_batch(&mut self) {
-        self.operations.push((
-            OperationHeader::new(RuleOperation::BatchStart, 0, 0),
-            Vec::new(),
-        ));
+        self.operations
+            .push((OperationHeader::new(RuleOperation::BatchStart, 0, 0), Vec::new()));
         self.in_batch = true;
     }
 
     /// Commit the current batch
     pub fn commit_batch(&mut self) {
         if self.in_batch {
-            self.operations.push((
-                OperationHeader::new(RuleOperation::BatchCommit, 0, 0),
-                Vec::new(),
-            ));
+            self.operations
+                .push((OperationHeader::new(RuleOperation::BatchCommit, 0, 0), Vec::new()));
             self.in_batch = false;
         }
     }

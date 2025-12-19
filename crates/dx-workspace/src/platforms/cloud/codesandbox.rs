@@ -6,7 +6,7 @@
 
 use super::{CloudGenerator, GeneratedFile};
 use crate::{Result, WorkspaceConfig};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use std::fs;
 use std::path::Path;
 
@@ -68,10 +68,13 @@ impl CodeSandboxGenerator {
         }
 
         // Container configuration
-        sandbox.insert("container".to_string(), json!({
-            "node": "18",
-            "startScript": "dev"
-        }));
+        sandbox.insert(
+            "container".to_string(),
+            json!({
+                "node": "18",
+                "startScript": "dev"
+            }),
+        );
 
         // Infinite loop protection
         sandbox.insert("infiniteLoopProtection".to_string(), json!(true));
@@ -97,10 +100,7 @@ impl CloudGenerator for CodeSandboxGenerator {
         // Generate tasks.json
         let tasks = self.generate_tasks(config);
         let tasks_content = serde_json::to_string_pretty(&tasks).unwrap_or_default();
-        files.push(GeneratedFile::new(
-            ".codesandbox/tasks.json",
-            tasks_content.clone(),
-        ));
+        files.push(GeneratedFile::new(".codesandbox/tasks.json", tasks_content.clone()));
 
         let tasks_path = codesandbox_dir.join("tasks.json");
         fs::write(&tasks_path, &tasks_content).map_err(|e| crate::Error::io(&tasks_path, e))?;
@@ -108,19 +108,18 @@ impl CloudGenerator for CodeSandboxGenerator {
         // Generate sandbox.config.json
         let sandbox = self.generate_sandbox_config(config);
         let sandbox_content = serde_json::to_string_pretty(&sandbox).unwrap_or_default();
-        files.push(GeneratedFile::new(
-            "sandbox.config.json",
-            sandbox_content.clone(),
-        ));
+        files.push(GeneratedFile::new("sandbox.config.json", sandbox_content.clone()));
 
         let sandbox_path = output_dir.join("sandbox.config.json");
-        fs::write(&sandbox_path, &sandbox_content).map_err(|e| crate::Error::io(&sandbox_path, e))?;
+        fs::write(&sandbox_path, &sandbox_content)
+            .map_err(|e| crate::Error::io(&sandbox_path, e))?;
 
         Ok(files)
     }
 
     fn exists(&self, project_dir: &Path) -> bool {
-        project_dir.join(".codesandbox").exists() || project_dir.join("sandbox.config.json").exists()
+        project_dir.join(".codesandbox").exists()
+            || project_dir.join("sandbox.config.json").exists()
     }
 
     fn clean(&self, project_dir: &Path) -> Result<()> {

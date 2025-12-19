@@ -102,7 +102,10 @@ pub async fn run(args: SerializerArgs, theme: &Theme) -> Result<()> {
         } => run_bench(iterations, theme).await,
         SerializerCommands::Validate { input: _ } => run_validate(theme).await,
         SerializerCommands::Stats => run_stats(theme).await,
-        SerializerCommands::Schema { input: _, output: _ } => run_schema(theme).await,
+        SerializerCommands::Schema {
+            input: _,
+            output: _,
+        } => run_schema(theme).await,
     }
 }
 
@@ -199,11 +202,7 @@ async fn run_bench(iterations: u32, theme: &Theme) -> Result<()> {
     theme.print_section("dx-serializer: Benchmark");
     eprintln!();
 
-    eprintln!(
-        "  {} Iterations: {}",
-        "│".bright_black(),
-        iterations.to_string().cyan()
-    );
+    eprintln!("  {} Iterations: {}", "│".bright_black(), iterations.to_string().cyan());
     eprintln!();
 
     let spinner = Spinner::dots("Running encode benchmark...");

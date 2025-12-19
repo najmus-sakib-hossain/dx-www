@@ -2,8 +2,8 @@
 //!
 //! Lock-free synchronization primitives for rule state.
 
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 /// Sync state
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

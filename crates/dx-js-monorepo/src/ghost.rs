@@ -2,11 +2,11 @@
 //!
 //! Detects undeclared dependencies in the workspace.
 
-use std::path::{Path, PathBuf};
-use std::collections::{HashMap, HashSet};
+use crate::change::ChangeDetector;
 use crate::error::ScanError;
 use crate::types::GhostDependency;
-use crate::change::ChangeDetector;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
 /// Ghost dependency report
 #[derive(Debug, Clone, Default)]
@@ -98,15 +98,12 @@ impl GhostDetector {
 
     /// Scan single package for ghost dependencies
     pub fn scan_package(&self, package_idx: u32) -> Result<Vec<GhostDependency>, ScanError> {
-        let path = self.package_paths.get(&package_idx)
-            .ok_or_else(|| ScanError::ReadFailed {
-                path: PathBuf::from(format!("package_{}", package_idx)),
-                reason: "package path not set".to_string(),
-            })?;
+        let path = self.package_paths.get(&package_idx).ok_or_else(|| ScanError::ReadFailed {
+            path: PathBuf::from(format!("package_{}", package_idx)),
+            reason: "package path not set".to_string(),
+        })?;
 
-        let declared = self.declared_deps.get(&package_idx)
-            .cloned()
-            .unwrap_or_default();
+        let declared = self.declared_deps.get(&package_idx).cloned().unwrap_or_default();
 
         let mut ghosts = Vec::new();
 
@@ -125,7 +122,7 @@ impl GhostDetector {
                 path: path.clone(),
                 reason: e.to_string(),
             })?;
-            
+
             let file_path = entry.path();
             if self.is_source_file(&file_path) {
                 self.scan_file(&file_path, package_idx, &declared, &mut ghosts)?;
@@ -169,9 +166,9 @@ impl GhostDetector {
                 path: dir.to_path_buf(),
                 reason: e.to_string(),
             })?;
-            
+
             let path = entry.path();
-            
+
             if path.is_dir() {
                 self.scan_directory(&path, package_idx, declared, ghosts)?;
             } else if self.is_source_file(&path) {
@@ -189,11 +186,13 @@ impl GhostDetector {
         declared: &HashSet<String>,
         ghosts: &mut Vec<GhostDependency>,
     ) -> Result<(), ScanError> {
-        let imports = self.change_detector.detect_imports_file(path)
-            .map_err(|e| ScanError::ReadFailed {
-                path: path.to_path_buf(),
-                reason: e.to_string(),
-            })?;
+        let imports =
+            self.change_detector
+                .detect_imports_file(path)
+                .map_err(|e| ScanError::ReadFailed {
+                    path: path.to_path_buf(),
+                    reason: e.to_string(),
+                })?;
 
         for import in imports {
             let package_name = self.extract_package_name(&import.specifier);
@@ -239,13 +238,47 @@ impl GhostDetector {
 
     fn is_builtin(&self, package: &str) -> bool {
         const BUILTINS: &[&str] = &[
-            "fs", "path", "os", "util", "events", "stream", "http", "https",
-            "url", "querystring", "crypto", "buffer", "child_process", "cluster",
-            "dgram", "dns", "net", "readline", "repl", "tls", "tty", "v8", "vm",
-            "zlib", "assert", "async_hooks", "console", "constants", "domain",
-            "inspector", "module", "perf_hooks", "process", "punycode",
-            "string_decoder", "timers", "trace_events", "worker_threads",
-            "node:fs", "node:path", "node:os", // Node.js prefixed
+            "fs",
+            "path",
+            "os",
+            "util",
+            "events",
+            "stream",
+            "http",
+            "https",
+            "url",
+            "querystring",
+            "crypto",
+            "buffer",
+            "child_process",
+            "cluster",
+            "dgram",
+            "dns",
+            "net",
+            "readline",
+            "repl",
+            "tls",
+            "tty",
+            "v8",
+            "vm",
+            "zlib",
+            "assert",
+            "async_hooks",
+            "console",
+            "constants",
+            "domain",
+            "inspector",
+            "module",
+            "perf_hooks",
+            "process",
+            "punycode",
+            "string_decoder",
+            "timers",
+            "trace_events",
+            "worker_threads",
+            "node:fs",
+            "node:path",
+            "node:os", // Node.js prefixed
         ];
         BUILTINS.contains(&package)
     }
@@ -266,8 +299,8 @@ impl Default for GhostDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::fs;
+    use tempfile::TempDir;
 
     #[test]
     fn test_extract_package_name() {
@@ -282,7 +315,7 @@ mod tests {
     #[test]
     fn test_is_declared() {
         let mut detector = GhostDetector::new();
-        
+
         let mut deps = HashSet::new();
         deps.insert("lodash".to_string());
         deps.insert("react".to_string());
@@ -292,11 +325,11 @@ mod tests {
         assert!(detector.is_declared(0, "lodash/get"));
         assert!(detector.is_declared(0, "react"));
         assert!(!detector.is_declared(0, "express"));
-        
+
         // Relative imports are always "declared"
         assert!(detector.is_declared(0, "./utils"));
         assert!(detector.is_declared(0, "../shared"));
-        
+
         // Builtins are always "declared"
         assert!(detector.is_declared(0, "fs"));
         assert!(detector.is_declared(0, "path"));
@@ -317,10 +350,11 @@ import express from 'express';
 import { foo } from './utils';
 import fs from 'fs';
 "#,
-        ).unwrap();
+        )
+        .unwrap();
 
         let mut detector = GhostDetector::new();
-        
+
         // Only lodash is declared
         let mut deps = HashSet::new();
         deps.insert("lodash".to_string());
@@ -331,13 +365,13 @@ import fs from 'fs';
 
         // express should be detected as ghost
         assert!(ghosts.iter().any(|g| g.package_name == "express"));
-        
+
         // lodash should NOT be detected (declared)
         assert!(!ghosts.iter().any(|g| g.package_name == "lodash"));
-        
+
         // fs should NOT be detected (builtin)
         assert!(!ghosts.iter().any(|g| g.package_name == "fs"));
-        
+
         // ./utils should NOT be detected (relative)
         assert!(!ghosts.iter().any(|g| g.package_name.starts_with('.')));
     }

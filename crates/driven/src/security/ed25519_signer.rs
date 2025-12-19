@@ -121,23 +121,23 @@ impl KeyPair {
         // Use a simple deterministic approach for now
         // In production, use a proper crypto library like ed25519-dalek
         let mut seed = [0u8; 32];
-        
+
         // Get some entropy from system time and process ID
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default();
-        
+
         seed[0..8].copy_from_slice(&now.as_nanos().to_le_bytes()[0..8]);
         seed[8..12].copy_from_slice(&std::process::id().to_le_bytes());
-        
+
         // Use blake3 to derive keys from seed
         let hash = blake3::hash(&seed);
         let secret_bytes = hash.as_bytes();
-        
+
         // Derive public key from secret (simplified - real Ed25519 is more complex)
         let public_hash = blake3::hash(secret_bytes);
         let public_bytes = public_hash.as_bytes();
-        
+
         Ok(Self {
             public: PublicKey(*public_bytes),
             secret: SecretKey(*secret_bytes),
@@ -190,7 +190,9 @@ impl Ed25519Signer {
 
     /// Sign data
     pub fn sign(&self, data: &[u8]) -> Result<Signature> {
-        let key_pair = self.key_pair.as_ref()
+        let key_pair = self
+            .key_pair
+            .as_ref()
             .ok_or_else(|| DrivenError::Security("No signing key configured".into()))?;
 
         // Simplified signature using BLAKE3 HMAC-like construction
@@ -198,32 +200,37 @@ impl Ed25519Signer {
         let mut to_sign = Vec::with_capacity(32 + data.len());
         to_sign.extend_from_slice(key_pair.secret.as_bytes());
         to_sign.extend_from_slice(data);
-        
+
         let hash = blake3::hash(&to_sign);
         let hash2 = blake3::hash(hash.as_bytes());
-        
+
         let mut sig = [0u8; 64];
         sig[0..32].copy_from_slice(hash.as_bytes());
         sig[32..64].copy_from_slice(hash2.as_bytes());
-        
+
         Ok(Signature(sig))
     }
 
     /// Verify signature with our key pair
     pub fn verify(&self, data: &[u8], signature: &Signature) -> Result<bool> {
-        let key_pair = self.key_pair.as_ref()
+        let key_pair = self
+            .key_pair
+            .as_ref()
             .ok_or_else(|| DrivenError::Security("No verification key configured".into()))?;
 
         self.verify_with_key(data, signature, &key_pair.public)
     }
 
     /// Verify signature with a specific public key
-    pub fn verify_with_key(&self, data: &[u8], signature: &Signature, public_key: &PublicKey) -> Result<bool> {
+    pub fn verify_with_key(
+        &self,
+        data: &[u8],
+        signature: &Signature,
+        public_key: &PublicKey,
+    ) -> Result<bool> {
         // Check if key is trusted
-        let is_our_key = self.key_pair.as_ref()
-            .map(|kp| &kp.public == public_key)
-            .unwrap_or(false);
-        
+        let is_our_key = self.key_pair.as_ref().map(|kp| &kp.public == public_key).unwrap_or(false);
+
         if !is_our_key && !self.trusted_keys.contains(public_key) {
             return Err(DrivenError::Security("Untrusted public key".into()));
         }
@@ -235,8 +242,8 @@ impl Ed25519Signer {
 
     /// Check if key is trusted
     pub fn is_trusted(&self, key: &PublicKey) -> bool {
-        self.trusted_keys.contains(key) || 
-            self.key_pair.as_ref().map(|kp| &kp.public == key).unwrap_or(false)
+        self.trusted_keys.contains(key)
+            || self.key_pair.as_ref().map(|kp| &kp.public == key).unwrap_or(false)
     }
 
     /// Get our public key

@@ -145,18 +145,14 @@ impl StringTable {
     /// Write string table to a writer.
     pub fn write_to<W: Write>(&self, writer: &mut W) -> Result<usize> {
         let bytes = self.to_bytes();
-        writer
-            .write_all(&bytes)
-            .map_err(|e| Error::io("string_table", e))?;
+        writer.write_all(&bytes).map_err(|e| Error::io("string_table", e))?;
         Ok(bytes.len())
     }
 
     /// Read string table from a reader.
     pub fn read_from<R: Read>(reader: &mut R, size: usize) -> Result<Self> {
         let mut bytes = vec![0u8; size];
-        reader
-            .read_exact(&mut bytes)
-            .map_err(|e| Error::io("string_table", e))?;
+        reader.read_exact(&mut bytes).map_err(|e| Error::io("string_table", e))?;
         Self::from_bytes(&bytes)
     }
 }

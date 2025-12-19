@@ -1,6 +1,6 @@
 //! Validate command - validate rules
 
-use crate::{validation, Result, RuleSet};
+use crate::{Result, RuleSet, validation};
 use std::path::Path;
 
 /// Validate command handler
@@ -76,10 +76,7 @@ impl ValidateCommand {
         if result.is_valid() {
             Ok(())
         } else {
-            Err(crate::DrivenError::Validation(format!(
-                "{} errors found",
-                result.error_count()
-            )))
+            Err(crate::DrivenError::Validation(format!("{} errors found", result.error_count())))
         }
     }
 

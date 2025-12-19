@@ -18,7 +18,7 @@ pub use standards::StandardsTemplate;
 pub use task::TaskTemplate;
 pub use workflow::WorkflowTemplate;
 
-use crate::{parser::UnifiedRule, Result};
+use crate::{Result, parser::UnifiedRule};
 
 /// A loadable template
 pub trait Template: Send + Sync {
@@ -48,7 +48,14 @@ pub trait Template: Send + Sync {
 
         for rule in rules {
             match rule {
-                UnifiedRule::Persona { name, role, identity, style, traits, principles } => {
+                UnifiedRule::Persona {
+                    name,
+                    role,
+                    identity,
+                    style,
+                    traits,
+                    principles,
+                } => {
                     output.push_str("## Persona\n\n");
                     output.push_str(&format!("**{}** - {}\n\n", name, role));
                     if let Some(id) = identity {
@@ -72,11 +79,19 @@ pub trait Template: Send + Sync {
                         output.push('\n');
                     }
                 }
-                UnifiedRule::Standard { category, description, .. } => {
+                UnifiedRule::Standard {
+                    category,
+                    description,
+                    ..
+                } => {
                     output.push_str(&format!("### {:?}\n", category));
                     output.push_str(&format!("- {}\n\n", description));
                 }
-                UnifiedRule::Context { includes, excludes, focus } => {
+                UnifiedRule::Context {
+                    includes,
+                    excludes,
+                    focus,
+                } => {
                     output.push_str("## Context\n\n");
                     if !includes.is_empty() {
                         output.push_str("### Include\n");

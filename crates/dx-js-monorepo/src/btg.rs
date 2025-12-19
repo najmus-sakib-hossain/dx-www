@@ -2,10 +2,10 @@
 //!
 //! Pre-compiled task pipelines with u32 indices and parallel execution maps.
 
-use bytemuck::{Pod, Zeroable};
-use crate::{BTG_MAGIC, FORMAT_VERSION};
 use crate::error::TaskError;
 use crate::types::TaskEntry;
+use crate::{BTG_MAGIC, FORMAT_VERSION};
+use bytemuck::{Pod, Zeroable};
 
 /// Binary Task Graph header
 #[repr(C, packed)]
@@ -81,37 +81,35 @@ impl BtgSerializer {
     /// Serialize task graph to BTG format
     pub fn serialize(data: &TaskGraphData) -> Result<Vec<u8>, TaskError> {
         let mut buffer = Vec::new();
-        
+
         // Calculate sizes
         let tasks_size = data.tasks.len() * TaskEntry::SIZE;
         let edges_size = data.dependency_edges.len() * 8;
         let groups_size = data.parallel_groups.len() * std::mem::size_of::<ParallelGroup>();
         let topo_size = data.topological_order.len() * 4;
-        
+
         // Calculate offsets
         let tasks_offset = BtgHeader::SIZE as u64;
         let edges_offset = tasks_offset + tasks_size as u64;
         let groups_offset = edges_offset + edges_size as u64;
         let topo_offset = groups_offset + groups_size as u64;
         let strings_offset = topo_offset + topo_size as u64;
-        
+
         // Build string table
         let (string_table, string_indices) = Self::build_string_table(data);
-        
+
         // Create header
-        let mut header = BtgHeader::new(
-            data.tasks.len() as u32,
-            data.dependency_edges.len() as u32,
-        );
+        let mut header =
+            BtgHeader::new(data.tasks.len() as u32, data.dependency_edges.len() as u32);
         header.tasks_offset = tasks_offset;
         header.edges_offset = edges_offset;
         header.parallel_groups_offset = groups_offset;
         header.topo_order_offset = topo_offset;
         header.strings_offset = strings_offset;
-        
+
         // Write header
         buffer.extend_from_slice(bytemuck::bytes_of(&header));
-        
+
         // Write task entries
         for task in &data.tasks {
             let mut entry = TaskEntry::new(
@@ -126,31 +124,31 @@ impl BtgSerializer {
             }
             buffer.extend_from_slice(bytemuck::bytes_of(&entry));
         }
-        
+
         // Write dependency edges
         for (from, to) in &data.dependency_edges {
             buffer.extend_from_slice(&from.to_le_bytes());
             buffer.extend_from_slice(&to.to_le_bytes());
         }
-        
+
         // Write parallel groups
         for group in &data.parallel_groups {
             buffer.extend_from_slice(bytemuck::bytes_of(group));
         }
-        
+
         // Write topological order
         for idx in &data.topological_order {
             buffer.extend_from_slice(&idx.to_le_bytes());
         }
-        
+
         // Write string table
         buffer.extend_from_slice(&string_table);
-        
+
         // Compute content hash
         // content_hash offset in packed BtgHeader: 4 + 4 + 4 + 8 + 8 + 4 + 8 + 8 + 8 = 56
         let content_hash = blake3::hash(&buffer[BtgHeader::SIZE..]);
         buffer[56..88].copy_from_slice(content_hash.as_bytes());
-        
+
         Ok(buffer)
     }
 
@@ -173,21 +171,15 @@ impl BtgSerializer {
         // Read task entries
         let tasks_start = header.tasks_offset as usize;
         let mut tasks = Vec::with_capacity(header.task_count as usize);
-        
+
         for i in 0..header.task_count as usize {
             let offset = tasks_start + i * TaskEntry::SIZE;
-            let entry: &TaskEntry = bytemuck::from_bytes(
-                &data[offset..offset + TaskEntry::SIZE]
-            );
-            
+            let entry: &TaskEntry = bytemuck::from_bytes(&data[offset..offset + TaskEntry::SIZE]);
+
             tasks.push(TaskData {
-                name: string_table.get(entry.name_idx as usize)
-                    .cloned()
-                    .unwrap_or_default(),
+                name: string_table.get(entry.name_idx as usize).cloned().unwrap_or_default(),
                 package_idx: entry.package_idx,
-                command: string_table.get(entry.command_idx as usize)
-                    .cloned()
-                    .unwrap_or_default(),
+                command: string_table.get(entry.command_idx as usize).cloned().unwrap_or_default(),
                 definition_hash: entry.definition_hash,
                 frame_budget_us: entry.frame_budget_us,
                 cacheable: entry.is_cacheable(),
@@ -197,7 +189,7 @@ impl BtgSerializer {
         // Read dependency edges
         let edges_start = header.edges_offset as usize;
         let mut dependency_edges = Vec::with_capacity(header.edge_count as usize);
-        
+
         for i in 0..header.edge_count as usize {
             let offset = edges_start + i * 8;
             let from = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap());
@@ -209,7 +201,7 @@ impl BtgSerializer {
         let topo_start = header.topo_order_offset as usize;
         let topo_count = header.task_count as usize;
         let mut topological_order = Vec::with_capacity(topo_count);
-        
+
         for i in 0..topo_count {
             let offset = topo_start + i * 4;
             if offset + 4 <= data.len() {
@@ -223,12 +215,11 @@ impl BtgSerializer {
         let groups_end = header.topo_order_offset as usize;
         let group_count = (groups_end - groups_start) / std::mem::size_of::<ParallelGroup>();
         let mut parallel_groups = Vec::with_capacity(group_count);
-        
+
         for i in 0..group_count {
             let offset = groups_start + i * std::mem::size_of::<ParallelGroup>();
-            let group: &ParallelGroup = bytemuck::from_bytes(
-                &data[offset..offset + std::mem::size_of::<ParallelGroup>()]
-            );
+            let group: &ParallelGroup =
+                bytemuck::from_bytes(&data[offset..offset + std::mem::size_of::<ParallelGroup>()]);
             parallel_groups.push(*group);
         }
 
@@ -240,13 +231,15 @@ impl BtgSerializer {
         })
     }
 
-    fn build_string_table(data: &TaskGraphData) -> (Vec<u8>, std::collections::HashMap<String, usize>) {
+    fn build_string_table(
+        data: &TaskGraphData,
+    ) -> (Vec<u8>, std::collections::HashMap<String, usize>) {
         use std::collections::HashMap;
-        
+
         let mut table = Vec::new();
         let mut indices = HashMap::new();
         let mut string_index = 0usize;
-        
+
         for task in &data.tasks {
             for s in [&task.name, &task.command] {
                 if !indices.contains_key(s) {
@@ -257,14 +250,14 @@ impl BtgSerializer {
                 }
             }
         }
-        
+
         (table, indices)
     }
 
     fn parse_string_table(data: &[u8]) -> Vec<String> {
         let mut strings = Vec::new();
         let mut start = 0;
-        
+
         for (i, &byte) in data.iter().enumerate() {
             if byte == 0 {
                 if let Ok(s) = std::str::from_utf8(&data[start..i]) {
@@ -273,7 +266,7 @@ impl BtgSerializer {
                 start = i + 1;
             }
         }
-        
+
         strings
     }
 }
@@ -329,7 +322,7 @@ impl TaskGraphData {
         // Compute levels (distance from root)
         let mut levels = vec![0u16; n];
         let mut adj: Vec<Vec<u32>> = vec![Vec::new(); n];
-        
+
         for &(from, to) in &self.dependency_edges {
             adj[from as usize].push(to);
         }
@@ -337,20 +330,19 @@ impl TaskGraphData {
         // BFS to compute levels
         for &root in &self.topological_order {
             for &neighbor in &adj[root as usize] {
-                levels[neighbor as usize] = levels[neighbor as usize]
-                    .max(levels[root as usize] + 1);
+                levels[neighbor as usize] =
+                    levels[neighbor as usize].max(levels[root as usize] + 1);
             }
         }
 
         // Group tasks by level
         let max_level = *levels.iter().max().unwrap_or(&0);
         self.parallel_groups.clear();
-        
+
         for level in 0..=max_level {
-            let tasks_at_level: Vec<u32> = (0..n as u32)
-                .filter(|&i| levels[i as usize] == level)
-                .collect();
-            
+            let tasks_at_level: Vec<u32> =
+                (0..n as u32).filter(|&i| levels[i as usize] == level).collect();
+
             if !tasks_at_level.is_empty() {
                 self.parallel_groups.push(ParallelGroup {
                     tasks_offset: 0, // Would be set during serialization
@@ -413,7 +405,7 @@ mod tests {
         };
 
         data.compute_parallel_groups();
-        
+
         // Should have 2 levels: [a, b] at level 0, [c] at level 1
         assert_eq!(data.parallel_groups.len(), 2);
         // Copy field values to avoid unaligned access on packed struct
