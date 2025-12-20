@@ -180,8 +180,8 @@ export class ForgeDaemon implements vscode.Disposable {
         const forgePath = await this.findForgeBinary();
 
         if (!forgePath) {
-            this.outputChannel.appendLine('[Forge] Error: dx-forge binary not found');
-            vscode.window.showErrorMessage('dx-forge binary not found. Please install dx-forge.');
+            // Gracefully skip - no error message to user
+            this.outputChannel.appendLine('[Forge] dx-forge not available, skipping binary build');
             return false;
         }
 

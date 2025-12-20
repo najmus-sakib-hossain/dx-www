@@ -1,5 +1,5 @@
 /**
- * DX Hologram Extension - Main Entry Point
+ * DX Serializer Extension - Main Entry Point
  * 
  * The Holographic DX System: Three formats in quantum superposition
  * - Human Format: Beautiful, readable (shown in editor)
@@ -24,7 +24,7 @@ export async function activate(context: vscode.ExtensionContext) {
     console.log('[DX] Extension activating...');
 
     // Create output channel
-    outputChannel = vscode.window.createOutputChannel('DX Hologram');
+    outputChannel = vscode.window.createOutputChannel('DX Serializer');
     context.subscriptions.push(outputChannel);
 
     // Create status bar item
@@ -40,10 +40,7 @@ export async function activate(context: vscode.ExtensionContext) {
         autoBuild: vscode.workspace.getConfiguration('dx-hologram.forge').get('autoBuild', true)
     });
 
-    // ═══════════════════════════════════════════════════════════════
     // Register the Hologram Virtual Document Provider
-    // ═══════════════════════════════════════════════════════════════
-    
     context.subscriptions.push(
         vscode.workspace.registerTextDocumentContentProvider(
             'dx-hologram',
@@ -51,26 +48,19 @@ export async function activate(context: vscode.ExtensionContext) {
         )
     );
 
-    // ═══════════════════════════════════════════════════════════════
     // Intercept dx file opens to show human format
-    // ═══════════════════════════════════════════════════════════════
-
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(async (doc) => {
             if (isDxFile(doc.uri) && doc.uri.scheme === 'file') {
                 const config = vscode.workspace.getConfiguration('dx.hologram');
                 if (config.get('autoInflate', true)) {
-                    // Show the hologram (human-readable) version
                     await openAsHologram(doc.uri);
                 }
             }
         })
     );
 
-    // ═══════════════════════════════════════════════════════════════
     // Save handler: Deflate human → LLM, then build binary
-    // ═══════════════════════════════════════════════════════════════
-
     context.subscriptions.push(
         vscode.workspace.onWillSaveTextDocument(async (event) => {
             if (isDxFile(event.document.uri)) {
@@ -79,10 +69,7 @@ export async function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    // ═══════════════════════════════════════════════════════════════
     // Watch for external file changes
-    // ═══════════════════════════════════════════════════════════════
-
     const watcher = vscode.workspace.createFileSystemWatcher('**/dx');
     context.subscriptions.push(
         watcher.onDidChange(uri => hologramProvider.onExternalChange(uri)),
@@ -90,10 +77,7 @@ export async function activate(context: vscode.ExtensionContext) {
         watcher.onDidDelete(uri => logInfo(`DX file deleted: ${uri.fsPath}`))
     );
 
-    // ═══════════════════════════════════════════════════════════════
     // Register Commands
-    // ═══════════════════════════════════════════════════════════════
-
     context.subscriptions.push(
         vscode.commands.registerCommand('dx.openHologram', async (uri?: vscode.Uri) => {
             const fileUri = uri || vscode.window.activeTextEditor?.document.uri;
@@ -111,38 +95,125 @@ export async function activate(context: vscode.ExtensionContext) {
         }),
 
         vscode.commands.registerCommand('dx.startForge', async () => {
-            await forgeDaemon.start();
-            updateStatusBar(true);
+            const started = await forgeDaemon.start();
+            updateStatusBar(started);
         }),
 
         vscode.commands.registerCommand('dx.stopForge', async () => {
-            await forgeDaemon.stop();
+            forgeDaemon.stop();
             updateStatusBar(false);
         }),
 
         vscode.commands.registerCommand('dx.convertFromJson', async () => {
             await convertFromJson();
+        }),
+
+        vscode.commands.registerCommand('dx.normalizeFormat', async () => {
+            await normalizeFormat();
         })
     );
 
-    // ═══════════════════════════════════════════════════════════════
-    // Auto-start Forge daemon
-    // ═══════════════════════════════════════════════════════════════
-
+    // Auto-start Forge daemon (with graceful failure)
     const forgeConfig = vscode.workspace.getConfiguration('dx.forge');
     if (forgeConfig.get('autoStart', true)) {
         try {
-            await forgeDaemon.start();
-            updateStatusBar(true);
-            logSuccess('Forge daemon started automatically');
+            const started = await forgeDaemon.start();
+            updateStatusBar(started);
+            if (started) {
+                logSuccess('Forge daemon started');
+            } else {
+                logInfo('Forge daemon not available - binary builds disabled');
+            }
         } catch (error) {
-            logError(`Failed to start Forge daemon: ${error}`);
+            logInfo('Forge daemon not available - binary builds disabled');
             updateStatusBar(false);
         }
     }
 
     statusBarItem.show();
-    logSuccess('DX Hologram Extension activated!');
+    logSuccess('DX Serializer Extension activated');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Format Detection
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Detect if content is in Human format or LLM format
+ * 
+ * Human format indicators:
+ * - Lines with multiple spaces for indentation
+ * - Unicode symbols (▼, ✓, ✗, •, —)
+ * - Box-drawing characters (┌, │, └, ─)
+ * - Lines starting with spaces
+ * 
+ * LLM format indicators:
+ * - # separators in key:value format
+ * - @ for arrays (key@N>)
+ * - ^ for inheritance
+ * - > for arrays
+ * - No leading whitespace (except empty lines)
+ */
+function detectFormat(content: string): 'human' | 'llm' | 'unknown' {
+    const lines = content.split('\n').filter(l => l.trim().length > 0);
+    
+    if (lines.length === 0) {
+        return 'unknown';
+    }
+
+    let humanScore = 0;
+    let llmScore = 0;
+
+    for (const line of lines) {
+        // Human format indicators
+        if (line.startsWith('    ') || line.startsWith('\t')) {
+            humanScore += 2;
+        }
+        if (/[▼▲✓✗•—→←]/.test(line)) {
+            humanScore += 3;
+        }
+        if (/[┌┐└┘├┤┬┴┼│─]/.test(line)) {
+            humanScore += 3;
+        }
+        if (/^\s+\w+\s*:/.test(line)) {
+            humanScore += 1;
+        }
+
+        // LLM format indicators
+        if (/^\w+#\w+:/.test(line)) {
+            llmScore += 3;
+        }
+        if (/^\w+@\d+[>=]/.test(line)) {
+            llmScore += 3;
+        }
+        if (/^\^/.test(line)) {
+            llmScore += 2;
+        }
+        if (/^>\w+\|/.test(line) || /\|/.test(line) && !/[│]/.test(line)) {
+            llmScore += 1;
+        }
+        if (/^\w+\s+>/.test(line)) {
+            llmScore += 2;
+        }
+    }
+
+    if (humanScore > llmScore + 2) {
+        return 'human';
+    } else if (llmScore > humanScore + 2) {
+        return 'llm';
+    }
+    
+    // Check for simple key:value without # (could be either, but lean towards human-like)
+    const simpleKV = lines.filter(l => /^\w[\w.]*\s*:/.test(l.trim()) && !l.includes('#'));
+    if (simpleKV.length > lines.length * 0.5) {
+        // More than half are simple key:value - check indentation
+        const indented = lines.filter(l => l.startsWith(' ') || l.startsWith('\t'));
+        if (indented.length > lines.length * 0.3) {
+            return 'human';
+        }
+    }
+
+    return 'unknown';
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -151,17 +222,28 @@ export async function activate(context: vscode.ExtensionContext) {
 
 function isDxFile(uri: vscode.Uri): boolean {
     const basename = path.basename(uri.fsPath);
-    return basename === 'dx';
+    return basename === 'dx' || uri.fsPath.endsWith('.dx');
 }
 
 async function openAsHologram(fileUri: vscode.Uri): Promise<void> {
     try {
-        // Read the LLM-dense format from disk
         const content = fs.readFileSync(fileUri.fsPath, 'utf8');
+        const format = detectFormat(content);
         
-        // Inflate to human-pretty format
-        const inflater = new DxInflater();
-        const humanFormat = inflater.inflate(content);
+        logInfo(`Detected format: ${format} for ${path.basename(fileUri.fsPath)}`);
+        
+        let humanFormat: string;
+        
+        if (format === 'human' || format === 'unknown') {
+            // Already human-readable or unknown - show as-is but normalize on save
+            humanFormat = content;
+            logInfo('File appears to be human-readable, showing as-is');
+        } else {
+            // LLM format - inflate to human
+            const inflater = new DxInflater();
+            humanFormat = inflater.inflate(content);
+            logInfo('Inflated LLM format to human-readable');
+        }
         
         // Create a new document with the human format
         const doc = await vscode.workspace.openTextDocument({
@@ -173,7 +255,7 @@ async function openAsHologram(fileUri: vscode.Uri): Promise<void> {
         hologramProvider.registerFile(fileUri.fsPath, doc.uri);
         
         await vscode.window.showTextDocument(doc, { preview: false });
-        logInfo(`Opened dx file as hologram: ${fileUri.fsPath}`);
+        logInfo(`Opened dx file: ${fileUri.fsPath}`);
     } catch (error) {
         logError(`Failed to open hologram: ${error}`);
     }
@@ -182,25 +264,85 @@ async function openAsHologram(fileUri: vscode.Uri): Promise<void> {
 async function handleSave(doc: vscode.TextDocument): Promise<vscode.TextEdit[]> {
     try {
         const realPath = hologramProvider.getRealPath(doc.uri);
-        if (!realPath) {
-            // This is a direct dx file edit
-            const deflater = new DxDeflater();
-            const llmFormat = deflater.deflate(doc.getText());
-            
-            // Write LLM format to disk
-            fs.writeFileSync(doc.uri.fsPath, llmFormat, 'utf8');
-            logInfo(`Saved LLM format: ${doc.uri.fsPath}`);
-            
-            // Build binary if configured
-            const config = vscode.workspace.getConfiguration('dx.forge');
-            if (config.get('autoBuild', true)) {
-                await buildBinaryForFile(doc.uri.fsPath);
-            }
+        const targetPath = realPath || doc.uri.fsPath;
+        
+        if (!targetPath || !isDxFile(vscode.Uri.file(targetPath))) {
+            return [];
+        }
+
+        const content = doc.getText();
+        const format = detectFormat(content);
+        
+        // Always deflate to LLM format for storage
+        const deflater = new DxDeflater();
+        let llmFormat: string;
+        
+        if (format === 'llm') {
+            // Already LLM - use as-is
+            llmFormat = content;
+        } else {
+            // Human or unknown - deflate to LLM
+            llmFormat = deflater.deflate(content);
+            logInfo('Deflated human format to LLM format for storage');
+        }
+        
+        // Write LLM format to disk
+        fs.writeFileSync(targetPath, llmFormat, 'utf8');
+        logInfo(`Saved LLM format: ${targetPath}`);
+        
+        // Build binary if forge is available
+        const config = vscode.workspace.getConfiguration('dx.forge');
+        if (config.get('autoBuild', true) && forgeDaemon.getStatus() === 'running') {
+            await buildBinaryForFile(targetPath);
         }
     } catch (error) {
         logError(`Save failed: ${error}`);
     }
     return [];
+}
+
+async function normalizeFormat(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        vscode.window.showWarningMessage('No active editor');
+        return;
+    }
+
+    const content = editor.document.getText();
+    const format = detectFormat(content);
+    
+    if (format === 'human' || format === 'unknown') {
+        // Convert human to LLM, then back to normalized human
+        const deflater = new DxDeflater();
+        const inflater = new DxInflater();
+        const llmFormat = deflater.deflate(content);
+        const normalized = inflater.inflate(llmFormat);
+        
+        const edit = new vscode.WorkspaceEdit();
+        const fullRange = new vscode.Range(
+            editor.document.positionAt(0),
+            editor.document.positionAt(content.length)
+        );
+        edit.replace(editor.document.uri, fullRange, normalized);
+        await vscode.workspace.applyEdit(edit);
+        
+        logInfo('Normalized format (Human -> LLM -> Human)');
+        vscode.window.showInformationMessage('Format normalized');
+    } else {
+        const inflater = new DxInflater();
+        const humanFormat = inflater.inflate(content);
+        
+        const edit = new vscode.WorkspaceEdit();
+        const fullRange = new vscode.Range(
+            editor.document.positionAt(0),
+            editor.document.positionAt(content.length)
+        );
+        edit.replace(editor.document.uri, fullRange, humanFormat);
+        await vscode.workspace.applyEdit(edit);
+        
+        logInfo('Converted LLM to Human format');
+        vscode.window.showInformationMessage('Converted to human-readable format');
+    }
 }
 
 async function showLLMFormat(): Promise<void> {
@@ -246,20 +388,23 @@ async function buildBinary(): Promise<void> {
 
 async function buildBinaryForFile(filePath: string): Promise<void> {
     try {
-        // Use Forge daemon to build binary
-        if (forgeDaemon.getStatus() === 'running') {
+        const status = forgeDaemon.getStatus();
+        
+        if (status === 'running') {
             await forgeDaemon.buildBinary(filePath);
-            logSuccess(`Built binary: ${filePath}.dxb`);
-            vscode.window.showInformationMessage('DX binary built successfully!');
-        } else {
-            logInfo('Forge daemon not running. Starting...');
-            await forgeDaemon.start();
-            await forgeDaemon.buildBinary(filePath);
-            logSuccess(`Built binary: ${filePath}.dxb`);
+            logSuccess(`Built binary for: ${path.basename(filePath)}`);
+        } else if (status === 'error' || status === 'stopped') {
+            // Try to start forge
+            const started = await forgeDaemon.start();
+            if (started) {
+                await forgeDaemon.buildBinary(filePath);
+                logSuccess(`Built binary for: ${path.basename(filePath)}`);
+            } else {
+                logInfo('Binary build skipped - dx-forge not available');
+            }
         }
     } catch (error) {
-        logError(`Build failed: ${error}`);
-        vscode.window.showErrorMessage(`Failed to build binary: ${error}`);
+        logInfo(`Binary build skipped: ${error}`);
     }
 }
 
@@ -271,9 +416,10 @@ async function convertFromJson(): Promise<void> {
     }
 
     try {
-        const json = JSON.parse(editor.document.getText());
+        const text = editor.document.getText();
+        const json = JSON.parse(text);
         const deflater = new DxDeflater();
-        const dxFormat = deflater.jsonToDense(json);
+        const dxFormat = deflater.jsonToDense(JSON.stringify(json));
 
         const doc = await vscode.workspace.openTextDocument({
             content: dxFormat,
@@ -281,7 +427,7 @@ async function convertFromJson(): Promise<void> {
         });
 
         await vscode.window.showTextDocument(doc);
-        vscode.window.showInformationMessage('Converted JSON to DX format!');
+        vscode.window.showInformationMessage('Converted JSON to DX format');
     } catch (error) {
         vscode.window.showErrorMessage(`Conversion failed: ${error}`);
     }
@@ -293,9 +439,9 @@ function updateStatusBar(forgeRunning: boolean): void {
         statusBarItem.tooltip = 'DX Serializer: Active | Forge: Running';
         statusBarItem.backgroundColor = undefined;
     } else {
-        statusBarItem.text = '$(circle-outline) DX';
-        statusBarItem.tooltip = 'DX Serializer: Active | Forge: Stopped';
-        statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+        statusBarItem.text = '$(symbol-structure) DX';
+        statusBarItem.tooltip = 'DX Serializer: Active | Forge: Not Available';
+        statusBarItem.backgroundColor = undefined;
     }
 }
 
@@ -318,5 +464,5 @@ export function deactivate() {
     if (forgeDaemon) {
         forgeDaemon.stop();
     }
-    console.log('DX Hologram Extension deactivated');
+    console.log('DX Serializer Extension deactivated');
 }
