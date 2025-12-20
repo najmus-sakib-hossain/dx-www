@@ -3,12 +3,25 @@
  * 
  * Transforms token-efficient LLM format into beautiful, readable format.
  * 
- * LLM-Dense: server#host:localhost#port:5432#ssl:1
- * Human-Pretty:
- *   ▼ server
- *       host: localhost
- *       port: 5432
- *       ssl:  ✓
+ * LLM Format (dx file style):
+ *   name:dx-ts
+ *   forge.repository:https://...
+ *   ^container:docker
+ *   ^registry:ghcr.io/...
+ *   forge_items>cli|docs|examples
+ * 
+ * Human-Pretty Format:
+ *   name : dx-ts
+ *   
+ *   ▼ forge
+ *       repository : https://...
+ *       container  : docker
+ *       registry   : ghcr.io/...
+ * 
+ *   ▼ forge_items (7 items)
+ *       • cli
+ *       • docs
+ *       • examples
  */
 
 export interface InflaterConfig {
@@ -17,12 +30,13 @@ export interface InflaterConfig {
     useBoxDrawing: boolean;
 }
 
-interface TableContext {
-    key: string;
-    columns: string[];
-    expectedRows: number;
-    rows: string[][];
-    comment: string | null;
+interface ParsedEntry {
+    type: 'simple' | 'nested' | 'continuation' | 'array' | 'table' | 'tableRow' | 'empty';
+    parentKey?: string;
+    key?: string;
+    value?: string;
+    items?: string[];
+    columns?: string[];
 }
 
 export class DxInflater {
@@ -40,307 +54,306 @@ export class DxInflater {
      * Inflate LLM-dense format to human-pretty format
      */
     inflate(dense: string): string {
-        const lines: string[] = [];
-        let tableContext: TableContext | null = null;
-
-        for (const rawLine of dense.split('\n')) {
-            const line = rawLine.trim();
-
-            if (!line) {
-                if (tableContext) {
-                    lines.push(...this.closeTable(tableContext));
-                    tableContext = null;
-                }
-                lines.push('');
+        const lines = dense.split('\n');
+        const result: string[] = [];
+        
+        // Group entries by parent key
+        const groups = new Map<string, Array<{ key: string; value: string }>>();
+        const arrays = new Map<string, string[]>();
+        const tables = new Map<string, { columns: string[]; rows: string[][] }>();
+        const rootProps: Array<{ key: string; value: string }> = [];
+        
+        let currentParent = '';
+        let currentTable = '';
+        
+        for (const rawLine of lines) {
+            const entry = this.parseLine(rawLine);
+            
+            if (entry.type === 'empty') {
+                currentParent = '';
                 continue;
             }
-
-            const element = this.parseDenseLine(line);
-
-            if (element.type === 'tableRow') {
-                if (tableContext) {
-                    tableContext.rows.push(element.values);
+            
+            if (entry.type === 'simple' && entry.key) {
+                rootProps.push({ key: entry.key, value: entry.value || '' });
+                currentParent = entry.key;
+            } else if (entry.type === 'nested' && entry.parentKey && entry.key) {
+                if (!groups.has(entry.parentKey)) {
+                    groups.set(entry.parentKey, []);
                 }
-                continue;
-            }
-
-            // Close pending table
-            if (tableContext) {
-                lines.push(...this.closeTable(tableContext));
-                tableContext = null;
-            }
-
-            switch (element.type) {
-                case 'object':
-                    lines.push(...this.formatObject(element));
-                    break;
-                case 'array':
-                    lines.push(...this.formatArray(element));
-                    break;
-                case 'tableHeader':
-                    tableContext = {
-                        key: element.key,
-                        columns: element.columns,
-                        expectedRows: element.rowCount,
-                        rows: [],
-                        comment: element.comment
-                    };
-                    break;
-                case 'keyValue':
-                    lines.push(...this.formatKeyValue(element));
-                    break;
-                case 'comment':
-                    lines.push(`// ${element.text}`);
-                    break;
+                groups.get(entry.parentKey)!.push({ key: entry.key, value: entry.value || '' });
+                currentParent = entry.parentKey;
+            } else if (entry.type === 'continuation' && entry.key) {
+                if (currentParent) {
+                    if (!groups.has(currentParent)) {
+                        groups.set(currentParent, []);
+                    }
+                    groups.get(currentParent)!.push({ key: entry.key, value: entry.value || '' });
+                }
+            } else if (entry.type === 'array' && entry.key && entry.items) {
+                arrays.set(entry.key, entry.items);
+            } else if (entry.type === 'table' && entry.key && entry.columns) {
+                tables.set(entry.key, { columns: entry.columns, rows: [] });
+                currentTable = entry.key;
+            } else if (entry.type === 'tableRow' && entry.items && currentTable) {
+                const table = tables.get(currentTable);
+                if (table) {
+                    table.rows.push(entry.items);
+                }
             }
         }
-
-        // Close remaining table
-        if (tableContext) {
-            lines.push(...this.closeTable(tableContext));
+        
+        // Format root properties
+        if (rootProps.length > 0) {
+            const maxKeyLen = Math.max(...rootProps.map(p => p.key.length));
+            for (const prop of rootProps) {
+                // Skip properties that have nested children
+                if (!groups.has(prop.key) || prop.value) {
+                    const padding = ' '.repeat(maxKeyLen - prop.key.length);
+                    const prettyValue = this.inflateValue(prop.value);
+                    if (prettyValue) {
+                        result.push(`${prop.key}${padding} : ${prettyValue}`);
+                    }
+                }
+            }
+            if (result.length > 0) {
+                result.push('');
+            }
         }
-
-        return lines.join('\n');
+        
+        // Format groups (nested objects)
+        for (const [parentKey, props] of groups) {
+            result.push(...this.formatGroup(parentKey, props));
+        }
+        
+        // Format arrays
+        for (const [key, items] of arrays) {
+            result.push(...this.formatArray(key, items));
+        }
+        
+        // Format tables
+        for (const [key, table] of tables) {
+            result.push(...this.formatTable(key, table.columns, table.rows));
+        }
+        
+        return result.join('\n').trim();
     }
 
-    private parseDenseLine(line: string): any {
-        let trimmed = line.trim();
-        let comment: string | null = null;
-
-        // Check for anchored comment: !text!content
-        if (trimmed.startsWith('!')) {
-            const endIdx = trimmed.indexOf('!', 1);
-            if (endIdx > 0) {
-                comment = trimmed.substring(1, endIdx);
-                trimmed = trimmed.substring(endIdx + 1).trim();
-                if (!trimmed) {
-                    return { type: 'comment', text: comment };
-                }
-            }
+    private parseLine(rawLine: string): ParsedEntry {
+        const line = rawLine.trim();
+        
+        if (!line) {
+            return { type: 'empty' };
         }
-
+        
         // Table row: >val|val|val
-        if (trimmed.startsWith('>')) {
-            const values = trimmed.substring(1).split('|').map(s => s.trim());
-            return { type: 'tableRow', values };
+        if (line.startsWith('>')) {
+            const items = line.substring(1).split('|').map(s => s.trim());
+            return { type: 'tableRow', items };
         }
-
-        // Table header: key@N=col^col^col
-        const atIdx = trimmed.indexOf('@');
-        const eqIdx = trimmed.indexOf('=');
-        if (atIdx > 0 && eqIdx > atIdx) {
-            const key = trimmed.substring(0, atIdx);
-            const rowCount = parseInt(trimmed.substring(atIdx + 1, eqIdx)) || 0;
-            const columns = trimmed.substring(eqIdx + 1).split('^').map(s => s.trim());
-            return { type: 'tableHeader', key, rowCount, columns, comment };
-        }
-
-        // Array: key@N>item|item|item
-        const arrowIdx = trimmed.indexOf('>');
-        if (atIdx > 0 && arrowIdx > atIdx) {
-            const key = trimmed.substring(0, atIdx);
-            const items = trimmed.substring(arrowIdx + 1).split('|').map(s => s.trim());
-            return { type: 'array', key, items, comment };
-        }
-
-        // Object: key#field:val#field:val
-        if (trimmed.includes('#')) {
-            const parts = trimmed.split('#');
-            const key = parts[0];
-            const fields: [string, string][] = [];
-
-            for (let i = 1; i < parts.length; i++) {
-                const colonIdx = parts[i].indexOf(':');
-                if (colonIdx > 0) {
-                    const fieldName = parts[i].substring(0, colonIdx);
-                    const fieldValue = parts[i].substring(colonIdx + 1);
-                    fields.push([fieldName, fieldValue]);
-                }
+        
+        // Continuation: ^key:value or ^key value
+        if (line.startsWith('^')) {
+            const rest = line.substring(1);
+            const colonIdx = rest.indexOf(':');
+            
+            if (colonIdx > 0) {
+                const key = rest.substring(0, colonIdx).trim();
+                const value = rest.substring(colonIdx + 1).trim();
+                return { type: 'continuation', key, value };
             }
-
-            if (fields.length > 0) {
-                return { type: 'object', key, fields, comment };
+            
+            const spaceIdx = rest.indexOf(' ');
+            if (spaceIdx > 0) {
+                const key = rest.substring(0, spaceIdx).trim();
+                const value = rest.substring(spaceIdx + 1).trim();
+                return { type: 'continuation', key, value };
             }
+            
+            return { type: 'continuation', key: rest.trim(), value: '' };
         }
-
-        // Simple key:value
-        const colonIdx = trimmed.indexOf(':');
-        if (colonIdx > 0) {
-            const key = trimmed.substring(0, colonIdx);
-            const value = trimmed.substring(colonIdx + 1);
-            return { type: 'keyValue', key, value, comment };
+        
+        // Array: key>item|item|item (with optional space)
+        const arrayMatch = line.match(/^([\w_]+)\s*>\s*(.+)$/);
+        if (arrayMatch) {
+            const items = arrayMatch[2].split('|').map(s => s.trim()).filter(s => s);
+            return { type: 'array', key: arrayMatch[1], items };
         }
-
-        return { type: 'comment', text: trimmed };
+        
+        // Table: key=col^col^col
+        const tableMatch = line.match(/^([\w_]+)\s*=\s*(.+)$/);
+        if (tableMatch && tableMatch[2].includes('^')) {
+            const columns = tableMatch[2].split('^').map(s => s.trim());
+            return { type: 'table', key: tableMatch[1], columns };
+        }
+        
+        // Nested: parent.child:value or parent.child value
+        const nestedColonMatch = line.match(/^([\w_]+)\.([\w_.]+)\s*:\s*(.*)$/);
+        if (nestedColonMatch) {
+            return {
+                type: 'nested',
+                parentKey: nestedColonMatch[1],
+                key: nestedColonMatch[2],
+                value: nestedColonMatch[3].trim()
+            };
+        }
+        
+        // Nested with space: parent.child value
+        const nestedSpaceMatch = line.match(/^([\w_]+)\.([\w_.]+)\s+(.+)$/);
+        if (nestedSpaceMatch) {
+            return {
+                type: 'nested',
+                parentKey: nestedSpaceMatch[1],
+                key: nestedSpaceMatch[2],
+                value: nestedSpaceMatch[3].trim()
+            };
+        }
+        
+        // Simple: key:value or key value
+        const simpleColonMatch = line.match(/^([\w_][\w_.]*)\s*:\s*(.*)$/);
+        if (simpleColonMatch) {
+            return { type: 'simple', key: simpleColonMatch[1], value: simpleColonMatch[2].trim() };
+        }
+        
+        const simpleSpaceMatch = line.match(/^([\w_]+)\s+(.+)$/);
+        if (simpleSpaceMatch && !simpleSpaceMatch[2].startsWith('>') && !simpleSpaceMatch[2].includes('=')) {
+            return { type: 'simple', key: simpleSpaceMatch[1], value: simpleSpaceMatch[2].trim() };
+        }
+        
+        return { type: 'empty' };
     }
 
-    private formatObject(element: any): string[] {
+    private formatGroup(parentKey: string, props: Array<{ key: string; value: string }>): string[] {
         const result: string[] = [];
         const indent = ' '.repeat(this.config.indentSize);
         const marker = this.config.useUnicode ? '▼' : '>';
-
-        if (element.comment) {
-            result.push(`// ${element.comment}`);
+        
+        result.push(`${marker} ${parentKey}`);
+        
+        // Group by sub-parent
+        const subGroups = new Map<string, Array<{ key: string; value: string }>>();
+        const directProps: Array<{ key: string; value: string }> = [];
+        
+        for (const prop of props) {
+            if (prop.key.includes('.')) {
+                const [sub, ...rest] = prop.key.split('.');
+                if (!subGroups.has(sub)) {
+                    subGroups.set(sub, []);
+                }
+                subGroups.get(sub)!.push({ key: rest.join('.'), value: prop.value });
+            } else {
+                directProps.push(prop);
+            }
         }
-
-        result.push(`${marker} ${element.key}`);
-
-        // Calculate max field name length for alignment
-        const maxLen = Math.max(...element.fields.map(([k]: [string, string]) => k.length));
-
-        for (const [name, value] of element.fields) {
-            const padding = ' '.repeat(maxLen - name.length);
-            const prettyValue = this.inflateValue(value);
-            result.push(`${indent}${name}:${padding} ${prettyValue}`);
+        
+        // Format direct properties with alignment
+        if (directProps.length > 0) {
+            const maxKeyLen = Math.max(...directProps.map(p => p.key.length));
+            for (const prop of directProps) {
+                const padding = ' '.repeat(maxKeyLen - prop.key.length);
+                const prettyValue = this.inflateValue(prop.value);
+                result.push(`${indent}${prop.key}${padding} : ${prettyValue}`);
+            }
         }
-
+        
+        // Format sub-groups
+        for (const [subKey, subProps] of subGroups) {
+            result.push(`${indent}${marker} ${subKey}`);
+            const innerIndent = indent + indent;
+            const maxKeyLen = Math.max(...subProps.map(p => p.key.length));
+            for (const prop of subProps) {
+                const padding = ' '.repeat(maxKeyLen - prop.key.length);
+                const prettyValue = this.inflateValue(prop.value);
+                result.push(`${innerIndent}${prop.key}${padding} : ${prettyValue}`);
+            }
+        }
+        
+        result.push('');
         return result;
     }
 
-    private formatArray(element: any): string[] {
+    private formatArray(key: string, items: string[]): string[] {
         const result: string[] = [];
         const indent = ' '.repeat(this.config.indentSize);
         const marker = this.config.useUnicode ? '▼' : '>';
         const bullet = this.config.useUnicode ? '•' : '-';
-
-        if (element.comment) {
-            result.push(`// ${element.comment}`);
+        
+        result.push(`${marker} ${key} (${items.length} items)`);
+        for (const item of items) {
+            result.push(`${indent}${bullet} ${this.inflateValue(item)}`);
         }
-
-        result.push(`${marker} ${element.key} (${element.items.length} items)`);
-
-        for (const item of element.items) {
-            const prettyValue = this.inflateValue(item);
-            result.push(`${indent}${bullet} ${prettyValue}`);
-        }
-
+        result.push('');
+        
         return result;
     }
 
-    private formatKeyValue(element: any): string[] {
-        const result: string[] = [];
-
-        if (element.comment) {
-            result.push(`// ${element.comment}`);
-        }
-
-        const prettyValue = this.inflateValue(element.value);
-        result.push(`${element.key}: ${prettyValue}`);
-
-        return result;
-    }
-
-    private closeTable(ctx: TableContext): string[] {
+    private formatTable(key: string, columns: string[], rows: string[][]): string[] {
         const result: string[] = [];
         const indent = ' '.repeat(this.config.indentSize);
         const marker = this.config.useUnicode ? '▼' : '>';
-
-        if (ctx.comment) {
-            result.push(`// ${ctx.comment}`);
-        }
-
-        result.push(`${marker} ${ctx.key} (${ctx.columns.length} columns × ${ctx.rows.length} rows)`);
-
+        
+        result.push(`${marker} ${key} (${columns.length} columns × ${rows.length} rows)`);
+        
         // Calculate column widths
-        const colWidths = ctx.columns.map(c => c.length);
-        for (const row of ctx.rows) {
-            for (let i = 0; i < row.length; i++) {
-                const pretty = this.inflateValue(row[i]);
-                if (i < colWidths.length) {
-                    colWidths[i] = Math.max(colWidths[i], pretty.length);
-                }
+        const colWidths = columns.map(c => c.length);
+        for (const row of rows) {
+            for (let i = 0; i < row.length && i < colWidths.length; i++) {
+                colWidths[i] = Math.max(colWidths[i], row[i].length);
             }
         }
-
+        
         if (this.config.useBoxDrawing) {
-            result.push(...this.formatTableBoxed(ctx, colWidths, indent));
+            // Top border
+            result.push(indent + '┌' + colWidths.map(w => '─'.repeat(w + 2)).join('┬') + '┐');
+            
+            // Header
+            const headerCells = columns.map((c, i) => c.padEnd(colWidths[i]));
+            result.push(indent + '│ ' + headerCells.join(' │ ') + ' │');
+            
+            // Separator
+            result.push(indent + '├' + colWidths.map(w => '─'.repeat(w + 2)).join('┼') + '┤');
+            
+            // Data rows
+            for (const row of rows) {
+                const cells = row.map((v, i) => v.padEnd(colWidths[i] || v.length));
+                result.push(indent + '│ ' + cells.join(' │ ') + ' │');
+            }
+            
+            // Bottom border
+            result.push(indent + '└' + colWidths.map(w => '─'.repeat(w + 2)).join('┴') + '┘');
         } else {
-            result.push(...this.formatTableSimple(ctx, colWidths, indent));
+            const headerCells = columns.map((c, i) => c.padEnd(colWidths[i]));
+            result.push(indent + headerCells.join(' | '));
+            result.push(indent + colWidths.map(w => '-'.repeat(w)).join('-+-'));
+            
+            for (const row of rows) {
+                const cells = row.map((v, i) => v.padEnd(colWidths[i] || v.length));
+                result.push(indent + cells.join(' | '));
+            }
         }
-
-        return result;
-    }
-
-    private formatTableBoxed(ctx: TableContext, colWidths: number[], indent: string): string[] {
-        const result: string[] = [];
-
-        // Top border
-        result.push(indent + '┌' + colWidths.map(w => '─'.repeat(w + 2)).join('┬') + '┐');
-
-        // Header row
-        const headerCells = ctx.columns.map((col, i) => col.padEnd(colWidths[i]));
-        result.push(indent + '│ ' + headerCells.join(' │ ') + ' │');
-
-        // Separator
-        result.push(indent + '├' + colWidths.map(w => '─'.repeat(w + 2)).join('┼') + '┤');
-
-        // Data rows
-        for (const row of ctx.rows) {
-            const cells = row.map((val, i) => {
-                const pretty = this.inflateValue(val);
-                return pretty.padEnd(colWidths[i] || pretty.length);
-            });
-            result.push(indent + '│ ' + cells.join(' │ ') + ' │');
-        }
-
-        // Bottom border
-        result.push(indent + '└' + colWidths.map(w => '─'.repeat(w + 2)).join('┴') + '┘');
-
-        return result;
-    }
-
-    private formatTableSimple(ctx: TableContext, colWidths: number[], indent: string): string[] {
-        const result: string[] = [];
-
-        // Header row
-        const headerCells = ctx.columns.map((col, i) => col.padEnd(colWidths[i]));
-        result.push(indent + headerCells.join(' | '));
-
-        // Separator
-        result.push(indent + colWidths.map(w => '-'.repeat(w)).join('-+-'));
-
-        // Data rows
-        for (const row of ctx.rows) {
-            const cells = row.map((val, i) => {
-                const pretty = this.inflateValue(val);
-                return pretty.padEnd(colWidths[i] || pretty.length);
-            });
-            result.push(indent + cells.join(' | '));
-        }
-
+        
+        result.push('');
         return result;
     }
 
     private inflateValue(value: string): string {
         const v = value.trim();
-
+        
+        if (!v) return '';
+        
         if (this.config.useUnicode) {
             switch (v) {
                 case '1': case '+': case 'true': return '✓';
                 case '0': case '-': case 'false': return '✗';
                 case '~': case 'null': case 'none': return '—';
             }
-        } else {
-            switch (v) {
-                case '1': case '+': return 'true';
-                case '0': case '-': return 'false';
-                case '~': return 'null';
-            }
         }
-
-        // Reference: *ref → →ref
-        if (v.startsWith('*')) {
-            return this.config.useUnicode ? `→${v.substring(1)}` : `>${v.substring(1)}`;
-        }
-
-        // Quoted string - show without quotes for simple strings
+        
+        // Remove surrounding quotes
         if (v.startsWith('"') && v.endsWith('"') && v.length > 2) {
-            const inner = v.slice(1, -1);
-            if (!inner.includes('#') && !inner.includes('|') && !inner.includes('^')) {
-                return inner;
-            }
+            return v.slice(1, -1);
         }
-
+        
         return v;
     }
 }

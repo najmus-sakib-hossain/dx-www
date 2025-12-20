@@ -110,6 +110,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
         vscode.commands.registerCommand('dx.normalizeFormat', async () => {
             await normalizeFormat();
+        }),
+
+        vscode.commands.registerCommand('dx.convertAllFiles', async () => {
+            await convertAllDxFiles();
+        }),
+
+        vscode.commands.registerCommand('dx.convertCurrentFile', async () => {
+            await convertCurrentFile();
         })
     );
 
@@ -458,6 +466,327 @@ function logSuccess(message: string): void {
 function logError(message: string): void {
     const timestamp = new Date().toISOString().substring(11, 19);
     outputChannel.appendLine(`[${timestamp}] [ERR] ${message}`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Convert All DX Files
+// ═══════════════════════════════════════════════════════════════════════
+
+async function convertAllDxFiles(): Promise<void> {
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!workspaceRoot) {
+        vscode.window.showWarningMessage('No workspace folder open');
+        return;
+    }
+
+    outputChannel.show();
+    logInfo('Starting conversion of all DX files...');
+
+    // Find all dx files
+    const dxFiles = await findDxFiles(workspaceRoot);
+    logInfo(`Found ${dxFiles.length} DX files`);
+
+    let converted = 0;
+    let binaryBuilt = 0;
+
+    for (const filePath of dxFiles) {
+        try {
+            const result = await convertAndBuildFile(filePath, workspaceRoot);
+            if (result.converted) converted++;
+            if (result.binary) binaryBuilt++;
+        } catch (error) {
+            logError(`Failed to convert ${filePath}: ${error}`);
+        }
+    }
+
+    logSuccess(`Conversion complete: ${converted} files normalized, ${binaryBuilt} binaries built`);
+    vscode.window.showInformationMessage(`DX: Converted ${converted} files, built ${binaryBuilt} binaries`);
+}
+
+async function convertCurrentFile(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        vscode.window.showWarningMessage('No active editor');
+        return;
+    }
+
+    const filePath = editor.document.uri.fsPath;
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || path.dirname(filePath);
+
+    outputChannel.show();
+    logInfo(`Converting: ${path.basename(filePath)}`);
+
+    try {
+        const result = await convertAndBuildFile(filePath, workspaceRoot);
+        if (result.converted) {
+            logSuccess(`Converted: ${path.basename(filePath)}`);
+        }
+        if (result.binary) {
+            logSuccess(`Binary built: ${result.binaryPath}`);
+        }
+        vscode.window.showInformationMessage(`DX: File converted and binary built`);
+    } catch (error) {
+        logError(`Failed: ${error}`);
+        vscode.window.showErrorMessage(`Conversion failed: ${error}`);
+    }
+}
+
+async function findDxFiles(rootDir: string): Promise<string[]> {
+    const results: string[] = [];
+    
+    async function walk(dir: string): Promise<void> {
+        try {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            
+            for (const entry of entries) {
+                const fullPath = path.join(dir, entry.name);
+                
+                // Skip hidden directories and node_modules
+                if (entry.isDirectory()) {
+                    if (!entry.name.startsWith('.') && 
+                        entry.name !== 'node_modules' && 
+                        entry.name !== 'target') {
+                        await walk(fullPath);
+                    }
+                } else if (entry.name === 'dx' || entry.name.endsWith('.dx')) {
+                    results.push(fullPath);
+                }
+            }
+        } catch (error) {
+            // Skip directories we can't read
+        }
+    }
+    
+    await walk(rootDir);
+    return results;
+}
+
+interface ConvertResult {
+    converted: boolean;
+    binary: boolean;
+    binaryPath?: string;
+}
+
+async function convertAndBuildFile(filePath: string, workspaceRoot: string): Promise<ConvertResult> {
+    const result: ConvertResult = { converted: false, binary: false };
+    
+    // Read current content
+    const content = fs.readFileSync(filePath, 'utf8');
+    const format = detectFormat(content);
+    
+    logInfo(`Processing: ${path.relative(workspaceRoot, filePath)} (detected: ${format})`);
+    
+    // Normalize to LLM format if needed
+    let llmContent: string;
+    if (format === 'human' || format === 'unknown') {
+        const deflater = new DxDeflater();
+        llmContent = deflater.deflate(content);
+        
+        // Only write if different
+        if (llmContent !== content) {
+            fs.writeFileSync(filePath, llmContent, 'utf8');
+            result.converted = true;
+            logInfo(`Normalized to LLM format: ${path.basename(filePath)}`);
+        }
+    } else {
+        llmContent = content;
+        result.converted = true;
+    }
+    
+    // Build binary (.dxs)
+    const binaryPath = buildBinaryFile(filePath, llmContent, workspaceRoot);
+    if (binaryPath) {
+        result.binary = true;
+        result.binaryPath = binaryPath;
+    }
+    
+    return result;
+}
+
+/**
+ * Build binary .dxs file using FNV-1a hashed path
+ */
+function buildBinaryFile(sourcePath: string, content: string, workspaceRoot: string): string | null {
+    try {
+        // Get relative path for hashing
+        const relativePath = path.relative(workspaceRoot, sourcePath).replace(/\\/g, '/');
+        
+        // FNV-1a hash (matching Rust implementation)
+        const hash = hashPath(relativePath);
+        
+        // Get filename
+        const filename = path.basename(sourcePath, path.extname(sourcePath)) || 'dx';
+        
+        // Create output directory
+        const outputDir = path.join(workspaceRoot, '.dx', 'serializer', hash);
+        fs.mkdirSync(outputDir, { recursive: true });
+        
+        // Build binary representation
+        const binary = buildBinaryFormat(content);
+        
+        // Write binary file
+        const outputPath = path.join(outputDir, `${filename}.dxs`);
+        fs.writeFileSync(outputPath, binary);
+        
+        logInfo(`Binary written: .dx/serializer/${hash}/${filename}.dxs (${binary.length} bytes)`);
+        return outputPath;
+    } catch (error) {
+        logError(`Binary build failed: ${error}`);
+        return null;
+    }
+}
+
+/**
+ * FNV-1a hash (matches Rust implementation)
+ */
+function hashPath(relativePath: string): string {
+    const FNV_OFFSET = BigInt('0xcbf29ce484222325');
+    const FNV_PRIME = BigInt('0x100000001b3');
+    
+    let hash = FNV_OFFSET;
+    for (let i = 0; i < relativePath.length; i++) {
+        hash ^= BigInt(relativePath.charCodeAt(i));
+        hash = (hash * FNV_PRIME) & BigInt('0xffffffffffffffff');
+    }
+    
+    return (hash & BigInt('0xffffffff')).toString(16).padStart(8, '0');
+}
+
+/**
+ * Build binary format from LLM content
+ * 
+ * Binary format:
+ * - 4 bytes: Magic "DXS1"
+ * - 4 bytes: Version (1)
+ * - 4 bytes: Entry count
+ * - 4 bytes: String table offset
+ * - Entries: [keyId(4) + valueId(4) + type(1) + flags(1)]
+ * - String table: [length(2) + utf8 bytes...]
+ */
+function buildBinaryFormat(content: string): Buffer {
+    const entries: Array<{ key: string; value: string; type: number; flags: number }> = [];
+    const strings = new Map<string, number>();
+    let stringId = 0;
+    
+    function internString(s: string): number {
+        if (strings.has(s)) {
+            return strings.get(s)!;
+        }
+        const id = stringId++;
+        strings.set(s, id);
+        return id;
+    }
+    
+    // Parse content into entries
+    const lines = content.split('\n');
+    let currentParent = '';
+    
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        
+        // Entry types
+        const TYPE_SIMPLE = 0;
+        const TYPE_NESTED = 1;
+        const TYPE_ARRAY = 2;
+        const TYPE_TABLE = 3;
+        
+        if (trimmed.startsWith('^')) {
+            // Continuation
+            const rest = trimmed.substring(1);
+            const colonIdx = rest.indexOf(':');
+            if (colonIdx > 0) {
+                const key = currentParent + '.' + rest.substring(0, colonIdx).trim();
+                const value = rest.substring(colonIdx + 1).trim();
+                entries.push({
+                    key,
+                    value,
+                    type: TYPE_NESTED,
+                    flags: 0
+                });
+            }
+        } else if (trimmed.includes('>')) {
+            // Array
+            const arrowIdx = trimmed.indexOf('>');
+            const key = trimmed.substring(0, arrowIdx).trim();
+            const value = trimmed.substring(arrowIdx + 1).trim();
+            entries.push({ key, value, type: TYPE_ARRAY, flags: 0 });
+        } else if (trimmed.includes('=') && trimmed.includes('^')) {
+            // Table header
+            const eqIdx = trimmed.indexOf('=');
+            const key = trimmed.substring(0, eqIdx).trim();
+            const value = trimmed.substring(eqIdx + 1).trim();
+            entries.push({ key, value, type: TYPE_TABLE, flags: 0 });
+        } else {
+            // Simple key:value or nested
+            const colonIdx = trimmed.indexOf(':');
+            const spaceIdx = trimmed.indexOf(' ');
+            
+            if (colonIdx > 0) {
+                const key = trimmed.substring(0, colonIdx).trim();
+                const value = trimmed.substring(colonIdx + 1).trim();
+                
+                if (key.includes('.')) {
+                    const dotIdx = key.indexOf('.');
+                    currentParent = key.substring(0, dotIdx);
+                    entries.push({ key, value, type: TYPE_NESTED, flags: 0 });
+                } else {
+                    entries.push({ key, value, type: TYPE_SIMPLE, flags: 0 });
+                }
+            } else if (spaceIdx > 0) {
+                const key = trimmed.substring(0, spaceIdx).trim();
+                const value = trimmed.substring(spaceIdx + 1).trim();
+                entries.push({ key, value, type: TYPE_SIMPLE, flags: 0 });
+            }
+        }
+    }
+    
+    // Intern all strings
+    for (const entry of entries) {
+        internString(entry.key);
+        internString(entry.value);
+    }
+    
+    // Calculate sizes
+    const headerSize = 16;
+    const entrySize = 10; // keyId(4) + valueId(4) + type(1) + flags(1)
+    const entriesSize = entries.length * entrySize;
+    const stringTableOffset = headerSize + entriesSize;
+    
+    // Build string table
+    const stringParts: Buffer[] = [];
+    const sortedStrings = Array.from(strings.entries()).sort((a, b) => a[1] - b[1]);
+    for (const [str] of sortedStrings) {
+        const bytes = Buffer.from(str, 'utf8');
+        const lenBuf = Buffer.alloc(2);
+        lenBuf.writeUInt16LE(bytes.length, 0);
+        stringParts.push(lenBuf, bytes);
+    }
+    const stringTable = Buffer.concat(stringParts);
+    
+    // Build final buffer
+    const totalSize = headerSize + entriesSize + stringTable.length;
+    const buffer = Buffer.alloc(totalSize);
+    let offset = 0;
+    
+    // Header
+    buffer.write('DXS1', offset); offset += 4;
+    buffer.writeUInt32LE(1, offset); offset += 4; // version
+    buffer.writeUInt32LE(entries.length, offset); offset += 4;
+    buffer.writeUInt32LE(stringTableOffset, offset); offset += 4;
+    
+    // Entries
+    for (const entry of entries) {
+        buffer.writeUInt32LE(strings.get(entry.key)!, offset); offset += 4;
+        buffer.writeUInt32LE(strings.get(entry.value)!, offset); offset += 4;
+        buffer.writeUInt8(entry.type, offset); offset += 1;
+        buffer.writeUInt8(entry.flags, offset); offset += 1;
+    }
+    
+    // String table
+    stringTable.copy(buffer, offset);
+    
+    return buffer;
 }
 
 export function deactivate() {

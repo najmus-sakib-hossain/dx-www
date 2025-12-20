@@ -120,6 +120,21 @@
         "command": "dx.convertFromJson",
         "title": "DX: Convert JSON to DX",
         "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "dx.normalizeFormat",
+        "title": "DX: Normalize Format",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "dx.convertAllFiles",
+        "title": "DX: Convert All DX Files & Build Binaries",
+        "icon": "$(files)"
+      },
+      {
+        "command": "dx.convertCurrentFile",
+        "title": "DX: Convert Current File & Build Binary",
+        "icon": "$(file-binary)"
       }
     ],
     "menus": {
