@@ -58,28 +58,33 @@ mod dx_zero_v2 {
     }
 
     /// Read user fields with quantum access (0.1-0.3ns per field)
+    /// Using unchecked accessors for maximum performance
     #[inline(always)]
     pub fn read_id(data: &[u8]) -> u64 {
         let reader = QuantumReader::new(data);
-        reader.read_u64::<ID_OFFSET>()
+        // Safety: We know our layout has ID at offset 4
+        unsafe { reader.read_u64_unchecked::<ID_OFFSET>() }
     }
 
     #[inline(always)]
     pub fn read_age(data: &[u8]) -> u32 {
         let reader = QuantumReader::new(data);
-        reader.read_u32::<AGE_OFFSET>()
+        // Safety: We know our layout has age at AGE_OFFSET
+        unsafe { reader.read_u32_unchecked::<AGE_OFFSET>() }
     }
 
     #[inline(always)]
     pub fn read_active(data: &[u8]) -> bool {
         let reader = QuantumReader::new(data);
-        reader.read_bool::<ACTIVE_OFFSET>()
+        // Safety: We know our layout has active at ACTIVE_OFFSET
+        unsafe { reader.read_bool_unchecked::<ACTIVE_OFFSET>() }
     }
 
     #[inline(always)]
     pub fn read_score(data: &[u8]) -> f64 {
         let reader = QuantumReader::new(data);
-        reader.read_f64::<SCORE_OFFSET>()
+        // Safety: We know our layout has score at SCORE_OFFSET
+        unsafe { reader.read_f64_unchecked::<SCORE_OFFSET>() }
     }
 
     #[inline(always)]

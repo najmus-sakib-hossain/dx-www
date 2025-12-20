@@ -270,6 +270,89 @@ impl<'a> QuantumReader<'a> {
 
         Some(&self.data[SLOT_OFFSET + 1..SLOT_OFFSET + 1 + len])
     }
+
+    // =========================================================================
+    // UNCHECKED ACCESSORS (for maximum performance)
+    // =========================================================================
+    // These bypass bounds checking for sub-nanosecond field access.
+    // Use only when you have validated the buffer at a higher level.
+
+    /// Read u8 at compile-time offset (no bounds check)
+    ///
+    /// # Safety
+    /// Caller must ensure `OFFSET < data.len()`
+    #[inline(always)]
+    pub unsafe fn read_u8_unchecked<const OFFSET: usize>(&self) -> u8 {
+        *self.data.get_unchecked(OFFSET)
+    }
+
+    /// Read u16 at compile-time offset (no bounds check)
+    ///
+    /// # Safety
+    /// Caller must ensure `OFFSET + 1 < data.len()`
+    #[inline(always)]
+    pub unsafe fn read_u16_unchecked<const OFFSET: usize>(&self) -> u16 {
+        let ptr = self.data.as_ptr().add(OFFSET) as *const u16;
+        ptr.read_unaligned()
+    }
+
+    /// Read u32 at compile-time offset (no bounds check)
+    ///
+    /// # Safety
+    /// Caller must ensure `OFFSET + 3 < data.len()`
+    #[inline(always)]
+    pub unsafe fn read_u32_unchecked<const OFFSET: usize>(&self) -> u32 {
+        let ptr = self.data.as_ptr().add(OFFSET) as *const u32;
+        u32::from_le(ptr.read_unaligned())
+    }
+
+    /// Read u64 at compile-time offset (no bounds check)
+    ///
+    /// # Safety
+    /// Caller must ensure `OFFSET + 7 < data.len()`
+    #[inline(always)]
+    pub unsafe fn read_u64_unchecked<const OFFSET: usize>(&self) -> u64 {
+        let ptr = self.data.as_ptr().add(OFFSET) as *const u64;
+        u64::from_le(ptr.read_unaligned())
+    }
+
+    /// Read i64 at compile-time offset (no bounds check)
+    ///
+    /// # Safety
+    /// Caller must ensure `OFFSET + 7 < data.len()`
+    #[inline(always)]
+    pub unsafe fn read_i64_unchecked<const OFFSET: usize>(&self) -> i64 {
+        self.read_u64_unchecked::<OFFSET>() as i64
+    }
+
+    /// Read f32 at compile-time offset (no bounds check)
+    ///
+    /// # Safety
+    /// Caller must ensure `OFFSET + 3 < data.len()`
+    #[inline(always)]
+    pub unsafe fn read_f32_unchecked<const OFFSET: usize>(&self) -> f32 {
+        let bits = self.read_u32_unchecked::<OFFSET>();
+        f32::from_bits(bits)
+    }
+
+    /// Read f64 at compile-time offset (no bounds check)
+    ///
+    /// # Safety
+    /// Caller must ensure `OFFSET + 7 < data.len()`
+    #[inline(always)]
+    pub unsafe fn read_f64_unchecked<const OFFSET: usize>(&self) -> f64 {
+        let bits = self.read_u64_unchecked::<OFFSET>();
+        f64::from_bits(bits)
+    }
+
+    /// Read bool at compile-time offset (no bounds check)
+    ///
+    /// # Safety
+    /// Caller must ensure `OFFSET < data.len()`
+    #[inline(always)]
+    pub unsafe fn read_bool_unchecked<const OFFSET: usize>(&self) -> bool {
+        *self.data.get_unchecked(OFFSET) != 0
+    }
 }
 
 /// Zero-copy quantum writer with compile-time offsets
