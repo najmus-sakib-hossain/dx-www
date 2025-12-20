@@ -1,0 +1,26 @@
+c.a:essensefromexistence
+c.ci/cd:none
+c.c:none
+c.con:dx
+c.d:Inter
+c.d:Orchestrate don't just own your code
+c.fon:@/font
+c.for:https://dx.vercel.app/essensefromexistence/dx
+c.i18:@/locales
+c.i18:./ttses
+c.ico:@/components/icons
+c.loc:en-US
+c.med:@/public/assets/*
+c.med:@/public/images/*
+c.med:@/public/sounds/*
+c.med:@/public/videos/*
+c.pk:lucide-react
+c.pr:Manrope
+c.sc:Roboto Mono
+c.sty:@/style
+c.tasks:none
+c.t:Enhanced Developing Experience
+c.tts:en-US
+c.ui_path:@/components/ui
+c.vr:default
+c.v:0.0.1

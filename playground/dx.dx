@@ -1,0 +1,30 @@
+n:dx^v:0.0.1^t:Enhanced Developing Experience^d:Orchestrate don't just own your code^a:essensefromexistence
+stk=lg rt cp bd pm fw
+js/ts bun tsc vite bun react
+py cpython - - uv django
+rs native rustc - cargo -
+frg.r:https://dx.vercel.app/essensefromexistence/dx^c:none^ci:none^t:none
+frg_i>cli|docs|examples|packages|scripts|style|tests
+sty.p:@/style
+sty_e>atomic|enhanced|logical
+sty_t>dx|vercel|claude
+ui.p:@/components/ui
+ui_c>button|card|modal|navbar|footer
+med.ip:@/public/images/*
+med_im>dummy1.jpg|dummy2.png
+med.vp:@/public/videos/*
+med_vi>dummy1.mp4
+med.sp:@/public/sounds/*
+med_so>dummy1.wav
+med.ap:@/public/assets/*
+med_as>dummy1.asset
+i18.lp:@/locales^ld:en-US
+i18_lv>en-US
+i18_lp>all
+i18.tp:./ttses^td:en-US
+i18_tv>en-US|bn-BD
+i18_tp>all
+ico.p:@/components/icons^pk:lucide-react^vr:default
+fnt.p:@/font^d:Inter^pr:Manrope^sc:Roboto Mono
+wrk>frontend/www|frontend/mobile
+edt>vscode|vim|gitpod|github-codespace|replit|firebase-studio|cursor|windsurf|stackblitz
