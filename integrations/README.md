@@ -17,8 +17,9 @@ git clone https://github.com/fadeevab/cliclack.git && cd cliclack && rm -rf .git
 git clone https://github.com/vercel/turborepo.git && cd turborepo && rm -rf .git && cd ..
 git clone https://github.com/rust-lang/cargo && cd cargo && rm -rf .git && cd ..
 git clone https://github.com/astral-sh/uv && cd uv && rm -rf .git && cd ..
+
 git clone https://github.com/capnproto/capnproto && cd capnproto && rm -rf .git && cd ..
-git clone https://github.com/rkyv/rkyv && cd rkyv && rm -rf .git && cd ..
 git clone https://github.com/google/flatbuffers && cd flatbuffers && rm -rf .git && cd ..
 git clone https://github.com/protocolbuffers/protobuf && cd protobuf && rm -rf .git && cd ..
+git clone https://github.com/rkyv/rkyv && cd rkyv && rm -rf .git && cd ..
 ```
