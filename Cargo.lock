@@ -7199,6 +7199,7 @@ version = "0.1.0"
 dependencies = [
  "bytemuck",
  "bytes",
+ "console_error_panic_hook",
  "criterion",
  "memchr",
  "rustc-hash 1.1.0",
@@ -7207,6 +7208,7 @@ dependencies = [
  "serde_yaml",
  "thiserror 2.0.17",
  "toml 0.8.23",
+ "wasm-bindgen",
 ]
 
 [[package]]

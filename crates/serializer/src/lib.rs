@@ -4,9 +4,22 @@
 //! Achieves 65%+ better efficiency than TOON through schema-guided parsing,
 //! vertical compression, and zero-copy operations.
 //!
-//! DX ∞ features:
+//! ## Holographic Architecture
+//!
+//! DX operates in a "quantum superposition" of three formats:
+//!
+//! 1. **Human Format** (Editor View) - Beautiful, readable, collapsible
+//! 2. **LLM Format** (Disk Storage) - Token-efficient, minimal bytes
+//! 3. **Machine Format** (Runtime) - Binary, 0.70ns access
+//!
+//! The `hologram` module provides `inflate` (LLM→Human) and `deflate` (Human→LLM)
+//! transformations, enabling VS Code to show beautiful configs while storing
+//! token-efficient versions on disk.
+//!
+//! ## DX ∞ features:
 //! - Base62 integers (%x): 320→5A, 540→8k
 //! - Auto-increment (%#): Sequential IDs generated automatically
+//! - Holographic inflate/deflate for editor integration
 
 // Allow dead_code for API completeness
 #![allow(dead_code)]
@@ -17,6 +30,7 @@ pub mod converters;
 pub mod encoder;
 pub mod error;
 pub mod formatter;
+pub mod hologram;
 pub mod mappings;
 pub mod optimizer;
 pub mod parser;
@@ -31,6 +45,7 @@ pub use converters::{convert_to_dx, json_to_dx, toml_to_dx, toon_to_dx, yaml_to_
 pub use encoder::{encode, encode_to_writer, Encoder};
 pub use error::{DxError, Result};
 pub use formatter::{format_human, HumanFormatter};
+pub use hologram::{deflate, inflate, Deflater, HologramConfig, Inflater};
 pub use mappings::Mappings;
 pub use optimizer::{optimize_key, optimize_path};
 pub use parser::{parse, parse_stream, Parser};

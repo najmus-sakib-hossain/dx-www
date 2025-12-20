@@ -15,6 +15,7 @@ license = "MIT"
 [lib]
 name = "serializer"
 path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 bytemuck = { version = "1.18", features = ["derive"] }
@@ -27,12 +28,17 @@ serde_json = { version = "1.0", optional = true }
 serde_yaml = { version = "0.9", optional = true }
 toml = { version = "0.8", optional = true }
 
+# WASM bindings
+wasm-bindgen = { version = "0.2", optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
+
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
 
 [features]
 default = ["converters"]
 converters = ["serde", "serde_json", "serde_yaml", "toml"]
+wasm = ["wasm-bindgen", "console_error_panic_hook", "converters"]
 
 [[bench]]
 name = "dx_vs_toon"
