@@ -1038,3 +1038,8 @@ Good, but for cache colder please update these:
 rename .dx/unsafe to .dx/node_modules(As its more familiar to devs)
 add .dx/i18n
 add .dx/ui
+
+Good, now we have dx serializer and also dx forge correctly at crates folder - So, please create dx vs code vsix extension with just the lsp no extension ui needed but it should correctly run dx forge daemon to do VSC related stuffs and the dx extension will put logo.png that you will find at the root folder /logo.png and put the logo as the file extension of a file that is just "dx" no suffix or prefix and it will show human version of the file and modifying it will change the llm version under the hood and saving it will result in dx forge running dx serializer to create binary version of the file for machine use!!! Please make sure dx forge daemon is correctly running in background when dx vs code extension is being used!!! And please make sure dx vs code extension is working properly with dx forge daemon!!! As because this is very important for dx serializer to be best for humans, llms and machines too!!!
+
+And also try to do it as efficiently as possible without wasting time and resources!!! As because this is a very big task so we will take me turn in agents to do it properly and efficiently without wasting time and resources!!!
+
