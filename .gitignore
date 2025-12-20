@@ -16,7 +16,7 @@ wasm-pack.log
 /dist/
 /build/
 *.dxb
-# *.dx
+*.dx
 **/generated/
 
 # IDE
