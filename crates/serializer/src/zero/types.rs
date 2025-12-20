@@ -13,7 +13,7 @@ pub enum DxZeroError {
     /// Slot operation error
     Slot(SlotError),
     /// Buffer too small
-    BufferTooSmall { required: usize, available: usize },
+    BufferTooSmall { required: usize, actual: usize },
     /// Invalid UTF-8 in string data
     InvalidUtf8,
     /// Invalid alignment
@@ -26,6 +26,12 @@ pub enum DxZeroError {
         length: u32,
         heap_size: usize,
     },
+    /// Invalid magic bytes
+    InvalidMagic,
+    /// Unsupported version
+    UnsupportedVersion { found: u8, supported: u8 },
+    /// Invalid data (generic)
+    InvalidData(String),
 }
 
 impl fmt::Display for DxZeroError {
@@ -33,10 +39,9 @@ impl fmt::Display for DxZeroError {
         match self {
             Self::Header(err) => write!(f, "Header error: {}", err),
             Self::Slot(err) => write!(f, "Slot error: {}", err),
-            Self::BufferTooSmall {
-                required,
-                available,
-            } => write!(f, "Buffer too small: need {} bytes, have {} bytes", required, available),
+            Self::BufferTooSmall { required, actual } => {
+                write!(f, "Buffer too small: need {} bytes, have {} bytes", required, actual)
+            }
             Self::InvalidUtf8 => write!(f, "Invalid UTF-8 in string data"),
             Self::InvalidAlignment => write!(f, "Invalid buffer alignment"),
             Self::CorruptedData { reason } => write!(f, "Corrupted data: {}", reason),
@@ -49,6 +54,11 @@ impl fmt::Display for DxZeroError {
                 "Heap access out of bounds: offset {} + length {} exceeds heap size {}",
                 offset, length, heap_size
             ),
+            Self::InvalidMagic => write!(f, "Invalid DX-Zero magic bytes"),
+            Self::UnsupportedVersion { found, supported } => {
+                write!(f, "Unsupported version: found {}, supported {}", found, supported)
+            }
+            Self::InvalidData(msg) => write!(f, "Invalid data: {}", msg),
         }
     }
 }

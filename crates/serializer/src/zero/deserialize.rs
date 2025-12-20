@@ -26,7 +26,7 @@ pub fn from_bytes<T>(bytes: &[u8]) -> Result<&T> {
     if bytes.len() < min_size {
         return Err(DxZeroError::BufferTooSmall {
             required: min_size,
-            available: bytes.len(),
+            actual: bytes.len(),
         });
     }
 

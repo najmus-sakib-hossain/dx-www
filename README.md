@@ -989,6 +989,18 @@ Welcome to the future. Welcome to **Dx.**
 
 Currently the dx-serializer is already best for humans and llms but, I want to make dx serializer also the best for binary serialization for machines too! So please don't change the logic of llms and humans at serializer and just update dx serializer to be best for machines too with these planning and after you are done with these please test all claims of dx-serializer in playground folder testing against rkyv!!! As we have to make it at least 3x faster than rkyv for binary serialization and deserialization for machines too! And remember to not change any logic for humans and llms at dx-serializer while you are doing these updates for machines! And this is a very big task so please take your time and do it carefully and properly!!! Use tasklist and complate all todos one by one carefully and systematically - And also try to do it as efficiently as possible without wasting time and resources!!! As because this is a very big task so we will take me turn in agents to do it properly and efficiently without wasting time and resources!!!
 
+Nowadays there is the many rust web frameworks like actix web, axum - Right? - Different frameworks are good at different stuffs like actix web is good for its RPC and axum is made by the team who created tokio in rust so they are great! I am creating a new web framework called dx-www and in there, I will make the best web framework in rust for to best at everything - So, please help me beat actix web and axum in every aspect!!!
+
+Here is more about dx-www framework:
+```markdown
+
+```
+
+And here is more about dx:
+```markdown
+
+```
+
 
 I already made the dx serializer is 3x smaller than TOON for LLMS! And then it should handle better than rkyv (I alreayd have installed and have working playground at /playground folder) And it also 🚀 Its the most beautiful serializer for human(For human format don't check tokens, bytes or speed just check its easy for a human to view or not other than any other serializer) and create a "dx" file without any extension it will be config file for all project like in nodejs the package.json does - Learn from the human.dx file but rename key context.name to just name and put languages in stack key and put code editors at workspace key instead of ide key put some over the top configs for all dx-tools mentioned in the human.dx file!(If dx serializer is worse than I describe then please first make it have all these features so that we move - So please test all dx-serializer claims by playground folder testing as dx serializer is very important for next steps!!!)
 
