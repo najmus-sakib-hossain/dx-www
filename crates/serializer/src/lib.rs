@@ -25,6 +25,7 @@
 #![allow(dead_code)]
 
 pub mod base62;
+pub mod binary_output;
 pub mod compress;
 pub mod converters;
 pub mod encoder;
@@ -40,6 +41,9 @@ pub mod types;
 pub mod zero;
 
 pub use base62::{decode_base62, encode_base62};
+pub use binary_output::{
+    get_binary_path, hash_path, is_cache_valid, read_binary, write_binary, BinaryConfig,
+};
 pub use compress::{compress_to_writer, format_machine};
 pub use converters::{convert_to_dx, json_to_dx, toml_to_dx, toon_to_dx, yaml_to_dx};
 pub use encoder::{encode, encode_to_writer, Encoder};

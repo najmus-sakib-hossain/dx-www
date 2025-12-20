@@ -1,0 +1,15 @@
+{
+  "iconDefinitions": {
+    "dx": {
+      "iconPath": "../images/logo.png"
+    }
+  },
+  "file": "dx",
+  "fileExtensions": {},
+  "fileNames": {
+    "dx": "dx"
+  },
+  "languageIds": {
+    "dx": "dx"
+  }
+}

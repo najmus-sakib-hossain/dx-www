@@ -117,6 +117,7 @@ pub mod profiler;
 // DX Tool Cache Management (v2.0.0)
 pub mod dx_cache;
 pub mod dx_executor;
+pub mod serializer_tool;
 
 // Binary Dawn: Sovereign Orchestration Engine
 pub mod sovereign;

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "DX Config",
+  "scopeName": "source.dx",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#sections" },
+    { "include": "#bullets" },
+    { "include": "#tables" },
+    { "include": "#fields" },
+    { "include": "#values" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.dx",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "sections": {
+      "patterns": [
+        {
+          "name": "keyword.control.section.dx",
+          "match": "^\\s*[▼▾>]\\s*"
+        },
+        {
+          "name": "entity.name.section.dx",
+          "match": "(?<=^\\s*[▼▾>]\\s*)\\w+"
+        },
+        {
+          "name": "comment.block.metadata.dx",
+          "match": "\\(.*?\\)"
+        }
+      ]
+    },
+    "bullets": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.list.dx",
+          "match": "^\\s*[•·\\-]\\s*"
+        }
+      ]
+    },
+    "tables": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.table.dx",
+          "match": "[┌┬┐├┼┤└┴┘│─]+"
+        }
+      ]
+    },
+    "fields": {
+      "patterns": [
+        {
+          "name": "variable.other.field.dx",
+          "match": "^\\s*\\w+(?=:)"
+        },
+        {
+          "name": "punctuation.separator.key-value.dx",
+          "match": ":"
+        }
+      ]
+    },
+    "values": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.true.dx",
+          "match": "\\b(true|yes|✓)\\b"
+        },
+        {
+          "name": "constant.language.boolean.false.dx",
+          "match": "\\b(false|no|✗)\\b"
+        },
+        {
+          "name": "constant.language.null.dx",
+          "match": "\\b(null|none|—|∅)\\b"
+        },
+        {
+          "name": "constant.numeric.dx",
+          "match": "\\b\\d+(\\.\\d+)?\\b"
+        },
+        {
+          "name": "string.quoted.double.dx",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.dx",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "variable.other.reference.dx",
+          "match": "→\\w+"
+        }
+      ]
+    }
+  }
+}

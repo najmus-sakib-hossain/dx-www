@@ -1043,3 +1043,9 @@ Good, now we have dx serializer and also dx forge correctly at crates folder - S
 
 And also try to do it as efficiently as possible without wasting time and resources!!! As because this is a very big task so we will take me turn in agents to do it properly and efficiently without wasting time and resources!!!
 
+I am seeing that you have used dx hologram, zero and other for dx serializer, This is getting out of the hand - Its all will be dx serializer only but its their that * statergy like its hologram strategy of dx serializer so please enforce professional and simple naming conventions throughout the dx codebase!!!
+
+And all binary files made from dx serializer should have .dxs extension for machine use and they will be place in the .dx/serializer folder for each project!!! And in a project there can many files with same file name so .dx/serializer should have subfolders with hashed names for each file to avoid name collisions!!! Like if we have config.dx file in the root of the project and another config.dx file in the src/ folder of the project then in the .dx/serializer folder there will be two subfolders with hashed names for each file to avoid name collisions!!! And inside those folders the binary .dxs files will be placed!!! Please make sure dx serializer is updated to handle these properly!!! And please make sure dx forge is updated to handle these properly too!!! As because this is very important for dx serializer to be best for humans, llms and machines too!!!
+
+
+And Please professional icons instead of emojis and make dx vs code extension look like vercel like design!!! As because this is very important for dx to have professional look and feel!!!
