@@ -1,15 +1,19 @@
 {
+  "hidesExplorerArrows": false,
   "iconDefinitions": {
-    "dx": {
+    "_dx_file": {
       "iconPath": "../images/logo.png"
     }
   },
-  "file": "dx",
-  "fileExtensions": {},
+  "file": "_dx_file",
+  "fileExtensions": {
+    "dx": "_dx_file",
+    "dxs": "_dx_file"
+  },
   "fileNames": {
-    "dx": "dx"
+    "dx": "_dx_file"
   },
   "languageIds": {
-    "dx": "dx"
+    "dx": "_dx_file"
   }
 }

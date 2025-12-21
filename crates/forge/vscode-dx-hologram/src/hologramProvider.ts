@@ -35,9 +35,7 @@ export class DxHologramProvider implements vscode.TextDocumentContentProvider {
         
         const config = vscode.workspace.getConfiguration('dx.hologram');
         this.inflater = new DxInflater({
-            indentSize: config.get('indentSize', 4),
-            useUnicode: config.get('useUnicode', true),
-            useBoxDrawing: config.get('useBoxDrawing', true)
+            keyWidth: config.get('keyWidth', 20)
         });
         this.deflater = new DxDeflater();
     }

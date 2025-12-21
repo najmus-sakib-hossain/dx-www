@@ -48,26 +48,12 @@ export async function activate(context: vscode.ExtensionContext) {
         )
     );
 
-    // Intercept dx file opens to show human format
-    context.subscriptions.push(
-        vscode.workspace.onDidOpenTextDocument(async (doc) => {
-            if (isDxFile(doc.uri) && doc.uri.scheme === 'file') {
-                const config = vscode.workspace.getConfiguration('dx.hologram');
-                if (config.get('autoInflate', true)) {
-                    await openAsHologram(doc.uri);
-                }
-            }
-        })
-    );
+    // NOTE: We don't intercept file opens anymore - just show files as-is
+    // The deflate/inflate is handled on explicit save commands
+    // This avoids the "content newer on disk" conflict
 
-    // Save handler: Deflate human → LLM, then build binary
-    context.subscriptions.push(
-        vscode.workspace.onWillSaveTextDocument(async (event) => {
-            if (isDxFile(event.document.uri)) {
-                event.waitUntil(handleSave(event.document));
-            }
-        })
-    );
+    // NOTE: onWillSaveTextDocument removed - was causing "file content newer" conflicts
+    // Deflation happens via explicit command only (dx.normalizeFormat or dx.showLLMFormat)
 
     // Watch for external file changes
     const watcher = vscode.workspace.createFileSystemWatcher('**/dx');
