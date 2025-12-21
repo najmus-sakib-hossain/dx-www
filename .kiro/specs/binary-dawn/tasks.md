@@ -6,88 +6,88 @@ This implementation plan breaks down the Binary Dawn architecture into discrete 
 
 ## Tasks
 
-- [ ] 1. Set up dx-reactor crate structure
+- [x] 1. Set up dx-reactor crate structure
   - Create `crates/dx-reactor/` directory structure
   - Create `Cargo.toml` with platform-specific dependencies
   - Create module structure: `io/`, `protocol/`, `memory/`, `middleware/`
   - _Requirements: 1.1_
 
-- [ ] 2. Implement core I/O abstractions
-  - [ ] 2.1 Define Reactor trait and common types
+- [x] 2. Implement core I/O abstractions
+  - [x] 2.1 Define Reactor trait and common types
     - Create `src/io/mod.rs` with Reactor trait
     - Define ReactorConfig, Completion, Interest, IoHandle types
     - Implement platform type aliases (PlatformReactor)
     - _Requirements: 1.1, 1.7, 1.8_
 
-  - [ ] 2.2 Write property test for batch submission
+  - [x] 2.2 Write property test for batch submission
     - **Property 1: Batch Submission Count**
     - **Validates: Requirements 1.7**
 
-  - [ ] 2.3 Implement io_uring backend (Linux)
+  - [x] 2.3 Implement io_uring backend (Linux)
     - Create `src/io/uring.rs`
     - Implement `is_available()` kernel version check
     - Implement UringReactor with SQPOLL support
     - Implement `recv_multishot()` and `send_zc()` for zero-copy I/O
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
 
-  - [ ] 2.4 Write property test for kernel version detection
+  - [x] 2.4 Write property test for kernel version detection
     - **Property 3: Kernel Version Detection**
     - **Validates: Requirements 2.1**
 
-  - [ ] 2.5 Implement epoll backend (Linux fallback)
+  - [x] 2.5 Implement epoll backend (Linux fallback)
     - Create `src/io/epoll.rs`
     - Implement EpollReactor as fallback for older Linux
     - _Requirements: 1.3_
 
-  - [ ] 2.6 Implement kqueue backend (macOS/BSD)
+  - [x] 2.6 Implement kqueue backend (macOS/BSD)
     - Create `src/io/kqueue.rs`
     - Implement KqueueReactor with batch event handling
     - Implement `register_read()` and `register_write()`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 2.7 Write property test for kqueue batch submission
+  - [x] 2.7 Write property test for kqueue batch submission
     - **Property 4: Kqueue Batch Submission**
     - **Validates: Requirements 3.4**
 
-  - [ ] 2.8 Implement IOCP backend (Windows)
+  - [x] 2.8 Implement IOCP backend (Windows)
     - Create `src/io/iocp.rs`
     - Implement IocpReactor with completion port
     - Implement `associate()`, `read_file()`, `recv_socket()`
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 2.9 Write property test for completion structure
+  - [x] 2.9 Write property test for completion structure
     - **Property 5: Completion Structure Integrity**
     - **Validates: Requirements 3.5, 4.5**
 
-- [ ] 3. Checkpoint - Verify I/O backends compile on target platforms
+- [x] 3. Checkpoint - Verify I/O backends compile on target platforms
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement DxReactor and thread-per-core architecture
-  - [ ] 4.1 Implement ReactorBuilder and DxReactor
+- [x] 4. Implement DxReactor and thread-per-core architecture
+  - [x] 4.1 Implement ReactorBuilder and DxReactor
     - Create `src/lib.rs` with DxReactor struct
     - Implement ReactorBuilder with fluent API
     - Implement WorkerStrategy and IoBackend enums
     - _Requirements: 5.1, 5.4_
 
-  - [ ] 4.2 Write property test for thread-per-core default
+  - [x] 4.2 Write property test for thread-per-core default
     - **Property 6: Thread-per-Core Default**
     - **Validates: Requirements 5.1**
 
-  - [ ] 4.3 Write property test for fixed worker count
+  - [x] 4.3 Write property test for fixed worker count
     - **Property 7: Fixed Worker Count**
     - **Validates: Requirements 5.4**
 
-  - [ ] 4.4 Implement CoreState and event loop
+  - [x] 4.4 Implement CoreState and event loop
     - Create CoreState struct with local work queue
     - Implement `run_event_loop()` for each core
     - Implement CPU pinning via core_affinity
     - _Requirements: 5.2, 5.3_
 
-  - [ ] 4.5 Implement `best_available()` runtime detection
+  - [x] 4.5 Implement `best_available()` runtime detection
     - Create function to detect and return best reactor
     - _Requirements: 1.6_
 
-- [ ] 5. Checkpoint - Verify reactor builds and spawns workers
+- [x] 5. Checkpoint - Verify reactor builds and spawns workers
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Implement HBTP Protocol

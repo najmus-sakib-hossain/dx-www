@@ -75,6 +75,9 @@ members = [
     # Compiler (transpiler-to-binary pipeline)
     "crates/dx-www",
     
+    # Binary Dawn - Cross-platform I/O reactor
+    "crates/dx-reactor",
+    
     # =========================================================================
     # EXAMPLES
     # =========================================================================
@@ -208,6 +211,9 @@ dx-www-fallback = { path = "crates/dx-www-fallback" }
 dx-www-a11y = { path = "crates/dx-www-a11y" }
 dx-www-print = { path = "crates/dx-www-print" }
 dx-www-rtl = { path = "crates/dx-www-rtl" }
+
+# Binary Dawn
+dx-reactor = { path = "crates/dx-reactor" }
 
 
 # ============================================================================
