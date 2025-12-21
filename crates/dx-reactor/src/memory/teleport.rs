@@ -238,3 +238,127 @@ macro_rules! impl_teleportable_primitive {
 }
 
 impl_teleportable_primitive!(u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
+
+
+// ============================================================================
+// Example Teleportable Types
+// ============================================================================
+
+/// Example teleportable user type.
+///
+/// This demonstrates how to create a teleportable struct with string references.
+/// Strings are stored in a separate string table and referenced by offset/length.
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TeleportableUser {
+    /// User ID.
+    pub id: u64,
+    /// Offset into string table for name.
+    pub name_offset: u32,
+    /// Length of name string.
+    pub name_len: u32,
+    /// User age.
+    pub age: u8,
+    /// Whether user is active.
+    pub active: u8,
+    /// Padding for alignment.
+    pub _pad: [u8; 6],
+}
+
+// Compile-time assertion that TeleportableUser is 24 bytes
+const _: () = assert!(std::mem::size_of::<TeleportableUser>() == 24);
+
+unsafe impl Teleportable for TeleportableUser {
+    const LAYOUT: TeleportLayout = TeleportLayout::new(
+        std::mem::size_of::<TeleportableUser>(),
+        std::mem::align_of::<TeleportableUser>(),
+        0x5553_4552, // "USER" as checksum
+    );
+}
+
+impl TeleportableUser {
+    /// Create a new teleportable user.
+    pub fn new(id: u64, name_offset: u32, name_len: u32, age: u8, active: bool) -> Self {
+        Self {
+            id,
+            name_offset,
+            name_len,
+            age,
+            active: if active { 1 } else { 0 },
+            _pad: [0; 6],
+        }
+    }
+
+    /// Check if user is active.
+    pub fn is_active(&self) -> bool {
+        self.active != 0
+    }
+}
+
+/// Example teleportable point type for 2D coordinates.
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TeleportablePoint {
+    /// X coordinate.
+    pub x: f64,
+    /// Y coordinate.
+    pub y: f64,
+}
+
+// Compile-time assertion that TeleportablePoint is 16 bytes
+const _: () = assert!(std::mem::size_of::<TeleportablePoint>() == 16);
+
+unsafe impl Teleportable for TeleportablePoint {
+    const LAYOUT: TeleportLayout = TeleportLayout::new(
+        std::mem::size_of::<TeleportablePoint>(),
+        std::mem::align_of::<TeleportablePoint>(),
+        0x504F_494E, // "POIN" as checksum
+    );
+}
+
+impl TeleportablePoint {
+    /// Create a new point.
+    pub fn new(x: f64, y: f64) -> Self {
+        Self { x, y }
+    }
+
+    /// Calculate distance from origin.
+    pub fn distance_from_origin(&self) -> f64 {
+        (self.x * self.x + self.y * self.y).sqrt()
+    }
+}
+
+/// Example teleportable timestamp type.
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TeleportableTimestamp {
+    /// Seconds since Unix epoch.
+    pub secs: i64,
+    /// Nanoseconds within the second.
+    pub nanos: u32,
+    /// Padding for alignment.
+    pub _pad: u32,
+}
+
+// Compile-time assertion that TeleportableTimestamp is 16 bytes
+const _: () = assert!(std::mem::size_of::<TeleportableTimestamp>() == 16);
+
+unsafe impl Teleportable for TeleportableTimestamp {
+    const LAYOUT: TeleportLayout = TeleportLayout::new(
+        std::mem::size_of::<TeleportableTimestamp>(),
+        std::mem::align_of::<TeleportableTimestamp>(),
+        0x5449_4D45, // "TIME" as checksum
+    );
+}
+
+impl TeleportableTimestamp {
+    /// Create a new timestamp.
+    pub fn new(secs: i64, nanos: u32) -> Self {
+        Self { secs, nanos, _pad: 0 }
+    }
+
+    /// Create a timestamp from seconds only.
+    pub fn from_secs(secs: i64) -> Self {
+        Self::new(secs, 0)
+    }
+}

@@ -13,6 +13,7 @@ path = "src/lib.rs"
 [features]
 default = []
 oxc = ["oxc_parser", "oxc_allocator", "oxc_ast", "oxc_span"]
+db-teleport = ["dx-db-teleport"]
 
 [dependencies]
 # CLI & Terminal
@@ -58,6 +59,10 @@ chrono = "0.4"
 
 # Internal
 dx-www-packet = { path = "../dx-www-packet", features = ["std"] }
+
+# Binary Dawn - Cross-platform I/O reactor
+dx-reactor = { path = "../dx-reactor" }
+dx-db-teleport = { path = "../dx-db-teleport", optional = true }
 
 # Ecosystem crates (compile-time features)
 dx-www-form = { path = "../dx-www-form" }

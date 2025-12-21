@@ -1765,6 +1765,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "deadpool-postgres"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d697d376cbfa018c23eb4caab1fd1883dd9c906a8c034e8d9a3cb06a7e0bef9"
+dependencies = [
+ "async-trait",
+ "deadpool 0.12.3",
+ "getrandom 0.2.16",
+ "tokio",
+ "tokio-postgres",
+ "tracing",
+]
+
+[[package]]
 name = "deadpool-runtime"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2078,6 +2092,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "dx-db-teleport"
+version = "0.1.0"
+dependencies = [
+ "dashmap 6.1.0",
+ "deadpool-postgres 0.14.1",
+ "dx-reactor",
+ "futures",
+ "proptest",
+ "thiserror 2.0.17",
+ "tokio",
+ "tokio-postgres",
+ "tracing",
+ "xxhash-rust",
+]
+
+[[package]]
 name = "dx-js-monorepo"
 version = "0.1.0"
 dependencies = [
@@ -2169,6 +2199,8 @@ dependencies = [
  "chrono",
  "clap",
  "console",
+ "dx-db-teleport",
+ "dx-reactor",
  "dx-www-a11y",
  "dx-www-db",
  "dx-www-form",
@@ -2292,7 +2324,7 @@ version = "0.1.0"
 dependencies = [
  "bincode 2.0.1",
  "bytes",
- "deadpool-postgres",
+ "deadpool-postgres 0.12.1",
  "dx-www-packet",
  "serde",
  "serde_json",

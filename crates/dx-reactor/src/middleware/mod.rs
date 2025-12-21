@@ -10,7 +10,7 @@ mod rate_limit;
 pub use traits::{Middleware, MiddlewareResult, MiddlewareError, Request, Response};
 pub use auth::AuthMiddleware;
 pub use timing::TimingMiddleware;
-pub use rate_limit::RateLimitMiddleware;
+pub use rate_limit::{RateLimitMiddleware, get_thread_rate_count, reset_thread_rate_limit};
 
 /// Macro for compile-time middleware chaining.
 ///

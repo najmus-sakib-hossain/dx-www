@@ -5,4 +5,7 @@
 
 mod teleport;
 
-pub use teleport::{Teleportable, TeleportLayout, TeleportBuffer, TeleportReader};
+pub use teleport::{
+    Teleportable, TeleportLayout, TeleportBuffer, TeleportReader,
+    TeleportableUser, TeleportablePoint, TeleportableTimestamp,
+};
