@@ -1097,6 +1097,9 @@ And all binary files made from dx serializer should have .dxs extension for mach
 
 And Please professional icons instead of emojis and make dx vs code extension look like vercel like design!!! As because this is very important for dx to have professional look and feel!!!
 
+
+cd "f:/Code/dx/crates/forge/vscode-dx-hologram" && npm run compile 2>&1
+cd "f:/Code/dx/crates/forge/vscode-dx-hologram" && npx vsce package --allow-missing-repository
 code --install-extension "f:/Code/dx/crates/forge/vscode-dx-hologram/dx-serializer-1.0.0.vsix" --force
 
 
