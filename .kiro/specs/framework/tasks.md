@@ -179,7 +179,7 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
 - [x] 11. Checkpoint - Verify DOM operations
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 12. Routing and Navigation
+- [x] 12. Routing and Navigation
   - [x] 12.1 Implement binary trie router
     - Create `src/router.rs` with RouteHandler struct
     - Implement TrieNode and BinaryRouter
@@ -195,50 +195,50 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
     - **Property 26: Dynamic Route Parameter Extraction**
     - **Validates: Requirements 15.4**
 
-  - [-] 12.4 Implement view transitions
+  - [x] 12.4 Implement view transitions
     - Create `src/transitions.rs` with TransitionConfig struct
     - Implement TransitionType enum
     - Implement `navigate_with_transition()` with FLIP
     - _Requirements: 18.1, 18.2, 18.3_
 
-  - [ ] 12.5 Write property test for TransitionConfig fields
+  - [x] 12.5 Write property test for TransitionConfig fields
     - **Property 31: TransitionConfig Fields**
     - **Validates: Requirements 18.1**
 
-- [ ] 13. Checkpoint - Verify routing and navigation
+- [x] 13. Checkpoint - Verify routing and navigation
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 14. Forms and Optimistic UI
-  - [ ] 14.1 Implement binary form actions
+- [x] 14. Forms and Optimistic UI
+  - [x] 14.1 Implement binary form actions
     - Create `src/forms.rs` with BinaryFormData struct
     - Implement FormValue enum
     - Implement FormAction trait
     - Create `process_form_action()` function
     - _Requirements: 16.1, 16.2, 16.3_
 
-  - [ ] 14.2 Write property test for form validation correctness
+  - [x] 14.2 Write property test for form validation correctness
     - **Property 27: Form Validation Correctness**
     - **Validates: Requirements 16.2**
 
-  - [ ] 14.3 Write property test for binary form round-trip
+  - [x] 14.3 Write property test for binary form round-trip
     - **Property 28: Binary Form Round-Trip**
     - **Validates: Requirements 16.1, 16.3**
 
-  - [ ] 14.4 Implement optimistic UI with XOR rollback
+  - [x] 14.4 Implement optimistic UI with XOR rollback
     - Create `src/optimistic.rs` with StateSnapshot struct
     - Implement SIMD-accelerated XOR `rollback()` method
     - Create `optimistic_mutation()` async wrapper
     - _Requirements: 17.1, 17.2, 17.5_
 
-  - [ ] 14.5 Write property test for optimistic rollback round-trip
+  - [x] 14.5 Write property test for optimistic rollback round-trip
     - **Property 29: Optimistic Rollback Round-Trip**
     - **Validates: Requirements 17.1, 17.2**
 
-  - [ ] 14.6 Write property test for rollback zero allocation
+  - [x] 14.6 Write property test for rollback zero allocation
     - **Property 30: Rollback Zero Allocation**
     - **Validates: Requirements 17.5**
 
-- [ ] 15. Checkpoint - Verify forms and optimistic UI
+- [x] 15. Checkpoint - Verify forms and optimistic UI
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 16. LiveView and Content

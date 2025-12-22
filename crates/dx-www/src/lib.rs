@@ -35,6 +35,10 @@ pub mod control;
 pub mod suspense;
 pub mod teleport;
 pub mod keepalive;
+pub mod router;
+pub mod transitions;
+pub mod forms;
+pub mod optimistic;
 
 // OXC-based parser (optional - requires oxc feature)
 #[cfg(feature = "oxc")]
