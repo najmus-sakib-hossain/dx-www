@@ -11,12 +11,19 @@
 //! 8. Grayscale/Filter Applier - Apply visual effects
 //! 9. OCR (Text Extractor) - Extract text from images
 //! 10. Icon Generator - Generate favicon and app icons
+//!
+//! ## Native Processing
+//!
+//! When compiled with the `image-core` feature, native Rust implementations
+//! are available that don't require external tools like ImageMagick.
+//! See the `native` submodule for these functions.
 
 pub mod compressor;
 pub mod converter;
 pub mod exif;
 pub mod filters;
 pub mod icons;
+pub mod native;
 pub mod ocr;
 pub mod palette;
 pub mod qrcode;
@@ -28,6 +35,7 @@ pub use converter::*;
 pub use exif::*;
 pub use filters::*;
 pub use icons::*;
+pub use native::*;
 pub use ocr::*;
 pub use palette::*;
 pub use qrcode::*;

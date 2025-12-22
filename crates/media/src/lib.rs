@@ -76,7 +76,9 @@
 // MODULE DECLARATIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
+pub mod binary;
 pub mod config;
+pub mod core;
 pub mod engine;
 pub mod error;
 pub mod http;
@@ -135,6 +137,15 @@ pub use providers::{
 pub use tools::{
     ArchiveTools, AudioTools, DocumentTools, ImageTools, ToolOutput, UtilityTools, VideoTools,
 };
+
+// Re-export core infrastructure (Binary Dawn architecture)
+pub use core::{
+    ConversionCache, CoreConfig, CoreError, CoreResult, MediaBuffer, MediaPipeline, PipelineStage,
+    ProgressTracker,
+};
+
+// Re-export binary format utilities
+pub use binary::{BinaryCache, BinaryCacheConfig, BinaryFormat, FormatDetector};
 
 /// Library version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

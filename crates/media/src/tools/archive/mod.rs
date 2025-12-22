@@ -11,12 +11,18 @@
 //! 8. Archive Encrypt - Encrypt archives
 //! 9. Archive Split - Split large archives
 //! 10. Archive Merge - Merge split archives
+//!
+//! ## Native Processing
+//!
+//! Enable the `archive-core` feature for native Rust archive processing
+//! without external tools. Uses `zip`, `tar`, and `flate2` crates.
 
 pub mod compress;
 pub mod decompress;
 pub mod encrypt;
 pub mod list;
 pub mod merge;
+pub mod native;
 pub mod rar;
 pub mod sevenz;
 pub mod split;
@@ -28,6 +34,7 @@ pub use decompress::*;
 pub use encrypt::*;
 pub use list::*;
 pub use merge::*;
+pub use native::*;
 pub use rar::*;
 pub use sevenz::*;
 pub use split::*;

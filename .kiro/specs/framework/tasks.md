@@ -293,75 +293,75 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
 - [x] 19. Checkpoint - Verify DI and guards
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 20. Background Processing
-  - [ ] 20.1 Implement binary job queue
+- [x] 20. Background Processing
+  - [x] 20.1 Implement binary job queue
     - Create `src/jobs.rs` with Job struct (~14 bytes header)
     - Implement JobQueue ring buffer
     - Implement O(1) `enqueue()` and `dequeue()` methods
     - _Requirements: 22.1, 22.2, 22.3_
 
-  - [ ] 20.2 Write property test for job struct size
+  - [x] 20.2 Write property test for job struct size
     - **Property 35: Job Struct Size**
     - **Validates: Requirements 22.1, 22.3**
 
-  - [ ] 20.3 Write property test for ring buffer FIFO
+  - [x] 20.3 Write property test for ring buffer FIFO
     - **Property 36: Ring Buffer FIFO**
     - **Validates: Requirements 22.2**
 
-  - [ ] 20.4 Implement pre-computed cron
+  - [x] 20.4 Implement pre-computed cron
     - Create `src/cron.rs` with CronJob struct
     - Implement IntervalType enum
     - Implement `should_run()` timestamp comparison
     - Implement `execute()` with next_run update
     - _Requirements: 23.1, 23.2, 23.3_
 
-  - [ ] 20.5 Write property test for cron schedule check
+  - [x] 20.5 Write property test for cron schedule check
     - **Property 37: CronJob Schedule Check**
     - **Validates: Requirements 23.1, 23.3**
 
-- [ ] 21. Checkpoint - Verify background processing
+- [x] 21. Checkpoint - Verify background processing
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 22. Progressive Enhancement and Code Splitting
-  - [ ] 22.1 Implement progressive enhancement tiers
+- [x] 22. Progressive Enhancement and Code Splitting
+  - [x] 22.1 Implement progressive enhancement tiers
     - Create `src/progressive.rs` with BuildOutput struct
     - Implement ClientCapability enum and detection
     - Implement `serve_page()` tier selection
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
-  - [ ] 22.2 Write property test for progressive enhancement tiers
+  - [x] 22.2 Write property test for progressive enhancement tiers
     - **Property 23: Progressive Enhancement Tiers**
     - **Validates: Requirements 14.1, 14.4**
 
-  - [ ] 22.3 Write property test for capability detection correctness
+  - [x] 22.3 Write property test for capability detection correctness
     - **Property 24: Capability Detection Correctness**
     - **Validates: Requirements 14.2**
 
-  - [ ] 22.4 Implement handler code splitting
+  - [x] 22.4 Implement handler code splitting
     - Create `src/code_splitting.rs` with HandlerClassifier
     - Implement classification logic for each group
     - Implement Prefetcher with prediction
     - _Requirements: 13.1, 13.2, 13.4_
 
-  - [ ] 22.5 Write property test for handler classification completeness
+  - [x] 22.5 Write property test for handler classification completeness
     - **Property 22: Handler Classification Completeness**
     - **Validates: Requirements 13.1, 13.2**
 
-- [ ] 23. Checkpoint - Verify progressive enhancement and code splitting
+- [x] 23. Checkpoint - Verify progressive enhancement and code splitting
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 24. Type Safety and Admin
-  - [ ] 24.1 Implement BinarySchema type system
+- [x] 24. Type Safety and Admin
+  - [x] 24.1 Implement BinarySchema type system
     - Create `src/types.rs` with BinarySchema trait
     - Document derive macro usage
     - Implement example types
     - _Requirements: 25.1, 25.2, 25.3, 25.4_
 
-  - [ ] 24.2 Write property test for BinarySchema wire format
+  - [x] 24.2 Write property test for BinarySchema wire format
     - **Property 39: BinarySchema Wire Format**
     - **Validates: Requirements 25.2**
 
-  - [ ] 24.3 Implement schema-driven admin
+  - [x] 24.3 Implement schema-driven admin
     - Create `src/admin.rs` with AdminConfig struct
     - Implement ModelAdmin and Column structs
     - Document derive macro usage

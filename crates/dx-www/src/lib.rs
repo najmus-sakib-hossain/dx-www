@@ -43,6 +43,16 @@ pub mod liveview;
 pub mod content;
 pub mod di;
 pub mod guards;
+pub mod jobs;
+pub mod cron;
+
+// Binary Dawn Features - Progressive Enhancement and Code Splitting
+pub mod progressive;
+pub mod code_splitting;
+
+// Binary Dawn Features - Type Safety and Admin
+pub mod types;
+pub mod admin;
 
 // OXC-based parser (optional - requires oxc feature)
 #[cfg(feature = "oxc")]

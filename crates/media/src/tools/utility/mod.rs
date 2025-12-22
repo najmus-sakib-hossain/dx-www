@@ -1,6 +1,6 @@
 //! Utility tools.
 //!
-//! This module provides 10 general utility tools:
+//! This module provides 13 general utility tools:
 //! 1. Hash Calculator - Calculate file checksums
 //! 2. Base64 Encoder/Decoder - Encode/decode base64
 //! 3. URL Encoder/Decoder - Encode/decode URLs
@@ -11,27 +11,36 @@
 //! 8. UUID Generator - Generate unique IDs
 //! 9. Timestamp Tool - Convert timestamps
 //! 10. Random Generator - Generate random data
+//! 11. Duplicate Finder - Find duplicate files by content hash (NEW)
+//! 12. File Watcher - Watch directories for changes (NEW)
+//! 13. Checksum Tool - Multi-algorithm checksum verification (NEW)
 
 pub mod base64;
+pub mod checksum;
 pub mod csv_convert;
 pub mod diff;
+pub mod duplicate;
 pub mod hash;
 pub mod json_format;
 pub mod random;
 pub mod timestamp;
 pub mod url_encode;
 pub mod uuid;
+pub mod watcher;
 pub mod yaml_convert;
 
 pub use base64::*;
+pub use checksum::*;
 pub use csv_convert::*;
 pub use diff::*;
+pub use duplicate::*;
 pub use hash::*;
 pub use json_format::*;
 pub use random::*;
 pub use timestamp::*;
 pub use url_encode::*;
 pub use uuid::*;
+pub use watcher::*;
 pub use yaml_convert::*;
 
 use crate::error::Result;

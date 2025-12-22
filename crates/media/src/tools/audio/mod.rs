@@ -11,11 +11,18 @@
 //! 8. Splitter - Split audio by silence/duration
 //! 9. Effects Processor - Apply audio effects
 //! 10. Speech-to-Text - Transcribe audio
+//!
+//! ## Native Processing
+//!
+//! Enable the `audio-core` feature for native Rust audio decoding
+//! using symphonia and hound. Enable `audio-tags` for native
+//! metadata editing using lofty.
 
 mod converter;
 mod effects;
 mod merger;
 mod metadata;
+pub mod native;
 mod normalize;
 mod silence;
 mod spectrum;
@@ -27,6 +34,7 @@ pub use converter::*;
 pub use effects::*;
 pub use merger::*;
 pub use metadata::*;
+pub use native::*;
 pub use normalize::*;
 pub use silence::*;
 pub use spectrum::*;
