@@ -28,18 +28,21 @@ export async function activate(context: vscode.ExtensionContext) {
     // Auto-convert to Human when opening
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(async (doc) => {
-            if (isDxFile(doc.uri) && !isProcessing) {
-                await convertToHumanIfNeeded(doc);
+            if (isDxFile(doc.uri)) {
+                // Small delay to ensure document is fully loaded
+                setTimeout(() => convertToHumanIfNeeded(doc), 100);
             }
         })
     );
 
-    // Convert already open documents
-    for (const doc of vscode.workspace.textDocuments) {
-        if (isDxFile(doc.uri)) {
-            await convertToHumanIfNeeded(doc);
+    // Convert already open documents immediately
+    setTimeout(async () => {
+        for (const doc of vscode.workspace.textDocuments) {
+            if (isDxFile(doc.uri)) {
+                await convertToHumanIfNeeded(doc);
+            }
         }
-    }
+    }, 200);
 
     // Convert to LLM when closing (via workspace event)
     context.subscriptions.push(
@@ -149,15 +152,20 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 async function convertToHumanIfNeeded(doc: vscode.TextDocument) {
-    if (isProcessing) return;
-    
-    const text = doc.getText();
-    
-    // Already in human format?
-    if (text.includes(' : ') || text.includes(' > ')) {
+    // Don't convert if already processing
+    if (isProcessing) {
         return;
     }
     
+    const text = doc.getText();
+    
+    // Check if already in human format (has spaces around operators)
+    if (text.includes(' : ') || text.includes(' > ')) {
+        console.log('[DX] Already in human format');
+        return;
+    }
+    
+    console.log('[DX] Converting to human format...');
     isProcessing = true;
     
     try {
@@ -166,13 +174,19 @@ async function convertToHumanIfNeeded(doc: vscode.TextDocument) {
         const isRootConfig = basename === 'dx' && !basename.includes('.');
         
         const pretty = formatter.toPretty(text, isRootConfig);
+        
+        // Use workspace edit for better control
         const edit = new vscode.WorkspaceEdit();
         const fullRange = new vscode.Range(
             doc.positionAt(0),
             doc.positionAt(text.length)
         );
         edit.replace(doc.uri, fullRange, pretty);
-        await vscode.workspace.applyEdit(edit);
+        
+        const success = await vscode.workspace.applyEdit(edit);
+        console.log('[DX] Conversion success:', success);
+    } catch (error) {
+        console.error('[DX] Conversion error:', error);
     } finally {
         isProcessing = false;
     }
