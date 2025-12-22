@@ -1,64 +1,64 @@
-name                    : dx
-version                 : 0.0.1
-title                   : Enhanced Developing Experience
-description             : Orchestrate don't just own your code
-author                  : essensefromexistence
+name                  : dxds
+version               : 0.0.1
+title                 : Enhanced Developing Experience
+description           : Orchestrate don't just own your code
+author                : essensefromexistence
 
 # Technology Stack
-stack                   > Lang | Runtime | Compiler | Bundler | PM | Framework
-stack.javascript        > javascript/typescript | bun | tsc | vite | bun | react
-stack.python            > python | cpython | - | - | uv | django
-stack.rust              > rust | native | rustc | - | cargo | -
+stack                 > Lang | Runtime | Compiler | Bundler | PM | Framework
+stack.javascript      > javascript/typescript | bun | tsc | vite | bun | react
+stack.python          > python | cpython | - | - | uv | django
+stack.rust            > rust | native | rustc | - | cargo | -
 
 # Forge Configuration
-forge.repository        : https://dx.vercel.app/essensefromexistence/dx
-forge.container         : none
-forge.ci_cd             : none
-forge.tasks             : none
-forge_items             > cli | docs | examples | packages | scripts | style | tests
+forge.repository      : https://dx.vercel.app/essensefromexistence/dx
+forge.container       : none
+forge.ci_cd           : none
+forge.tasks           : none
+forge_items           > cli | docs | examples | packages | scripts | style | tests
 
 # Style Configuration
-style.path              : @/style
-style_engine            > atomic | enhanced | logical
-style_themes            > dx | vercel | claude
+style.path            : @/style
+style_engine          > atomic | enhanced | logical
+style_themes          > dx | vercel | claude
 
 # UI Components
-ui.path                 : @/components/ui
-ui_components           > button | card | modal | navbar | footer
+ui.path               : @/components/ui
+ui_components         > button | card | modal | navbar | footer
 
 # Media Assets
-media.images_path       : @/public/images/*
-media_images            > dummy1.jpg | dummy2.png
-media.videos_path       : @/public/videos/*
-media_videos            > dummy1.mp4
-media.sounds_path       : @/public/sounds/*
-media_sounds            > dummy1.wav
-media.assets_path       : @/public/assets/*
-media_assets            > dummy1.asset
+media.images_path     : @/public/images/*
+media_images          > dummy1.jpg | dummy2.png
+media.videos_path     : @/public/videos/*
+media_videos          > dummy1.mp4
+media.sounds_path     : @/public/sounds/*
+media_sounds          > dummy1.wav
+media.assets_path     : @/public/assets/*
+media_assets          > dummy1.asset
 
 # Internationalization
-i18n.locales_path       : @/locales
-i18n.locales_default    : en-US
-i18n_locales_dev        > en-US
-i18n_locales_prod       > all
+i18n.locales_path     : @/locales
+i18n.locales_default  : en-US
+i18n_locales_dev      > en-US
+i18n_locales_prod     > all
 
 # Text-to-Speech
-i18n.ttses_path         : ./ttses
-i18n.ttses_default      : en-US
-i18n_ttses_dev          > en-US | bn-BD
-i18n_ttses_prod         > all
+i18n.ttses_path       : ./ttses
+i18n.ttses_default    : en-US
+i18n_ttses_dev        > en-US | bn-BD
+i18n_ttses_prod       > all
 
 # Icon Configuration
-icon.path               : @/components/icons
-icon.pack               : lucide-react
-icon.variant            : default
+icon.path             : @/components/icons
+icon.pack             : lucide-react
+icon.variant          : default
 
 # Font Configuration
-font.path               : @/font
-font.default            : Inter
-font.primary            : Manrope
-font.secondary          : Roboto Mono
+font.path             : @/font
+font.default          : Inter
+font.primary          : Manrope
+font.secondary        : Roboto Mono
 
 # Workspace & Editors
-workspace               > frontend/www | frontend/mobile
-editors                 > vscode | vim | gitpod | github-codespace | replit | firebase-studio | cursor | windsurf | stackblitz
+workspace             > frontend/www | frontend/mobile
+editors               > vscode | vim | gitpod | github-codespace | replit | firebase-studio | cursor | windsurf | stackblitz
