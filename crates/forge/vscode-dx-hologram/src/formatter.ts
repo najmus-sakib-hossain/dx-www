@@ -22,9 +22,10 @@ export class DxFormatter {
      * - Remove ALL ^ prefixes, convert to indentation
      * - Add spaces around : and >
      * - Add section breaks
+     * - Add comments for root 'dx' config file
      * - Align keys
      */
-    toPretty(content: string): string {
+    toPretty(content: string, isRootConfig: boolean = false): string {
         const lines = content.split('\n');
         
         interface Parsed {
@@ -114,6 +115,19 @@ export class DxFormatter {
         const alignCol = Math.max(maxKeyLen + 2, 18);
         const result: string[] = [];
         let prevSection = '';
+        
+        // Add comments for root dx config
+        const sectionComments: Record<string, string> = isRootConfig ? {
+            'stack': '# Technology Stack',
+            'forge': '# Forge Configuration',
+            'style': '# Style Configuration',
+            'ui': '# UI Components',
+            'media': '# Media Assets',
+            'i18n': '# Internationalization',
+            'icon': '# Icon Configuration',
+            'font': '# Font Configuration',
+            'workspace': '# Workspace & Editors'
+        } : {};
 
         for (let i = 0; i < parsed.length; i++) {
             const p = parsed[i];
@@ -121,6 +135,11 @@ export class DxFormatter {
             // Add blank line before new section (unless at start)
             if (i > 0 && p.section && p.section !== prevSection && p.indentLevel === 0) {
                 result.push('');
+                
+                // Add section comment for root config
+                if (isRootConfig && sectionComments[p.section]) {
+                    result.push(sectionComments[p.section]);
+                }
             }
 
             if (!p.isContent) {

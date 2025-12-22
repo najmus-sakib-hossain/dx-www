@@ -41,7 +41,16 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }
 
-    // Auto-convert to LLM when closing
+    // Convert to LLM when closing (via workspace event)
+    context.subscriptions.push(
+        vscode.workspace.onDidCloseTextDocument(async (doc) => {
+            if (isDxFile(doc.uri) && !isProcessing) {
+                await convertToLLMOnClose(doc);
+            }
+        })
+    );
+
+    // Also convert to LLM on save (for git commits)
     context.subscriptions.push(
         vscode.workspace.onWillSaveTextDocument((e) => {
             if (isDxFile(e.document.uri)) {
@@ -152,7 +161,11 @@ async function convertToHumanIfNeeded(doc: vscode.TextDocument) {
     isProcessing = true;
     
     try {
-        const pretty = formatter.toPretty(text);
+        // Check if this is the root dx config file
+        const basename = path.basename(doc.uri.fsPath);
+        const isRootConfig = basename === 'dx' && !basename.includes('.');
+        
+        const pretty = formatter.toPretty(text, isRootConfig);
         const edit = new vscode.WorkspaceEdit();
         const fullRange = new vscode.Range(
             doc.positionAt(0),
@@ -182,6 +195,28 @@ async function convertToLLMIfNeeded(doc: vscode.TextDocument): Promise<vscode.Te
     );
     
     return [vscode.TextEdit.replace(fullRange, dense)];
+}
+
+async function convertToLLMOnClose(doc: vscode.TextDocument) {
+    if (isProcessing) return;
+    
+    const text = doc.getText();
+    
+    // Already in LLM format?
+    if (!text.includes(' : ') && !text.includes(' > ')) {
+        return;
+    }
+    
+    isProcessing = true;
+    
+    try {
+        const dense = formatter.toDense(text);
+        // Write directly to file system
+        const fs = require('fs');
+        fs.writeFileSync(doc.uri.fsPath, dense, 'utf8');
+    } finally {
+        isProcessing = false;
+    }
 }
 
 function updateStatusBar(editor: vscode.TextEditor | undefined) {
