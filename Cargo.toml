@@ -91,6 +91,7 @@ exclude = [
     "crates/dx-js-test-runner",     # Has own workspace
     "crates/dx-js-package-manager", # Has 12 internal crates
     "crates/dx-js-compatibility",   # Has 12 internal sub-crates
+    "crates/check",                 # Has own workspace with submodules
     "playground",                   # Experiments
     "benchmarks",                   # Performance tests
 ]

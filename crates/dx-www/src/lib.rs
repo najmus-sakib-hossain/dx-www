@@ -23,6 +23,15 @@ pub mod rpc;
 pub mod schema_parser;
 pub mod splitter;
 
+// Binary Dawn Features - Core binary structures
+pub mod reactivity;
+pub mod animation;
+pub mod handlers;
+pub mod resumability;
+pub mod server_component;
+pub mod streaming;
+pub mod islands;
+
 // OXC-based parser (optional - requires oxc feature)
 #[cfg(feature = "oxc")]
 pub mod swc_parser;

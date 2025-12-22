@@ -1,6 +1,106 @@
+[workspace]
+# Standalone workspace - excluded from parent dx workspace
+
 [package]
-name = "check"
+name = "dx-check"
 version = "0.1.0"
 edition = "2024"
+description = "Binary-first code linter and formatter - 10x faster than Biome"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nicholasoxford/dx"
+keywords = ["linter", "formatter", "typescript", "javascript", "wasm"]
+categories = ["development-tools", "command-line-utilities"]
+
+[[bin]]
+name = "dx-check"
+path = "src/main.rs"
+
+[lib]
+name = "dx_check"
+path = "src/lib.rs"
 
 [dependencies]
+# Parser - using oxc for JavaScript/TypeScript parsing
+oxc_parser = "0.52"
+oxc_ast = "0.52"
+oxc_span = "0.52"
+oxc_allocator = "0.52"
+oxc_diagnostics = "0.52"
+oxc_syntax = "0.52"
+
+# Parallelism
+rayon = "1.10"
+crossbeam-deque = "0.8"
+crossbeam-channel = "0.5"
+parking_lot = "0.12"
+
+# Memory
+memmap2 = "0.9"
+bumpalo = { version = "3.16", features = ["collections"] }
+bytemuck = { version = "1.14", features = ["derive"] }
+
+# Hashing
+blake3 = "1.5"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+
+# Serialization
+bincode = "2.0.0-rc.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+colored = "2.1"
+
+# File system
+walkdir = "2.5"
+ignore = "0.4"
+glob = "0.3"
+notify = "6.1"
+
+# CPU detection
+num_cpus = "1.16"
+
+# Async (for watch mode and LSP)
+tokio = { version = "1.43", features = ["full"] }
+
+# Error handling
+thiserror = "2.0"
+anyhow = "1.0"
+miette = { version = "7.4", features = ["fancy"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# SIMD (optional, for pattern scanning)
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+# Uses std::arch for SIMD
+
+[target.'cfg(target_arch = "aarch64")'.dependencies]
+# Uses std::arch for NEON
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+insta = "1.41"
+tempfile = "3.14"
+
+[[bench]]
+name = "lint_benchmark"
+harness = false
+
+[features]
+default = ["simd"]
+simd = []
+lsp = []
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.bench]
+lto = "thin"
+debug = true

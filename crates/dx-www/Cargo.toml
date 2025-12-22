@@ -75,4 +75,5 @@ dx-www-rtl = { path = "../dx-www-rtl"}
 
 
 [dev-dependencies]
-# tempfile = "3.8"
+tempfile = "3.8"
+proptest = "1.4"

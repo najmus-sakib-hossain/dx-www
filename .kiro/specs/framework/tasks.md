@@ -6,22 +6,22 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
 
 ## Tasks
 
-- [ ] 1. Core Binary Structures
-  - [ ] 1.1 Implement ReactiveSlot and reactive bindings
+- [x] 1. Core Binary Structures
+  - [x] 1.1 Implement ReactiveSlot and reactive bindings
     - Create `src/reactivity.rs` with ReactiveSlot struct (8 bytes)
     - Implement `apply()` method for memory copy updates
     - Create ReactiveBindings collection with `apply_all()`
     - _Requirements: 1.1, 1.2, 1.4_
 
-  - [ ] 1.2 Write property test for ReactiveSlot size invariant
+  - [x] 1.2 Write property test for ReactiveSlot size invariant
     - **Property 1: ReactiveSlot Size Invariant**
     - **Validates: Requirements 1.1**
 
-  - [ ] 1.3 Write property test for reactive update correctness
+  - [x] 1.3 Write property test for reactive update correctness
     - **Property 2: Reactive Update Correctness**
     - **Validates: Requirements 1.2**
 
-  - [ ] 1.4 Implement BinaryAnimation and easing system
+  - [x] 1.4 Implement BinaryAnimation and easing system
     - Create `src/animation.rs` with BinaryAnimation struct (8 bytes)
     - Define AnimationType and EasingType enums
     - Pre-compute EASING_CURVES static array (60fps * 4 curves)
@@ -29,93 +29,93 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
     - Add `fade()`, `slide()`, `flip()` API functions
     - _Requirements: 2.1, 2.2, 2.4, 2.6_
 
-  - [ ] 1.5 Write property test for BinaryAnimation size invariant
+  - [x] 1.5 Write property test for BinaryAnimation size invariant
     - **Property 3: BinaryAnimation Size Invariant**
     - **Validates: Requirements 2.1**
 
-  - [ ] 1.6 Write property test for easing curves validity
+  - [x] 1.6 Write property test for easing curves validity
     - **Property 4: Easing Curves Validity**
     - **Validates: Requirements 2.2**
 
-- [ ] 2. Checkpoint - Verify core binary structures compile
+- [x] 2. Checkpoint - Verify core binary structures compile
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 3. Handler and Resumability System
-  - [ ] 3.1 Implement HandlerRef and handler table
+- [x] 3. Handler and Resumability System
+  - [x] 3.1 Implement HandlerRef and handler table
     - Create `src/handlers.rs` with HandlerRef struct (4 bytes)
     - Define HANDLER_TABLE static array (256 entries)
     - Implement HandlerGroup enum and classification
     - Create HandlerManifest for code splitting
     - _Requirements: 4.3, 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [ ] 3.2 Write property test for HandlerRef size invariant
+  - [x] 3.2 Write property test for HandlerRef size invariant
     - **Property 9: HandlerRef Size Invariant**
     - **Validates: Requirements 5.2**
 
-  - [ ] 3.3 Write property test for handler table validity
+  - [x] 3.3 Write property test for handler table validity
     - **Property 7: Handler Table Validity**
     - **Validates: Requirements 4.3**
 
-  - [ ] 3.4 Write property test for handler group count
+  - [x] 3.4 Write property test for handler group count
     - **Property 10: Handler Group Count**
     - **Validates: Requirements 5.4, 13.3**
 
-  - [ ] 3.5 Implement resumability system
+  - [x] 3.5 Implement resumability system
     - Create `src/resumability.rs` with AppState struct
     - Implement `resume()` function for SharedArrayBuffer
     - Implement `invoke_handler()` for O(1) handler lookup
     - _Requirements: 4.1, 4.2, 4.5_
 
-  - [ ] 3.6 Write property test for HTML handler attribute format
+  - [x] 3.6 Write property test for HTML handler attribute format
     - **Property 8: HTML Handler Attribute Format**
     - **Validates: Requirements 4.5**
 
-- [ ] 4. Checkpoint - Verify handler system works
+- [x] 4. Checkpoint - Verify handler system works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Server Components and Streaming
-  - [ ] 5.1 Implement BinaryFragment and server components
+- [x] 5. Server Components and Streaming
+  - [x] 5.1 Implement BinaryFragment and server components
     - Create `src/server_component.rs` with BinaryFragment struct
     - Define ServerComponentHeader (8 bytes)
     - Implement ServerComponent trait
     - Create example UserListComponent
     - _Requirements: 3.1, 3.2_
 
-  - [ ] 5.2 Write property test for server component binary size
+  - [x] 5.2 Write property test for server component binary size
     - **Property 5: Server Component Binary Size**
     - **Validates: Requirements 3.2**
 
-  - [ ] 5.3 Write property test for binary fragment round-trip
+  - [x] 5.3 Write property test for binary fragment round-trip
     - **Property 6: Binary Fragment Round-Trip**
     - **Validates: Requirements 3.1, 3.4**
 
-  - [ ] 5.4 Implement streaming SSR
+  - [x] 5.4 Implement streaming SSR
     - Create `src/streaming.rs` with ChunkType enum
     - Implement StreamChunk struct (5 byte header)
     - Implement `process()` method for each chunk type
     - Create StreamingResponse builder
     - _Requirements: 12.1, 12.2, 12.3_
 
-  - [ ] 5.5 Write property test for StreamChunk processing
+  - [x] 5.5 Write property test for StreamChunk processing
     - **Property 21: StreamChunk Processing**
     - **Validates: Requirements 12.1, 12.3**
 
-- [ ] 6. Checkpoint - Verify server components and streaming
+- [x] 6. Checkpoint - Verify server components and streaming
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Islands and Partial Hydration
-  - [ ] 7.1 Implement islands architecture
+- [x] 7. Islands and Partial Hydration
+  - [x] 7.1 Implement islands architecture
     - Create `src/islands.rs` with IslandSlot struct
     - Implement IslandActivation bitfield (u64)
     - Create BinaryPage with island slots
     - Implement `activate_island()` for partial hydration
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-  - [ ] 7.2 Write property test for island activation bitfield
+  - [x] 7.2 Write property test for island activation bitfield
     - **Property 11: Island Activation Bitfield**
     - **Validates: Requirements 6.2**
 
-  - [ ] 7.3 Write property test for partial hydration isolation
+  - [x] 7.3 Write property test for partial hydration isolation
     - **Property 12: Partial Hydration Isolation**
     - **Validates: Requirements 6.5**
 
