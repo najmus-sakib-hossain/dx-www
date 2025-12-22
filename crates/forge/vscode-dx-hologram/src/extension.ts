@@ -1,9 +1,8 @@
 /**
- * DX Extension - Hologram View (Simple & Reliable)
+ * DX Extension - Auto Hologram View
  * 
- * File on disk: LLM dense format
- * Editor display: Click status bar to toggle Human/LLM view
- * Editing: Done in Human format, manually convert to LLM when ready to save
+ * On Open: Auto-convert LLM → Human (for editing)
+ * On Close/Save: Auto-convert Human → LLM (for storage/git)
  */
 
 import * as vscode from 'vscode';
@@ -13,6 +12,7 @@ import { DxFormatter } from './formatter';
 
 let formatter: DxFormatter;
 let statusBarItem: vscode.StatusBarItem;
+let isProcessing = false;
 
 export async function activate(context: vscode.ExtensionContext) {
     console.log('[DX] Hologram Extension activating...');
@@ -21,19 +21,38 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Status bar
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    statusBarItem.text = '$(mirror) Hologram';
+    statusBarItem.tooltip = 'Auto-converting: LLM on disk ↔ Human in editor';
     context.subscriptions.push(statusBarItem);
+
+    // Auto-convert to Human when opening
+    context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument(async (doc) => {
+            if (isDxFile(doc.uri) && !isProcessing) {
+                await convertToHumanIfNeeded(doc);
+            }
+        })
+    );
+
+    // Convert already open documents
+    for (const doc of vscode.workspace.textDocuments) {
+        if (isDxFile(doc.uri)) {
+            await convertToHumanIfNeeded(doc);
+        }
+    }
+
+    // Auto-convert to LLM when closing
+    context.subscriptions.push(
+        vscode.workspace.onWillSaveTextDocument((e) => {
+            if (isDxFile(e.document.uri)) {
+                e.waitUntil(convertToLLMIfNeeded(e.document));
+            }
+        })
+    );
 
     // Update status bar
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(updateStatusBar)
-    );
-    
-    context.subscriptions.push(
-        vscode.workspace.onDidChangeTextDocument((e) => {
-            if (isDxFile(e.document.uri)) {
-                updateStatusBar(vscode.window.activeTextEditor);
-            }
-        })
     );
     
     updateStatusBar(vscode.window.activeTextEditor);
@@ -120,21 +139,55 @@ export async function activate(context: vscode.ExtensionContext) {
     console.log('[DX] Hologram Extension activated');
 }
 
+async function convertToHumanIfNeeded(doc: vscode.TextDocument) {
+    if (isProcessing) return;
+    
+    const text = doc.getText();
+    
+    // Already in human format?
+    if (text.includes(' : ') || text.includes(' > ')) {
+        return;
+    }
+    
+    isProcessing = true;
+    
+    try {
+        const pretty = formatter.toPretty(text);
+        const edit = new vscode.WorkspaceEdit();
+        const fullRange = new vscode.Range(
+            doc.positionAt(0),
+            doc.positionAt(text.length)
+        );
+        edit.replace(doc.uri, fullRange, pretty);
+        await vscode.workspace.applyEdit(edit);
+    } finally {
+        isProcessing = false;
+    }
+}
+
+async function convertToLLMIfNeeded(doc: vscode.TextDocument): Promise<vscode.TextEdit[]> {
+    if (isProcessing) return [];
+    
+    const text = doc.getText();
+    
+    // Already in LLM format?
+    if (!text.includes(' : ') && !text.includes(' > ')) {
+        return [];
+    }
+    
+    const dense = formatter.toDense(text);
+    const fullRange = new vscode.Range(
+        doc.positionAt(0),
+        doc.positionAt(text.length)
+    );
+    
+    return [vscode.TextEdit.replace(fullRange, dense)];
+}
+
 function updateStatusBar(editor: vscode.TextEditor | undefined) {
     if (editor && isDxFile(editor.document.uri)) {
-        const text = editor.document.getText();
-        const isHuman = text.includes(' : ') || text.includes(' > ');
-        
-        if (isHuman) {
-            statusBarItem.text = '$(eye) Human';
-            statusBarItem.tooltip = 'Viewing Human format - Click to convert to LLM (and save)';
-            statusBarItem.command = 'dx.formatDense';
-        } else {
-            statusBarItem.text = '$(file-code) LLM';
-            statusBarItem.tooltip = 'Viewing LLM format - Click to convert to Human';
-            statusBarItem.command = 'dx.formatPretty';
-        }
-        
+        statusBarItem.text = '$(mirror) Hologram';
+        statusBarItem.tooltip = 'LLM on disk ↔ Human in editor';
         statusBarItem.show();
     } else {
         statusBarItem.hide();
