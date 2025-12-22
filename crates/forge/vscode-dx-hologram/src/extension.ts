@@ -13,6 +13,7 @@ import { DxFormatter } from './formatter';
 let formatter: DxFormatter;
 let statusBarItem: vscode.StatusBarItem;
 let isProcessing = false;
+const convertedDocs = new Set<string>();
 
 export async function activate(context: vscode.ExtensionContext) {
     console.log('[DX] Hologram Extension activating...');
@@ -25,28 +26,38 @@ export async function activate(context: vscode.ExtensionContext) {
     statusBarItem.tooltip = 'Auto-converting: LLM on disk ↔ Human in editor';
     context.subscriptions.push(statusBarItem);
 
-    // Auto-convert to Human when opening
+    // Auto-convert when editor becomes active (most reliable)
     context.subscriptions.push(
-        vscode.workspace.onDidOpenTextDocument(async (doc) => {
-            if (isDxFile(doc.uri)) {
-                // Small delay to ensure document is fully loaded
-                setTimeout(() => convertToHumanIfNeeded(doc), 100);
+        vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+            updateStatusBar(editor);
+            if (editor && isDxFile(editor.document.uri)) {
+                await convertToHumanIfNeeded(editor.document);
             }
         })
     );
 
-    // Convert already open documents immediately
-    setTimeout(async () => {
-        for (const doc of vscode.workspace.textDocuments) {
+    // Also try on document open
+    context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument(async (doc) => {
             if (isDxFile(doc.uri)) {
-                await convertToHumanIfNeeded(doc);
+                setTimeout(() => convertToHumanIfNeeded(doc), 150);
             }
-        }
-    }, 200);
+        })
+    );
+
+    // Convert current active editor on startup
+    if (vscode.window.activeTextEditor && isDxFile(vscode.window.activeTextEditor.document.uri)) {
+        setTimeout(() => {
+            if (vscode.window.activeTextEditor) {
+                convertToHumanIfNeeded(vscode.window.activeTextEditor.document);
+            }
+        }, 300);
+    }
 
     // Convert to LLM when closing (via workspace event)
     context.subscriptions.push(
         vscode.workspace.onDidCloseTextDocument(async (doc) => {
+            convertedDocs.delete(doc.uri.toString());
             if (isDxFile(doc.uri) && !isProcessing) {
                 await convertToLLMOnClose(doc);
             }
@@ -61,10 +72,15 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         })
     );
-
-    // Update status bar
+    
+    // Restore human format AFTER save completes
     context.subscriptions.push(
-        vscode.window.onDidChangeActiveTextEditor(updateStatusBar)
+        vscode.workspace.onDidSaveTextDocument(async (doc) => {
+            if (isDxFile(doc.uri)) {
+                // Re-convert to human after save
+                setTimeout(() => convertToHumanIfNeeded(doc, true), 100);
+            }
+        })
     );
     
     updateStatusBar(vscode.window.activeTextEditor);
@@ -151,17 +167,19 @@ export async function activate(context: vscode.ExtensionContext) {
     console.log('[DX] Hologram Extension activated');
 }
 
-async function convertToHumanIfNeeded(doc: vscode.TextDocument) {
+async function convertToHumanIfNeeded(doc: vscode.TextDocument, force: boolean = false) {
     // Don't convert if already processing
     if (isProcessing) {
         return;
     }
     
     const text = doc.getText();
+    const docKey = doc.uri.toString();
     
     // Check if already in human format (has spaces around operators)
-    if (text.includes(' : ') || text.includes(' > ')) {
+    if (!force && (text.includes(' : ') || text.includes(' > '))) {
         console.log('[DX] Already in human format');
+        convertedDocs.add(docKey);
         return;
     }
     
@@ -175,16 +193,36 @@ async function convertToHumanIfNeeded(doc: vscode.TextDocument) {
         
         const pretty = formatter.toPretty(text, isRootConfig);
         
-        // Use workspace edit for better control
-        const edit = new vscode.WorkspaceEdit();
-        const fullRange = new vscode.Range(
-            doc.positionAt(0),
-            doc.positionAt(text.length)
-        );
-        edit.replace(doc.uri, fullRange, pretty);
+        // Find an editor showing this document
+        const editor = vscode.window.visibleTextEditors.find(e => e.document.uri.toString() === docKey);
         
-        const success = await vscode.workspace.applyEdit(edit);
-        console.log('[DX] Conversion success:', success);
+        if (editor) {
+            // Use editor.edit for more reliable editing
+            const success = await editor.edit(editBuilder => {
+                const fullRange = new vscode.Range(
+                    doc.positionAt(0),
+                    doc.positionAt(text.length)
+                );
+                editBuilder.replace(fullRange, pretty);
+            });
+            console.log('[DX] Editor conversion success:', success);
+            if (success) {
+                convertedDocs.add(docKey);
+            }
+        } else {
+            // Fallback to workspace edit
+            const edit = new vscode.WorkspaceEdit();
+            const fullRange = new vscode.Range(
+                doc.positionAt(0),
+                doc.positionAt(text.length)
+            );
+            edit.replace(doc.uri, fullRange, pretty);
+            const success = await vscode.workspace.applyEdit(edit);
+            console.log('[DX] Workspace conversion success:', success);
+            if (success) {
+                convertedDocs.add(docKey);
+            }
+        }
     } catch (error) {
         console.error('[DX] Conversion error:', error);
     } finally {
