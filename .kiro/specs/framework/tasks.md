@@ -119,32 +119,32 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
     - **Property 12: Partial Hydration Isolation**
     - **Validates: Requirements 6.5**
 
-- [-] 8. Control Flow and Suspense
-  - [ ] 8.1 Implement control flow opcodes
+- [x] 8. Control Flow and Suspense
+  - [x] 8.1 Implement control flow opcodes
     - Create `src/control.rs` with ControlOpcode enum
     - Implement ForEachOp, ShowOp, SwitchOp structs
     - Create KeyedList with SIMD diff support
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-  - [ ] 8.2 Write property test for control op struct fields
+  - [x] 8.2 Write property test for control op struct fields
     - **Property 18: Control Op Struct Fields**
     - **Validates: Requirements 10.2, 10.3**
 
-  - [ ] 8.3 Write property test for keyed list diff correctness
+  - [x] 8.3 Write property test for keyed list diff correctness
     - **Property 19: Keyed List Diff Correctness**
     - **Validates: Requirements 10.4**
 
-  - [ ] 8.4 Implement suspense system
+  - [x] 8.4 Implement suspense system
     - Create `src/suspense.rs` with SuspenseState struct
     - Implement SuspenseTemplate with dependency mask
     - Implement branchless `is_ready()` and `mark_loaded()`
     - _Requirements: 11.1, 11.2, 11.3, 11.5_
 
-  - [ ] 8.5 Write property test for suspense bitfield operations
+  - [x] 8.5 Write property test for suspense bitfield operations
     - **Property 20: Suspense Bitfield Operations**
     - **Validates: Requirements 11.1, 11.2, 11.3, 11.5**
 
-- [ ] 9. Checkpoint - Verify control flow and suspense
+- [-] 9. Checkpoint - Verify control flow and suspense
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 10. DOM Operations

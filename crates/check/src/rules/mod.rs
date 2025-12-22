@@ -382,8 +382,13 @@ pub struct FusedRuleSet {
 
 impl FusedRuleSet {
     pub fn new() -> Self {
+        // Pre-allocate empty vecs for all node kinds
+        let mut rules_by_node = Vec::with_capacity(100);
+        for _ in 0..100 {
+            rules_by_node.push(Vec::new());
+        }
         Self {
-            rules_by_node: vec![Vec::new(); 100], // Pre-allocate for all node kinds
+            rules_by_node,
             file_rules: Vec::new(),
             end_rules: Vec::new(),
         }

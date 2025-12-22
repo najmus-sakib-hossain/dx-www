@@ -31,6 +31,8 @@ pub mod resumability;
 pub mod server_component;
 pub mod streaming;
 pub mod islands;
+pub mod control;
+pub mod suspense;
 
 // OXC-based parser (optional - requires oxc feature)
 #[cfg(feature = "oxc")]

@@ -7,7 +7,6 @@ use dx_check::config::CheckerConfig;
 use dx_check::engine::Checker;
 use dx_check::fix::FixEngine;
 use dx_check::project::ProjectProfile;
-use dx_check::reactor::LintReactor;
 use dx_check::cache::AstCache;
 use std::path::Path;
 use std::process::ExitCode;
@@ -36,18 +35,18 @@ fn main() -> ExitCode {
 }
 
 fn run(cli: Cli) -> Result<bool, Box<dyn std::error::Error>> {
-    match cli.command {
+    match &cli.command {
         Some(Commands::Check { paths, fix }) => {
-            run_check(&paths, fix, &cli)
+            run_check(paths, *fix, &cli)
         }
         Some(Commands::Format { paths, check }) => {
-            run_format(&paths, check, &cli)
+            run_format(paths, *check, &cli)
         }
         Some(Commands::Init { force }) => {
-            run_init(force)
+            run_init(*force)
         }
         Some(Commands::Analyze { path }) => {
-            run_analyze(&path)
+            run_analyze(path)
         }
         Some(Commands::Rule { command }) => {
             run_rule_command(command)
@@ -56,7 +55,7 @@ fn run(cli: Cli) -> Result<bool, Box<dyn std::error::Error>> {
             run_cache_command(command)
         }
         Some(Commands::Watch { paths }) => {
-            run_watch(&paths, &cli)
+            run_watch(paths, &cli)
         }
         Some(Commands::Lsp) => {
             run_lsp()
@@ -203,9 +202,9 @@ fn run_check(
 }
 
 fn run_format(
-    paths: &[std::path::PathBuf],
-    check: bool,
-    cli: &Cli,
+    _paths: &[std::path::PathBuf],
+    _check: bool,
+    _cli: &Cli,
 ) -> Result<bool, Box<dyn std::error::Error>> {
     // Format implementation would go here
     println!("Format command not yet implemented");
@@ -265,11 +264,11 @@ fn run_analyze(path: &std::path::Path) -> Result<bool, Box<dyn std::error::Error
     Ok(false)
 }
 
-fn run_rule_command(command: RuleCommands) -> Result<bool, Box<dyn std::error::Error>> {
+fn run_rule_command(command: &RuleCommands) -> Result<bool, Box<dyn std::error::Error>> {
     use dx_check::rules::RuleRegistry;
     
     match command {
-        RuleCommands::List { category, enabled } => {
+        RuleCommands::List { category, enabled: _ } => {
             let registry = RuleRegistry::with_builtins();
             
             println!("Available rules:\n");
@@ -301,7 +300,7 @@ fn run_rule_command(command: RuleCommands) -> Result<bool, Box<dyn std::error::E
         RuleCommands::Show { rule } => {
             let registry = RuleRegistry::with_builtins();
             
-            if let Some(r) = registry.get(&rule) {
+            if let Some(r) = registry.get(rule) {
                 let meta = r.meta();
                 println!("Rule: {}", meta.name);
                 println!("Category: {}", meta.category.as_str());
@@ -329,7 +328,7 @@ fn run_rule_command(command: RuleCommands) -> Result<bool, Box<dyn std::error::E
     Ok(false)
 }
 
-fn run_cache_command(command: CacheCommands) -> Result<bool, Box<dyn std::error::Error>> {
+fn run_cache_command(command: &CacheCommands) -> Result<bool, Box<dyn std::error::Error>> {
     let cache_dir = std::path::PathBuf::from(".dx-cache");
     
     match command {
@@ -355,7 +354,7 @@ fn run_cache_command(command: CacheCommands) -> Result<bool, Box<dyn std::error:
             }
         }
         CacheCommands::Path => {
-            println!("{}", cache_dir.canonicalize().unwrap_or(cache_dir).display());
+            println!("{}", cache_dir.canonicalize().unwrap_or(cache_dir.clone()).display());
         }
     }
     
@@ -363,8 +362,8 @@ fn run_cache_command(command: CacheCommands) -> Result<bool, Box<dyn std::error:
 }
 
 fn run_watch(
-    paths: &[std::path::PathBuf],
-    cli: &Cli,
+    _paths: &[std::path::PathBuf],
+    _cli: &Cli,
 ) -> Result<bool, Box<dyn std::error::Error>> {
     println!("Watch mode not yet implemented");
     Ok(false)
