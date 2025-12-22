@@ -1,5 +1,6 @@
 /**
- * DX Extension - Simple formatting without auto-conversion lag
+ * DX Extension - Hologram View
+ * File stored in LLM dense format, displayed in Human pretty format
  */
 
 import * as vscode from 'vscode';
@@ -8,6 +9,7 @@ import { DxFormatter } from './formatter';
 
 let formatter: DxFormatter;
 let statusBarItem: vscode.StatusBarItem;
+const originalContent = new Map<string, string>();
 
 export async function activate(context: vscode.ExtensionContext) {
     console.log('[DX] Extension activating...');
@@ -19,11 +21,43 @@ export async function activate(context: vscode.ExtensionContext) {
     statusBarItem.command = 'dx.formatPretty';
     context.subscriptions.push(statusBarItem);
 
+    // Auto-format on open
+    context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument(async (doc) => {
+            if (isDxFile(doc.uri)) {
+                await autoFormatDocument(doc);
+            }
+        })
+    );
+
+    // Auto-convert to dense on save
+    context.subscriptions.push(
+        vscode.workspace.onWillSaveTextDocument((e) => {
+            if (isDxFile(e.document.uri)) {
+                e.waitUntil(convertToDenseOnSave(e.document));
+            }
+        })
+    );
+
     // Update status bar on editor change
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(updateStatusBar)
     );
     updateStatusBar(vscode.window.activeTextEditor);
+
+    // Format already open documents
+    for (const doc of vscode.workspace.textDocuments) {
+        if (isDxFile(doc.uri)) {
+            await autoFormatDocument(doc);
+        }
+    }
+
+    // Format already open documents
+    for (const doc of vscode.workspace.textDocuments) {
+        if (isDxFile(doc.uri)) {
+            await autoFormatDocument(doc);
+        }
+    }
 
     // Document formatting provider
     context.subscriptions.push(
@@ -92,6 +126,45 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     console.log('[DX] Extension activated');
+}
+
+async function autoFormatDocument(doc: vscode.TextDocument) {
+    const text = doc.getText();
+    
+    // Store original dense content
+    originalContent.set(doc.uri.toString(), text);
+    
+    // Check if already in pretty format (has proper spacing)
+    if (text.includes(' : ') || text.includes(' > ')) {
+        return; // Already formatted
+    }
+    
+    // Convert to pretty format
+    const pretty = formatter.toPretty(text);
+    
+    // Apply the formatting
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(
+        doc.uri,
+        new vscode.Range(doc.positionAt(0), doc.positionAt(text.length)),
+        pretty
+    );
+    await vscode.workspace.applyEdit(edit);
+}
+
+async function convertToDenseOnSave(doc: vscode.TextDocument): Promise<vscode.TextEdit[]> {
+    const text = doc.getText();
+    
+    // Only convert if in pretty format
+    if (text.includes(' : ') || text.includes(' > ')) {
+        const dense = formatter.toDense(text);
+        return [vscode.TextEdit.replace(
+            new vscode.Range(doc.positionAt(0), doc.positionAt(text.length)),
+            dense
+        )];
+    }
+    
+    return [];
 }
 
 function updateStatusBar(editor: vscode.TextEditor | undefined) {
