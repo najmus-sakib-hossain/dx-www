@@ -161,10 +161,6 @@ fn benchmark_compression_ratio(c: &mut Criterion) {
 criterion_group!(
     benches,
     benchmark_parse_simple,
-    benchmark_parse_complex,
-    benchmark_parse_large,
-    benchmark_encode_round_trip,
-    benchmark_human_format,
     benchmark_compression_ratio
 );
 
