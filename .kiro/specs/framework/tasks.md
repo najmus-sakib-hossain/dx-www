@@ -241,59 +241,59 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
 - [x] 15. Checkpoint - Verify forms and optimistic UI
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. LiveView and Content
-  - [ ] 16.1 Implement binary LiveView patches
+- [x] 16. LiveView and Content
+  - [x] 16.1 Implement binary LiveView patches
     - Create `src/liveview.rs` with PatchOp enum
     - Implement BinaryPatch struct (4 byte header)
     - Implement `apply()` method for each patch type
     - _Requirements: 20.1, 20.2, 20.3_
 
-  - [ ] 16.2 Write property test for BinaryPatch size
+  - [x] 16.2 Write property test for BinaryPatch size
     - **Property 33: BinaryPatch Size**
     - **Validates: Requirements 20.1, 20.2**
 
-  - [ ] 16.3 Write property test for patch application correctness
+  - [x] 16.3 Write property test for patch application correctness
     - **Property 34: Patch Application Correctness**
     - **Validates: Requirements 20.3**
 
-  - [ ] 16.4 Implement binary content collections
+  - [x] 16.4 Implement binary content collections
     - Create `src/content.rs` with BinaryContent struct
     - Implement ContentCollection with memory-mapped files
     - Implement zero-parsing `get()` method
     - _Requirements: 19.1, 19.2, 19.3_
 
-  - [ ] 16.5 Write property test for content binary round-trip
+  - [x] 16.5 Write property test for content binary round-trip
     - **Property 32: Content Binary Round-Trip**
     - **Validates: Requirements 19.1, 19.2, 19.3**
 
-- [ ] 17. Checkpoint - Verify LiveView and content
+- [x] 17. Checkpoint - Verify LiveView and content
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 18. Dependency Injection and Guards
-  - [ ] 18.1 Implement compile-time DI
+- [x] 18. Dependency Injection and Guards
+  - [x] 18.1 Implement compile-time DI
     - Create `src/di.rs` with Container struct
     - Implement fixed-offset service creation
     - Create example UserService with pointer fields
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [ ] 18.2 Write property test for DI offset consistency
+  - [x] 18.2 Write property test for DI offset consistency
     - **Property 13: DI Offset Consistency**
     - **Validates: Requirements 7.1, 7.2, 7.4**
 
-  - [ ] 18.3 Implement compile-time guards
+  - [x] 18.3 Implement compile-time guards
     - Create `src/guards.rs` with GuardResult enum
     - Implement `auth_guard()` and `role_guard()` functions
     - Document macro usage for guard inlining
     - _Requirements: 24.1, 24.2, 24.3_
 
-  - [ ] 18.4 Write property test for guard inlining
+  - [x] 18.4 Write property test for guard inlining
     - **Property 38: Guard Inlining**
     - **Validates: Requirements 24.2, 24.3**
 
-- [ ] 19. Checkpoint - Verify DI and guards
+- [x] 19. Checkpoint - Verify DI and guards
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 20. Background Processing
+- [-] 20. Background Processing
   - [ ] 20.1 Implement binary job queue
     - Create `src/jobs.rs` with Job struct (~14 bytes header)
     - Implement JobQueue ring buffer

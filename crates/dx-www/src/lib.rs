@@ -39,6 +39,10 @@ pub mod router;
 pub mod transitions;
 pub mod forms;
 pub mod optimistic;
+pub mod liveview;
+pub mod content;
+pub mod di;
+pub mod guards;
 
 // OXC-based parser (optional - requires oxc feature)
 #[cfg(feature = "oxc")]

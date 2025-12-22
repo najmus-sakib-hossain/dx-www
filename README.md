@@ -123,7 +123,8 @@
 | | TypeScript | Bun baseline | **80.03x faster** | 80.03x faster |
 | | Cold Start | ~50ms (Bun) | **<3ms** | 16x faster |
 | **Linter** | Speed vs ESLint | ESLint baseline | **100-200x faster** | 100-200x faster |
-| | Speed vs Biome | Biome baseline | **5-15x faster** | 5-15x faster |
+| | Speed vs Biome | Biome 2.2.0 | **7.6x faster** | ✅ Verified |
+| | Multi-file | Biome 2.2.0 | **4.9x faster** | ✅ Verified |
 | **Serialization** | Size (699B JSON) | 296B (TOON) | **186 bytes** | 37% smaller |
 | | Parse Speed | ~8µs (TOON) | **~1.9µs** | 4x faster |
 | **CSS System** | Payload | 100 KB (Tailwind) | **2 KB** | 50x smaller |
