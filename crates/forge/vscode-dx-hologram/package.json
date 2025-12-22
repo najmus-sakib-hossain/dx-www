@@ -58,14 +58,13 @@
     "configurationDefaults": {
       "editor.tokenColorCustomizations": {
         "textMateRules": [
-          
           {
             "scope": ["variable.other.readwrite.dx", "variable.other.property.dx", "support.type.property-name.dx"],
-            "settings": { "foreground": "#51ff00" }
+            "settings": { "foreground": "#ff0000" }
           },
           {
             "scope": ["entity.name.function.dx", "entity.name.function.child.dx"],
-            "settings": { "foreground": "#51ff00" }
+            "settings": { "foreground": "#ff0000" }
           },
           {
             "scope": ["entity.name.namespace.dx", "entity.name.class.dx"],

@@ -21,6 +21,7 @@ export class DxFormatter {
      * Convert to Human-readable Pretty format
      * - Remove ALL ^ prefixes, convert to indentation
      * - Add spaces around : and >
+     * - Add section breaks
      * - Align keys
      */
     toPretty(content: string): string {
@@ -33,10 +34,12 @@ export class DxFormatter {
             value: string;
             isContent: boolean;
             raw: string;
+            section: string;
         }
 
         const parsed: Parsed[] = [];
         let maxKeyLen = 0;
+        let lastSection = '';
 
         // First pass: parse all lines
         for (const line of lines) {
@@ -44,13 +47,13 @@ export class DxFormatter {
             
             // Empty lines
             if (!trimmed) {
-                parsed.push({ indentLevel: 0, key: '', op: '', value: '', isContent: false, raw: '' });
+                parsed.push({ indentLevel: 0, key: '', op: '', value: '', isContent: false, raw: '', section: '' });
                 continue;
             }
 
             // Comments - preserve as-is
             if (trimmed.startsWith('#') || trimmed.startsWith('//')) {
-                parsed.push({ indentLevel: 0, key: '', op: '', value: '', isContent: false, raw: trimmed });
+                parsed.push({ indentLevel: 0, key: '', op: '', value: '', isContent: false, raw: trimmed, section: '' });
                 continue;
             }
 
@@ -72,6 +75,10 @@ export class DxFormatter {
 
             work = work.trim();
 
+            // Detect section changes (keys with dots indicate new sections)
+            const dotIdx = work.indexOf('.');
+            const section = dotIdx > 0 ? work.substring(0, dotIdx) : '';
+
             // Parse operator and key/value
             const arrowIdx = work.indexOf('>');
             const colonIdx = work.indexOf(':');
@@ -89,23 +96,33 @@ export class DxFormatter {
 
             if (opIdx < 0) {
                 // No operator - just content
-                parsed.push({ indentLevel, key: work, op: '', value: '', isContent: true, raw: line });
+                parsed.push({ indentLevel, key: work, op: '', value: '', isContent: true, raw: line, section });
                 maxKeyLen = Math.max(maxKeyLen, work.length);
+                lastSection = section;
                 continue;
             }
 
             const key = work.substring(0, opIdx).trim();
             const value = work.substring(opIdx + 1).trim();
 
-            parsed.push({ indentLevel, key, op, value, isContent: true, raw: line });
+            parsed.push({ indentLevel, key, op, value, isContent: true, raw: line, section });
             maxKeyLen = Math.max(maxKeyLen, key.length + (indentLevel * this.indentSize));
+            lastSection = section;
         }
 
-        // Second pass: format with alignment
+        // Second pass: format with alignment and section breaks
         const alignCol = Math.max(maxKeyLen + 2, 18);
         const result: string[] = [];
+        let prevSection = '';
 
-        for (const p of parsed) {
+        for (let i = 0; i < parsed.length; i++) {
+            const p = parsed[i];
+
+            // Add blank line before new section (unless at start)
+            if (i > 0 && p.section && p.section !== prevSection && p.indentLevel === 0) {
+                result.push('');
+            }
+
             if (!p.isContent) {
                 result.push(p.raw);
                 continue;
@@ -115,6 +132,7 @@ export class DxFormatter {
 
             if (!p.op) {
                 result.push(indentStr + p.key);
+                prevSection = p.section;
                 continue;
             }
 
@@ -123,10 +141,12 @@ export class DxFormatter {
 
             if (p.op === '>') {
                 const items = p.value.split('|').map(v => v.trim()).filter(Boolean);
-                result.push(`${indentStr}${paddedKey}> ${items.join(' | ')}`);
+                result.push(`${indentStr}${paddedKey} > ${items.join(' | ')}`);
             } else {
-                result.push(`${indentStr}${paddedKey}: ${p.value}`);
+                result.push(`${indentStr}${paddedKey} : ${p.value}`);
             }
+
+            prevSection = p.section;
         }
 
         return result.join('\n');
