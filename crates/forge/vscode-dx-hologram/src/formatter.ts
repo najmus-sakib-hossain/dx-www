@@ -1,43 +1,61 @@
 /**
- * DX Formatter - Bidirectional formatting between Dense and Pretty
- * 
- * Key principle: SAME syntax, DIFFERENT whitespace
+ * DX Formatter - Bidirectional formatting between Dense (LLM) and Pretty (Human)
  * 
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │                    SAME SYNTAX, DIFFERENT FORMAT                        │
+ * │                    STORAGE vs DISPLAY                                   │
  * ├─────────────────────────────────────────────────────────────────────────┤
  * │                                                                         │
- * │  LLM FORMAT (Dense):                    HUMAN FORMAT (Pretty):          │
- * │  ══════════════════                     ════════════════════            │
+ * │  LLM FORMAT (Dense - stored on disk):                                   │
+ * │  ════════════════════════════════════                                   │
+ * │  name:dx                                                                │
+ * │  forge.repository:https://dx.vercel.app/essensefromexistence/dx        │
+ * │  ^container:none                                                        │
+ * │  ^ci/cd:none                                                            │
+ * │  forge_items>cli|docs|examples                                          │
  * │                                                                         │
- * │  server#host:localhost#port:5432        server                          │
- * │  users@3>alice|bob|charlie                #host: localhost              │
- * │                                           #port: 5432                   │
+ * │  HUMAN FORMAT (Pretty - shown in editor):                               │
+ * │  ════════════════════════════════════════                               │
+ * │  name                : dx                                               │
+ * │  forge.repository    : https://dx.vercel.app/essensefromexistence/dx   │
+ * │     container        : none                                             │
+ * │     ci/cd            : none                                             │
  * │                                                                         │
- * │                                         users @3                        │
- * │                                           >alice                        │
- * │                                           >bob                          │
- * │                                           >charlie                      │
+ * │  forge_items >                                                          │
+ * │     cli                                                                 │
+ * │     docs                                                                │
+ * │     examples                                                            │
  * │                                                                         │
  * │  ─────────────────────────────────────────────────────────────────────  │
- * │                                                                         │
- * │  BOTH ARE VALID DX SYNTAX!                                              │
- * │  • Same tokens: # @ > | : ^                                             │
- * │  • Same semantics                                                       │
- * │  • Just different whitespace/newlines                                   │
- * │  • LLMs can read BOTH (but dense = fewer tokens)                        │
- * │                                                                         │
+ * │  KEY TRANSFORMATIONS:                                                   │
+ * │  • ^key:value → "   key : value" (caret = child indent)                │
+ * │  • Align all colons in a block                                          │
+ * │  • key>a|b|c → multi-line with indented items                          │
+ * │  • Tables formatted with aligned columns                                │
  * └─────────────────────────────────────────────────────────────────────────┘
  */
+
+interface LineInfo {
+    original: string;
+    key: string;
+    operator: string;  // ':', '>', '='
+    value: string;
+    indent: number;    // 0 = root, 1 = child (from ^), etc.
+    isTableHeader?: boolean;
+    isTableRow?: boolean;
+    isComment?: boolean;
+    isEmpty?: boolean;
+}
 
 export class DxFormatter {
     
     private indentSize: number;
     private indent: string;
+    private colonAlign: number;  // Column to align colons at
     
-    constructor(indentSize: number = 2) {
+    constructor(indentSize: number = 3) {
         this.indentSize = indentSize;
         this.indent = ' '.repeat(indentSize);
+        this.colonAlign = 20;  // Default colon alignment column
     }
     
     // ═══════════════════════════════════════════════════════════════
@@ -45,131 +63,214 @@ export class DxFormatter {
     // ═══════════════════════════════════════════════════════════════
     
     toPretty(dense: string): string {
-        const lines: string[] = [];
+        const lines = dense.split('\n');
+        const parsed: LineInfo[] = [];
         
-        for (const rawLine of dense.split('\n')) {
-            const line = rawLine.trim();
-            if (!line) {
-                lines.push('');
+        // First pass: parse all lines
+        for (const rawLine of lines) {
+            parsed.push(this.parseDenseLine(rawLine));
+        }
+        
+        // Second pass: calculate alignment for blocks
+        const blocks = this.identifyBlocks(parsed);
+        
+        // Third pass: format with proper alignment
+        const result: string[] = [];
+        
+        for (let i = 0; i < parsed.length; i++) {
+            const info = parsed[i];
+            const block = blocks.get(i);
+            
+            if (info.isEmpty) {
+                result.push('');
                 continue;
             }
             
-            // Handle comments: !comment text!content
-            if (line.startsWith('!')) {
-                const endIdx = line.indexOf('!', 1);
-                if (endIdx > 0) {
-                    const comment = line.substring(1, endIdx);
-                    const rest = line.substring(endIdx + 1);
-                    lines.push(`// ${comment}`);
-                    if (rest.trim()) {
-                        lines.push(...this.expandLine(rest.trim()));
-                    }
-                    continue;
-                }
+            if (info.isComment) {
+                result.push(info.original);
+                continue;
             }
             
-            lines.push(...this.expandLine(line));
+            const formatted = this.formatPrettyLine(info, block?.colonAlign || this.colonAlign);
+            result.push(...formatted);
         }
         
-        return lines.join('\n');
+        return result.join('\n');
     }
     
-    private expandLine(line: string): string[] {
-        const result: string[] = [];
+    private parseDenseLine(line: string): LineInfo {
+        const trimmed = line.trim();
         
-        // Table row: >val|val|val
-        if (line.startsWith('>')) {
-            const values = line.substring(1).split('|');
-            result.push(this.indent + '>' + values.map(v => v.trim()).join(' | '));
-            return result;
+        if (!trimmed) {
+            return { original: line, key: '', operator: '', value: '', indent: 0, isEmpty: true };
         }
         
-        // Table definition: key@N=col^col^col
-        if (line.includes('@') && line.includes('=')) {
-            const atIdx = line.indexOf('@');
-            const eqIdx = line.indexOf('=');
-            const key = line.substring(0, atIdx);
-            const count = line.substring(atIdx + 1, eqIdx);
-            const cols = line.substring(eqIdx + 1).split('^');
-            
-            result.push(`${key} @${count}`);
-            result.push(this.indent + '=' + cols.map(c => c.trim()).join(' ^ '));
-            return result;
+        // Comment lines
+        if (trimmed.startsWith('#') && (trimmed.includes('--') || trimmed.startsWith('# '))) {
+            return { original: trimmed, key: '', operator: '', value: '', indent: 0, isComment: true };
+        }
+        if (trimmed.startsWith('//')) {
+            return { original: trimmed, key: '', operator: '', value: '', indent: 0, isComment: true };
         }
         
-        // Array: key@N>item|item|item or key>item|item|item
-        const arrowMatch = line.match(/^([\w_.]+)(@\d+)?>/);
-        if (arrowMatch) {
-            const key = arrowMatch[1];
-            const count = arrowMatch[2] || '';
-            const arrowIdx = line.indexOf('>');
-            const items = line.substring(arrowIdx + 1).split('|');
+        // Table row: >val|val|val or >val | val | val
+        if (trimmed.startsWith('>')) {
+            return { 
+                original: trimmed, 
+                key: '', 
+                operator: '>', 
+                value: trimmed.substring(1), 
+                indent: 0,
+                isTableRow: true 
+            };
+        }
+        
+        // Check for caret prefix (child/continuation)
+        let indent = 0;
+        let content = trimmed;
+        if (trimmed.startsWith('^')) {
+            indent = 1;
+            content = trimmed.substring(1);
+        }
+        
+        // Array: key>items or key_name>items
+        const arrowIdx = content.indexOf('>');
+        if (arrowIdx > 0 && !content.substring(0, arrowIdx).includes(':')) {
+            const key = content.substring(0, arrowIdx);
+            const value = content.substring(arrowIdx + 1);
+            return { original: trimmed, key, operator: '>', value, indent };
+        }
+        
+        // Table definition: key@N=cols
+        if (content.includes('@') && content.includes('=')) {
+            const atIdx = content.indexOf('@');
+            const eqIdx = content.indexOf('=');
+            const key = content.substring(0, atIdx);
+            const count = content.substring(atIdx + 1, eqIdx);
+            const cols = content.substring(eqIdx + 1);
+            return { 
+                original: trimmed, 
+                key: `${key}@${count}`, 
+                operator: '=', 
+                value: cols, 
+                indent,
+                isTableHeader: true 
+            };
+        }
+        
+        // Key:value pair
+        const colonIdx = content.indexOf(':');
+        if (colonIdx > 0) {
+            const key = content.substring(0, colonIdx).trim();
+            const value = content.substring(colonIdx + 1).trim();
+            return { original: trimmed, key, operator: ':', value, indent };
+        }
+        
+        // Just a key or identifier
+        return { original: trimmed, key: content, operator: '', value: '', indent };
+    }
+    
+    private identifyBlocks(lines: LineInfo[]): Map<number, { colonAlign: number }> {
+        const blocks = new Map<number, { colonAlign: number }>();
+        let blockStart = -1;
+        let maxKeyLen = 0;
+        let currentIndent = 0;
+        
+        for (let i = 0; i < lines.length; i++) {
+            const info = lines[i];
             
-            if (count) {
-                result.push(`${key} ${count}`);
+            if (info.isEmpty || info.isComment || info.isTableRow) {
+                // End current block
+                if (blockStart >= 0) {
+                    const align = Math.max(maxKeyLen + 4, 20);
+                    for (let j = blockStart; j < i; j++) {
+                        blocks.set(j, { colonAlign: align });
+                    }
+                }
+                blockStart = -1;
+                maxKeyLen = 0;
+                continue;
+            }
+            
+            // Check if continuing same block or starting new one
+            if (blockStart < 0 || info.indent !== currentIndent) {
+                // End previous block if exists
+                if (blockStart >= 0) {
+                    const align = Math.max(maxKeyLen + 4, 20);
+                    for (let j = blockStart; j < i; j++) {
+                        blocks.set(j, { colonAlign: align });
+                    }
+                }
+                // Start new block
+                blockStart = i;
+                currentIndent = info.indent;
+                maxKeyLen = info.key.length + (info.indent * this.indentSize);
             } else {
-                result.push(key);
+                // Continue block
+                maxKeyLen = Math.max(maxKeyLen, info.key.length + (info.indent * this.indentSize));
             }
-            
-            for (const item of items) {
-                const trimmed = item.trim();
-                if (trimmed) {
-                    result.push(this.indent + '>' + trimmed);
-                }
+        }
+        
+        // Close final block
+        if (blockStart >= 0) {
+            const align = Math.max(maxKeyLen + 4, 20);
+            for (let j = blockStart; j < lines.length; j++) {
+                blocks.set(j, { colonAlign: align });
             }
+        }
+        
+        return blocks;
+    }
+    
+    private formatPrettyLine(info: LineInfo, colonAlign: number): string[] {
+        const result: string[] = [];
+        const indentStr = this.indent.repeat(info.indent);
+        
+        // Table row formatting
+        if (info.isTableRow) {
+            const values = info.value.split('|').map(v => v.trim());
+            // Format as aligned table row
+            result.push(values.map(v => v.padEnd(15)).join('  ').trim());
             return result;
         }
         
-        // Object: key#field:val#field:val
-        if (line.includes('#') && !line.startsWith('#')) {
-            const parts = line.split('#');
-            const key = parts[0];
-            result.push(key);
-            
-            for (let i = 1; i < parts.length; i++) {
-                const part = parts[i];
-                if (part.includes(':')) {
-                    const colonIdx = part.indexOf(':');
-                    const fieldName = part.substring(0, colonIdx);
-                    const fieldValue = part.substring(colonIdx + 1);
-                    result.push(`${this.indent}#${fieldName}: ${this.prettyValue(fieldValue)}`);
-                } else {
-                    result.push(`${this.indent}#${part}`);
-                }
-            }
+        // Array formatting: key>a|b|c → multi-line
+        if (info.operator === '>') {
+            const items = info.value.split('|').map(v => v.trim()).filter(v => v);
+            result.push(`${indentStr}${info.key.padEnd(colonAlign - indentStr.length)}> ${items.join(' | ')}`);
             return result;
         }
         
-        // Continuation: ^key:value → ^key : value (with alignment)
-        if (line.startsWith('^')) {
-            const rest = line.substring(1);
-            const colonIdx = rest.indexOf(':');
-            if (colonIdx > 0) {
-                const key = rest.substring(0, colonIdx).trim();
-                const value = rest.substring(colonIdx + 1).trim();
-                result.push(`^${key} : ${this.prettyValue(value)}`);
-                return result;
-            }
-        }
-        
-        // Simple key:value → key : value (with alignment for multi-line blocks)
-        const colonIdx = line.indexOf(':');
-        if (colonIdx > 0 && !line.substring(0, colonIdx).includes(' ')) {
-            const key = line.substring(0, colonIdx).trim();
-            const value = line.substring(colonIdx + 1).trim();
-            result.push(`${key} : ${this.prettyValue(value)}`);
+        // Table header: key@N=cols
+        if (info.isTableHeader) {
+            const cols = info.value.split('^').map(c => c.trim());
+            result.push('');
+            result.push(`# ${info.key.split('@')[0].toUpperCase()} TABLE (${cols.length} Columns)`);
+            result.push(`# ${'-'.repeat(60)}`);
+            result.push(cols.map(c => c.padEnd(15)).join('  ').trim());
             return result;
         }
         
-        // Simple line (e.g., table rows, etc.)
-        result.push(line);
+        // Key:value formatting with alignment
+        if (info.operator === ':') {
+            const keyPart = `${indentStr}${info.key}`;
+            const padding = Math.max(colonAlign - keyPart.length, 1);
+            result.push(`${keyPart}${' '.repeat(padding)}: ${this.prettyValue(info.value)}`);
+            return result;
+        }
+        
+        // Just a key
+        if (info.key) {
+            result.push(`${indentStr}${info.key}`);
+        }
+        
         return result;
     }
     
     private prettyValue(v: string): string {
         const trimmed = v.trim();
-        if (trimmed === '1' || trimmed === '+') return 'true';
-        if (trimmed === '0' || trimmed === '-') return 'false';
+        if (trimmed === '+') return 'true';
+        if (trimmed === '-') return 'false';
         if (trimmed === '~') return 'null';
         if (trimmed.startsWith('*')) return `ref(${trimmed.substring(1)})`;
         return trimmed;
@@ -180,8 +281,8 @@ export class DxFormatter {
     // ═══════════════════════════════════════════════════════════════
     
     toDense(pretty: string): string {
-        const denseLines: string[] = [];
         const lines = pretty.split('\n');
+        const denseLines: string[] = [];
         
         let i = 0;
         while (i < lines.length) {
@@ -194,255 +295,112 @@ export class DxFormatter {
                 continue;
             }
             
-            // Comment line: // comment → !comment!
+            // Comment line - skip in dense (or convert)
+            if (trimmed.startsWith('#') && !trimmed.includes(':')) {
+                i++;
+                continue;
+            }
             if (trimmed.startsWith('//')) {
-                const comment = trimmed.substring(2).trim();
-                // Look ahead and attach to next content
-                let nextContent = '';
-                let j = i + 1;
-                while (j < lines.length) {
-                    const nextLine = lines[j].trim();
-                    if (nextLine && !nextLine.startsWith('//')) {
-                        // Collect this structure
-                        const result = this.collectStructure(lines, j);
-                        nextContent = result.dense;
-                        i = result.nextIndex;
-                        break;
-                    }
-                    j++;
-                }
-                if (nextContent) {
-                    denseLines.push(`!${comment}!${nextContent}`);
-                } else {
-                    i++;
-                }
+                i++;
                 continue;
             }
             
-            // Collect structure starting at this line
-            const result = this.collectStructure(lines, i);
-            if (result.dense) {
-                denseLines.push(result.dense);
+            // Check indentation level (3 spaces = 1 level = ^)
+            const leadingSpaces = line.length - line.trimStart().length;
+            const indentLevel = Math.floor(leadingSpaces / this.indentSize);
+            
+            // Parse the line content
+            const result = this.parsePrettyLine(trimmed, indentLevel);
+            if (result) {
+                denseLines.push(result);
             }
-            i = result.nextIndex;
+            i++;
         }
         
         return denseLines.join('\n');
     }
     
-    private collectStructure(lines: string[], startIdx: number): { dense: string; nextIndex: number } {
-        const firstLine = lines[startIdx].trim();
-        
-        // Already compact table row: >val|val|val
-        if (firstLine.startsWith('>') && !firstLine.includes(' ')) {
-            return { dense: firstLine, nextIndex: startIdx + 1 };
-        }
-        
-        // Table row with spaces: > val | val | val
-        if (firstLine.startsWith('>')) {
-            const values = firstLine.substring(1).split('|').map(v => v.trim());
-            return { dense: `>${values.join('|')}`, nextIndex: startIdx + 1 };
-        }
-        
-        // Check for array or table header: key @N or just key followed by indented items
-        if (firstLine.includes('@') && !firstLine.includes('#') && !firstLine.includes(':')) {
-            return this.collectArrayOrTable(lines, startIdx);
-        }
-        
-        // Check if next line is indented with # (object fields)
-        if (startIdx + 1 < lines.length) {
-            const nextLine = lines[startIdx + 1];
-            if ((nextLine.startsWith(' ') || nextLine.startsWith('\t')) && nextLine.trim().startsWith('#')) {
-                return this.collectObject(lines, startIdx);
-            }
-            // Check for indented > (array items)
-            if ((nextLine.startsWith(' ') || nextLine.startsWith('\t')) && nextLine.trim().startsWith('>')) {
-                return this.collectArrayItems(lines, startIdx);
+    private parsePrettyLine(line: string, indentLevel: number): string | null {
+        // Table row (no prefix, just values separated by spaces)
+        // Skip these as they're handled with table headers
+        if (!line.includes(':') && !line.includes('>') && line.includes('  ')) {
+            // Could be table row - check if all parts are simple values
+            const parts = line.split(/\s{2,}/).map(p => p.trim()).filter(p => p);
+            if (parts.length >= 2 && parts.every(p => /^[a-zA-Z0-9_\-./]+$/.test(p))) {
+                return `>${parts.join('|')}`;
             }
         }
         
-        // Single line - compact it
-        return { dense: this.compactLine(firstLine), nextIndex: startIdx + 1 };
-    }
-    
-    private collectObject(lines: string[], startIdx: number): { dense: string; nextIndex: number } {
-        const key = lines[startIdx].trim();
-        const fields: string[] = [];
-        let i = startIdx + 1;
-        
-        while (i < lines.length) {
-            const line = lines[i];
-            // Check if indented (part of this object)
-            if (line.startsWith(' ') || line.startsWith('\t')) {
-                const trimmed = line.trim();
-                if (trimmed.startsWith('#')) {
-                    // Field line: #name: value or #name : value
-                    const content = trimmed.substring(1); // Remove leading #
-                    const colonIdx = content.indexOf(':');
-                    if (colonIdx > 0) {
-                        const fieldName = content.substring(0, colonIdx).trim();
-                        const fieldValue = this.denseValue(content.substring(colonIdx + 1).trim());
-                        fields.push(`${fieldName}:${fieldValue}`);
-                    } else {
-                        fields.push(content.trim());
-                    }
-                    i++;
-                } else {
-                    // Not a field - end of object
-                    break;
-                }
-            } else {
-                // Not indented - end of object
-                break;
-            }
-        }
-        
-        const dense = fields.length > 0 ? `${key}#${fields.join('#')}` : key;
-        return { dense, nextIndex: i };
-    }
-    
-    private collectArrayItems(lines: string[], startIdx: number): { dense: string; nextIndex: number } {
-        const key = lines[startIdx].trim();
-        const items: string[] = [];
-        let i = startIdx + 1;
-        
-        while (i < lines.length) {
-            const line = lines[i];
-            if (line.startsWith(' ') || line.startsWith('\t')) {
-                const trimmed = line.trim();
-                if (trimmed.startsWith('>')) {
-                    const item = trimmed.substring(1).trim();
-                    if (item) {
-                        items.push(this.denseValue(item));
-                    }
-                    i++;
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-        
-        const dense = items.length > 0 ? `${key}>${items.join('|')}` : key;
-        return { dense, nextIndex: i };
-    }
-    
-    private collectArrayOrTable(lines: string[], startIdx: number): { dense: string; nextIndex: number } {
-        const header = lines[startIdx].trim();
-        // Parse: key @N or key@N
-        const atMatch = header.match(/^([\w_.]+)\s*@(\d+)$/);
-        if (!atMatch) {
-            return { dense: this.compactLine(header), nextIndex: startIdx + 1 };
-        }
-        
-        const key = atMatch[1];
-        const count = atMatch[2];
-        
-        let i = startIdx + 1;
-        const items: string[] = [];
-        const columns: string[] = [];
-        let isTable = false;
-        
-        while (i < lines.length) {
-            const line = lines[i];
-            if (line.startsWith(' ') || line.startsWith('\t')) {
-                const trimmed = line.trim();
-                
-                // Column definition: =col ^ col ^ col
-                if (trimmed.startsWith('=')) {
-                    isTable = true;
-                    const colDef = trimmed.substring(1);
-                    columns.push(...colDef.split('^').map(c => c.trim()));
-                    i++;
-                }
-                // Row: >val | val | val or >val
-                else if (trimmed.startsWith('>')) {
-                    const rowContent = trimmed.substring(1);
-                    if (rowContent.includes('|')) {
-                        const values = rowContent.split('|').map(v => this.denseValue(v.trim()));
-                        items.push(`>${values.join('|')}`);
-                    } else {
-                        items.push(this.denseValue(rowContent.trim()));
-                    }
-                    i++;
-                }
-                else {
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-        
-        let dense: string;
-        if (isTable && columns.length > 0) {
-            dense = `${key}@${count}=${columns.join('^')}\n${items.join('\n')}`;
-        } else if (items.length > 0) {
-            // Array: join items with |
-            const arrayItems = items.map(item => item.startsWith('>') ? item.substring(1) : item);
-            dense = `${key}@${count}>${arrayItems.join('|')}`;
-        } else {
-            dense = `${key}@${count}`;
-        }
-        
-        return { dense, nextIndex: i };
-    }
-    
-    private compactLine(line: string): string {
-        // Continuation: ^key : value → ^key:value
-        if (line.startsWith('^')) {
-            const rest = line.substring(1);
-            const colonMatch = rest.match(/^([\w_.]+)\s*:\s*(.*)$/);
-            if (colonMatch) {
-                const key = colonMatch[1].trim();
-                const value = this.denseValue(colonMatch[2].trim());
-                return `^${key}:${value}`;
-            }
-            return line;
-        }
-        
-        // Array: key > item | item → key>item|item
-        const arrowMatch = line.match(/^([\w_.]+)\s*>\s*(.+)$/);
+        // Array line: key > items
+        const arrowMatch = line.match(/^([\w_./-]+)\s*>\s*(.*)$/);
         if (arrowMatch) {
             const key = arrowMatch[1].trim();
-            const items = arrowMatch[2].split('|').map(s => this.denseValue(s.trim())).join('|');
-            return `${key}>${items}`;
+            const items = arrowMatch[2].split('|').map(s => this.denseValue(s.trim())).filter(s => s).join('|');
+            const prefix = indentLevel > 0 ? '^' : '';
+            return `${prefix}${key}>${items}`;
         }
         
-        // Simple key : value → key:value
-        const colonMatch = line.match(/^([\w_.]+)\s*:\s*(.*)$/);
+        // Key : value (with spaces around colon)
+        const colonMatch = line.match(/^([\w_./-]+)\s*:\s*(.*)$/);
         if (colonMatch) {
             const key = colonMatch[1].trim();
             const value = this.denseValue(colonMatch[2].trim());
-            return `${key}:${value}`;
+            const prefix = indentLevel > 0 ? '^' : '';
+            return `${prefix}${key}:${value}`;
         }
         
-        // Remove extra spaces around operators
-        return line
-            .replace(/\s*#\s*/g, '#')
-            .replace(/\s*:\s*/g, ':')
-            .replace(/\s*\|\s*/g, '|')
-            .replace(/\s*\^\s*/g, '^')
-            .replace(/\s*@\s*/g, '@')
-            .replace(/\s*>\s*/g, '>');
+        // Just return the line compacted
+        return line.replace(/\s+/g, '');
     }
     
     private denseValue(v: string): string {
         const lower = v.toLowerCase();
-        if (lower === 'true' || lower === 'yes') return '+';
-        if (lower === 'false' || lower === 'no') return '-';
-        if (lower === 'null' || lower === 'none') return '~';
+        // Only convert explicit true/false, keep other values as-is
+        if (lower === 'true') return '+';
+        if (lower === 'false') return '-';
+        // Only convert explicit 'null' keyword, not 'none' (which is a valid string value)
+        if (lower === 'null') return '~';
         if (v.startsWith('ref(') && v.endsWith(')')) {
             return '*' + v.substring(4, v.length - 1);
         }
-        // Remove quotes if simple string
-        if (v.startsWith('"') && v.endsWith('"')) {
-            const inner = v.slice(1, -1);
-            if (!inner.includes('#') && !inner.includes('|') && !inner.includes(':')) {
-                return inner;
-            }
-        }
         return v;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // UTILITY: Check if content is Dense or Pretty
+    // ═══════════════════════════════════════════════════════════════
+    
+    isDense(content: string): boolean {
+        const lines = content.split('\n').filter(l => l.trim());
+        if (lines.length === 0) return true;
+        
+        // Dense characteristics:
+        // - No spaces around : or >
+        // - Uses ^ for children
+        // - No aligned columns
+        
+        let denseScore = 0;
+        let prettyScore = 0;
+        
+        for (const line of lines.slice(0, 10)) { // Check first 10 lines
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//')) continue;
+            
+            // Dense: key:value (no spaces)
+            if (/^[\w_./-]+:[^\s]/.test(trimmed)) denseScore++;
+            // Dense: uses ^ prefix
+            if (trimmed.startsWith('^')) denseScore++;
+            // Dense: key>items (no spaces)
+            if (/^[\w_./-]+>[^\s]/.test(trimmed)) denseScore++;
+            
+            // Pretty: spaces around :
+            if (/:\s+/.test(trimmed) && /\s+:/.test(trimmed)) prettyScore++;
+            // Pretty: indented (leading spaces)
+            if (line.startsWith('   ') && !line.startsWith('    ')) prettyScore++;
+            // Pretty: spaces around >
+            if (/>\s+/.test(trimmed)) prettyScore++;
+        }
+        
+        return denseScore >= prettyScore;
     }
 }

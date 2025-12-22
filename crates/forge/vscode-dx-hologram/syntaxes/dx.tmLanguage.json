@@ -4,78 +4,121 @@
   "scopeName": "source.dx",
   "patterns": [
     { "include": "#comment" },
-    { "include": "#object" },
-    { "include": "#array" },
-    { "include": "#table" },
-    { "include": "#value" }
+    { "include": "#table-header" },
+    { "include": "#table-row" },
+    { "include": "#array-definition" },
+    { "include": "#key-value" },
+    { "include": "#operators" }
   ],
   "repository": {
     "comment": {
       "patterns": [
         {
+          "name": "comment.line.number-sign.dx",
+          "match": "^#.*$"
+        },
+        {
           "name": "comment.line.double-slash.dx",
           "match": "//.*$"
-        },
-        {
-          "name": "comment.block.dx",
-          "begin": "!",
-          "end": "!",
-          "beginCaptures": { "0": { "name": "punctuation.definition.comment.dx" } },
-          "endCaptures": { "0": { "name": "punctuation.definition.comment.dx" } }
         }
       ]
     },
-    "object": {
+    "table-header": {
       "patterns": [
         {
-          "name": "entity.name.tag.dx",
-          "match": "^[a-zA-Z_][a-zA-Z0-9_.]*(?=\\s|#|@|$)"
-        },
-        {
-          "name": "punctuation.separator.dx",
-          "match": "#"
-        },
-        {
-          "name": "variable.other.property.dx",
-          "match": "(?<=#)[a-zA-Z_][a-zA-Z0-9_]*(?=:)"
-        },
-        {
-          "name": "keyword.operator.inheritance.dx",
-          "match": "\\^"
+          "comment": "Table column headers (Lang Runtime Compiler etc)",
+          "name": "entity.name.type.class.dx",
+          "match": "^[A-Z][a-zA-Z0-9_]*(?=\\s{2,})"
         }
       ]
     },
-    "array": {
+    "table-row": {
       "patterns": [
         {
-          "name": "keyword.operator.array.dx",
-          "match": "@\\d*"
-        },
+          "comment": "Table cell values",
+          "name": "string.unquoted.dx",
+          "match": "(?<=\\s{2,})[a-zA-Z0-9_\\-./]+(?=\\s{2,}|$)"
+        }
+      ]
+    },
+    "array-definition": {
+      "patterns": [
         {
-          "name": "punctuation.separator.array.dx",
+          "comment": "Array key with arrow: forge_items >",
+          "match": "^(\\s*)(\\^)?([a-zA-Z_][a-zA-Z0-9_./-]*)\\s*(>)\\s*(.*)$",
+          "captures": {
+            "2": { "name": "keyword.control.dx" },
+            "3": { "name": "entity.name.function.dx" },
+            "4": { "name": "keyword.operator.arrow.dx" },
+            "5": { "patterns": [{ "include": "#array-items" }] }
+          }
+        }
+      ]
+    },
+    "array-items": {
+      "patterns": [
+        {
+          "name": "keyword.operator.separator.dx",
           "match": "\\|"
         },
         {
-          "name": "punctuation.definition.array.dx",
-          "match": ">"
+          "name": "variable.other.constant.dx",
+          "match": "[a-zA-Z0-9_\\-./]+"
         }
       ]
     },
-    "table": {
+    "key-value": {
       "patterns": [
         {
-          "name": "punctuation.separator.table.dx",
-          "match": "\\^"
+          "comment": "Root level key:value - name : dx",
+          "match": "^([a-zA-Z_][a-zA-Z0-9_.]*)\\s*(:)\\s*(.*)$",
+          "captures": {
+            "1": { "name": "variable.other.property.dx" },
+            "2": { "name": "punctuation.separator.colon.dx" },
+            "3": { "patterns": [{ "include": "#values" }] }
+          }
         },
         {
-          "name": "keyword.operator.table.dx",
-          "match": "="
+          "comment": "Indented child key:value (from ^ prefix)",
+          "match": "^(\\s{3,})([a-zA-Z_][a-zA-Z0-9_./\\-]*)\\s*(:)\\s*(.*)$",
+          "captures": {
+            "2": { "name": "support.type.property-name.dx" },
+            "3": { "name": "punctuation.separator.colon.dx" },
+            "4": { "patterns": [{ "include": "#values" }] }
+          }
+        },
+        {
+          "comment": "Dotted key: forge.repository",
+          "match": "^([a-zA-Z_][a-zA-Z0-9_]*)(\\.)([a-zA-Z_][a-zA-Z0-9_]*)\\s*(:)\\s*(.*)$",
+          "captures": {
+            "1": { "name": "entity.name.namespace.dx" },
+            "2": { "name": "punctuation.accessor.dx" },
+            "3": { "name": "variable.other.property.dx" },
+            "4": { "name": "punctuation.separator.colon.dx" },
+            "5": { "patterns": [{ "include": "#values" }] }
+          }
         }
       ]
     },
-    "value": {
+    "values": {
       "patterns": [
         {
+          "comment": "URL values",
+          "name": "string.other.link.dx",
+          "match": "https?://[^\\s]+"
+        },
+        {
+          "comment": "Path values starting with @/",
+          "name": "string.interpolated.dx",
+          "match": "@/[a-zA-Z0-9_/\\-.*]+"
+        },
+        {
+          "comment": "Glob patterns",
+          "name": "string.regexp.dx",
+          "match": "\\*\\*?(/[a-zA-Z0-9_.*]+)*"
+        },
+        {
+          "comment": "Quoted strings",
           "name": "string.quoted.double.dx",
           "begin": "\"",
           "end": "\"",
@@ -84,26 +127,71 @@
           ]
         },
         {
+          "comment": "Numbers",
           "name": "constant.numeric.dx",
           "match": "-?\\d+(\\.\\d+)?"
         },
         {
+          "comment": "Boolean true",
           "name": "constant.language.boolean.true.dx",
-          "match": "\\b(true|yes|\\+)\\b"
+          "match": "\\b(true|yes)\\b"
         },
         {
+          "comment": "Boolean false",
           "name": "constant.language.boolean.false.dx",
-          "match": "\\b(false|no|-)\\b"
+          "match": "\\b(false|no)\\b"
         },
         {
+          "comment": "Null/none",
           "name": "constant.language.null.dx",
-          "match": "(~|\\bnull\\b|\\bnone\\b)"
+          "match": "\\b(null|none)\\b"
         },
         {
-          "name": "variable.other.reference.dx",
-          "match": "(\\*\\d+|ref\\(\\d+\\))"
+          "comment": "Special 'all' value",
+          "name": "keyword.other.special.dx",
+          "match": "\\ball\\b"
         },
         {
+          "comment": "Package names with @",
+          "name": "entity.name.tag.dx",
+          "match": "@[a-zA-Z0-9_\\-/]+"
+        },
+        {
+          "comment": "Simple string values",
+          "name": "string.unquoted.dx",
+          "match": "[a-zA-Z0-9_\\-./]+"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "comment": "Caret operator (child/inheritance)",
+          "name": "keyword.control.dx",
+          "match": "\\^"
+        },
+        {
+          "comment": "Arrow operator (array)",
+          "name": "keyword.operator.arrow.dx",
+          "match": ">"
+        },
+        {
+          "comment": "Pipe separator",
+          "name": "keyword.operator.separator.dx",
+          "match": "\\|"
+        },
+        {
+          "comment": "At symbol (count/reference)",
+          "name": "keyword.operator.at.dx",
+          "match": "@\\d*"
+        },
+        {
+          "comment": "Hash operator (object field)",
+          "name": "keyword.operator.hash.dx",
+          "match": "#"
+        },
+        {
+          "comment": "Colon separator",
           "name": "punctuation.separator.colon.dx",
           "match": ":"
         }
