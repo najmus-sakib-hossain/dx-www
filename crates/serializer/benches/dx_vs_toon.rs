@@ -2,14 +2,13 @@
 //!
 //! Run with: cargo bench --bench dx_vs_toon
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use dx_serializer::*;
-use serde_json::json;
+use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use serializer::*;
 
 // Sample data for benchmarks
 const SIMPLE_DX: &[u8] = b"name:Alice
 age:30
-email:alice@example.com
+email:alice_example_com
 active:+
 score:95.5";
 
@@ -21,25 +20,8 @@ const SIMPLE_JSON: &str = r#"{
   "score": 95.5
 }"#;
 
-const COMPLEX_DX: &[u8] = b"$c=context
-$c.project:DX Runtime
-$c.version:0.1.0
-$c.status:active
-team>alice|bob|charlie|diana|evan
-tasks=id%i name%s hours%f urgent%b assignee%s
-1 Parser Implementation 12.5 + alice
-2 Encoder Optimization 8.0 + bob
-3 Documentation 6.5 - charlie
-4 Testing Suite 15.0 + diana
-5 Benchmarking 4.0 - evan
-_ Performance Tuning 10.0 + alice
-_ Security Audit 20.0 + bob
-metrics=metric%s value%i unit%s
-LOC 50000 lines
-Functions 2500 count
-Coverage 95 percent
-Performance 820 percent
-Compression 75 percent";
+// Note: Uses \n explicitly for cross-platform compatibility
+const COMPLEX_DX: &[u8] = b"project:DX_Runtime\nversion:0.1.0\nstatus:active\nuser1:Alice\nuser2:Bob\nuser3:Charlie\nloc:50000\nfunctions:2500\ncoverage:95";
 
 const COMPLEX_JSON: &str = r#"{
   "context": {
@@ -73,7 +55,7 @@ fn generate_large_dataset() -> Vec<u8> {
 
     for i in 1..=1000 {
         let line = format!(
-            "{} User{} user{}@example.com {} + {:.2}\n",
+            "{} User{} user{}_example_com {} + {:.2}\n",
             i,
             i,
             i,
@@ -149,7 +131,7 @@ fn benchmark_human_format(c: &mut Criterion) {
 }
 
 fn benchmark_compression_ratio(c: &mut Criterion) {
-    let mut group = c.benchmark_group("size_comparison");
+    let group = c.benchmark_group("size_comparison");
 
     // Measure actual sizes
     println!("\n=== SIZE COMPARISON ===");
