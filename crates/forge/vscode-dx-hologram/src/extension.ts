@@ -38,8 +38,30 @@ export async function activate(context: vscode.ExtensionContext) {
     
     updateStatusBar(vscode.window.activeTextEditor);
 
-    // Commands - Manual conversion only
+    // Commands
     context.subscriptions.push(
+        vscode.commands.registerCommand('dx.toggleFormat', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || !isDxFile(editor.document.uri)) return;
+            
+            const text = editor.document.getText();
+            const isHuman = text.includes(' : ') || text.includes(' > ');
+            const converted = isHuman ? formatter.toDense(text) : formatter.toPretty(text);
+            
+            await editor.edit(eb => {
+                const fullRange = new vscode.Range(
+                    editor.document.positionAt(0),
+                    editor.document.positionAt(text.length)
+                );
+                eb.replace(fullRange, converted);
+            });
+            
+            // Auto-save if converting to LLM format
+            if (isHuman) {
+                await editor.document.save();
+            }
+        }),
+        
         vscode.commands.registerCommand('dx.formatPretty', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || !isDxFile(editor.document.uri)) return;
@@ -70,6 +92,9 @@ export async function activate(context: vscode.ExtensionContext) {
                 );
                 eb.replace(fullRange, dense);
             });
+            
+            // Auto-save after converting to dense
+            await editor.document.save();
         }),
 
         vscode.commands.registerCommand('dx.showLLMFormat', async () => {
