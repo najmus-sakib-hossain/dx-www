@@ -1,0 +1,19 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+members = ["cpp-linter", "bindings/python", "bindings/node", "docs"]
+resolver = "2"
+
+[workspace.package]
+version = "2.0.0-rc12" # auto
+authors = [
+    "Brendan Doherty",
+    "Xianpeng Shen",
+]
+description = "Run clang-format and clang-tidy on a batch of files."
+homepage = "https://cpp-linter.github.io/cpp-linter-rs"
+license = "MIT"
+
+[profile.release]
+lto = true
+strip = "symbols"

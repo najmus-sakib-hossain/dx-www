@@ -1,0 +1,69 @@
+# Sample GraphQL schema to test Biome formatter and linter
+
+type Query {
+  user(id: ID!): User
+  users(limit: Int, offset: Int): [User!]!
+  posts(authorId: ID): [Post!]!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User
+  deleteUser(id: ID!): Boolean!
+  createPost(input: CreatePostInput!): Post!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  age: Int
+  posts: [Post!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User!
+  published: Boolean!
+  tags: [String!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateUserInput {
+  name: String!
+  email: String!
+  age: Int
+}
+
+input UpdateUserInput {
+  name: String
+  email: String
+  age: Int
+}
+
+input CreatePostInput {
+  title: String!
+  content: String!
+  authorId: ID!
+  published: Boolean
+  tags: [String!]
+}
+
+scalar DateTime
+
+enum Role {
+  ADMIN
+  USER
+  MODERATOR
+}
+
+interface Node {
+  id: ID!
+}
+
+union SearchResult = User | Post

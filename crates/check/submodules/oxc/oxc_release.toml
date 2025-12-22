@@ -1,0 +1,35 @@
+# Configuration file for [cargo release oxc](https://github.com/oxc-project/cargo-release-oxc)
+
+# Release `--name crates`
+[[releases]]
+name = "crates"
+root_crate = "oxc"
+versioned_files = [
+  "Cargo.toml",
+  "napi/parser/package.json",
+  "napi/transform/package.json",
+  "napi/minify/package.json",
+  "npm/oxc-types/package.json",
+  "npm/runtime/package.json",
+]
+
+[[releases]]
+name = "oxlint"
+scopes_for_breaking_change = ["lint"]
+versioned_files = [
+  "apps/oxlint/Cargo.toml",
+  "apps/oxlint/package.json",
+  "crates/oxc_linter/Cargo.toml",
+  "editors/vscode/package.json",
+  "npm/oxlint/package.json",
+  "crates/oxc_language_server/Cargo.toml",
+]
+
+[[releases]]
+name = "oxfmt"
+scopes_for_breaking_change = ["format"]
+versioned_files = [
+  "apps/oxfmt/Cargo.toml",
+  "crates/oxc_formatter/Cargo.toml",
+  "npm/oxfmt/package.json",
+]

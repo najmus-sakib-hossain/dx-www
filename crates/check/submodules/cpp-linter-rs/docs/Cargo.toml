@@ -1,0 +1,18 @@
+
+[package]
+name = "cli-gen"
+edition = "2021"
+description = "A function exposed in python that generates a CLI doc from rust source code."
+repository = "https://github.com/cpp-linter/cpp-linter-rs/tree/main/docs"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+cpp-linter = { path = "../cpp-linter" }
+pyo3 = "0.26.0"
+
+[lib]
+name = "cli_gen"
+crate-type = ["cdylib"]
+bench = false

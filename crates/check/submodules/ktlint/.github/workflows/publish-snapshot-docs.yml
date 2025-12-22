@@ -1,0 +1,36 @@
+name: Publish snapshot documentation
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: ['master']
+    paths: ['documentation/snapshot/**']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.repository == 'pinterest/ktlint'
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          fetch-depth: 0 # fetch all commits/branches
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.x
+
+      - name: Install mkdocs and mike
+        run: pip install mkdocs-material mike
+
+      - name: Config git
+        run: |
+          git config user.email "ktlint@github.com"
+          git config user.name "Ktlint Release Workflow"
+
+      - name: Build and push snapshot documentation to GitHub Pages
+        run: |
+          cd documentation/snapshot
+          # The dev-snapshot version has no release number as the version will only be tagged when an official release is build
+          # This also prevents that multiple snapshot versions of the documentation will be published in parallel
+          mike deploy --push dev-snapshot

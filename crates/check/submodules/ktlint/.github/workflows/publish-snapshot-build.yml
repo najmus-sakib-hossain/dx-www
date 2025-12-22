@@ -1,0 +1,30 @@
+name: Publish snapshot build
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [master]
+    paths: ['**/*.kt', '**/*.kts', '**/*.properties', '**/*.toml']
+
+env:
+  ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
+  ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_PORTAL_TOKEN }}
+  ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+  ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEYID }}
+  ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: github.repository == 'pinterest/ktlint'
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+
+      - uses: ./.github/actions/setup-gradle-build
+
+      - name: Publish snapshot to Maven
+        run: ./gradlew clean publishMavenPublicationToMavenCentralRepository
+
+      - name: Publish Kotlin-dev snapshot to Maven
+        run: ./gradlew -PkotlinDev clean publishMavenPublicationToMavenCentralRepository

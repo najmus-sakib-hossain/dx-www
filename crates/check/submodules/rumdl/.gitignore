@@ -1,0 +1,19 @@
+target/
+**/__pycache__
+**/*.egg-info
+cov-report
+# Ignore benchmark directory but not benchmark/bin
+benchmark/*
+!benchmark/bin/
+*.bak*
+.env
+*.log
+node_modules
+parity_corpus
+.cleanup_archive/
+issues/
+.DS_Store
+.archive
+.cursorrules
+CLAUDE.md
+uv.lock
