@@ -2,7 +2,7 @@
 //!
 //! Zero-config detection of project type, framework, and conventions.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 

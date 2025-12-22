@@ -98,9 +98,9 @@ pub const FRAME_BUDGET_US: u32 = 4_000;
 pub mod prelude {
     pub use crate::cache::AstCache;
     pub use crate::config::CheckerConfig;
-    pub use crate::diagnostics::{Diagnostic, DiagnosticSeverity, Span};
+    pub use crate::diagnostics::{Diagnostic, DiagnosticSeverity, Fix, Span};
     pub use crate::engine::{CheckResult, Checker};
-    pub use crate::fix::{Fix, FixEngine};
+    pub use crate::fix::FixEngine;
     pub use crate::project::ProjectProfile;
     pub use crate::reactor::LintReactor;
     pub use crate::rules::{Rule, RuleId, RuleRegistry};

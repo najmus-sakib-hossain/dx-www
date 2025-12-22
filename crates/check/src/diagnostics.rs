@@ -120,7 +120,7 @@ impl LineIndex {
 }
 
 /// Binary diagnostic format (33 bytes - compact for network transfer)
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[repr(C, packed)]
 pub struct BinaryDiagnostic {
     /// File ID (index into file table)
@@ -382,10 +382,15 @@ impl DiagnosticPatch {
     fn hash_diagnostic(d: &BinaryDiagnostic) -> u64 {
         use std::hash::{Hash, Hasher};
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        d.file_id.hash(&mut hasher);
-        d.start_byte.hash(&mut hasher);
-        d.end_byte.hash(&mut hasher);
-        d.rule_id.hash(&mut hasher);
+        // Copy fields to avoid unaligned reference issues with packed struct
+        let file_id = d.file_id;
+        let start_byte = d.start_byte;
+        let end_byte = d.end_byte;
+        let rule_id = d.rule_id;
+        file_id.hash(&mut hasher);
+        start_byte.hash(&mut hasher);
+        end_byte.hash(&mut hasher);
+        rule_id.hash(&mut hasher);
         hasher.finish()
     }
 

@@ -3,7 +3,7 @@
 //! Predictive fix engine with pre-compiled fix templates.
 //! Applies fixes in microseconds via pattern matching.
 
-use crate::diagnostics::{Diagnostic, Edit, Fix, Span};
+use crate::diagnostics::{Diagnostic, Edit, Fix};
 use std::collections::HashMap;
 
 /// Pre-compiled fix template
@@ -116,8 +116,6 @@ impl FixEngine {
 
     /// Apply a single fix to source
     pub fn apply_fix(&self, source: &[u8], fix: &Fix) -> Vec<u8> {
-        let mut result = Vec::with_capacity(source.len());
-
         // Sort edits by position (reverse order for safe application)
         let mut edits = fix.edits.clone();
         edits.sort_by_key(|e| std::cmp::Reverse(e.span.start));

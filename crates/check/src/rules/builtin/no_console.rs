@@ -3,7 +3,7 @@
 //! Disallow the use of console
 
 use crate::diagnostics::{Diagnostic, Fix, Span};
-use crate::rules::{Category, NodeKind, Rule, RuleContext, RuleId, RuleMeta, Severity};
+use crate::rules::{Category, Rule, RuleContext, RuleId, RuleMeta, Severity};
 use oxc_ast::ast::*;
 use oxc_ast::AstKind;
 

@@ -3,13 +3,11 @@
 //! Persistent binary AST cache for instant re-linting of unchanged files.
 //! Uses memory-mapped files for zero-copy access.
 
-use blake3::Hasher;
-use memmap2::{Mmap, MmapMut};
 use parking_lot::RwLock;
 use std::collections::HashMap;
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 /// Binary AST cache with memory-mapped storage

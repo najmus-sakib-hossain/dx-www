@@ -2,10 +2,8 @@
 //!
 //! Disallow unused variables
 
-use crate::diagnostics::Diagnostic;
 use crate::rules::{Category, Rule, RuleContext, RuleId, RuleMeta, Severity};
 use oxc_ast::AstKind;
-use std::collections::{HashMap, HashSet};
 
 /// Rule: no-unused-vars
 /// Disallows declared variables that are never used

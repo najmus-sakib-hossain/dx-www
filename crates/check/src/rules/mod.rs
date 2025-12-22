@@ -7,7 +7,6 @@ pub mod builtin;
 pub mod registry;
 
 use crate::diagnostics::{Diagnostic, Span};
-use oxc_ast::ast::*;
 use oxc_ast::AstKind;
 use std::path::Path;
 
@@ -148,8 +147,19 @@ impl<'a> RuleContext<'a> {
     }
 }
 
+/// Helper trait for cloning boxed rules
+pub trait RuleClone: Send + Sync {
+    fn clone_box(&self) -> Box<dyn Rule>;
+}
+
+impl<T: Rule + Clone + 'static> RuleClone for T {
+    fn clone_box(&self) -> Box<dyn Rule> {
+        Box::new(self.clone())
+    }
+}
+
 /// Trait for lint rules
-pub trait Rule: Send + Sync {
+pub trait Rule: RuleClone + Send + Sync {
     /// Get rule metadata
     fn meta(&self) -> &RuleMeta;
 
@@ -403,17 +413,6 @@ impl FusedRuleSet {
 impl Default for FusedRuleSet {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-/// Helper trait for cloning boxed rules
-trait RuleClone {
-    fn clone_box(&self) -> Box<dyn Rule>;
-}
-
-impl<T: Rule + Clone + 'static> RuleClone for T {
-    fn clone_box(&self) -> Box<dyn Rule> {
-        Box::new(self.clone())
     }
 }
 

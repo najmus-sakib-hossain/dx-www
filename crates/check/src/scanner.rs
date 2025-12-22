@@ -126,7 +126,8 @@ impl PatternScanner {
 
         while offset + 32 <= source.len() {
             // Load 32 bytes from source
-            let chunk = _mm256_loadu_si256(source[offset..].as_ptr() as *const __m256i);
+            // SAFETY: We verified offset + 32 <= source.len()
+            let chunk = unsafe { _mm256_loadu_si256(source[offset..].as_ptr() as *const __m256i) };
 
             // For each pattern's first byte, check if it exists in the chunk
             for pattern in &self.patterns {
@@ -137,11 +138,11 @@ impl PatternScanner {
                 let first_byte = pattern.bytes[0];
 
                 // Broadcast first byte to all positions
-                let needle = _mm256_set1_epi8(first_byte as i8);
+                let needle = unsafe { _mm256_set1_epi8(first_byte as i8) };
 
                 // Compare
-                let cmp = _mm256_cmpeq_epi8(chunk, needle);
-                let mask = _mm256_movemask_epi8(cmp) as u32;
+                let cmp = unsafe { _mm256_cmpeq_epi8(chunk, needle) };
+                let mask = unsafe { _mm256_movemask_epi8(cmp) } as u32;
 
                 if mask != 0 {
                     // There are potential matches - verify them
@@ -283,12 +284,13 @@ impl PatternScanner {
 
         let mut offset = 0;
         while offset + 32 <= source.len() {
-            let chunk = _mm256_loadu_si256(source[offset..].as_ptr() as *const __m256i);
+            // SAFETY: We verified offset + 32 <= source.len()
+            let chunk = unsafe { _mm256_loadu_si256(source[offset..].as_ptr() as *const __m256i) };
 
             for &first_byte in &first_bytes_set {
-                let needle = _mm256_set1_epi8(first_byte as i8);
-                let cmp = _mm256_cmpeq_epi8(chunk, needle);
-                let mask = _mm256_movemask_epi8(cmp) as u32;
+                let needle = unsafe { _mm256_set1_epi8(first_byte as i8) };
+                let cmp = unsafe { _mm256_cmpeq_epi8(chunk, needle) };
+                let mask = unsafe { _mm256_movemask_epi8(cmp) } as u32;
 
                 if mask != 0 {
                     // Verify full pattern

@@ -119,7 +119,7 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
     - **Property 12: Partial Hydration Isolation**
     - **Validates: Requirements 6.5**
 
-- [ ] 8. Control Flow and Suspense
+- [-] 8. Control Flow and Suspense
   - [ ] 8.1 Implement control flow opcodes
     - Create `src/control.rs` with ControlOpcode enum
     - Implement ForEachOp, ShowOp, SwitchOp structs

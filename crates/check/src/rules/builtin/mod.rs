@@ -20,7 +20,7 @@ pub use no_var::NoVar;
 pub use no_eval::NoEval;
 pub use no_with::NoWith;
 
-use super::{Rule, RuleId, RuleMeta, Category, Severity};
+use super::Rule;
 
 /// Get all built-in rules
 pub fn all_rules() -> Vec<Box<dyn Rule>> {

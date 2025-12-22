@@ -3,8 +3,8 @@
 //! Manages all available rules and their configurations.
 
 use super::builtin;
-use super::{Category, Rule, RuleId, RuleMeta, Severity};
-use crate::config::{RuleConfig, RuleConfigs, RuleSeverity};
+use super::{Rule, RuleId, Severity};
+use crate::config::{RuleConfigs, RuleSeverity};
 use std::collections::HashMap;
 
 /// Registry of all available lint rules

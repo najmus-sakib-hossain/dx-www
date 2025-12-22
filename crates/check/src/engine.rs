@@ -6,7 +6,7 @@ use crate::cache::AstCache;
 use crate::config::CheckerConfig;
 use crate::diagnostics::Diagnostic;
 use crate::project::ProjectProfile;
-use crate::rules::{Rule, RuleContext, RuleRegistry};
+use crate::rules::{RuleContext, RuleRegistry};
 use ignore::WalkBuilder;
 use oxc_allocator::Allocator;
 use oxc_ast::AstKind;
@@ -14,7 +14,6 @@ use oxc_ast::Visit;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 /// Result of a check operation
