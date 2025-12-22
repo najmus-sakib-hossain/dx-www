@@ -2,7 +2,7 @@
   "hidesExplorerArrows": false,
   "iconDefinitions": {
     "_dx_file": {
-      "iconPath": "../images/logo.png"
+      "iconPath": "../media/file-extension-dark.png"
     }
   },
   "file": "_dx_file",

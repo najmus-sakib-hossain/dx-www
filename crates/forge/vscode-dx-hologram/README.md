@@ -1,51 +1,81 @@
-# DX Hologram - VS Code Extension
+# DX Quantum - VS Code Extension
 
-**Binary-first holographic editing for DX configuration files**
+**The World's First Quantum Config File**
+
+Beautiful for Humans. Efficient for LLMs. Blazing for Machines.
 
 ## What is this?
 
-The DX Hologram extension provides a revolutionary editing experience for DX configuration files. It implements "Quantum Superposition" for config files - showing you a beautiful, human-readable format while storing an ultra-efficient LLM format, and generating binary `.dxb` files on save.
+The DX Quantum extension implements a revolutionary editing experience. It uses a transparent FileSystemProvider to show you a beautiful, human-readable format while storing an ultra-efficient LLM format on disk - and generating binary `.dxs` files on save.
+
+**ONE file, THREE formats, ZERO friction.**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         THE DX QUANTUM FILE                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│                           ONE FILE: config/dx                           │
+│                                                                         │
+│  ┌────────────────┐   ┌────────────────┐   ┌────────────────────┐      │
+│  │     EDITOR     │   │     DISK       │   │      RUNTIME       │      │
+│  │                │   │                │   │                    │      │
+│  │  server        │   │ server#host:   │   │  ┌──────────────┐  │      │
+│  │    #host: loc  │──▶│ localhost#     │──▶│  │ BINARY .dxs  │  │      │
+│  │    #port: 5432 │   │ port:5432      │   │  │ 0.70ns read  │  │      │
+│  │                │   │                │   │  └──────────────┘  │      │
+│  └────────────────┘   └────────────────┘   └────────────────────┘      │
+│                                                                         │
+│        PRETTY              DENSE               BINARY                   │
+│     (Human view)        (LLM optimal)      (Machine optimal)            │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 ## The Three Formats
 
 | Format | Purpose | Location | Size |
 |--------|---------|----------|------|
-| **Human** | Editor display | Virtual (in-memory) | Readable |
-| **LLM** | Storage | `.dx` file on disk | 5x smaller |
-| **Machine** | Runtime | `.dxb` binary file | 0.70ns access |
+| **Human** | Editor display | Transparent (via FileSystemProvider) | Readable |
+| **LLM** | Storage | `.dx` file on disk | 3.5x smaller than JSON |
+| **Machine** | Runtime | `.dxs` binary file | 0.70ns access |
+
+## Key Features
+
+- ✅ **Same file, same tab, same path** - No virtual documents
+- ✅ **NO dirty indicator** after opening
+- ✅ **NO save dialogs** when closing saved files
+- ✅ **100% transparent** to user
 
 ## Example Transformation
 
 ### Human Format (What you see in editor)
 
 ```
-▼ server
-    host: localhost
-    port: 5432
-    ssl:  ✓
+server
+  #host: localhost
+  #port: 5432
+  #ssl:  true
 
-▼ features (3 items)
-    • authentication
-    • caching
-    • compression
+features
+  >authentication
+  >caching
+  >compression
 
-▼ users (3 columns × 2 rows)
-    ┌──────────┬─────────┬────────┐
-    │ name     │ role    │ active │
-    ├──────────┼─────────┼────────┤
-    │ alice    │ admin   │ ✓      │
-    │ bob      │ user    │ ✗      │
-    └──────────┴─────────┴────────┘
+users @3
+  =name ^ role ^ active
+  >alice | admin | true
+  >bob | user | false
 ```
 
 ### LLM Format (What's stored on disk)
 
 ```
-server#host:localhost#port:5432#ssl:1
-features@3>authentication|caching|compression
-users@2=name^role^active
->alice|admin|1
->bob|user|0
+server#host:localhost#port:5432#ssl:+
+features>authentication|caching|compression
+users@3=name^role^active
+>alice|admin|+
+>bob|user|-
 ```
 
 ### Machine Format (What runs at runtime)
@@ -54,14 +84,37 @@ users@2=name^role^active
 Binary: 47 bytes → 0.70ns field access
 ```
 
+## How It Works
+
+```
+USER CLICKS config/dx
+        │
+        ▼
+  ┌─────────────────────────────────────────────┐
+  │          DX FILESYSTEM PROVIDER              │
+  │                                              │
+  │   readFile():              writeFile():      │
+  │   ─────────────            ──────────────    │
+  │   1. Read dense from disk  1. Receive pretty │
+  │   2. Format to pretty      2. Format to dense│
+  │   3. Return pretty         3. Write to disk  │
+  └─────────────────────────────────────────────┘
+        │                         │
+        ▼                         ▼
+  ┌─────────────┐           ┌─────────────┐
+  │  VS CODE    │           │    DISK     │
+  │  EDITOR     │           │             │
+  │  (Pretty)   │           │  (Dense)    │
+  └─────────────┘           └─────────────┘
+```
+
 ## Features
 
-- **🔮 Holographic Editing**: See human format, save LLM format
-- **📦 Auto Binary Build**: Creates `.dxb` on save via dx-forge daemon
-- **🎨 Beautiful Tables**: Box-drawing characters for tabular data
-- **✓✗ Unicode Symbols**: Booleans as ✓/✗, nulls as —
+- **🔮 Quantum Editing**: See human format, save LLM format
+- **📦 Auto Binary Build**: Creates `.dxs` on save via dx-forge daemon
+- **🎨 Clean Syntax**: Uses # @ > | : ^ operators
 - **🔧 JSON Import**: Convert existing JSON to DX format
-- **⚡ Status Bar**: Shows dx-forge daemon status
+- **⚡ Status Bar**: Shows editing mode and dx-forge status
 
 ## Commands
 

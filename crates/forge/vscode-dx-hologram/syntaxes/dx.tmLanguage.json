@@ -3,98 +3,109 @@
   "name": "DX Config",
   "scopeName": "source.dx",
   "patterns": [
-    { "include": "#comments" },
-    { "include": "#sections" },
-    { "include": "#bullets" },
-    { "include": "#tables" },
-    { "include": "#fields" },
-    { "include": "#values" }
+    { "include": "#comment" },
+    { "include": "#object" },
+    { "include": "#array" },
+    { "include": "#table" },
+    { "include": "#value" }
   ],
   "repository": {
-    "comments": {
+    "comment": {
       "patterns": [
         {
           "name": "comment.line.double-slash.dx",
           "match": "//.*$"
+        },
+        {
+          "name": "comment.block.dx",
+          "begin": "!",
+          "end": "!",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.dx" } },
+          "endCaptures": { "0": { "name": "punctuation.definition.comment.dx" } }
         }
       ]
     },
-    "sections": {
+    "object": {
       "patterns": [
         {
-          "name": "keyword.control.section.dx",
-          "match": "^\\s*[▼▾>]\\s*"
+          "name": "entity.name.tag.dx",
+          "match": "^[a-zA-Z_][a-zA-Z0-9_.]*(?=\\s|#|@|$)"
         },
         {
-          "name": "entity.name.section.dx",
-          "match": "(?<=^\\s*[▼▾>]\\s*)\\w+"
+          "name": "punctuation.separator.dx",
+          "match": "#"
         },
         {
-          "name": "comment.block.metadata.dx",
-          "match": "\\(.*?\\)"
+          "name": "variable.other.property.dx",
+          "match": "(?<=#)[a-zA-Z_][a-zA-Z0-9_]*(?=:)"
+        },
+        {
+          "name": "keyword.operator.inheritance.dx",
+          "match": "\\^"
         }
       ]
     },
-    "bullets": {
+    "array": {
       "patterns": [
         {
-          "name": "punctuation.definition.list.dx",
-          "match": "^\\s*[•·\\-]\\s*"
+          "name": "keyword.operator.array.dx",
+          "match": "@\\d*"
+        },
+        {
+          "name": "punctuation.separator.array.dx",
+          "match": "\\|"
+        },
+        {
+          "name": "punctuation.definition.array.dx",
+          "match": ">"
         }
       ]
     },
-    "tables": {
+    "table": {
       "patterns": [
         {
-          "name": "punctuation.definition.table.dx",
-          "match": "[┌┬┐├┼┤└┴┘│─]+"
+          "name": "punctuation.separator.table.dx",
+          "match": "\\^"
+        },
+        {
+          "name": "keyword.operator.table.dx",
+          "match": "="
         }
       ]
     },
-    "fields": {
+    "value": {
       "patterns": [
-        {
-          "name": "variable.other.field.dx",
-          "match": "^\\s*\\w+(?=:)"
-        },
-        {
-          "name": "punctuation.separator.key-value.dx",
-          "match": ":"
-        }
-      ]
-    },
-    "values": {
-      "patterns": [
-        {
-          "name": "constant.language.boolean.true.dx",
-          "match": "\\b(true|yes|✓)\\b"
-        },
-        {
-          "name": "constant.language.boolean.false.dx",
-          "match": "\\b(false|no|✗)\\b"
-        },
-        {
-          "name": "constant.language.null.dx",
-          "match": "\\b(null|none|—|∅)\\b"
-        },
-        {
-          "name": "constant.numeric.dx",
-          "match": "\\b\\d+(\\.\\d+)?\\b"
-        },
         {
           "name": "string.quoted.double.dx",
           "begin": "\"",
           "end": "\"",
           "patterns": [
-            {
-              "name": "constant.character.escape.dx",
-              "match": "\\\\."
-            }
+            { "name": "constant.character.escape.dx", "match": "\\\\." }
           ]
         },
         {
+          "name": "constant.numeric.dx",
+          "match": "-?\\d+(\\.\\d+)?"
+        },
+        {
+          "name": "constant.language.boolean.true.dx",
+          "match": "\\b(true|yes|\\+)\\b"
+        },
+        {
+          "name": "constant.language.boolean.false.dx",
+          "match": "\\b(false|no|-)\\b"
+        },
+        {
+          "name": "constant.language.null.dx",
+          "match": "(~|\\bnull\\b|\\bnone\\b)"
+        },
+        {
           "name": "variable.other.reference.dx",
-          "match": "→\\w+"
+          "match": "(\\*\\d+|ref\\(\\d+\\))"
+        },
+        {
+          "name": "punctuation.separator.colon.dx",
+          "match": ":"
         }
       ]
     }

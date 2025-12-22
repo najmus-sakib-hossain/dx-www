@@ -4,7 +4,7 @@
   "description": "World-record serialization format: Beautiful for Humans, Token-efficient for LLMs, Blazing binary for Machines.",
   "version": "1.0.0",
   "publisher": "dx-www",
-  "icon": "images/logo.png",
+  "icon": "media/logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/dx-www/dx"
@@ -35,8 +35,8 @@
         "aliases": ["DX Config", "dx"],
         "filenames": ["dx"],
         "icon": {
-          "light": "./images/logo.png",
-          "dark": "./images/logo.png"
+          "light": "./media/file-extension-dark.png",
+          "dark": "./media/file-extension-dark.png"
         },
         "configuration": "./language-configuration.json"
       }
