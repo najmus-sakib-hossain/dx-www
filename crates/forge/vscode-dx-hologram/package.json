@@ -25,7 +25,7 @@
     "binary"
   ],
   "activationEvents": [
-    "onFileSystem:dx-hologram"
+    "onLanguage:dx"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -59,96 +59,104 @@
       "editor.tokenColorCustomizations": {
         "textMateRules": [
           {
+            "scope": "variable.other.readwrite.dx",
+            "settings": { "foreground": "#00FFFF", "fontStyle": "bold" }
+          },
+          {
             "scope": "variable.other.property.dx",
-            "settings": { "foreground": "#7DD3FC", "fontStyle": "" }
+            "settings": { "foreground": "#00E5FF", "fontStyle": "" }
           },
           {
             "scope": "entity.name.namespace.dx",
-            "settings": { "foreground": "#C4B5FD", "fontStyle": "" }
+            "settings": { "foreground": "#FF00FF", "fontStyle": "bold" }
           },
           {
             "scope": "support.type.property-name.dx",
-            "settings": { "foreground": "#93C5FD", "fontStyle": "" }
+            "settings": { "foreground": "#00BFFF", "fontStyle": "" }
           },
           {
             "scope": "entity.name.function.dx",
-            "settings": { "foreground": "#FDE047", "fontStyle": "" }
+            "settings": { "foreground": "#FFFF00", "fontStyle": "bold" }
           },
           {
-            "scope": "entity.name.type.class.dx",
-            "settings": { "foreground": "#A78BFA", "fontStyle": "bold" }
+            "scope": "entity.name.class.dx",
+            "settings": { "foreground": "#DA70D6", "fontStyle": "bold" }
           },
           {
             "scope": "keyword.operator.arrow.dx",
-            "settings": { "foreground": "#FB923C", "fontStyle": "" }
+            "settings": { "foreground": "#FF6B00", "fontStyle": "bold" }
           },
           {
-            "scope": "keyword.operator.separator.dx",
-            "settings": { "foreground": "#F472B6", "fontStyle": "" }
+            "scope": "keyword.operator.pipe.dx",
+            "settings": { "foreground": "#FF1493", "fontStyle": "bold" }
           },
           {
-            "scope": "keyword.control.dx",
-            "settings": { "foreground": "#F472B6", "fontStyle": "" }
+            "scope": "keyword.control.caret.dx",
+            "settings": { "foreground": "#FF69B4", "fontStyle": "" }
           },
           {
-            "scope": "punctuation.separator.colon.dx",
-            "settings": { "foreground": "#6EE7B7", "fontStyle": "" }
+            "scope": "punctuation.separator.key-value.dx",
+            "settings": { "foreground": "#00FF7F", "fontStyle": "bold" }
           },
           {
             "scope": "punctuation.accessor.dx",
-            "settings": { "foreground": "#9CA3AF", "fontStyle": "" }
+            "settings": { "foreground": "#FFD700", "fontStyle": "" }
           },
           {
-            "scope": "string.other.link.dx",
-            "settings": { "foreground": "#38BDF8", "fontStyle": "underline" }
+            "scope": "markup.underline.link.dx",
+            "settings": { "foreground": "#00BFFF", "fontStyle": "underline" }
           },
           {
             "scope": "string.interpolated.dx",
-            "settings": { "foreground": "#34D399", "fontStyle": "" }
+            "settings": { "foreground": "#00FF9F", "fontStyle": "" }
           },
           {
             "scope": "string.unquoted.dx",
-            "settings": { "foreground": "#FCD34D", "fontStyle": "" }
+            "settings": { "foreground": "#FFD700", "fontStyle": "" }
+          },
+          {
+            "scope": "string.unquoted.array-item.dx",
+            "settings": { "foreground": "#FFA500", "fontStyle": "" }
           },
           {
             "scope": "string.quoted.double.dx",
-            "settings": { "foreground": "#A3E635", "fontStyle": "" }
+            "settings": { "foreground": "#ADFF2F", "fontStyle": "" }
           },
           {
             "scope": "constant.numeric.dx",
-            "settings": { "foreground": "#F9A8D4", "fontStyle": "" }
+            "settings": { "foreground": "#FF69B4", "fontStyle": "" }
+          },
+          {
+            "scope": "constant.numeric.version.dx",
+            "settings": { "foreground": "#FF6EC7", "fontStyle": "" }
           },
           {
             "scope": "constant.language.boolean.true.dx",
-            "settings": { "foreground": "#4ADE80", "fontStyle": "" }
+            "settings": { "foreground": "#00FF00", "fontStyle": "bold" }
           },
           {
             "scope": "constant.language.boolean.false.dx",
-            "settings": { "foreground": "#FB7185", "fontStyle": "" }
+            "settings": { "foreground": "#FF4444", "fontStyle": "bold" }
           },
           {
             "scope": "constant.language.null.dx",
-            "settings": { "foreground": "#94A3B8", "fontStyle": "italic" }
+            "settings": { "foreground": "#888888", "fontStyle": "italic" }
           },
           {
-            "scope": "keyword.other.special.dx",
-            "settings": { "foreground": "#E879F9", "fontStyle": "bold" }
+            "scope": "keyword.other.all.dx",
+            "settings": { "foreground": "#FF00FF", "fontStyle": "bold" }
           },
           {
             "scope": "entity.name.tag.dx",
-            "settings": { "foreground": "#F472B6", "fontStyle": "" }
-          },
-          {
-            "scope": "variable.other.constant.dx",
-            "settings": { "foreground": "#FCD34D", "fontStyle": "" }
+            "settings": { "foreground": "#FF1493", "fontStyle": "" }
           },
           {
             "scope": "comment.line.number-sign.dx",
-            "settings": { "foreground": "#64748B", "fontStyle": "italic" }
+            "settings": { "foreground": "#6A9955", "fontStyle": "italic" }
           },
           {
             "scope": "comment.line.double-slash.dx",
-            "settings": { "foreground": "#64748B", "fontStyle": "italic" }
+            "settings": { "foreground": "#6A9955", "fontStyle": "italic" }
           }
         ]
       }
@@ -189,6 +197,16 @@
       }
     },
     "commands": [
+      {
+        "command": "dx.formatPretty",
+        "title": "DX: Format as Human-Readable (Pretty)",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "dx.formatDense",
+        "title": "DX: Format as LLM-Optimized (Dense)",
+        "icon": "$(file-code)"
+      },
       {
         "command": "dx.openHologram",
         "title": "DX: Open as Human-Readable View",
