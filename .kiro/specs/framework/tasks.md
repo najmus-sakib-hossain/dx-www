@@ -367,22 +367,22 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
     - Document derive macro usage
     - _Requirements: 21.1, 21.2, 21.3, 21.4_
 
-- [ ] 25. Final checkpoint - Full integration test
+- [x] 25. Final checkpoint - Full integration test
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 26. Integration and wiring
-  - [ ] 26.1 Wire all modules into dx-www lib.rs
+- [x] 26. Integration and wiring
+  - [x] 26.1 Wire all modules into dx-www lib.rs
     - Add all new modules to lib.rs exports
     - Update Cargo.toml with any new dependencies
     - _Requirements: All_
 
-  - [ ] 26.2 Create integration examples
+  - [x] 26.2 Create integration examples
     - Create example showing reactive updates
     - Create example showing streaming SSR
     - Create example showing optimistic UI
     - _Requirements: All_
 
-  - [ ] 26.3 Write integration tests
+  - [x] 26.3 Write integration tests
     - Test full reactive update cycle
     - Test streaming SSR flow
     - Test form submission flow

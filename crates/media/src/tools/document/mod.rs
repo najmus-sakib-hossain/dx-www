@@ -11,10 +11,16 @@
 //! 8. Text Extractor - Extract text from documents
 //! 9. PDF Watermark - Add watermarks to PDFs
 //! 10. PDF Encryption - Password protect PDFs
+//!
+//! ## Native Processing
+//!
+//! Enable the `document-core` feature for native Rust document processing
+//! using `lopdf` for PDFs and `pulldown-cmark` for Markdown.
 
 pub mod doc_convert;
 pub mod html_to_pdf;
 pub mod markdown;
+pub mod native;
 pub mod pdf_compress;
 pub mod pdf_encrypt;
 pub mod pdf_merge;
@@ -26,6 +32,7 @@ pub mod text_extract;
 pub use doc_convert::*;
 pub use html_to_pdf::*;
 pub use markdown::*;
+pub use native::*;
 pub use pdf_compress::*;
 pub use pdf_encrypt::*;
 pub use pdf_merge::*;
