@@ -22,3 +22,10 @@ Here is more about toon:
 ```
 
 I already acheived that but now I want to add it like a way where in code editor like vscode it will show the serializer for human but in actual file it will be llm version. I already tried to create a vscode extension where whenever it sees a .dx or just "dx" file it will show human readable version but when saved it will convert to llm version. But I am stuck on how to achieve this. As its showing save problems in code editor
+
+
+Please study the dx-serializer at "crates/serializer". At dx serializer we have 3 version of seralization
+1. Human Readable Version - This version is meant for humans to read and understand the structure
+2. LLM Version - This version is meant for llms to read and it is highly token efficient
+3. Machine Version - This version is meant for machines to read and it is highly optimized for speed
+But the llm version to human readable version conversion is not working properly in vscode extension. So, please fix all conversion about llms to machine and human, human to llm and machine works properly and also test the performace claim of dx-serializer against toon serializer at playground folder correclty!!!
