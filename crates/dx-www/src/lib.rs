@@ -33,6 +33,8 @@ pub mod streaming;
 pub mod islands;
 pub mod control;
 pub mod suspense;
+pub mod teleport;
+pub mod keepalive;
 
 // OXC-based parser (optional - requires oxc feature)
 #[cfg(feature = "oxc")]

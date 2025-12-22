@@ -304,7 +304,7 @@ impl KeyedList {
         let old_keys = &self.keys;
 
         // Build a map of old key positions
-        let mut old_positions: std::collections::HashMap<u32, usize> = 
+        let old_positions: std::collections::HashMap<u32, usize> = 
             old_keys.iter().enumerate().map(|(i, &k)| (k, i)).collect();
 
         // Track which old items are used
@@ -595,7 +595,9 @@ mod property_tests {
             prop_assert_eq!(op.opcode, restored.opcode);
             prop_assert_eq!(op.value_ptr, restored.value_ptr);
             prop_assert_eq!(op.case_count, restored.case_count);
-            prop_assert_eq!(op.cases[..case_count as usize], restored.cases[..case_count as usize]);
+            for i in 0..case_count {
+                prop_assert_eq!(op.cases[i], restored.cases[i]);
+            }
         }
     }
 

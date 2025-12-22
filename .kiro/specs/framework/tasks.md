@@ -144,58 +144,58 @@ This implementation plan breaks down the 25 Binary Dawn features into discrete c
     - **Property 20: Suspense Bitfield Operations**
     - **Validates: Requirements 11.1, 11.2, 11.3, 11.5**
 
-- [-] 9. Checkpoint - Verify control flow and suspense
+- [x] 9. Checkpoint - Verify control flow and suspense
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. DOM Operations
-  - [ ] 10.1 Implement teleport system
+- [x] 10. DOM Operations
+  - [x] 10.1 Implement teleport system
     - Create `src/teleport.rs` with teleport target constants
     - Implement TeleportOp struct (4 bytes)
     - Implement `execute()` for O(1) appendChild
     - _Requirements: 9.1, 9.2, 9.3_
 
-  - [ ] 10.2 Write property test for TeleportOp size invariant
+  - [x] 10.2 Write property test for TeleportOp size invariant
     - **Property 16: TeleportOp Size Invariant**
     - **Validates: Requirements 9.2**
 
-  - [ ] 10.3 Write property test for teleport correctness
+  - [x] 10.3 Write property test for teleport correctness
     - **Property 17: Teleport Correctness**
     - **Validates: Requirements 9.3**
 
-  - [ ] 10.4 Implement keep-alive system
+  - [x] 10.4 Implement keep-alive system
     - Create `src/keepalive.rs` with ComponentState struct
     - Implement ScrollState with AtomicU32 values
     - Implement `deactivate()` and `reactivate()` methods
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-  - [ ] 10.5 Write property test for state preservation round-trip
+  - [x] 10.5 Write property test for state preservation round-trip
     - **Property 14: State Preservation Round-Trip**
     - **Validates: Requirements 8.2, 8.3**
 
-  - [ ] 10.6 Write property test for scroll state persistence
+  - [x] 10.6 Write property test for scroll state persistence
     - **Property 15: Scroll State Persistence**
     - **Validates: Requirements 8.4**
 
-- [ ] 11. Checkpoint - Verify DOM operations
+- [x] 11. Checkpoint - Verify DOM operations
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Routing and Navigation
-  - [ ] 12.1 Implement binary trie router
+- [-] 12. Routing and Navigation
+  - [x] 12.1 Implement binary trie router
     - Create `src/router.rs` with RouteHandler struct
     - Implement TrieNode and BinaryRouter
     - Implement O(path_length) `lookup()` method
     - Support dynamic segments with parameter extraction
     - _Requirements: 15.1, 15.2, 15.4, 15.5_
 
-  - [ ] 12.2 Write property test for router lookup correctness
+  - [x] 12.2 Write property test for router lookup correctness
     - **Property 25: Router Lookup Correctness**
     - **Validates: Requirements 15.1**
 
-  - [ ] 12.3 Write property test for dynamic route parameter extraction
+  - [x] 12.3 Write property test for dynamic route parameter extraction
     - **Property 26: Dynamic Route Parameter Extraction**
     - **Validates: Requirements 15.4**
 
-  - [ ] 12.4 Implement view transitions
+  - [-] 12.4 Implement view transitions
     - Create `src/transitions.rs` with TransitionConfig struct
     - Implement TransitionType enum
     - Implement `navigate_with_transition()` with FLIP

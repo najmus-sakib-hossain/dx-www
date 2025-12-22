@@ -2520,3 +2520,417 @@ lopdf = { version = "0.26", optional = true }
 And here is the left!!!
 
 
+This is the complete, professional implementation plan for the **Dx Media Engine**. It is structured as a standalone architectural document ready to be dropped into your `docs/` folder or used as the roadmap for `crates/dx-media`.
+
+It strictly adheres to the **Binary Dawn** philosophy: *Zero-Copy where possible, Feature-Gated for size, and High Performance.*
+
+```markdown
+# Dx Media Conversion Engine: Implementation Plan
+
+> **Status:** Architecture Phase  
+> **Target:** High-Performance Media Pipeline  
+> **Philosophy:** Binary First, Zero Parse, Minimal Dependencies
+
+## 📋 Executive Summary
+
+The **Dx Media Engine** (`dx-media`) is a high-performance, modular crate designed to handle 60+ media manipulation tasks across images, video, audio, documents, and archives. 
+
+Unlike traditional media tools that spawn heavy external processes for every task, `dx-media` integrates natively into the Rust runtime, leveraging **SIMD optimizations**, **memory mapping (`mmap`)**, and **parallel processing (`rayon`)** to achieve throughputs significantly higher than Node.js or Python equivalents.
+
+---
+
+## 🏗️ Architecture & Project Structure
+
+The crate is organized to allow "pay-for-what-you-use" via Cargo features. A user needing only image resizing will not pay the binary size cost of FFmpeg bindings.
+
+```text
+dx/
+├── crates/
+│   └── dx-media/
+│       ├── Cargo.toml                 # Feature-gated dependency matrix
+│       ├── src/
+│       │   ├── lib.rs                 # Public API
+│       │   │
+│       │   ├── core/                  # Shared Infrastructure
+│       │   │   ├── pipeline.rs        # Zero-copy Mmap logic
+│       │   │   ├── cache.rs           # Blake3-based artifact caching
+│       │   │   └── error.rs           # Unified error handling
+│       │   │
+│       │   ├── image/                 # Image Engine
+│       │   │   ├── convert.rs         # Format transcoding
+│       │   │   ├── ops.rs             # Resize, Crop, Filter
+│       │   │   ├── meta.rs            # EXIF/Metadata stripping
+│       │   │   ├── qr.rs              # QR Code Gen/Read
+│       │   │   └── analysis.rs        # Palette extraction, OCR
+│       │   │
+│       │   ├── video/                 # Video Engine (FFmpeg)
+│       │   │   ├── transcode.rs       # Format conversion
+│       │   │   ├── process.rs         # Trim, Concat, Mute
+│       │   │   └── frames.rs          # Thumbnail, GIF extraction
+│       │   │
+│       │   ├── audio/                 # Audio Engine
+│       │   │   ├── codec.rs           # Decode/Encode pipeline
+│       │   │   ├── tags.rs            # ID3/Metadata manipulation
+│       │   │   └── dsp.rs             # Waveforms, Normalization, Silence
+│       │   │
+│       │   ├── document/              # Document Engine
+│       │   │   ├── pdf.rs             # Merge, Split, Extract
+│       │   │   ├── text.rs            # MD->HTML, Syntax Highlight
+│       │   │   └── data.rs            # CSV<->JSON, Minification
+│       │   │
+│       │   ├── archive/               # Archive Engine
+│       │   │   ├── manager.rs         # Zip/Tar abstraction
+│       │   │   └── stream.rs          # Streaming extraction
+│       │   │
+│       │   ├── utility/               # System Utilities
+│       │   │   ├── fs.rs              # Rename, Dedupe, Watch
+│       │   │   └── crypto.rs          # Checksums, Base64
+│       │   │
+│       │   └── cli/                   # CLI Command Definitions
+│       │       └── mod.rs             # Clap subcommands
+│       │
+│       └── tests/                     # Integration Tests
+```
+
+---
+
+## 🛠️ Feature Matrix (The 60 Tools)
+
+We map the requested features to specific, high-performance Rust crates.
+
+### 1. Image Tools (Feature: `image-processing`)
+| # | Feature | Crate / Strategy | Performance Note |
+|---|---------|------------------|------------------|
+| 1 | Format Converter | `image` | Native Rust decoders |
+| 2 | Smart Resizer | `image` (Lanczos3) | Parallelized |
+| 3 | Compressor | `oxipng`, `image` | Optimized DEFLATE |
+| 4 | Watermarker | `imageproc` | Layer composition |
+| 5 | Metadata Wiper | `img-parts` | **Zero-copy** header rewrite |
+| 6 | QR Generator | `qrcode` | Pure Rust |
+| 7 | Palette Extractor | Custom K-Means | Pixel sampling |
+| 8 | Filters | `imageproc` | Gauss, Sharpen, Grayscale |
+| 9 | Text (OCR) | `ocrs` | Experimental pure Rust |
+| 10 | Icon Generator | `image`, `ico` | Multi-size generation |
+
+### 2. Video Tools (Feature: `video-processing`)
+| # | Feature | Crate / Strategy | Performance Note |
+|---|---------|------------------|------------------|
+| 11 | Transcoder | `ffmpeg-next` | Hardware Accel bindings |
+| 12 | Audio Extractor | `ffmpeg-next` | Stream copy (no re-encode) |
+| 13 | Trimmer | `ffmpeg-next` | Keyframe seeking |
+| 14 | GIF Maker | `image`, `gif` | Palette quantization |
+| 15 | Thumbnailer | `ffmpeg-next` | I-Frame extraction |
+| 16 | Scaler | `ffmpeg-next` | Filter graph |
+| 17 | Concatenator | `ffmpeg-next` | Demuxer chaining |
+| 18 | Mute | `ffmpeg-next` | Drop audio stream |
+| 19 | Inspector | `ffmpeg-next` | Probe API |
+| 20 | Subtitle Burner | `ffmpeg-next` | Filter graph overlay |
+
+### 3. Audio Tools (Feature: `audio-processing`)
+| # | Feature | Crate / Strategy | Performance Note |
+|---|---------|------------------|------------------|
+| 21 | Converter | `symphonia`, `hound` | SIMD Decoding |
+| 22 | Tag Editor | `lofty` | Zero-copy tag writing |
+| 23 | Normalizer | `dasp` | Single-pass RMS |
+| 24 | Silence Remover | `symphonia` | Amplitude thresholding |
+| 25 | Waveform Gen | `symphonia` + `image` | Downsampling visualization |
+| 26 | Merger | `dasp` | Sample interleaving |
+| 27 | Speed/Pitch | `rubato` | Async resampling |
+| 28 | Mono/Stereo | `dasp` | Channel mixing |
+| 29 | Duration Calc | `lofty` | Header parsing only |
+| 30 | Analyzer | `spectrum-analyzer` | FFT processing |
+
+### 4. Document Tools (Feature: `doc-processing`)
+| # | Feature | Crate / Strategy | Performance Note |
+|---|---------|------------------|------------------|
+| 31 | PDF Merger | `lopdf` | Object ID remapping |
+| 32 | PDF Splitter | `lopdf` | Page tree pruning |
+| 33 | MD -> HTML | `pulldown-cmark` | Event-based parser |
+| 34 | CSV <-> JSON | `csv`, `serde` | Zero-copy deserialization |
+| 35 | PDF Text | `pdf-extract` | Content stream parsing |
+| 36 | Img -> PDF | `printpdf` | Image embedding |
+| 37 | Word Count | `unicode-segmentation`| Grapheme cluster count |
+| 38 | Minifier | `minify-html` | Fast C-bindings |
+| 39 | Syntax Highlight| `syntect` | Sublime Text format |
+| 40 | Diff Viewer | `similar` | Myers algorithm |
+
+### 5. Archive Tools (Feature: `archive-processing`)
+| # | Feature | Crate / Strategy | Performance Note |
+|---|---------|------------------|------------------|
+| 41 | Extractor | `zip`, `tar`, `flate2`| Streamed extraction |
+| 42 | Compressor | `zip`, `walkdir` | Parallel file reading |
+| 43 | Encryption | `zip` (AES) | AES-256 support |
+| 44 | Tarball | `tar` | POSIX standard |
+| 45 | Lister | `zip` | Central Directory read only |
+| 46 | Integrity | `crc32fast` | Hardware CRC instructions |
+| 47 | Partial Extract | `zip` | Seek and stream |
+| 48 | Converter | Pipe logic | Decompress -> Compress pipe |
+| 49 | Deduplicator | `sha2` | Content hashing inside archive|
+| 50 | Flattener | Path logic | Path rewriting |
+
+### 6. Utility Tools (Feature: `utility-processing`)
+| # | Feature | Crate / Strategy | Performance Note |
+|---|---------|------------------|------------------|
+| 51 | Batch Renamer | `regex` | Compiled regex engine |
+| 52 | Duplicate Finder| `sha2`, `walkdir` | **Rayon** parallel hashing |
+| 53 | Base64 | `base64` | SIMD encoding |
+| 54 | File Watcher | `notify` | OS native events |
+| 55 | Checksum | `blake3` | Fastest cryptographic hash |
+| 56 | Large File | `walkdir` | Metadata scanning only |
+| 57 | Clipboard | `arboard` | Cross-platform |
+| 58 | Hex Viewer | `pretty-hex` | Binary view |
+| 59 | Shredder | `std::fs` | Multi-pass overwrite |
+| 60 | MIME Detect | `infer` | Magic byte checking |
+
+---
+
+## 💻 Implementation Details (Code Plan)
+
+### Phase 1: Dependency Configuration (`Cargo.toml`)
+
+We use a highly granular feature setup to keep build times fast and binary sizes small.
+
+```toml
+[package]
+name = "dx-media"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["cli", "image-core", "archive-core", "utility-core"]
+
+# --- Feature Groups ---
+cli = ["dep:clap"]
+image-core = ["dep:image", "dep:imageproc", "dep:img-parts"]
+image-extra = ["image-core", "dep:qrcode", "dep:ocrs", "dep:oxipng"]
+video-core = ["dep:ffmpeg-next"]
+audio-core = ["dep:symphonia", "dep:hound", "dep:lofty"]
+doc-core = ["dep:lopdf", "dep:pulldown-cmark", "dep:csv", "dep:serde", "dep:serde_json"]
+archive-core = ["dep:zip", "dep:tar", "dep:flate2"]
+utility-core = ["dep:regex", "dep:sha2", "dep:walkdir", "dep:memmap2", "dep:blake3"]
+
+[dependencies]
+# Core
+anyhow = "1.0"
+rayon = "1.8"       # Parallel processing
+tracing = "0.1"
+memmap2 = { version = "0.9", optional = true }
+blake3 = { version = "1.5", optional = true }
+
+# CLI
+clap = { version = "4.5", features = ["derive"], optional = true }
+
+# Image
+image = { version = "0.24", default-features = false, features = ["png", "jpeg", "webp"], optional = true }
+imageproc = { version = "0.23", optional = true }
+img-parts = { version = "0.3", optional = true }
+qrcode = { version = "0.12", optional = true }
+ocrs = { version = "0.1", optional = true } # Experimental
+oxipng = { version = "9.0", optional = true }
+
+# Video
+ffmpeg-next = { version = "6.1", optional = true }
+
+# Audio
+symphonia = { version = "0.5", features = ["mp3", "pcm", "wav"], optional = true }
+hound = { version = "3.5", optional = true }
+lofty = { version = "0.17", optional = true }
+
+# Document
+lopdf = { version = "0.31", optional = true }
+pulldown-cmark = { version = "0.9", optional = true }
+csv = { version = "1.3", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_json = { version = "1.0", optional = true }
+
+# Archive
+zip = { version = "0.6", default-features = false, features = ["deflate", "aes-crypto"], optional = true }
+tar = { version = "0.4", optional = true }
+flate2 = { version = "1.0", optional = true }
+
+# Utility
+regex = { version = "1.10", optional = true }
+sha2 = { version = "0.10", optional = true }
+walkdir = { version = "2.4", optional = true }
+infer = "0.15"
+```
+
+### Phase 2: Core Infrastructure
+
+**`src/core/pipeline.rs`**: Establish the zero-copy standard.
+
+```rust
+use std::path::Path;
+use memmap2::Mmap;
+use anyhow::Result;
+
+pub struct MediaContext {
+    pub input_path: std::path::PathBuf,
+    // Memory mapped file for zero-copy reading
+    pub source: Option<Mmap>,
+}
+
+impl MediaContext {
+    pub fn new(path: &Path) -> Result<Self> {
+        let file = std::fs::File::open(path)?;
+        // Unsafe: We guarantee file isn't modified externally during short process time
+        let mmap = unsafe { Mmap::map(&file)? };
+        Ok(Self {
+            input_path: path.to_path_buf(),
+            source: Some(mmap),
+        })
+    }
+}
+```
+
+### Phase 3: Image Module Implementation
+
+**`src/image/ops.rs`**: High-performance resizing.
+
+```rust
+use image::{DynamicImage, imageops::FilterType};
+use anyhow::Result;
+
+pub fn smart_resize(img: &DynamicImage, width: u32, height: u32) -> DynamicImage {
+    // Lanczos3 provides best quality/performance ratio for downscaling
+    img.resize(width, height, FilterType::Lanczos3)
+}
+
+pub fn strip_metadata(data: &[u8]) -> Result<Vec<u8>> {
+    use img_parts::jpeg::Jpeg;
+    use img_parts::ImageEXIF;
+
+    // Zero-copy parsing of segments
+    if let Ok(mut jpeg) = Jpeg::from_bytes(data.into()) {
+        jpeg.set_exif(None);
+        // Returns the reconstructed bytes without re-encoding the image data
+        return Ok(jpeg.encoder().bytes().to_vec());
+    }
+    // Fallback or other formats...
+    Ok(data.to_vec())
+}
+```
+
+### Phase 4: Audio Module Implementation
+
+**`src/audio/codec.rs`**: Leveraging Symphonia for pure Rust decoding.
+
+```rust
+use symphonia::core::io::MediaSourceStream;
+use symphonia::core::probe::Hint;
+use std::fs::File;
+
+pub fn inspect_audio(path: &std::path::Path) -> anyhow::Result<()> {
+    let src = File::open(path)?;
+    let mss = MediaSourceStream::new(Box::new(src), Default::default());
+
+    let mut hint = Hint::new();
+    if let Some(ext) = path.extension() {
+        hint.with_extension(ext.to_str().unwrap());
+    }
+
+    // Probe without decoding the whole file
+    let probed = symphonia::default::get_probe().format(
+        &hint,
+        mss,
+        &Default::default(),
+        &Default::default()
+    )?;
+
+    println!("Format: {:?}", probed.format.next_packet()?.track_id());
+    Ok(())
+}
+```
+
+### Phase 5: Utility Module Implementation
+
+**`src/utility/fs.rs`**: Parallel duplicate finder.
+
+```rust
+use rayon::prelude::*;
+use walkdir::WalkDir;
+use sha2::{Sha256, Digest};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
+pub fn find_duplicates(dir: &str) -> Vec<Vec<String>> {
+    let files: Vec<_> = WalkDir::new(dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_file())
+        .collect();
+
+    let hashes = Arc::new(Mutex::new(HashMap::new()));
+
+    // Parallel processing of file hashing
+    files.par_iter().for_each(|entry| {
+        let mut file = std::fs::File::open(entry.path()).unwrap();
+        let mut hasher = Sha256::new();
+        std::io::copy(&mut file, &mut hasher).unwrap();
+        let hash = format!("{:x}", hasher.finalize());
+
+        let mut map = hashes.lock().unwrap();
+        map.entry(hash).or_insert_with(Vec::new).push(entry.path().to_string_lossy().into_owned());
+    });
+
+    let map = Arc::try_unwrap(hashes).unwrap().into_inner().unwrap();
+    map.into_values().filter(|v| v.len() > 1).collect()
+}
+```
+
+---
+
+## 🚀 CLI Integration Plan
+
+The `dx` binary will expose these features via the `dx media` subcommand.
+
+```rust
+// crates/dx-media/src/cli/mod.rs
+
+use clap::{Subcommand, Parser};
+
+#[derive(Parser)]
+pub struct MediaCli {
+    #[command(subcommand)]
+    pub command: MediaCommand,
+}
+
+#[derive(Subcommand)]
+pub enum MediaCommand {
+    /// Image operations (Resize, Convert, Optimize)
+    Image {
+        #[arg(short, long)]
+        input: String,
+        #[arg(long)]
+        resize: Option<String>, // "1920x1080"
+        #[arg(long)]
+        format: Option<String>, // "webp"
+        #[arg(long)]
+        strip_meta: bool,
+    },
+    /// Recursive duplicate finder
+    Dedup {
+        target_dir: String,
+    },
+    /// PDF Operations
+    Pdf {
+        #[arg(short, long)]
+        merge: Vec<String>,
+        #[arg(short, long)]
+        output: String,
+    }
+}
+```
+
+## 📅 Roadmap to Completion
+
+1.  **Day 1: Foundation.** Set up `Cargo.toml`, feature flags, and the `core` module (Mmap pipeline).
+2.  **Day 2: Image Engine.** Implement the `image` wrapper, `imageproc` filters, and `img-parts` stripper.
+3.  **Day 3: Archive & Utils.** Implement Zip/Tar logic and the parallel Deduplicator (easy wins, high value).
+4.  **Day 4: Audio.** Integrate `symphonia` for reading and `hound` for writing WAVs.
+5.  **Day 5: Documents.** Integrate `lopdf` and Markdown parsers.
+6.  **Day 6: Video.** Set up the optional `ffmpeg-next` bindings. *Note: Ensure graceful fallback if FFmpeg is missing.*
+7.  **Day 7: CLI Polish.** Wire everything into `dx-cli` with nice progress bars (`indicatif`).
+
+This plan provides a professional, scalable, and highly performant media architecture compatible with the **Dx Binary Dawn** ecosystem.
+```

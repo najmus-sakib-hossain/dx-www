@@ -277,7 +277,7 @@ fn run_rule_command(command: &RuleCommands) -> Result<bool, Box<dyn std::error::
                     let meta = rule.meta();
                     let category_str = meta.category.as_str();
                     
-                    if let Some(ref filter) = category {
+                    if let Some(filter) = category {
                         if category_str != filter {
                             continue;
                         }
