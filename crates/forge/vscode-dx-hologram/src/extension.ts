@@ -1,13 +1,14 @@
 /**
- * DX Extension - True Hologram View
+ * DX Extension - Hologram View (Simple & Reliable)
  * 
- * File on disk: ALWAYS LLM dense format
- * Editor display: Human pretty format (virtual overlay)
- * User edits in pretty format, saved as dense format
+ * File on disk: LLM dense format
+ * Editor display: Click status bar to toggle Human/LLM view
+ * Editing: Done in Human format, manually convert to LLM when ready to save
  */
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import { DxFormatter } from './formatter';
 
 let formatter: DxFormatter;
@@ -20,14 +21,21 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Status bar
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.text = '$(mirror) LLM→Human';
-    statusBarItem.tooltip = 'Hologram View: File stored as LLM, displayed as Human';
     context.subscriptions.push(statusBarItem);
 
     // Update status bar
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(updateStatusBar)
     );
+    
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeTextDocument((e) => {
+            if (isDxFile(e.document.uri)) {
+                updateStatusBar(vscode.window.activeTextEditor);
+            }
+        })
+    );
+    
     updateStatusBar(vscode.window.activeTextEditor);
 
     // Commands - Manual conversion only
@@ -84,18 +92,24 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('dx.convertCurrentFile', () => vscode.commands.executeCommand('dx.formatDense'))
     );
 
-    console.log('[DX] Extension activated - Use Ctrl+Shift+P → "DX: Format as Human-Readable" to view');
+    console.log('[DX] Hologram Extension activated');
 }
 
 function updateStatusBar(editor: vscode.TextEditor | undefined) {
     if (editor && isDxFile(editor.document.uri)) {
         const text = editor.document.getText();
-        const isLLM = !text.includes(' : ') && !text.includes(' > ');
-        statusBarItem.text = isLLM ? '$(file-code) LLM Format' : '$(eye) Human Format';
-        statusBarItem.tooltip = isLLM 
-            ? 'Click to view as Human-Readable' 
-            : 'Viewing Human Format (file saved as LLM)';
-        statusBarItem.command = isLLM ? 'dx.formatPretty' : 'dx.formatDense';
+        const isHuman = text.includes(' : ') || text.includes(' > ');
+        
+        if (isHuman) {
+            statusBarItem.text = '$(eye) Human';
+            statusBarItem.tooltip = 'Viewing Human format - Click to convert to LLM (and save)';
+            statusBarItem.command = 'dx.formatDense';
+        } else {
+            statusBarItem.text = '$(file-code) LLM';
+            statusBarItem.tooltip = 'Viewing LLM format - Click to convert to Human';
+            statusBarItem.command = 'dx.formatPretty';
+        }
+        
         statusBarItem.show();
     } else {
         statusBarItem.hide();
