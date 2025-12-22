@@ -3,10 +3,17 @@
 //! Transforms token-efficient LLM format into beautiful, readable format.
 //!
 //! ## LLM-Dense Format Examples:
+//!
+//! ### Hologram Format (inline objects):
 //! - Object: `server#host:localhost#port:5432`
 //! - Array: `items@3>apple|banana|cherry`
 //! - Table: `data@2=id^name^active` + `>1|Alice|1` + `>2|Bob|0`
 //! - Comment: `!Database config!db#host:localhost`
+//!
+//! ### DX Format (one key:value per line with abbreviated keys):
+//! - Key:Value: `c.n:dx` → `context.name: dx`
+//! - Prefix: `^v:0.0.1` → `^version: 0.0.1`
+//! - Array: `tags>rust|wasm|performance` → `tags > rust | wasm | performance`
 //!
 //! ## Human-Pretty Output:
 //! ```text
@@ -30,6 +37,7 @@
 //! ```
 
 use super::types::{CommentAnchor, DenseElement, HologramConfig};
+use crate::mappings::Mappings;
 use std::fmt::Write;
 
 /// Inflater: Transforms LLM-dense format to human-pretty format
@@ -188,23 +196,39 @@ impl Inflater {
             }
         }
 
-        // Array: key@N>item|item|item
-        if let Some(at_idx) = trimmed.find('@') {
-            if let Some(arrow_idx) = trimmed.find('>') {
-                if arrow_idx > at_idx {
-                    let key = trimmed[..at_idx].to_string();
-                    let items = trimmed[arrow_idx + 1..]
-                        .split('|')
-                        .map(|s| s.trim().to_string())
-                        .collect();
-
-                    return DenseElement::Array {
-                        key,
-                        items,
-                        comment,
-                    };
-                }
+        // Array: key@N>item|item|item or key>item|item|item (DX format)
+        // Note: Table rows starting with '>' are already handled above
+        if let Some(arrow_idx) = trimmed.find('>') {
+            // Skip if it's a table row (handled earlier)
+            if arrow_idx == 0 {
+                // Already handled above, but just in case
+                let values = trimmed[1..]
+                    .split('|')
+                    .map(|s| s.trim().to_string())
+                    .collect();
+                return DenseElement::TableRow { values };
             }
+            
+            let key_part = &trimmed[..arrow_idx];
+            let items_part = &trimmed[arrow_idx + 1..];
+            
+            // Check if there's a count: key@N>
+            let key = if let Some(at_idx) = key_part.find('@') {
+                key_part[..at_idx].to_string()
+            } else {
+                key_part.to_string()
+            };
+            
+            let items = items_part
+                .split('|')
+                .map(|s| s.trim().to_string())
+                .collect();
+
+            return DenseElement::Array {
+                key,
+                items,
+                comment,
+            };
         }
 
         // Object: key#field:val#field:val
@@ -258,19 +282,47 @@ impl Inflater {
             writeln!(output, "{}", anchor.to_human()).unwrap();
         }
 
-        // Section header
-        writeln!(output, "{} {}", self.config.section_marker, key).unwrap();
+        // Expand abbreviated key
+        let expanded_key = self.expand_full_key(key);
 
-        // Calculate max field name length for alignment
+        // Expand field names
+        let expanded_fields: Vec<(String, String)> = fields
+            .iter()
+            .map(|(k, v)| (self.expand_full_key(k), v.clone()))
+            .collect();
+
+        // DX format: output each field as key.field : value
+        if self.config.use_dx_format {
+            let max_len = 20usize;
+            let mut is_first = true;
+            
+            for (name, value) in &expanded_fields {
+                let full_key = if is_first {
+                    format!("{}.{}", expanded_key, name)
+                } else {
+                    format!("^{}", name)
+                };
+                is_first = false;
+                
+                let padding = max_len.saturating_sub(full_key.len());
+                let pretty_value = self.inflate_value(value);
+                writeln!(output, "{}{} : {}", full_key, " ".repeat(padding), pretty_value).unwrap();
+            }
+            return;
+        }
+
+        // Hologram format: collapsible section
+        writeln!(output, "{} {}", self.config.section_marker, expanded_key).unwrap();
+
         let max_len = if self.config.align_values {
-            fields.iter().map(|(k, _)| k.len()).max().unwrap_or(0)
+            expanded_fields.iter().map(|(k, _)| k.len()).max().unwrap_or(0)
         } else {
             0
         };
 
         // Write fields
         let indent = " ".repeat(self.config.indent_size);
-        for (name, value) in fields {
+        for (name, value) in &expanded_fields {
             let padding = if self.config.align_values {
                 " ".repeat(max_len - name.len())
             } else {
@@ -294,12 +346,28 @@ impl Inflater {
             writeln!(output, "{}", anchor.to_human()).unwrap();
         }
 
-        // Section header with count
+        // Expand abbreviated key
+        let expanded_key = self.expand_full_key(key);
+
+        // DX format: key > item | item | item (flat, single line)
+        if self.config.use_dx_format {
+            let items_str: Vec<String> = items
+                .iter()
+                .map(|item| self.inflate_value(item))
+                .collect();
+            
+            // Calculate padding for alignment (20 chars for key)
+            let padding = 20usize.saturating_sub(expanded_key.len());
+            writeln!(output, "{}{} > {}", expanded_key, " ".repeat(padding), items_str.join(" | ")).unwrap();
+            return;
+        }
+
+        // Hologram format: collapsible section with bullets
         writeln!(
             output,
             "{} {} ({} items)",
             self.config.section_marker,
-            key,
+            expanded_key,
             items.len()
         )
         .unwrap();
@@ -323,8 +391,44 @@ impl Inflater {
         if let Some(anchor) = comment {
             writeln!(output, "{}", anchor.to_human()).unwrap();
         }
+        
+        // Expand abbreviated keys using mappings
+        let expanded_key = self.expand_full_key(key);
         let pretty_value = self.inflate_value(value);
-        writeln!(output, "{}: {}", key, pretty_value).unwrap();
+        
+        // Format with proper alignment (20 chars for key)
+        let padding = 20usize.saturating_sub(expanded_key.len());
+        writeln!(output, "{}{}: {}", expanded_key, " ".repeat(padding), pretty_value).unwrap();
+    }
+
+    /// Expand a full key (handles dotted and prefix keys)
+    /// e.g., "c.n" → "context.name", "^v" → "^version"
+    fn expand_full_key(&self, key: &str) -> String {
+        let mappings = Mappings::get();
+        
+        // Handle prefix inheritance (^key)
+        let (prefix, rest) = if key.starts_with('^') {
+            ("^", &key[1..])
+        } else {
+            ("", key)
+        };
+        
+        // Handle dotted keys: each part expanded independently
+        let expanded = if rest.contains('.') {
+            rest.split('.')
+                .map(|part| mappings.expand_key(part))
+                .collect::<Vec<_>>()
+                .join(".")
+        } else if rest.contains('_') {
+            rest.split('_')
+                .map(|part| mappings.expand_key(part))
+                .collect::<Vec<_>>()
+                .join("_")
+        } else {
+            mappings.expand_key(rest)
+        };
+        
+        format!("{}{}", prefix, expanded)
     }
 
     /// Close a table and write it to output
@@ -334,21 +438,28 @@ impl Inflater {
             writeln!(output, "{}", anchor.to_human()).unwrap();
         }
 
+        // Expand abbreviated key and column names
+        let expanded_key = self.expand_full_key(&ctx.key);
+        let expanded_columns: Vec<String> = ctx.columns
+            .iter()
+            .map(|c| self.expand_full_key(c))
+            .collect();
+
         // Section header
         writeln!(
             output,
             "{} {} ({} columns × {} rows)",
             self.config.section_marker,
-            ctx.key,
-            ctx.columns.len(),
+            expanded_key,
+            expanded_columns.len(),
             ctx.rows.len()
         )
         .unwrap();
 
         let indent = " ".repeat(self.config.indent_size);
 
-        // Calculate column widths
-        let mut col_widths: Vec<usize> = ctx.columns.iter().map(|c| c.len()).collect();
+        // Calculate column widths using expanded column names
+        let mut col_widths: Vec<usize> = expanded_columns.iter().map(|c| c.len()).collect();
         for row in &ctx.rows {
             for (i, val) in row.iter().enumerate() {
                 if i < col_widths.len() {
@@ -359,9 +470,9 @@ impl Inflater {
         }
 
         if self.config.use_box_drawing {
-            self.write_table_boxed(output, ctx, &col_widths, &indent);
+            self.write_table_boxed(output, &expanded_columns, &ctx.rows, &col_widths, &indent);
         } else {
-            self.write_table_simple(output, ctx, &col_widths, &indent);
+            self.write_table_simple(output, &expanded_columns, &ctx.rows, &col_widths, &indent);
         }
     }
 
@@ -369,7 +480,8 @@ impl Inflater {
     fn write_table_boxed(
         &self,
         output: &mut String,
-        ctx: &TableContext,
+        columns: &[String],
+        rows: &[Vec<String>],
         col_widths: &[usize],
         indent: &str,
     ) {
@@ -385,7 +497,7 @@ impl Inflater {
 
         // Header row: │ col │ col │
         write!(output, "{}│", indent).unwrap();
-        for (i, col) in ctx.columns.iter().enumerate() {
+        for (i, col) in columns.iter().enumerate() {
             let width = col_widths.get(i).copied().unwrap_or(col.len());
             write!(output, " {:width$} │", col, width = width).unwrap();
         }
@@ -402,7 +514,7 @@ impl Inflater {
         writeln!(output, "┤").unwrap();
 
         // Data rows: │ val │ val │
-        for row in &ctx.rows {
+        for row in rows {
             write!(output, "{}│", indent).unwrap();
             for (i, val) in row.iter().enumerate() {
                 let width = col_widths.get(i).copied().unwrap_or(val.len());
@@ -427,13 +539,14 @@ impl Inflater {
     fn write_table_simple(
         &self,
         output: &mut String,
-        ctx: &TableContext,
+        columns: &[String],
+        rows: &[Vec<String>],
         col_widths: &[usize],
         indent: &str,
     ) {
         // Header row
         write!(output, "{}", indent).unwrap();
-        for (i, col) in ctx.columns.iter().enumerate() {
+        for (i, col) in columns.iter().enumerate() {
             if i > 0 {
                 write!(output, " | ").unwrap();
             }
@@ -453,7 +566,7 @@ impl Inflater {
         writeln!(output).unwrap();
 
         // Data rows
-        for row in &ctx.rows {
+        for row in rows {
             write!(output, "{}", indent).unwrap();
             for (i, val) in row.iter().enumerate() {
                 if i > 0 {

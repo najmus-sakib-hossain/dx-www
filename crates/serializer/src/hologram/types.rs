@@ -65,6 +65,11 @@ pub struct HologramConfig {
 
     /// Maximum line width for table formatting
     pub max_line_width: usize,
+
+    /// Use flat DX format (key : value) instead of collapsible sections
+    /// When true: outputs `key : value` and `key > item | item`
+    /// When false: outputs `▼ key` with indented fields
+    pub use_dx_format: bool,
 }
 
 impl Default for HologramConfig {
@@ -80,6 +85,7 @@ impl Default for HologramConfig {
             null_display: "—".to_string(),
             align_values: true,
             max_line_width: 120,
+            use_dx_format: false,
         }
     }
 }
@@ -98,6 +104,24 @@ impl HologramConfig {
             null_display: "null".to_string(),
             align_values: true,
             max_line_width: 80,
+            use_dx_format: false,
+        }
+    }
+
+    /// Create a flat DX format configuration (key : value style)
+    pub fn dx_format() -> Self {
+        Self {
+            indent_size: 0,
+            preserve_comments: true,
+            use_unicode_symbols: false,
+            use_box_drawing: false,
+            section_marker: ' ',
+            bullet_char: ' ',
+            arrow_char: '>',
+            null_display: "null".to_string(),
+            align_values: true,
+            max_line_width: 120,
+            use_dx_format: true,
         }
     }
 
@@ -114,6 +138,7 @@ impl HologramConfig {
             null_display: "∅".to_string(),
             align_values: false,
             max_line_width: 60,
+            use_dx_format: false,
         }
     }
 }

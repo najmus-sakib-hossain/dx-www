@@ -24,7 +24,7 @@
 //!     └────┴───────┴────────┘
 //! ```
 //!
-//! ## LLM-Dense Output:
+//! ## LLM-Dense Output (Hologram format):
 //! ```text
 //! !Database config!server#host:localhost#port:5432#ssl:1
 //! items@3>apple|banana|cherry
@@ -32,8 +32,16 @@
 //! >1|Alice|1
 //! >2|Bob|0
 //! ```
+//!
+//! ## LLM-Dense Output (DX format with abbreviated keys):
+//! ```text
+//! c.n:dx
+//! ^v:0.0.1
+//! ws>frontend|backend
+//! ```
 
 use super::types::{HologramConfig, PrettyElement};
+use crate::mappings::Mappings;
 use std::fmt::Write;
 
 /// Deflater: Transforms human-pretty format to LLM-dense format
@@ -93,9 +101,17 @@ impl Deflater {
                     i += consumed;
                 }
                 PrettyElement::Field { key, value } => {
-                    // Simple key:value at root level
-                    let dense_val = self.deflate_value(&value);
-                    writeln!(output, "{}:{}", key, dense_val).unwrap();
+                    // Check if this is an array marked with @ARRAY@
+                    if value.starts_with("@ARRAY@") {
+                        let items_str = &value[7..];  // Skip @ARRAY@
+                        let compressed_key = self.compress_full_key(&key);
+                        writeln!(output, "{}>{}", compressed_key, items_str).unwrap();
+                    } else {
+                        // Simple key:value at root level - compress the key
+                        let compressed_key = self.compress_full_key(&key);
+                        let dense_val = self.deflate_value(&value);
+                        writeln!(output, "{}:{}", compressed_key, dense_val).unwrap();
+                    }
                     i += 1;
                 }
                 PrettyElement::TableBorder | PrettyElement::Empty => {
@@ -183,6 +199,23 @@ impl Deflater {
             }
             .to_string();
             return PrettyElement::Bullet { value };
+        }
+
+        // DX Array format: key > item | item | item (note: > with spaces)
+        if let Some(arrow_idx) = trimmed.find(" > ") {
+            let key = trimmed[..arrow_idx].trim().to_string();
+            let items_str = trimmed[arrow_idx + 3..].trim();
+            let items: Vec<String> = items_str
+                .split(" | ")
+                .map(|s| s.trim().to_string())
+                .collect();
+            
+            // Return as a field with array-like value for now
+            // We'll handle this specially in deflate()
+            return PrettyElement::Field { 
+                key, 
+                value: format!("@ARRAY@{}", items.join("|")) 
+            };
         }
 
         // Field: key: value (with possible alignment spaces)
@@ -285,9 +318,12 @@ impl Deflater {
             write!(output, "!{}!", comment).unwrap();
         }
 
-        write!(output, "{}", key).unwrap();
+        // Compress key and field names
+        let compressed_key = self.compress_full_key(key);
+        write!(output, "{}", compressed_key).unwrap();
         for (name, value) in &fields {
-            write!(output, "#{}:{}", name, value).unwrap();
+            let compressed_name = self.compress_full_key(name);
+            write!(output, "#{}:{}", compressed_name, value).unwrap();
         }
         writeln!(output).unwrap();
 
@@ -348,7 +384,9 @@ impl Deflater {
             write!(output, "!{}!", comment).unwrap();
         }
 
-        writeln!(output, "{}@{}>{}", key, items.len(), items.join("|")).unwrap();
+        // Compress key
+        let compressed_key = self.compress_full_key(key);
+        writeln!(output, "{}@{}>{}", compressed_key, items.len(), items.join("|")).unwrap();
 
         (output, i - start_idx)
     }
@@ -437,7 +475,14 @@ impl Deflater {
             write!(output, "!{}!", comment).unwrap();
         }
 
-        writeln!(output, "{}@{}={}", key, rows.len(), columns.join("^")).unwrap();
+        // Compress key and column names
+        let compressed_key = self.compress_full_key(key);
+        let compressed_columns: Vec<String> = columns
+            .iter()
+            .map(|c| self.compress_full_key(c))
+            .collect();
+        
+        writeln!(output, "{}@{}={}", compressed_key, rows.len(), compressed_columns.join("^")).unwrap();
 
         for row in &rows {
             writeln!(output, ">{}", row.join("|")).unwrap();
@@ -475,6 +520,36 @@ impl Deflater {
         }
 
         v.to_string()
+    }
+
+    /// Compress a full key (handles dotted and prefix keys)
+    /// e.g., "context.name" → "c.n", "^version" → "^v"
+    fn compress_full_key(&self, key: &str) -> String {
+        let mappings = Mappings::get();
+        
+        // Handle prefix inheritance (^key)
+        let (prefix, rest) = if key.starts_with('^') {
+            ("^", &key[1..])
+        } else {
+            ("", key)
+        };
+        
+        // Handle dotted keys: each part compressed independently
+        let compressed = if rest.contains('.') {
+            rest.split('.')
+                .map(|part| mappings.compress_key(part))
+                .collect::<Vec<_>>()
+                .join(".")
+        } else if rest.contains('_') {
+            rest.split('_')
+                .map(|part| mappings.compress_key(part))
+                .collect::<Vec<_>>()
+                .join("_")
+        } else {
+            mappings.compress_key(rest)
+        };
+        
+        format!("{}{}", prefix, compressed)
     }
 
     /// Find next non-empty, non-comment content
