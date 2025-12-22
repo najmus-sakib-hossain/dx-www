@@ -40,7 +40,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(async (doc) => {
             if (isDxFile(doc.uri)) {
-                setTimeout(() => convertToHumanIfNeeded(doc), 150);
+                setTimeout(() => convertToHumanIfNeeded(doc), 0);
             }
         })
     );
@@ -54,31 +54,21 @@ export async function activate(context: vscode.ExtensionContext) {
         }, 300);
     }
 
-    // Convert to LLM when closing (via workspace event)
+    // Save to LLM format on disk (without changing editor content)
+    context.subscriptions.push(
+        vscode.workspace.onDidSaveTextDocument(async (doc) => {
+            if (isDxFile(doc.uri) && !isProcessing) {
+                await saveLLMToDisk(doc);
+            }
+        })
+    );
+
+    // Convert to LLM when closing
     context.subscriptions.push(
         vscode.workspace.onDidCloseTextDocument(async (doc) => {
             convertedDocs.delete(doc.uri.toString());
             if (isDxFile(doc.uri) && !isProcessing) {
                 await convertToLLMOnClose(doc);
-            }
-        })
-    );
-
-    // Also convert to LLM on save (for git commits)
-    context.subscriptions.push(
-        vscode.workspace.onWillSaveTextDocument((e) => {
-            if (isDxFile(e.document.uri)) {
-                e.waitUntil(convertToLLMIfNeeded(e.document));
-            }
-        })
-    );
-    
-    // Restore human format AFTER save completes
-    context.subscriptions.push(
-        vscode.workspace.onDidSaveTextDocument(async (doc) => {
-            if (isDxFile(doc.uri)) {
-                // Re-convert to human after save
-                setTimeout(() => convertToHumanIfNeeded(doc, true), 100);
             }
         })
     );
@@ -230,23 +220,29 @@ async function convertToHumanIfNeeded(doc: vscode.TextDocument, force: boolean =
     }
 }
 
-async function convertToLLMIfNeeded(doc: vscode.TextDocument): Promise<vscode.TextEdit[]> {
-    if (isProcessing) return [];
+async function saveLLMToDisk(doc: vscode.TextDocument) {
+    if (isProcessing) return;
     
     const text = doc.getText();
     
     // Already in LLM format?
     if (!text.includes(' : ') && !text.includes(' > ')) {
-        return [];
+        return;
     }
     
-    const dense = formatter.toDense(text);
-    const fullRange = new vscode.Range(
-        doc.positionAt(0),
-        doc.positionAt(text.length)
-    );
+    console.log('[DX] Saving LLM format to disk (editor unchanged)...');
+    isProcessing = true;
     
-    return [vscode.TextEdit.replace(fullRange, dense)];
+    try {
+        const dense = formatter.toDense(text);
+        // Write directly to file system without modifying editor
+        fs.writeFileSync(doc.uri.fsPath, dense, 'utf8');
+        console.log('[DX] Saved LLM to disk');
+    } catch (error) {
+        console.error('[DX] Error saving LLM:', error);
+    } finally {
+        isProcessing = false;
+    }
 }
 
 async function convertToLLMOnClose(doc: vscode.TextDocument) {
@@ -264,8 +260,9 @@ async function convertToLLMOnClose(doc: vscode.TextDocument) {
     try {
         const dense = formatter.toDense(text);
         // Write directly to file system
-        const fs = require('fs');
         fs.writeFileSync(doc.uri.fsPath, dense, 'utf8');
+    } catch (error) {
+        console.error('[DX] Error on close:', error);
     } finally {
         isProcessing = false;
     }
