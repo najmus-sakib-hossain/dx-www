@@ -85,7 +85,7 @@ This implementation plan creates a VS Code extension that provides seamless edit
   - Wire up to DocumentManager for state coordination
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 9. Implement extension entry point
+- [x] 9. Implement extension entry point
   - Create `src/extension.ts` with activation logic
   - Load WASM core with fallback handling
   - Initialize DocumentManager and LensFileSystem
@@ -94,19 +94,19 @@ This implementation plan creates a VS Code extension that provides seamless edit
   - Implement auto-redirect from file:// to dxlens:// for .dx files
   - _Requirements: 1.1, 6.1_
 
-- [ ] 10. Checkpoint - Verify file system integration
+- [x] 10. Checkpoint - Verify file system integration
   - Test opening .dx files shows human format
   - Test saving .dx files writes dense format
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Implement user commands
+- [x] 11. Implement user commands
   - Register "DX: Refresh from Disk" command
   - Register "DX: Force Save" command
   - Register "DX: Show Dense View" command
   - Add refresh button to editor title bar for .dx files
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 12. Implement status bar
+- [x] 12. Implement status bar
   - Create status bar item for validation status
   - Show green checkmark when valid
   - Show warning with error message when invalid
@@ -114,24 +114,24 @@ This implementation plan creates a VS Code extension that provides seamless edit
   - Wire click to show dense preview
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 13. Implement configuration handling
+- [x] 13. Implement configuration handling
   - Read `dx.validateBeforeSave` setting
   - Read `dx.autoSaveGracePeriod` setting
   - Read `dx.indentSize` setting
   - Apply configuration changes without restart
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 14. Checkpoint - Full extension functionality
+- [x] 14. Checkpoint - Full extension functionality
   - Test all commands work correctly
   - Test status bar updates correctly
   - Test configuration changes apply
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Write property test for human format structure
+- [x] 15. Write property test for human format structure
   - **Property 2: Human format structure**
   - **Validates: Requirements 1.3, 1.4, 1.5**
 
-- [ ] 16. Write property test for smart quoting
+- [x] 16. Write property test for smart quoting
   - **Property 4: Smart quoting correctness**
   - **Validates: Requirements 2.3, 2.4**
 
