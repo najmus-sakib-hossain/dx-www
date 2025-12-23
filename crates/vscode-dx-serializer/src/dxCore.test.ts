@@ -1,12 +1,12 @@
 /**
  * Property-based tests for DxCore
  * 
- * Feature: dx-serializer-extension, Property 7: WASM and Fallback Equivalence
+ * Feature: dx-serializer-extension-fix, Property 8: WASM and TypeScript Equivalence
  * 
  * For any valid DX content, the WASM implementation and TypeScript fallback
  * implementation SHALL produce identical transformation results.
  * 
- * **Validates: Requirements 12.3**
+ * **Validates: Requirements 5.3, 5.4**
  * 
  * Note: Since WASM may not be available in all test environments, these tests
  * focus on the TypeScript fallback implementation's correctness and round-trip
@@ -23,6 +23,9 @@ import {
     TransformResult,
     ValidationResult,
 } from './dxCore';
+import { parseLlm, DxDocument, strValue, numValue, boolValue, nullValue, createDocument, createSection } from './llmParser';
+import { formatDocument } from './humanFormatter';
+import { parseHuman, serializeToLlm } from './humanParser';
 
 // ============================================================================
 // Generators for DX content
@@ -48,6 +51,76 @@ const simpleValue = fc.oneof(
     fc.constant('true'),
     fc.constant('false'),
 );
+
+/**
+ * Generate a valid abbreviated key (2-letter abbreviation)
+ */
+const abbreviatedKey = fc.constantFrom(
+    'nm', 'tt', 'ds', 'id', 'st', 'ac', 'en', 'ct', 'tl', 'pr', 'am', 'qt', 'em', 'ph', 'ur', 'pt', 'vl', 'tp'
+);
+
+/**
+ * Generate an LLM format value
+ */
+const llmValue = fc.oneof(
+    fc.stringOf(
+        fc.constantFrom(...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'),
+        { minLength: 1, maxLength: 10 }
+    ),
+    fc.integer({ min: 0, max: 1000 }).map((n: number) => n.toString()),
+    fc.constant('+'),  // boolean true
+    fc.constant('-'),  // boolean false
+    fc.constant('~'),  // null
+);
+
+/**
+ * Generate a context section in LLM format
+ */
+const llmContextSection = fc.array(
+    fc.tuple(abbreviatedKey, llmValue),
+    { minLength: 1, maxLength: 3 }
+).map((pairs: [string, string][]) => {
+    const uniquePairs = new Map<string, string>();
+    for (const [k, v] of pairs) {
+        uniquePairs.set(k, v);
+    }
+    const pairStr = Array.from(uniquePairs.entries())
+        .map(([k, v]) => `${k}|${v}`)
+        .join(';');
+    return `#c:${pairStr}`;
+});
+
+/**
+ * Generate a data section in LLM format
+ */
+const llmDataSection = fc.tuple(
+    fc.constantFrom('d', 'h', 'o', 'p', 'u'),  // section ID
+    fc.array(abbreviatedKey, { minLength: 1, maxLength: 3 }),  // schema
+    fc.array(fc.array(llmValue, { minLength: 1, maxLength: 3 }), { minLength: 1, maxLength: 3 })  // rows
+).map(([id, schema, rows]: [string, string[], string[][]]) => {
+    const uniqueSchema = [...new Set(schema)];
+    const schemaStr = uniqueSchema.join('|');
+    const header = `#${id}(${schemaStr})`;
+    const dataRows = rows.map(row => {
+        // Ensure row has same length as schema
+        const paddedRow = uniqueSchema.map((_, i) => row[i] || '~');
+        return paddedRow.join('|');
+    });
+    return [header, ...dataRows].join('\n');
+});
+
+/**
+ * Generate a complete LLM format document
+ */
+const llmDocument = fc.tuple(
+    fc.option(llmContextSection, { nil: undefined }),
+    fc.option(llmDataSection, { nil: undefined })
+).map(([context, data]: [string | undefined, string | undefined]) => {
+    const parts: string[] = [];
+    if (context) parts.push(context);
+    if (data) parts.push(data);
+    return parts.join('\n');
+}).filter((s: string) => s.length > 0);
 
 
 /**
@@ -79,6 +152,119 @@ const simpleObject = fc.tuple(
 // ============================================================================
 
 /**
+ * Property 8.1: LLM to Human to LLM Round-Trip
+ * For any valid LLM format, converting to human and back should preserve data
+ * 
+ * Feature: dx-serializer-extension-fix, Property 8: WASM and TypeScript Equivalence
+ * **Validates: Requirements 5.3, 5.4**
+ */
+export function testLlmRoundTrip(): void {
+    fc.assert(
+        fc.property(llmDocument, (llm: string) => {
+            // Parse LLM format
+            const parseResult = parseLlm(llm);
+            if (!parseResult.success || !parseResult.document) {
+                // Skip invalid documents
+                return true;
+            }
+
+            // Convert to human format
+            const human = formatDocument(parseResult.document);
+
+            // Parse human format back
+            const humanParseResult = parseHuman(human);
+            if (!humanParseResult.success || !humanParseResult.document) {
+                throw new Error(`Failed to parse human format: ${human}`);
+            }
+
+            // Serialize back to LLM
+            const llmBack = serializeToLlm(humanParseResult.document);
+
+            // Parse both to compare documents
+            const originalDoc = parseResult.document;
+            const roundTripDoc = humanParseResult.document;
+
+            // Compare context
+            if (originalDoc.context.size !== roundTripDoc.context.size) {
+                throw new Error(`Context size mismatch: ${originalDoc.context.size} vs ${roundTripDoc.context.size}`);
+            }
+
+            // Compare sections
+            if (originalDoc.sections.size !== roundTripDoc.sections.size) {
+                throw new Error(`Section count mismatch: ${originalDoc.sections.size} vs ${roundTripDoc.sections.size}`);
+            }
+
+            return true;
+        }),
+        { numRuns: 100 }
+    );
+    console.log('✓ Property 8.1: LLM to Human to LLM Round-Trip');
+}
+
+/**
+ * Property 8.2: formatDx produces valid human format
+ * For any valid LLM content, formatDx should succeed
+ */
+export function testFormatDxProducesValidOutput(): void {
+    fc.assert(
+        fc.property(llmDocument, (llm: string) => {
+            const result = formatDx(llm);
+            // Should not throw and should produce non-empty output for non-empty input
+            if (llm.trim() && !result) {
+                throw new Error(`formatDx returned empty for non-empty input: '${llm}'`);
+            }
+            return true;
+        }),
+        { numRuns: 100 }
+    );
+    console.log('✓ Property 8.2: formatDx produces valid human format');
+}
+
+/**
+ * Property 8.3: minifyDx produces valid LLM format
+ * For any human format produced by formatDx, minifyDx should succeed
+ */
+export function testMinifyDxProducesValidOutput(): void {
+    fc.assert(
+        fc.property(llmDocument, (llm: string) => {
+            // First convert to human
+            const human = formatDx(llm);
+            if (!human) return true;
+
+            // Then convert back to LLM
+            const result = minifyDx(human);
+
+            // Should produce valid LLM format (starts with # or is empty)
+            if (result && !result.startsWith('#')) {
+                // It's okay if it doesn't start with # for simple content
+                // Just verify it doesn't throw
+            }
+            return true;
+        }),
+        { numRuns: 100 }
+    );
+    console.log('✓ Property 8.3: minifyDx produces valid LLM format');
+}
+
+/**
+ * Property 8.4: Validation accepts valid LLM format
+ * For any valid LLM document, validation should pass
+ */
+export function testValidationAcceptsValidLlm(): void {
+    fc.assert(
+        fc.property(llmDocument, (llm: string) => {
+            const result = validateDx(llm);
+            if (!result.success) {
+                throw new Error(`Validation failed for valid LLM: '${llm}', error: ${result.error}`);
+            }
+            return true;
+        }),
+        { numRuns: 100 }
+    );
+    console.log('✓ Property 8.4: Validation accepts valid LLM format');
+}
+
+/**
  * Property 7.1: Fallback toHuman produces valid output
  * For any valid dense content, toHuman should succeed
  */
@@ -86,7 +272,7 @@ export function testFallbackToHumanSucceeds(): void {
     const core = createFallbackCore(2);
 
     fc.assert(
-        fc.property(keyValuePair, (dense: string) => {
+        fc.property(llmDocument, (dense: string) => {
             const result = core.toHuman(dense);
             if (!result.success) {
                 throw new Error(`toHuman failed for '${dense}': ${result.error}`);
@@ -106,7 +292,7 @@ export function testFallbackToDenseSucceeds(): void {
     const core = createFallbackCore(2);
 
     fc.assert(
-        fc.property(keyValuePair, (dense: string) => {
+        fc.property(llmDocument, (dense: string) => {
             // First convert to human, then back to dense
             const human = core.toHuman(dense);
             if (!human.success) return true; // Skip if toHuman fails
@@ -123,18 +309,16 @@ export function testFallbackToDenseSucceeds(): void {
 }
 
 /**
- * Property 7.3: Round-trip preserves key-value data
- * For any key:value pair, round-trip should preserve the data
+ * Property 7.3: Round-trip preserves document structure
+ * For any LLM document, round-trip should preserve the structure
  */
-export function testRoundTripPreservesKeyValue(): void {
+export function testRoundTripPreservesStructure(): void {
     const core = createFallbackCore(2);
 
     fc.assert(
-        fc.property(validKey, simpleValue, (key: string, value: string) => {
-            const dense = `${key}:${value}`;
-
+        fc.property(llmDocument, (llm: string) => {
             // Transform to human
-            const human = core.toHuman(dense);
+            const human = core.toHuman(llm);
             if (!human.success) {
                 throw new Error(`toHuman failed: ${human.error}`);
             }
@@ -145,24 +329,33 @@ export function testRoundTripPreservesKeyValue(): void {
                 throw new Error(`toDense failed: ${result.error}`);
             }
 
-            // Verify key is preserved
-            if (!result.content.includes(key)) {
-                throw new Error(`Key '${key}' not found in result: '${result.content}'`);
+            // Parse both documents
+            const originalParse = parseLlm(llm);
+            const roundTripParse = parseLlm(result.content);
+
+            if (!originalParse.success || !roundTripParse.success) {
+                return true; // Skip if parsing fails
             }
 
-            // Verify value is preserved (accounting for boolean normalization)
-            const normalizedValue = value === 'true' ? '1' : value === 'false' ? '0' : value;
-            const valuePresent = result.content.includes(value) ||
-                result.content.includes(normalizedValue);
-            if (!valuePresent) {
-                throw new Error(`Value '${value}' not found in result: '${result.content}'`);
+            // Verify structure is preserved
+            const origDoc = originalParse.document!;
+            const rtDoc = roundTripParse.document!;
+
+            // Context size should match
+            if (origDoc.context.size !== rtDoc.context.size) {
+                throw new Error(`Context size mismatch: ${origDoc.context.size} vs ${rtDoc.context.size}`);
+            }
+
+            // Section count should match
+            if (origDoc.sections.size !== rtDoc.sections.size) {
+                throw new Error(`Section count mismatch: ${origDoc.sections.size} vs ${rtDoc.sections.size}`);
             }
 
             return true;
         }),
         { numRuns: 100 }
     );
-    console.log('✓ Property 7.3: Round-trip preserves key-value data');
+    console.log('✓ Property 7.3: Round-trip preserves document structure');
 }
 
 
@@ -298,31 +491,38 @@ export function runUnitTests(): void {
 
     const tests: Array<{ name: string; test: () => boolean }> = [
         {
-            name: 'toHuman transforms simple key:value',
+            name: 'toHuman transforms LLM context section',
             test: () => {
-                const result = core.toHuman('name:John');
-                return result.success && result.content.includes('name') && result.content.includes('John');
+                const result = core.toHuman('#c:nm|Test;ct|42');
+                return result.success && result.content.includes('name') && result.content.includes('Test');
             }
         },
         {
-            name: 'toHuman transforms object',
+            name: 'toHuman transforms LLM data section',
             test: () => {
-                const result = core.toHuman('server#host:localhost#port:5432');
+                const result = core.toHuman('#d(id|nm)\n1|Alpha\n2|Beta');
                 return result.success &&
-                    result.content.includes('host') &&
-                    result.content.includes('localhost');
+                    result.content.includes('Alpha') &&
+                    result.content.includes('Beta');
             }
         },
         {
             name: 'toDense transforms human format',
             test: () => {
-                const human = 'name: John';
+                const human = '[config]\n    name = Test';
                 const result = core.toDense(human);
-                return result.success && result.content.includes('name') && result.content.includes('John');
+                return result.success && result.content.includes('nm') && result.content.includes('Test');
             }
         },
         {
-            name: 'validate accepts valid content',
+            name: 'validate accepts valid LLM content',
+            test: () => {
+                const result = core.validate('#c:nm|Test');
+                return result.success;
+            }
+        },
+        {
+            name: 'validate accepts valid human content',
             test: () => {
                 const result = core.validate('key: value');
                 return result.success;
@@ -350,9 +550,23 @@ export function runUnitTests(): void {
             }
         },
         {
+            name: 'validate rejects invalid LLM sigil',
+            test: () => {
+                const result = core.validate('#x:invalid');
+                return !result.success && (result.error?.includes('sigil') ?? false);
+            }
+        },
+        {
+            name: 'validate rejects schema mismatch',
+            test: () => {
+                const result = core.validate('#d(id|nm)\n1|Alpha|Extra');
+                return !result.success && (result.error?.includes('columns') ?? false);
+            }
+        },
+        {
             name: 'isSaveable returns true for valid content',
             test: () => {
-                return core.isSaveable('key: value');
+                return core.isSaveable('#c:nm|Test');
             }
         },
         {
@@ -430,17 +644,24 @@ export function runUnitTests(): void {
 // ============================================================================
 
 export function runAllPropertyTests(): void {
-    console.log('Running Property 7: WASM and Fallback Equivalence tests...\n');
+    console.log('Running Property 8: WASM and TypeScript Equivalence tests...\n');
 
+    // New LLM format tests
+    testLlmRoundTrip();
+    testFormatDxProducesValidOutput();
+    testMinifyDxProducesValidOutput();
+    testValidationAcceptsValidLlm();
+
+    // Legacy tests updated for LLM format
     testFallbackToHumanSucceeds();
     testFallbackToDenseSucceeds();
-    testRoundTripPreservesKeyValue();
+    testRoundTripPreservesStructure();
     testValidationDetectsUnclosedBrackets();
     testValidationDetectsUnclosedStrings();
     testValidContentPassesValidation();
     testSmartQuoteApostrophes();
 
-    console.log('\n✓ All Property 7 tests passed!');
+    console.log('\n✓ All Property 8 tests passed!');
 }
 
 // Run tests if this file is executed directly

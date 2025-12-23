@@ -1,14 +1,14 @@
 /**
  * Property-based tests for DX Serializer utility functions
  * 
- * Feature: dx-serializer-extension, Property 6: File type filtering correctness
+ * Feature: dx-serializer-extension-fix, Property 7: File Extension Filtering
  * 
  * For any file path:
  * - Paths ending exactly with `.dx` SHALL be identified as DX files
  * - Paths with compound extensions (`.dx.json`, `.dx.yml`, `.dx.bak`, etc.) SHALL NOT be identified as DX files
  * - Paths with non-file schemes SHALL NOT be identified as DX files
  * 
- * **Validates: Requirements 5.1, 5.2, 5.3**
+ * **Validates: Requirements 4.1-4.7**
  */
 
 import * as fc from 'fast-check';
@@ -59,12 +59,13 @@ const nonDxExtension = fc.constantFrom(
 const nonDxPath = fc.tuple(validDirPath, validFilename, nonDxExtension)
     .map(([dir, name, ext]: [string, string, string]) => dir ? `${dir}/${name}${ext}` : `${name}${ext}`);
 
-// Feature: dx-serializer-extension, Property 6: File type filtering correctness
-// **Validates: Requirements 5.1, 5.2, 5.3**
+// Feature: dx-serializer-extension-fix, Property 7: File Extension Filtering
+// **Validates: Requirements 4.1-4.7**
 
 /**
- * Property 6.1: Pure .dx files are identified
+ * Property 7.1: Pure .dx files are identified
  * For any valid filename, appending .dx should result in a recognized DX file
+ * **Validates: Requirements 4.1**
  */
 export function testPureDxFilesIdentified(): void {
     fc.assert(
@@ -77,13 +78,14 @@ export function testPureDxFilesIdentified(): void {
         }),
         { numRuns: 100 }
     );
-    console.log('✓ Property 6.1: Pure .dx files are identified');
+    console.log('✓ Property 7.1: Pure .dx files are identified');
 }
 
 
 /**
- * Property 6.2: Compound extensions are rejected
+ * Property 7.2: Compound extensions are rejected
  * For any .dx file with an additional extension, it should be rejected
+ * **Validates: Requirements 4.2-4.7**
  */
 export function testCompoundExtensionsRejected(): void {
     fc.assert(
@@ -96,12 +98,13 @@ export function testCompoundExtensionsRejected(): void {
         }),
         { numRuns: 100 }
     );
-    console.log('✓ Property 6.2: Compound extensions are rejected');
+    console.log('✓ Property 7.2: Compound extensions are rejected');
 }
 
 /**
- * Property 6.3: Non-.dx files are rejected
+ * Property 7.3: Non-.dx files are rejected
  * For any file without .dx extension, it should be rejected
+ * **Validates: Requirements 4.1**
  */
 export function testNonDxFilesRejected(): void {
     fc.assert(
@@ -114,26 +117,26 @@ export function testNonDxFilesRejected(): void {
         }),
         { numRuns: 100 }
     );
-    console.log('✓ Property 6.3: Non-.dx files are rejected');
+    console.log('✓ Property 7.3: Non-.dx files are rejected');
 }
 
 /**
  * Run all property tests
  */
 export function runAllPropertyTests(): void {
-    console.log('Running Property 6: File type filtering correctness tests...\n');
-    
+    console.log('Running Property 7: File Extension Filtering tests...\n');
+
     testPureDxFilesIdentified();
     testCompoundExtensionsRejected();
     testNonDxFilesRejected();
-    
-    console.log('\n✓ All Property 6 tests passed!');
+
+    console.log('\n✓ All Property 7 tests passed!');
 }
 
 // Unit tests for specific examples
 export function runUnitTests(): void {
     console.log('Running unit tests for isExactlyDxPath...\n');
-    
+
     const tests: Array<{ path: string; expected: boolean; description: string }> = [
         // Should accept
         { path: 'config.dx', expected: true, description: 'simple .dx file' },
@@ -145,7 +148,7 @@ export function runUnitTests(): void {
         { path: './relative/path/file.dx', expected: true, description: '.dx file with relative path' },
         { path: 'my.config.dx', expected: true, description: '.dx file with dots in name' },
         { path: 'app.v2.dx', expected: true, description: '.dx file with version in name' },
-        
+
         // Should reject - compound extensions
         { path: 'config.dx.json', expected: false, description: 'compound .dx.json' },
         { path: 'config.dx.yml', expected: false, description: 'compound .dx.yml' },
@@ -154,14 +157,14 @@ export function runUnitTests(): void {
         { path: 'config.dx.backup', expected: false, description: 'compound .dx.backup' },
         { path: 'config.dx.old', expected: false, description: 'compound .dx.old' },
         { path: 'config.dx.tmp', expected: false, description: 'compound .dx.tmp' },
-        
+
         // Should reject - non-.dx files
         { path: 'config.json', expected: false, description: 'JSON file' },
         { path: 'config.yml', expected: false, description: 'YAML file' },
         { path: 'config.toml', expected: false, description: 'TOML file' },
         { path: 'script.ts', expected: false, description: 'TypeScript file' },
         { path: 'readme.md', expected: false, description: 'Markdown file' },
-        
+
         // Should reject - edge cases
         { path: '', expected: false, description: 'empty string' },
         { path: '.dx', expected: false, description: 'just .dx' },
@@ -170,10 +173,10 @@ export function runUnitTests(): void {
         { path: 'my.dx.config', expected: false, description: '.dx in middle' },
         { path: 'config', expected: false, description: 'no extension' },
     ];
-    
+
     let passed = 0;
     let failed = 0;
-    
+
     for (const test of tests) {
         const result = isExactlyDxPath(test.path);
         if (result === test.expected) {
@@ -184,9 +187,9 @@ export function runUnitTests(): void {
             failed++;
         }
     }
-    
+
     console.log(`\nUnit tests: ${passed} passed, ${failed} failed`);
-    
+
     if (failed > 0) {
         throw new Error(`${failed} unit tests failed`);
     }

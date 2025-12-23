@@ -5,12 +5,18 @@
  * with validation support. Uses WASM for performance with a TypeScript
  * fallback for reliability.
  * 
- * Requirements: 12.2, 12.3
+ * The dense format is the LLM format with sigils (#c, #:, #<letter>).
+ * The human format is the beautiful TOML-like display with Unicode tables.
+ * 
+ * Requirements: 1.1-1.9, 2.1-2.7, 3.1-3.5, 5.1-5.4, 8.1-8.4
  */
 
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { parseLlm, DxDocument, DxValue, DxSection } from './llmParser';
+import { formatDocument } from './humanFormatter';
+import { parseHuman, serializeToLlm } from './humanParser';
 
 /**
  * Result of a transformation operation
@@ -38,16 +44,16 @@ export interface ValidationResult {
 export interface DxCore {
     /** Transform dense format to human-readable format */
     toHuman(dense: string): TransformResult;
-    
+
     /** Transform human-readable format to dense format */
     toDense(human: string): TransformResult;
-    
+
     /** Validate content syntax */
     validate(content: string): ValidationResult;
-    
+
     /** Check if content is complete enough to save */
     isSaveable(content: string): boolean;
-    
+
     /** Whether this is using WASM or fallback */
     readonly isWasm: boolean;
 }
@@ -168,91 +174,60 @@ export function smartQuote(value: string): string {
 /**
  * Format DX content to human-readable format (TypeScript fallback)
  * 
- * Transforms dense format like:
- *   server#host:localhost#port:5432
+ * Transforms LLM format like:
+ *   #c:nm|Test;ct|42
+ *   #d(id|nm|en)
+ *   1|Alpha|+
+ *   2|Beta|-
  * 
  * To human-readable format like:
- *   server:
- *     host: localhost
- *     port: 5432
+ *   [config]
+ *       name  = Test
+ *       count = 42
+ *   
+ *   [d]
+ *       # Schema: id | name | enabled
+ *       ┌────┬───────┬─────────┐
+ *       │ Id │ Name  │ Enabled │
+ *       ├────┼───────┼─────────┤
+ *       │  1 │ Alpha │    ✓    │
+ *       │  2 │ Beta  │    ✗    │
+ *       └────┴───────┴─────────┘
+ * 
+ * Requirements: 1.1-1.9, 2.1-2.7
  */
 export function formatDx(dense: string, indentSize: number = 2): string {
     if (!dense.trim()) {
         return '';
     }
 
-    const indent = ' '.repeat(indentSize);
-    const lines: string[] = [];
+    // Parse the LLM format
+    const parseResult = parseLlm(dense);
 
-    // Parse the dense format
-    // Format: key#field:value#field:value or key:value or key@N>item|item
-    const parts = dense.split('#');
-    
-    for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        
-        if (i === 0) {
-            // First part is the root key or key:value
-            if (part.includes(':')) {
-                const colonIdx = part.indexOf(':');
-                const key = part.substring(0, colonIdx);
-                const value = part.substring(colonIdx + 1);
-                
-                if (parts.length === 1) {
-                    // Simple key:value
-                    lines.push(`${key}: ${formatValue(value)}`);
-                } else {
-                    // Object with fields
-                    lines.push(`${key}:`);
-                }
-            } else if (part.includes('@')) {
-                // Array: key@N>item|item
-                const atIdx = part.indexOf('@');
-                const key = part.substring(0, atIdx);
-                const rest = part.substring(atIdx + 1);
-                const gtIdx = rest.indexOf('>');
-                
-                if (gtIdx !== -1) {
-                    const items = rest.substring(gtIdx + 1).split('|');
-                    lines.push(`${key}:`);
-                    for (const item of items) {
-                        lines.push(`${indent}- ${formatValue(item)}`);
-                    }
-                } else {
-                    lines.push(`${key}: []`);
-                }
-            } else {
-                // Just a key (object follows)
-                lines.push(`${part}:`);
-            }
-        } else {
-            // Subsequent parts are field:value pairs
-            const colonIdx = part.indexOf(':');
-            if (colonIdx !== -1) {
-                const key = part.substring(0, colonIdx);
-                const value = part.substring(colonIdx + 1);
-                lines.push(`${indent}${key}: ${formatValue(value)}`);
-            }
-        }
+    if (!parseResult.success || !parseResult.document) {
+        // If parsing fails, return the original content
+        // This allows graceful degradation for non-LLM format content
+        return dense;
     }
 
-    return lines.join('\n');
+    // Format to human-readable format
+    return formatDocument(parseResult.document);
 }
 
 /**
- * Format a value for human-readable output
+ * Format a value for human-readable output (legacy helper)
  */
-function formatValue(value: string): string {
+function formatValueLegacy(value: string): string {
     // Handle special values
     if (value === '1' || value === 'true') return 'true';
     if (value === '0' || value === 'false') return 'false';
     if (value === 'null' || value === '') return 'null';
-    
+
     // Check if value needs quoting
     if (/[ #|^:\n\t]/.test(value) || value.includes("'") || value.includes('"')) {
         return smartQuote(value);
     }
-    
+
     return value;
 }
 
@@ -261,100 +236,59 @@ function formatValue(value: string): string {
  * Minify DX content to dense format (TypeScript fallback)
  * 
  * Transforms human-readable format like:
- *   server:
- *     host: localhost
- *     port: 5432
+ *   [config]
+ *       name  = Test
+ *       count = 42
+ *   
+ *   [d]
+ *       # Schema: id | name | enabled
+ *       ┌────┬───────┬─────────┐
+ *       │ Id │ Name  │ Enabled │
+ *       ├────┼───────┼─────────┤
+ *       │  1 │ Alpha │    ✓    │
+ *       │  2 │ Beta  │    ✗    │
+ *       └────┴───────┴─────────┘
  * 
- * To dense format like:
- *   server#host:localhost#port:5432
+ * To LLM format like:
+ *   #c:nm|Test;ct|42
+ *   #d(id|nm|en)
+ *   1|Alpha|+
+ *   2|Beta|-
+ * 
+ * Requirements: 3.1-3.5
  */
 export function minifyDx(human: string): string {
     if (!human.trim()) {
         return '';
     }
 
-    const lines = human.split('\n').filter(line => line.trim());
-    if (lines.length === 0) {
-        return '';
+    // Parse the human format
+    const parseResult = parseHuman(human);
+
+    if (!parseResult.success || !parseResult.document) {
+        // If parsing fails, return the original content
+        return human;
     }
 
-    const result: string[] = [];
-    let currentKey = '';
-    let inArray = false;
-    const arrayItems: string[] = [];
-
-    for (const line of lines) {
-        const trimmed = line.trim();
-        const indentLevel = line.search(/\S/);
-        
-        // Skip comments
-        if (trimmed.startsWith('//') || trimmed.startsWith('#')) {
-            continue;
-        }
-
-        // Handle array items
-        if (trimmed.startsWith('- ')) {
-            inArray = true;
-            const value = trimmed.substring(2).trim();
-            arrayItems.push(parseValue(value));
-            continue;
-        }
-
-        // Flush array if we were in one
-        if (inArray && arrayItems.length > 0) {
-            result.push(`${currentKey}@${arrayItems.length}>${arrayItems.join('|')}`);
-            arrayItems.length = 0;
-            inArray = false;
-        }
-
-        // Parse key: value
-        const colonIdx = trimmed.indexOf(':');
-        if (colonIdx === -1) continue;
-
-        const key = trimmed.substring(0, colonIdx).trim();
-        const value = trimmed.substring(colonIdx + 1).trim();
-
-        if (indentLevel === 0) {
-            // Root level key
-            if (value) {
-                // Simple key: value
-                result.push(`${key}:${parseValue(value)}`);
-            } else {
-                // Object or array start
-                currentKey = key;
-            }
-        } else {
-            // Nested field
-            if (result.length === 0 || !result[result.length - 1].startsWith(currentKey)) {
-                result.push(currentKey);
-            }
-            result[result.length - 1] += `#${key}:${parseValue(value)}`;
-        }
-    }
-
-    // Flush any remaining array
-    if (inArray && arrayItems.length > 0) {
-        result.push(`${currentKey}@${arrayItems.length}>${arrayItems.join('|')}`);
-    }
-
-    return result.join('\n');
+    // Serialize to LLM format
+    return serializeToLlm(parseResult.document);
 }
 
 /**
- * Parse a value from human format to dense format
+ * Parse a value from human format to dense format (legacy helper)
  */
-function parseValue(value: string): string {
+function parseValueLegacy(value: string): string {
     // Handle quoted strings
     if ((value.startsWith('"') && value.endsWith('"')) ||
         (value.startsWith("'") && value.endsWith("'"))) {
         return value.slice(1, -1);
     }
-    
+
     // Handle booleans
     if (value === 'true') return '1';
     if (value === 'false') return '0';
     if (value === 'null') return '';
-    
+
     return value;
 }
 
@@ -362,12 +296,180 @@ function parseValue(value: string): string {
 /**
  * Validate DX content syntax (TypeScript fallback)
  * 
+ * Validates both LLM format and human format:
+ * - LLM format: sigil syntax, reference definitions, schema/row consistency
+ * - Human format: brackets, strings, general syntax
+ * 
+ * Requirements: 8.1-8.4
+ */
+export function validateDx(content: string): ValidationResult {
+    if (!content.trim()) {
+        return { success: true };
+    }
+
+    // Detect format type
+    const isLlmFormat = content.trim().startsWith('#');
+
+    if (isLlmFormat) {
+        return validateLlmFormat(content);
+    } else {
+        return validateHumanFormat(content);
+    }
+}
+
+/**
+ * Validate LLM format content
+ * 
+ * Checks for:
+ * - Valid sigil syntax (#c:, #:, #<letter>)
+ * - Reference definitions
+ * - Schema/row consistency
+ * 
+ * Requirements: 8.1-8.4
+ */
+function validateLlmFormat(content: string): ValidationResult {
+    const lines = content.split('\n');
+    const definedRefs = new Set<string>();
+    const usedRefs = new Set<string>();
+    let currentSchema: string[] = [];
+    let currentSectionId = '';
+    let lineNum = 0;
+
+    for (const line of lines) {
+        lineNum++;
+        const trimmed = line.trim();
+
+        // Skip empty lines and comments
+        if (!trimmed || trimmed.startsWith('//')) {
+            continue;
+        }
+
+        // Context section: #c:...
+        if (trimmed.startsWith('#c:')) {
+            const content = trimmed.substring(3);
+            // Validate context format
+            if (content && !content.includes('|')) {
+                return {
+                    success: false,
+                    error: `Invalid context format: missing pipe separator`,
+                    line: lineNum,
+                    column: 4,
+                    hint: 'Context format should be #c:key|value;key|value',
+                };
+            }
+            // Check for reference usage in context
+            const refMatches = content.match(/\^([a-zA-Z0-9_]+)/g);
+            if (refMatches) {
+                for (const ref of refMatches) {
+                    usedRefs.add(ref.substring(1));
+                }
+            }
+            currentSchema = [];
+            continue;
+        }
+
+        // Reference definition: #:...
+        if (trimmed.startsWith('#:')) {
+            const content = trimmed.substring(2);
+            const pipeIdx = content.indexOf('|');
+            if (pipeIdx === -1) {
+                return {
+                    success: false,
+                    error: `Invalid reference definition: missing pipe separator`,
+                    line: lineNum,
+                    column: 3,
+                    hint: 'Reference format should be #:key|value',
+                };
+            }
+            const refKey = content.substring(0, pipeIdx).trim();
+            if (!refKey) {
+                return {
+                    success: false,
+                    error: `Invalid reference definition: empty key`,
+                    line: lineNum,
+                    column: 3,
+                    hint: 'Reference key cannot be empty',
+                };
+            }
+            definedRefs.add(refKey);
+            currentSchema = [];
+            continue;
+        }
+
+        // Data section header: #<letter>(schema)
+        if (trimmed.startsWith('#') && trimmed.includes('(')) {
+            const match = trimmed.match(/^#([a-zA-Z])\(([^)]*)\)$/);
+            if (!match) {
+                return {
+                    success: false,
+                    error: `Invalid section header: ${trimmed}`,
+                    line: lineNum,
+                    column: 1,
+                    hint: 'Section headers should be in format #<letter>(col1|col2|col3)',
+                };
+            }
+            currentSectionId = match[1];
+            currentSchema = match[2].split('|').map(col => col.trim()).filter(col => col);
+            if (currentSchema.length === 0) {
+                return {
+                    success: false,
+                    error: `Empty schema in section header`,
+                    line: lineNum,
+                    column: 3,
+                    hint: 'Schema must have at least one column',
+                };
+            }
+            continue;
+        }
+
+        // Unknown sigil
+        if (trimmed.startsWith('#')) {
+            const sigil = trimmed.substring(0, 2);
+            return {
+                success: false,
+                error: `Unknown sigil '${sigil}'`,
+                line: lineNum,
+                column: 1,
+                hint: 'Valid sigils are #c: (context), #: (reference), #<letter>( (data section)',
+            };
+        }
+
+        // Data row (if we have a schema)
+        if (currentSchema.length > 0) {
+            const values = trimmed.split('|');
+            if (values.length !== currentSchema.length) {
+                return {
+                    success: false,
+                    error: `Row has ${values.length} columns, expected ${currentSchema.length}`,
+                    line: lineNum,
+                    column: 1,
+                    hint: `Schema for section '${currentSectionId}' has columns: ${currentSchema.join(', ')}`,
+                };
+            }
+            // Check for reference usage in row
+            for (const value of values) {
+                if (value.trim().startsWith('^')) {
+                    usedRefs.add(value.trim().substring(1));
+                }
+            }
+        }
+    }
+
+    // Check for undefined references (warning, not error)
+    // We don't fail on undefined refs as they may be intentional
+
+    return { success: true };
+}
+
+/**
+ * Validate human format content
+ * 
  * Checks for:
  * - Unclosed brackets
  * - Unclosed strings
  * - Mismatched brackets
  */
-export function validateDx(content: string): ValidationResult {
+function validateHumanFormat(content: string): ValidationResult {
     const bracketStack: Array<{ char: string; line: number; column: number }> = [];
     let inString = false;
     let stringChar = '"';
@@ -414,7 +516,6 @@ export function validateDx(content: string): ValidationResult {
                 bracketStack.push({ char: ch, line: lineNum, column: col });
             } else if (ch === '}' || ch === ']' || ch === ')') {
                 const expected = ch === '}' ? '{' : ch === ']' ? '[' : '(';
-                const expectedClose = ch;
 
                 if (bracketStack.length === 0) {
                     return {
@@ -540,7 +641,7 @@ export async function loadDxCore(
     // Try to load WASM
     try {
         const wasmPath = path.join(extensionPath, 'wasm', 'dx_serializer.js');
-        
+
         if (fs.existsSync(wasmPath)) {
             // Dynamic import of WASM module
             const wasmModule = await import(wasmPath) as WasmModule;

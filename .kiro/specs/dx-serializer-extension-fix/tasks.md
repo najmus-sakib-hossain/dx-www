@@ -98,47 +98,47 @@ This plan updates the DX Serializer VS Code extension to properly handle the DX 
   - [x] All TypeScript tests pass (llmParser.test.ts, humanFormatter.test.ts, humanParser.test.ts)
   - [x] TypeScript compiles without errors
 
-- [ ] 6. Update dxCore.ts with new implementations
-  - [ ] 6.1 Replace `formatDx` with LLM-aware formatter
+- [x] 6. Update dxCore.ts with new implementations
+  - [x] 6.1 Replace `formatDx` with LLM-aware formatter
     - Use new LLM parser and Human formatter
     - Handle empty input
     - _Requirements: 1.1-1.9, 2.1-2.7_
-  - [ ] 6.2 Replace `minifyDx` with LLM-aware compressor
+  - [x] 6.2 Replace `minifyDx` with LLM-aware compressor
     - Use new Human parser and LLM serializer
     - Handle empty input
     - _Requirements: 3.1-3.5_
-  - [ ] 6.3 Update validation to handle LLM format
+  - [x] 6.3 Update validation to handle LLM format
     - Validate sigil syntax
     - Validate reference definitions
     - Validate schema/row consistency
     - _Requirements: 8.1-8.4_
-  - [ ] 6.4 Write property test for WASM/TypeScript equivalence
+  - [x] 6.4 Write property test for WASM/TypeScript equivalence
     - **Property 8: WASM and TypeScript Equivalence**
     - **Validates: Requirements 5.3, 5.4**
 
-- [ ] 7. Verify file extension filtering
-  - [ ] 7.1 Review and test `isExactlyDxFile` function
+- [x] 7. Verify file extension filtering
+  - [x] 7.1 Review and test `isExactlyDxFile` function
     - Verify `.dx` files are accepted
     - Verify `.dx.json`, `.dx.yml`, etc. are rejected
     - _Requirements: 4.1-4.7_
-  - [ ] 7.2 Write property test for file extension filtering
+  - [x] 7.2 Write property test for file extension filtering
     - **Property 7: File Extension Filtering**
     - **Validates: Requirements 4.1-4.7**
 
-- [ ] 8. Checkpoint - Full integration test
+- [x] 8. Checkpoint - Full integration test
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Create example files for testing
-  - [ ] 9.1 Create LLM format example file
+- [x] 9. Create example files for testing
+  - [x] 9.1 Create LLM format example file
     - Include context section, references, data sections
     - Include all value types
     - _Requirements: 1.1-1.9_
-  - [ ] 9.2 Create Human format example file
+  - [x] 9.2 Create Human format example file
     - Include formatted tables, expanded keys
     - Include resolved references
     - _Requirements: 2.1-2.7_
 
-- [ ] 10. Final checkpoint - Ensure all tests pass
+- [x] 10. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
