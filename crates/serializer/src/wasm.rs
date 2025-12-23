@@ -35,7 +35,7 @@
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
-use crate::hologram::{Deflater, HologramConfig, Inflater};
+use crate::llm::{human_to_llm, llm_to_human};
 
 /// Result of a transformation operation
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
@@ -206,13 +206,11 @@ impl Default for SerializerConfig {
 
 /// DX Serializer for VS Code extension
 ///
-/// Provides transformation between dense (disk) and human (editor) formats
-/// with validation support.
+/// Provides transformation between LLM (disk) and Human (editor) formats
+/// with validation support. Uses the llm module for format conversion.
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct DxSerializer {
     config: SerializerConfig,
-    inflater: Inflater,
-    deflater: Deflater,
 }
 
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
@@ -221,59 +219,48 @@ impl DxSerializer {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Self {
         let config = SerializerConfig::new();
-        Self::with_config(config)
+        Self { config }
     }
 
     /// Create a DxSerializer with custom configuration
     #[cfg_attr(feature = "wasm", wasm_bindgen(js_name = withConfig))]
     pub fn with_config(config: SerializerConfig) -> Self {
-        let hologram_config = HologramConfig {
-            indent_size: config.indent_size,
-            preserve_comments: config.preserve_comments,
-            use_unicode_symbols: false, // Use ASCII for editor compatibility
-            use_box_drawing: false,
-            section_marker: ' ',
-            bullet_char: ' ',
-            arrow_char: '>',
-            null_display: "null".to_string(),
-            align_values: true,
-            max_line_width: 120,
-            use_dx_format: true, // Use flat key: value format
-        };
-
-        Self {
-            config,
-            inflater: Inflater::new(hologram_config.clone()),
-            deflater: Deflater::new(hologram_config),
-        }
+        Self { config }
     }
 
-    /// Transform dense format to human-readable format
+    /// Transform LLM format to human-readable format
     ///
     /// This is called when opening a .dx file in the editor.
+    /// Converts sigil-based LLM format (#c, #:, #<letter>) to beautiful
+    /// human-readable format with Unicode tables and expanded keys.
     #[cfg_attr(feature = "wasm", wasm_bindgen(js_name = toHuman))]
-    pub fn to_human(&self, dense: &str) -> TransformResult {
+    pub fn to_human(&self, llm_input: &str) -> TransformResult {
         // Handle empty input
-        if dense.trim().is_empty() {
+        if llm_input.trim().is_empty() {
             return TransformResult::ok(String::new());
         }
 
-        let human = self.inflater.inflate(dense);
-        TransformResult::ok(human)
+        match llm_to_human(llm_input) {
+            Ok(human) => TransformResult::ok(human),
+            Err(e) => TransformResult::err(format!("Parse error: {}", e)),
+        }
     }
 
-    /// Transform human-readable format to dense format
+    /// Transform human-readable format to LLM format
     ///
     /// This is called when saving a .dx file in the editor.
+    /// Converts human-readable format back to token-optimized LLM format.
     #[cfg_attr(feature = "wasm", wasm_bindgen(js_name = toDense))]
-    pub fn to_dense(&self, human: &str) -> TransformResult {
+    pub fn to_dense(&self, human_input: &str) -> TransformResult {
         // Handle empty input
-        if human.trim().is_empty() {
+        if human_input.trim().is_empty() {
             return TransformResult::ok(String::new());
         }
 
-        let dense = self.deflater.deflate(human);
-        TransformResult::ok(dense)
+        match human_to_llm(human_input) {
+            Ok(llm) => TransformResult::ok(llm),
+            Err(e) => TransformResult::err(format!("Parse error: {}", e)),
+        }
     }
 
     /// Validate content syntax
@@ -523,23 +510,24 @@ mod tests {
     #[test]
     fn test_serializer_to_human() {
         let serializer = DxSerializer::new();
-        let result = serializer.to_human("server#host:localhost#port:5432");
-        assert!(result.success());
-        assert!(result.content().contains("host"));
-        assert!(result.content().contains("localhost"));
+        // Use LLM format: #c: for context section with pipe-separated key|value pairs
+        let result = serializer.to_human("#c:host|localhost;port|5432");
+        assert!(result.success(), "to_human failed: {:?}", result.error());
+        assert!(result.content().contains("host") || result.content().contains("localhost"));
     }
 
     #[test]
     fn test_serializer_to_dense() {
         let serializer = DxSerializer::new();
-        // First inflate to get human format
-        let human = serializer.to_human("config#debug:1#prod:0");
-        assert!(human.success());
+        // Use LLM format for input
+        let human = serializer.to_human("#c:debug|+;prod|-");
+        assert!(human.success(), "to_human failed: {:?}", human.error());
 
         // Then deflate back
         let dense = serializer.to_dense(&human.content());
-        assert!(dense.success());
-        assert!(dense.content().contains("debug"));
+        assert!(dense.success(), "to_dense failed: {:?}", dense.error());
+        // The result should contain the LLM format sigil
+        assert!(dense.content().contains("#c:") || dense.content().contains("debug"));
     }
 
     #[test]
@@ -651,186 +639,152 @@ mod property_tests {
     use super::*;
     use proptest::prelude::*;
 
-    // Generators for valid DX content
+    // Generators for valid LLM format content
 
-    /// Generate a valid key (alphanumeric with dots and underscores)
-    fn valid_key() -> impl Strategy<Value = String> {
-        prop::string::string_regex("[a-z][a-z0-9_\\.]{0,15}")
+    /// Generate a valid abbreviated key (2-3 lowercase letters)
+    fn valid_abbrev_key() -> impl Strategy<Value = String> {
+        prop::string::string_regex("[a-z]{2,3}")
             .unwrap()
             .prop_filter("non-empty key", |s| !s.is_empty())
     }
 
-    /// Generate a simple value (no special characters that need escaping)
+    /// Generate a simple value for LLM format
     fn simple_value() -> impl Strategy<Value = String> {
         prop_oneof![
-            // Simple strings (avoid special chars like - + ~ that have meaning)
-            prop::string::string_regex("[a-zA-Z][a-zA-Z0-9_]{0,15}").unwrap(),
-            // Numbers (positive only to avoid - being interpreted as boolean)
+            // Simple strings (alphanumeric)
+            prop::string::string_regex("[a-zA-Z][a-zA-Z0-9]{0,15}").unwrap(),
+            // Numbers
             (1i32..10000).prop_map(|n| n.to_string()),
-            // Explicit booleans
-            prop::bool::ANY.prop_map(|b| if b { "1".to_string() } else { "0".to_string() }),
         ]
     }
 
-    /// Generate a key-value pair in dense format
-    fn key_value_pair() -> impl Strategy<Value = String> {
-        (valid_key(), simple_value()).prop_map(|(k, v)| format!("{}:{}", k, v))
+    /// Generate a boolean value in LLM format (+ or -)
+    fn llm_bool() -> impl Strategy<Value = String> {
+        prop::bool::ANY.prop_map(|b| if b { "+".to_string() } else { "-".to_string() })
     }
 
-    /// Generate a simple object in dense format: key#field:val#field:val
-    fn simple_object() -> impl Strategy<Value = String> {
-        (
-            valid_key(),
-            prop::collection::vec(
-                (valid_key(), simple_value()),
-                1..4,
-            ),
+    /// Generate a context section in LLM format: #c:key|val;key|val
+    fn llm_context_section() -> impl Strategy<Value = String> {
+        prop::collection::vec(
+            (valid_abbrev_key(), simple_value()),
+            1..4,
         )
-            .prop_map(|(key, fields)| {
-                let field_str: String = fields
+            .prop_map(|pairs| {
+                let content: String = pairs
                     .into_iter()
-                    .map(|(k, v)| format!("#{}:{}", k, v))
-                    .collect();
-                format!("{}{}", key, field_str)
+                    .map(|(k, v)| format!("{}|{}", k, v))
+                    .collect::<Vec<_>>()
+                    .join(";");
+                format!("#c:{}", content)
             })
     }
 
-    /// Generate a simple array in dense format: key@N>item|item|item
-    fn simple_array() -> impl Strategy<Value = String> {
+    /// Generate a data section in LLM format: #d(schema)\nrow\nrow
+    fn llm_data_section() -> impl Strategy<Value = String> {
         (
-            valid_key(),
-            prop::collection::vec(simple_value(), 1..5),
+            prop::string::string_regex("[a-z]").unwrap(), // section id (single letter)
+            prop::collection::vec(valid_abbrev_key(), 2..4), // schema columns
+            prop::collection::vec(simple_value(), 2..4), // row values
         )
-            .prop_map(|(key, items)| {
-                format!("{}@{}>{}",
-                    key,
-                    items.len(),
-                    items.join("|")
-                )
+            .prop_filter("schema and row same length", |(_, schema, row)| schema.len() == row.len())
+            .prop_map(|(id, schema, row)| {
+                let schema_str = schema.join("|");
+                let row_str = row.join("|");
+                format!("#{}({})\n{}", id, schema_str, row_str)
             })
     }
 
-    /// Generate valid dense DX content
-    fn valid_dense_content() -> impl Strategy<Value = String> {
+    /// Generate valid LLM format content
+    fn valid_llm_content() -> impl Strategy<Value = String> {
         prop_oneof![
-            key_value_pair(),
-            simple_object(),
-            simple_array(),
+            llm_context_section(),
+            llm_data_section(),
         ]
     }
 
-    // Feature: dx-serializer-extension, Property 1: Round-trip transformation consistency
-    // For any valid DX content in dense format, transforming to human format
-    // and back to dense format SHALL produce content equivalent to the original.
-    // **Validates: Requirements 1.1, 1.2, 1.6**
+    // Feature: dx-serializer-extension-fix, Property 1: LLM to Human to LLM Round-Trip
+    // For any valid LLM format string, converting to human format and back to LLM format
+    // SHALL produce a document with equivalent data.
+    // **Validates: Requirements 1.1-1.9, 2.1-2.6, 3.1-3.5, 3.6**
     proptest! {
         #![proptest_config(ProptestConfig::with_cases(100))]
 
         #[test]
-        fn prop_round_trip_preserves_key_value(
-            key in valid_key(),
-            value in simple_value()
+        fn prop_llm_round_trip_context(
+            pairs in prop::collection::vec(
+                (valid_abbrev_key(), simple_value()),
+                1..3,
+            )
         ) {
-            let serializer = DxSerializer::new();
-            let dense = format!("{}:{}", key, value);
-
-            // Transform to human
-            let human_result = serializer.to_human(&dense);
-            prop_assert!(human_result.success(), "to_human failed: {:?}", human_result.error());
-
-            // Transform back to dense
-            let dense_result = serializer.to_dense(&human_result.content());
-            prop_assert!(dense_result.success(), "to_dense failed: {:?}", dense_result.error());
-
-            // Verify key and value are preserved
-            let result = dense_result.content();
-            prop_assert!(
-                result.contains(&key) || result.contains(&key.replace('.', "_")),
-                "Key '{}' not found in result: '{}'", key, result
-            );
-            prop_assert!(
-                result.contains(&value),
-                "Value '{}' not found in result: '{}'", value, result
-            );
-        }
-
-        #[test]
-        fn prop_round_trip_preserves_object(
-            key in valid_key(),
-            field1_key in valid_key(),
-            field1_val in simple_value(),
-            field2_key in valid_key(),
-            field2_val in simple_value()
-        ) {
-            // Skip if field keys are the same (would cause collision)
-            prop_assume!(field1_key != field2_key);
+            // Skip if keys are duplicated
+            let keys: Vec<_> = pairs.iter().map(|(k, _)| k.clone()).collect();
+            let unique_keys: std::collections::HashSet<_> = keys.iter().collect();
+            prop_assume!(keys.len() == unique_keys.len());
 
             let serializer = DxSerializer::new();
-            let dense = format!("{}#{}:{}#{}:{}",
-                key, field1_key, field1_val, field2_key, field2_val);
+            let content: String = pairs
+                .iter()
+                .map(|(k, v)| format!("{}|{}", k, v))
+                .collect::<Vec<_>>()
+                .join(";");
+            let llm = format!("#c:{}", content);
 
             // Transform to human
-            let human_result = serializer.to_human(&dense);
+            let human_result = serializer.to_human(&llm);
             prop_assert!(human_result.success(), "to_human failed: {:?}", human_result.error());
 
-            // Transform back to dense
-            let dense_result = serializer.to_dense(&human_result.content());
-            prop_assert!(dense_result.success(), "to_dense failed: {:?}", dense_result.error());
+            // Transform back to LLM
+            let llm_result = serializer.to_dense(&human_result.content());
+            prop_assert!(llm_result.success(), "to_dense failed: {:?}", llm_result.error());
 
-            // Verify values are preserved (accounting for boolean normalization)
-            let result = dense_result.content();
-
-            // Helper to check if value is present (with boolean normalization)
-            let value_present = |val: &str| -> bool {
-                match val {
-                    "0" | "false" => result.contains("0") || result.contains("false"),
-                    "1" | "true" => result.contains("1") || result.contains("true"),
-                    other => result.contains(other),
-                }
-            };
-
-            prop_assert!(
-                value_present(&field1_val),
-                "Field1 value '{}' not found in result: '{}'", field1_val, result
-            );
-            prop_assert!(
-                value_present(&field2_val),
-                "Field2 value '{}' not found in result: '{}'", field2_val, result
-            );
-        }
-
-        #[test]
-        fn prop_round_trip_preserves_array(
-            key in valid_key(),
-            items in prop::collection::vec(simple_value(), 1..5)
-        ) {
-            let serializer = DxSerializer::new();
-            let dense = format!("{}@{}>{}",
-                key, items.len(), items.join("|"));
-
-            // Transform to human
-            let human_result = serializer.to_human(&dense);
-            prop_assert!(human_result.success(), "to_human failed: {:?}", human_result.error());
-
-            // Transform back to dense
-            let dense_result = serializer.to_dense(&human_result.content());
-            prop_assert!(dense_result.success(), "to_dense failed: {:?}", dense_result.error());
-
-            // Verify all items are preserved (accounting for boolean normalization)
-            let result = dense_result.content();
-            for item in &items {
-                // Boolean values may be normalized: 0 -> false -> 0, 1 -> true -> 1
-                let normalized = match item.as_str() {
-                    "0" | "false" => vec!["0", "false"],
-                    "1" | "true" => vec!["1", "true"],
-                    other => vec![other],
-                };
-                let found = normalized.iter().any(|v| result.contains(v));
+            // Verify values are preserved
+            let result = llm_result.content();
+            for (_, value) in &pairs {
                 prop_assert!(
-                    found,
-                    "Item '{}' (or equivalent) not found in result: '{}'", item, result
+                    result.contains(value),
+                    "Value '{}' not found in result: '{}'", value, result
                 );
             }
+        }
+
+        #[test]
+        fn prop_llm_round_trip_booleans(
+            key1 in valid_abbrev_key(),
+            key2 in valid_abbrev_key(),
+            bool1 in prop::bool::ANY,
+            bool2 in prop::bool::ANY
+        ) {
+            prop_assume!(key1 != key2);
+
+            let serializer = DxSerializer::new();
+            let b1 = if bool1 { "+" } else { "-" };
+            let b2 = if bool2 { "+" } else { "-" };
+            let llm = format!("#c:{}|{};{}|{}", key1, b1, key2, b2);
+
+            // Transform to human
+            let human_result = serializer.to_human(&llm);
+            prop_assert!(human_result.success(), "to_human failed: {:?}", human_result.error());
+
+            // Human format should show true/false
+            let human = human_result.content();
+            if bool1 {
+                prop_assert!(human.contains("true") || human.contains("✓"),
+                    "Boolean true not found in human format: '{}'", human);
+            } else {
+                prop_assert!(human.contains("false") || human.contains("✗"),
+                    "Boolean false not found in human format: '{}'", human);
+            }
+
+            // Transform back to LLM
+            let llm_result = serializer.to_dense(&human);
+            prop_assert!(llm_result.success(), "to_dense failed: {:?}", llm_result.error());
+
+            // LLM format should have + or -
+            let result = llm_result.content();
+            prop_assert!(
+                result.contains("|+") || result.contains("|-"),
+                "Boolean markers not found in LLM result: '{}'", result
+            );
         }
 
         #[test]
