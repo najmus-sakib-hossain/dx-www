@@ -5,24 +5,24 @@ Seamless editing of `.dx` files and files named exactly `dx` with human-readable
 ## Features
 
 - **Dual Format**: Edit human-readable format while storing token-efficient LLM format on disk
+- **Human Format V2**: Flat TOML-like structure with full key names and Unicode tables
 - **File Support**: Handles both `.dx` extension files AND files named exactly `dx` (no extension)
 - **Syntax Highlighting**: Full TextMate grammar for DX files
 - **Auto-Save Compatible**: Grace period prevents saving incomplete code during typing
 - **Real-time Validation**: Immediate syntax error feedback with actionable hints
 - **Smart Quoting**: Automatic quote selection for strings with apostrophes and special characters
-- **WASM Performance**: Rust-compiled WebAssembly core with TypeScript fallback
 
 ## How It Works
 
 When you open a `.dx` file or a file named exactly `dx`:
 1. The extension reads the LLM format from disk
-2. Transforms it to human-readable format for display
+2. Transforms it to human-readable V2 format for display
 3. You edit the readable format in the editor
 4. On save, it transforms back to LLM format for storage
 
 This gives you the best of both worlds:
-- **Humans**: Beautiful, readable, TOML-like format with Unicode tables
-- **LLMs**: Token-efficient sigil-based format (37% smaller than TOON)
+- **Humans**: Beautiful, readable, flat TOML-like format with Unicode tables
+- **LLMs**: Token-efficient sigil-based format (4.8× better than JSON)
 - **Git**: Compact diffs, efficient storage
 
 ### Format Example
@@ -34,31 +34,71 @@ This gives you the best of both worlds:
 forge|https://dx.vercel.app/essensefromexistence/dx|none
 ```
 
-**Human format (in editor):**
+**Human Format V2 (in editor):**
 ```toml
-# ═══════════════════════════════════════════════════════════════════════════════
-#                                   CONFIG
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════════
+#                                  CONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════════
 
 [config]
-    name        = "dx"
-    version     = "0.0.1"
-    title       = "Enhanced Developing Experience"
-    description = "Orchestrate don't just own your code"
+name        = "dx"
+version     = "0.0.1"
+title       = "Enhanced Developing Experience"
+description = "Orchestrate don't just own your code"
 
-# ═══════════════════════════════════════════════════════════════════════════════
-#                                   FORGE
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════════
+#                                      FORGE
+# ════════════════════════════════════════════════════════════════════════════════
 
 [forge]
-    # Schema: name | repository | container
+┌───────┬─────────────────────────────────────────────────┬───────────┐
+│ Name  │                   Repository                    │ Container │
+├───────┼─────────────────────────────────────────────────┼───────────┤
+│ forge │ https://dx.vercel.app/essensefromexistence/dx   │ none      │
+└───────┴─────────────────────────────────────────────────┴───────────┘
 
-    ┌───────┬─────────────────────────────────────────────────┬───────────┐
-    │ Name  │ Repository                                      │ Container │
-    ├───────┼─────────────────────────────────────────────────┼───────────┤
-    │ forge │ https://dx.vercel.app/essensefromexistence/dx   │ none      │
-    └───────┴─────────────────────────────────────────────────┴───────────┘
+Total: 1 rows
 ```
+
+## Human Format V2 Features
+
+### Flat Structure (No Indentation)
+```toml
+[config]
+name    = "MyProject"
+version = "1.0.0"
+```
+
+### Full Key Name Expansion
+| Abbreviated | Full Name   |
+|-------------|-------------|
+| `nm`        | `name`      |
+| `v`         | `version`   |
+| `au`        | `author`    |
+| `ws`        | `workspace` |
+| `ed`        | `editors`   |
+| `repo`      | `repository`|
+| `cont`      | `container` |
+| `ci`        | `ci_cd`     |
+
+### Full Section Names
+```toml
+[forge]    # instead of [f]
+[stack]    # instead of [k]
+[style]    # instead of [y]
+[media]    # instead of [m]
+```
+
+### Comma-Separated Arrays
+```toml
+workspace = frontend/www, frontend/mobile, backend/api
+```
+
+### Unicode Box-Drawing Tables
+Tables use Unicode box-drawing characters:
+- `┌` `┐` `└` `┘` - Corners
+- `─` `│` - Lines
+- `┬` `┴` `├` `┤` `┼` - Junctions
 
 ## Commands
 
@@ -107,6 +147,7 @@ The extension works seamlessly with VS Code's auto-save feature:
 ## Requirements
 
 - VS Code 1.85.0 or higher
+- Kiro IDE (recommended)
 
 ## Development
 
@@ -118,10 +159,8 @@ npm install
 npm run compile
 
 # Run tests
-node out/utils.standalone.test.js
-node out/smartQuoting.test.js
-node out/humanFormat.test.js
-node out/validation.test.js
+node out/humanFormatter.test.js
+node out/humanParser.test.js
 node out/dxCore.test.js
 ```
 
@@ -133,8 +172,16 @@ src/
 ├── dxCore.ts             # WASM wrapper with TypeScript fallback
 ├── dxDocumentManager.ts  # Document state and validation
 ├── dxLensFileSystem.ts   # Virtual file system provider
+├── humanFormatter.ts     # Human Format V2 formatter
+├── humanParser.ts        # Human Format V2 parser
+├── llmParser.ts          # LLM format parser
 └── utils.ts              # Helper functions
 ```
+
+## Related Documentation
+
+- **[HUMAN.md](../../HUMAN.md)** - Complete Human Format V2 specification
+- **[Serializer README](../serializer/README.md)** - DX Serializer library documentation
 
 ## License
 

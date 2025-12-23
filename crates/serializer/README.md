@@ -548,6 +548,89 @@ Same as dx-serializer parent crate.
 
 ---
 
+## 📝 Human Format V2
+
+**NEW: Human-readable configuration format with flat TOML-like structure.**
+
+### Features
+
+- **Flat structure** - No YAML indentation, clean key-value pairs
+- **Full key names** - `version` instead of `v`, `workspace` instead of `ws`
+- **Full section names** - `[forge]` instead of `[f]`
+- **Comma-separated arrays** - `workspace = frontend/www, frontend/mobile`
+- **Unicode box-drawing tables** - Clean borders without indentation
+- **Automatic cache generation** - LLM + Machine formats with path preservation
+
+### Example Output
+
+```toml
+# ════════════════════════════════════════════════════════════════════════════════
+#                                  CONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════════
+
+[config]
+name        = "MyProject"
+version     = "1.0.0"
+author      = essensefromexistence
+workspace   = frontend/www, frontend/mobile
+
+[forge]
+┌───────┬───────────────────────────────────────────────┬───────────┬───────┐
+│ name  │                     repo                      │ container │ ci_cd │
+├───────┼───────────────────────────────────────────────┼───────────┼───────┤
+│ forge │ https://dx.vercel.app/essensefromexistence/dx │ none      │ none  │
+└───────┴───────────────────────────────────────────────┴───────────┴───────┘
+
+Total: 1 rows
+```
+
+### Quick Usage
+
+```rust
+use dx_serializer::llm::{
+    PrettyPrinter, CacheGenerator, CacheConfig,
+    llm_to_human_v2, human_to_llm_v2,
+};
+
+// Pretty print with validation
+let printer = PrettyPrinter::new();
+let output = printer.format(&doc)?;
+
+// Round-trip conversion
+let human_v2 = llm_to_human_v2(llm_input)?;
+let back_to_llm = human_to_llm_v2(&human_v2)?;
+
+// Cache generation
+let config = CacheConfig::new(".dx/cache".into())
+    .with_llm(true)
+    .with_machine(true);
+let generator = CacheGenerator::new(config);
+generator.generate(&source_path, &doc)?;
+```
+
+See **[HUMAN.md](../../HUMAN.md)** for complete documentation.
+
+### VS Code / Kiro Extension
+
+Install the DX Serializer extension for seamless `.dx` file editing:
+
+```bash
+# Install in Kiro
+kiro --install-extension crates/vscode-dx-serializer/vscode-dx-serializer-0.1.0.vsix
+
+# Or in VS Code
+code --install-extension crates/vscode-dx-serializer/vscode-dx-serializer-0.1.0.vsix
+```
+
+Features:
+- Edit human-readable V2 format while storing LLM format on disk
+- Syntax highlighting and real-time validation
+- Auto-save compatible with grace period
+
+See **[Extension README](../vscode-dx-serializer/README.md)** for full documentation.
+
+---
+
 ## 🎯 Summary
 
 **DX-Serializer is the ultimate serialization system.**

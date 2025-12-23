@@ -23,7 +23,7 @@ import {
     arrValue,
     refValue,
 } from './llmParser';
-import { compressKey } from './humanFormatter';
+import { compressKey, compressSectionName, REVERSE_SECTION_NAMES } from './humanFormatter';
 
 // ============================================================================
 // Types
@@ -56,20 +56,23 @@ export function parseSectionHeader(line: string): string | null {
 
 /**
  * Map section names to single-letter IDs
+ * Supports both full names (V2) and single letters (V1)
  */
 export function sectionNameToId(name: string): string {
     const lower = name.toLowerCase();
 
-    // Special mappings
-    if (lower === 'config' || lower === 'context') {
+    // Special mappings for config
+    if (lower === 'config' || lower === 'context' || lower === 'c') {
         return 'c';
     }
-    if (lower === 'data') {
-        return 'd';
+
+    // Check if it's already a single-letter ID
+    if (lower.length === 1) {
+        return lower;
     }
 
-    // Use first letter for other sections
-    return lower.charAt(0);
+    // V2: Full name to ID mapping
+    return compressSectionName(lower);
 }
 
 // ============================================================================
@@ -108,6 +111,7 @@ export function parseConfigLine(line: string): [string, DxValue] | null {
 
 /**
  * Parse a value from human format
+ * Supports both V1 (bracketed arrays) and V2 (comma-separated arrays)
  */
 export function parseHumanValue(raw: string): DxValue {
     const trimmed = raw.trim();
@@ -142,7 +146,7 @@ export function parseHumanValue(raw: string): DxValue {
         return strValue(trimmed.slice(1, -1));
     }
 
-    // Array: [a, b, c]
+    // V1: Array with brackets: [a, b, c]
     if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
         const content = trimmed.slice(1, -1);
         if (content.trim() === '') {
@@ -150,6 +154,14 @@ export function parseHumanValue(raw: string): DxValue {
         }
         const items = content.split(',').map(item => parseHumanValue(item.trim()));
         return arrValue(items);
+    }
+
+    // V2: Comma-separated array (no brackets): a, b, c
+    if (trimmed.includes(', ') || trimmed.includes(',')) {
+        const items = trimmed.split(/,\s*/).map(item => parseHumanValue(item.trim()));
+        if (items.length > 1) {
+            return arrValue(items);
+        }
     }
 
     // Plain string

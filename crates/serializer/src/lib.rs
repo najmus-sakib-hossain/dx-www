@@ -70,6 +70,19 @@ pub use llm::{
     machine_to_llm,
 };
 
+// Re-export Human Format V2 types
+pub use llm::{
+    box_chars, HumanFormatV2Config, HumanFormatterV2,
+    PrettyPrinter, PrettyPrinterConfig, PrettyPrintError,
+    TableWrapper, TableWrapperConfig,
+    CacheConfig, CacheGenerator, CacheError, CachePaths, CacheResult,
+};
+pub use llm::{
+    document_to_human_v2, document_to_human_v2_with_config,
+    human_to_llm_v2, human_v2_to_document, human_v2_to_machine,
+    llm_to_human_v2, llm_to_human_v2_with_config, machine_to_human_v2,
+};
+
 // Re-export WASM types for VS Code extension
 pub use wasm::{DxSerializer, SerializerConfig, TransformResult, ValidationResult, smart_quote};
 

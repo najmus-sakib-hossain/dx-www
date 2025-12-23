@@ -159,10 +159,10 @@ export function testFormatValueTypes(): void {
         throw new Error(`Expected 'null', got '${nullResult}'`);
     }
 
-    // Array
+    // Array - V2: comma-separated without brackets for simple arrays
     const arrResult = formatValue(arrValue([strValue('a'), strValue('b')]));
-    if (arrResult !== '[a, b]') {
-        throw new Error(`Expected '[a, b]', got '${arrResult}'`);
+    if (arrResult !== 'a, b') {
+        throw new Error(`Expected 'a, b', got '${arrResult}'`);
     }
 
     // Reference (without refs map)
@@ -229,8 +229,8 @@ export function testFormatSectionHeader(): void {
         throw new Error(`Header should contain 'TEST': ${header}`);
     }
 
-    // Check for box-drawing characters
-    if (!header.includes('─')) {
+    // Check for box-drawing characters (V2 uses ═ instead of ─)
+    if (!header.includes('═')) {
         throw new Error(`Header should contain box-drawing characters: ${header}`);
     }
 
@@ -276,9 +276,9 @@ export function testFormatDataSectionCreatesTable(): void {
 
     const result = formatDataSection(section);
 
-    // Should contain section header
-    if (!result.includes('[d]')) {
-        throw new Error(`Should contain section header '[d]': ${result}`);
+    // V2: Should contain full section name '[data]' instead of '[d]'
+    if (!result.includes('[data]')) {
+        throw new Error(`Should contain section header '[data]': ${result}`);
     }
 
     // Should contain box-drawing characters
@@ -363,6 +363,7 @@ export function runUnitTests(): void {
             test: () => {
                 const nested = arrValue([arrValue([strValue('a'), strValue('b')]), strValue('c')]);
                 const result = formatValue(nested);
+                // V2: nested arrays use brackets for clarity
                 return result === '[[a, b], c]';
             }
         },
@@ -387,7 +388,8 @@ export function runUnitTests(): void {
             test: () => {
                 const section = createSection('d', []);
                 const result = formatDataSection(section);
-                return result.includes('[d]') && !result.includes('┌');
+                // V2: uses full section name 'data' instead of 'd'
+                return result.includes('[data]') && !result.includes('┌');
             }
         },
         {

@@ -9,12 +9,21 @@ mod property_tests {
     use proptest::prelude::*;
 
     /// Generate a random abbreviation from the dictionary
+    /// Excludes short aliases that don't have reverse mappings
     fn arb_abbrev() -> impl Strategy<Value = String> {
         let dict = AbbrevDict::new();
         let abbrevs: Vec<String> = dict
             .global_mappings()
-            .keys()
-            .map(|s| s.to_string())
+            .iter()
+            .filter(|(&abbrev, &full)| {
+                // Exclude short aliases: keys where compress(expand(key)) != key
+                // These are one-way expansion aliases like "v" -> "version"
+                // where "version" compresses to "vr", not "v"
+                let expanded = dict.expand(abbrev, "");
+                let compressed = dict.compress(&expanded);
+                compressed == abbrev
+            })
+            .map(|(&s, _)| s.to_string())
             .collect();
         proptest::sample::select(abbrevs)
     }

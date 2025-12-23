@@ -1,10 +1,12 @@
 /**
- * Human Format Formatter for DX Serializer VS Code Extension
+ * Human Format V2 Formatter for DX Serializer VS Code Extension
  * 
  * Converts DxDocument to beautiful human-readable format with:
- * - Section headers with box-drawing characters
- * - Unicode tables for data sections
+ * - Flat TOML-like structure (no indentation)
+ * - Full section names in brackets ([forge] not [f])
+ * - Unicode tables without indentation
  * - Expanded key names
+ * - Comma-separated arrays without brackets
  * - Resolved references
  * - Summary footers
  * 
@@ -27,6 +29,19 @@ export const ABBREVIATIONS: Record<string, string> = {
     'tt': 'title',
     'ds': 'description',
     'id': 'id',
+
+    // Version & Author
+    'v': 'version',
+    'au': 'author',
+
+    // Workspace & Editors
+    'ws': 'workspace',
+    'ed': 'editors',
+
+    // Repository & Container
+    'repo': 'repository',
+    'cont': 'container',
+    'ci': 'ci_cd',
 
     // State
     'st': 'status',
@@ -70,10 +85,33 @@ export const ABBREVIATIONS: Record<string, string> = {
 };
 
 /**
+ * Section ID to full name mapping
+ */
+export const SECTION_NAMES: Record<string, string> = {
+    'c': 'config',
+    'f': 'forge',
+    'k': 'stack',
+    'y': 'style',
+    'u': 'ui',
+    'm': 'media',
+    'i': 'i18n',
+    'o': 'icon',
+    't': 'font',
+    'd': 'data',
+};
+
+/**
  * Reverse mapping for compression (full name -> abbreviation)
  */
 export const REVERSE_ABBREVIATIONS: Record<string, string> = Object.fromEntries(
     Object.entries(ABBREVIATIONS).map(([abbrev, full]) => [full, abbrev])
+);
+
+/**
+ * Reverse section name mapping (full name -> ID)
+ */
+export const REVERSE_SECTION_NAMES: Record<string, string> = Object.fromEntries(
+    Object.entries(SECTION_NAMES).map(([id, name]) => [name, id])
 );
 
 /**
@@ -88,6 +126,20 @@ export function expandKey(abbrev: string): string {
  */
 export function compressKey(full: string): string {
     return REVERSE_ABBREVIATIONS[full] || full;
+}
+
+/**
+ * Expand a section ID to its full name
+ */
+export function expandSectionName(id: string): string {
+    return SECTION_NAMES[id] || id;
+}
+
+/**
+ * Compress a section name to its ID
+ */
+export function compressSectionName(name: string): string {
+    return REVERSE_SECTION_NAMES[name.toLowerCase()] || name.charAt(0).toLowerCase();
 }
 
 // ============================================================================
@@ -134,7 +186,21 @@ export function formatValue(value: DxValue, refs?: Map<string, string>): string 
             return 'null';
         case 'array':
             const items = value.value as DxValue[];
-            return '[' + items.map(v => formatValue(v, refs)).join(', ') + ']';
+            // Check if any item is an array (nested)
+            const hasNestedArray = items.some(v => v.type === 'array');
+            if (hasNestedArray) {
+                // For nested arrays, use brackets and recursive formatting
+                const formatted = items.map(v => {
+                    if (v.type === 'array') {
+                        const innerItems = v.value as DxValue[];
+                        return '[' + innerItems.map(iv => formatValue(iv, refs)).join(', ') + ']';
+                    }
+                    return formatValue(v, refs);
+                });
+                return '[' + formatted.join(', ') + ']';
+            }
+            // V2: comma-separated without brackets for simple arrays
+            return items.map(v => formatValue(v, refs)).join(', ');
         case 'ref':
             const refKey = value.refKey || String(value.value);
             if (refs && refs.has(refKey)) {
@@ -161,36 +227,39 @@ export function formatTableValue(value: DxValue, refs?: Map<string, string>): st
                 return refs.get(refKey)!;
             }
             return `^${refKey}`;
+        case 'array':
+            const items = value.value as DxValue[];
+            return items.map(v => formatTableValue(v, refs)).join(', ');
         default:
             return formatValue(value, refs);
     }
 }
 
 // ============================================================================
-// Section Header Formatting
+// Section Header Formatting (V2 - Flat Structure)
 // ============================================================================
 
 /**
- * Generate a section header with box-drawing characters
+ * Generate a section header with box-drawing characters (V2 style)
  */
 export function formatSectionHeader(title: string, width: number = 80): string {
-    const line = BOX.horizontal.repeat(width);
-    const padding = Math.max(0, Math.floor((width - title.length - 2) / 2));
-    const paddedTitle = ' '.repeat(padding) + title.toUpperCase() + ' '.repeat(padding);
+    const line = '═'.repeat(width);
+    const padding = Math.max(0, Math.floor((width - title.length) / 2));
+    const paddedTitle = ' '.repeat(padding) + title.toUpperCase() + ' '.repeat(width - title.length - padding);
 
     return [
         `# ${line}`,
-        `# ${paddedTitle}`,
+        `#${paddedTitle}`,
         `# ${line}`,
     ].join('\n');
 }
 
 // ============================================================================
-// Config Section Formatting
+// Config Section Formatting (V2 - Flat Structure)
 // ============================================================================
 
 /**
- * Format the config/context section
+ * Format the config/context section (V2 - no indentation)
  */
 export function formatConfigSection(context: Map<string, DxValue>, refs?: Map<string, string>): string {
     if (context.size === 0) {
@@ -204,27 +273,26 @@ export function formatConfigSection(context: Map<string, DxValue>, refs?: Map<st
     const expandedKeys = Array.from(context.keys()).map(k => expandKey(k));
     const maxKeyLen = Math.max(...expandedKeys.map(k => k.length));
 
-    let i = 0;
     for (const [abbrevKey, value] of context) {
         const fullKey = expandKey(abbrevKey);
         const padding = ' '.repeat(maxKeyLen - fullKey.length);
         const formattedValue = formatValue(value, refs);
 
-        // Quote strings that contain special characters
+        // Quote strings that contain spaces or special characters
         let displayValue = formattedValue;
         if (value.type === 'string' && /[ =\[\]{}]/.test(formattedValue)) {
             displayValue = `"${formattedValue}"`;
         }
 
-        lines.push(`    ${fullKey}${padding} = ${displayValue}`);
-        i++;
+        // V2: No indentation - flat structure
+        lines.push(`${fullKey}${padding} = ${displayValue}`);
     }
 
     return lines.join('\n');
 }
 
 // ============================================================================
-// Table Formatting
+// Table Formatting (V2 - No Indentation)
 // ============================================================================
 
 /**
@@ -240,7 +308,7 @@ function calculateColumnWidths(schema: string[], rows: DxValue[][], refs?: Map<s
         }
     }
 
-    // Add padding
+    // Add padding (1 space on each side)
     return widths.map(w => w + 2);
 }
 
@@ -295,13 +363,14 @@ function determineAlignment(values: DxValue[]): 'left' | 'right' | 'center' {
 }
 
 /**
- * Format a data section as a Unicode table
+ * Format a data section as a Unicode table (V2 - no indentation)
  */
 export function formatDataSection(section: DxSection, refs?: Map<string, string>): string {
     const lines: string[] = [];
 
-    // Section header
-    lines.push(`[${section.id}]`);
+    // V2: Full section name in brackets (but keep original ID for unknown sections)
+    const fullSectionName = expandSectionName(section.id);
+    lines.push(`[${fullSectionName}]`);
 
     if (section.schema.length === 0) {
         return lines.join('\n');
@@ -315,39 +384,33 @@ export function formatDataSection(section: DxSection, refs?: Map<string, string>
 
     // Determine alignments
     const alignments: ('left' | 'right' | 'center')[] = section.schema.map((_, i) => {
-        const columnValues = section.rows.map(row => row[i]);
+        const columnValues = section.rows.map(row => row[i]).filter(v => v !== undefined);
         return determineAlignment(columnValues);
     });
 
-    // Schema comment
-    lines.push(`    # Schema: ${expandedSchema.join(' | ')}`);
-    lines.push('');
-
+    // V2: No indentation - table directly after header
     // Top border
-    lines.push('    ' + formatTableLine(widths, BOX.topLeft, BOX.topT, BOX.topRight));
+    lines.push(formatTableLine(widths, BOX.topLeft, BOX.topT, BOX.topRight));
 
     // Header row
     const headerCells = expandedSchema.map(col => col.charAt(0).toUpperCase() + col.slice(1));
-    lines.push('    ' + formatTableRow(headerCells, widths, alignments.map(() => 'center' as const)));
+    lines.push(formatTableRow(headerCells, widths, alignments.map(() => 'center' as const)));
 
     // Header separator
-    lines.push('    ' + formatTableLine(widths, BOX.leftT, BOX.cross, BOX.rightT));
+    lines.push(formatTableLine(widths, BOX.leftT, BOX.cross, BOX.rightT));
 
     // Data rows
     for (const row of section.rows) {
         const cells = row.map((value, i) => formatTableValue(value, refs));
-        lines.push('    ' + formatTableRow(cells, widths, alignments));
+        lines.push(formatTableRow(cells, widths, alignments));
     }
 
     // Bottom border
-    lines.push('    ' + formatTableLine(widths, BOX.bottomLeft, BOX.bottomT, BOX.bottomRight));
+    lines.push(formatTableLine(widths, BOX.bottomLeft, BOX.bottomT, BOX.bottomRight));
 
     // Summary footer
-    const summary = generateSummary(section, refs);
-    if (summary) {
-        lines.push('');
-        lines.push(`    ${summary}`);
-    }
+    lines.push('');
+    lines.push(`Total: ${section.rows.length} rows`);
 
     return lines.join('\n');
 }
@@ -367,7 +430,7 @@ export function generateSummary(section: DxSection, refs?: Map<string, string>):
 
     // Calculate numeric totals
     for (let i = 0; i < section.schema.length; i++) {
-        const columnValues = section.rows.map(row => row[i]);
+        const columnValues = section.rows.map(row => row[i]).filter(v => v !== undefined);
         const allNumbers = columnValues.every(v => v.type === 'number');
 
         if (allNumbers && columnValues.length > 0) {
@@ -389,18 +452,18 @@ export function generateSummary(section: DxSection, refs?: Map<string, string>):
 }
 
 // ============================================================================
-// Document Formatting
+// Document Formatting (V2 - Flat Structure)
 // ============================================================================
 
 /**
- * Format a complete DxDocument to human-readable format
+ * Format a complete DxDocument to human-readable format (V2)
  */
 export function formatDocument(doc: DxDocument): string {
     const sections: string[] = [];
 
     // Config section
     if (doc.context.size > 0) {
-        sections.push(formatSectionHeader('CONFIG'));
+        sections.push(formatSectionHeader('CONFIGURATION'));
         sections.push('');
         sections.push(formatConfigSection(doc.context, doc.refs));
     }
@@ -408,7 +471,7 @@ export function formatDocument(doc: DxDocument): string {
     // Data sections
     for (const [id, section] of doc.sections) {
         sections.push('');
-        sections.push(formatSectionHeader(`DATA: ${id.toUpperCase()}`));
+        sections.push(formatSectionHeader(expandSectionName(id).toUpperCase()));
         sections.push('');
         sections.push(formatDataSection(section, doc.refs));
     }
