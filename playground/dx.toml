@@ -1,0 +1,80 @@
+name = "dx"
+version = "0.0.1"
+title = "EnhancedDevelopingExperience"
+description = "Orchestratedon'tjustownyourcode"
+author = "essensefromexistence"
+workspace = ["frontend/www", "frontend/mobile"]
+editors = [
+    "vscode",
+    "vim",
+    "gitpod",
+    "github-codespace",
+    "replit",
+    "firebase-studio",
+    "cursor",
+    "windsurf",
+    "stackblitz",
+]
+[stack]
+columns = ["Lang", "Runtime", "Compiler", "Bundler", "PM", "Framework"]
+[stack.javascript]
+language = "javascript/typescript"
+runtime = "bun"
+compiler = "tsc"
+bundler = "vite"
+pm = "bun"
+framework = "react"
+[stack.python]
+language = "python"
+runtime = "cpython"
+compiler = "-"
+bundler = "-"
+pm = "uv"
+framework = "django"
+[stack.rust]
+language = "rust"
+runtime = "native"
+compiler = "rustc"
+bundler = "-"
+pm = "cargo"
+framework = "-"
+[forge]
+repository = "https://dx.vercel.app/essensefromexistence/dx"
+container = "none"
+ci_cd = "none"
+tasks = "none"
+items = ["cli", "docs", "examples", "packages", "scripts", "style", "tests"]
+[style]
+path = "@/style"
+engine = ["atomic", "enhanced", "logical"]
+themes = ["dx", "vercel", "claude"]
+[ui]
+path = "@/components/ui"
+components = ["button", "card", "modal", "navbar", "footer"]
+[media]
+images_path = "@/public/images/*"
+images = ["dummy1.jpg", "dummy2.png"]
+videos_path = "@/public/videos/*"
+videos = ["dummy1.mp4"]
+sounds_path = "@/public/sounds/*"
+sounds = ["dummy1.wav"]
+assets_path = "@/public/assets/*"
+assets = ["dummy1.asset"]
+[i18n]
+locales_path = "@/locales"
+locales_default = "en-US"
+locales_dev = ["en-US"]
+locales_prod = ["all"]
+ttses_path = "./ttses"
+ttses_default = "en-US"
+ttses_dev = ["en-US", "bn-BD"]
+ttses_prod = ["all"]
+[icon]
+path = "@/components/icons"
+pack = "lucide-react"
+variant = "default"
+[font]
+path = "@/font"
+default = "Inter"
+primary = "Manrope"
+secondary = "RobotoMono"
