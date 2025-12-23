@@ -63,6 +63,11 @@ dx-www now includes **25 revolutionary binary-first features** with **328 passin
 - [Implementation Summary](./IMPLEMENTATION_SUMMARY.md) - What we built
 - [Implementation Checklist](./IMPLEMENTATION_CHECKLIST.md) - Progress tracker
 
+### 🛠️ VS Code Extension
+- **[vscode-dx-serializer](../crates/vscode-dx-serializer/README.md)** - VS Code extension for `.dx` files
+- Seamless editing with human-readable display and dense storage
+- Smart quoting, auto-save compatible, real-time validation
+
 ## 🎯 Quick Links
 
 **For Users:**

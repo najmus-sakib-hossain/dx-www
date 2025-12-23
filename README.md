@@ -140,6 +140,13 @@
 - **Tailwind → dx-style:** Binary CSS with integer class IDs
 - **JSON → serializer:** World record 37% better than TOON
 
+### 🛠️ VS Code Extension
+- **vscode-dx-serializer:** Seamless `.dx` file editing with human-readable display
+- **Dual Format:** Edit readable format, store token-efficient dense format on disk
+- **Smart Quoting:** Automatic quote selection for strings with apostrophes
+- **Auto-Save Compatible:** Grace period prevents saving incomplete code during typing
+- **Real-time Validation:** Immediate syntax error feedback with actionable hints
+
 ### ⚡ Zero-Cost Abstractions
 - **Zero Parse:** Binary formats eliminate text parsing overhead
 - **Zero GC:** Stack-only allocation, SharedArrayBuffer for state
@@ -331,6 +338,7 @@ Dx is organized as a Cargo workspace with **47 specialized crates**, each focuse
 | **dx-generator** | Template code generator | ✅ Complete |
 | **dx-workspace** | Dev environment configurator | ✅ Complete |
 | **oxc** | OXC parser integration (fastest JS/TS parser) | ✅ Integrated |
+| **vscode-dx-serializer** | VS Code extension for `.dx` files | ✅ Complete |
 
 ### ⚡ Development Stack (Language-Aware Tooling)
 
@@ -463,7 +471,7 @@ dx/
 │   ├── serializer/            # World record format (37% better than TOON)
 │   ├── cache/                 # Browser caching (IndexedDB + ETags)
 │   │
-│   │── [Compiler & Tools (11 crates)]
+│   │── [Compiler & Tools (12 crates)]
 │   ├── dx-www/                # TSX → Binary compiler (lib: dx_compiler)
 │   ├── dx-cli/                # Unified CLI orchestrator
 │   ├── dx-forge/              # Build orchestration engine
@@ -475,6 +483,7 @@ dx/
 │   ├── oxc/                   # OXC parser integration
 │   ├── dx/                    # Main dx library re-exports
 │   ├── dx-error/              # Error boundaries
+│   ├── vscode-dx-serializer/  # VS Code extension for .dx files
 │   │
 │   │── [JavaScript/TypeScript Stack (6 crates)]
 │   ├── dx-js-runtime/         # 10.59x faster than Bun

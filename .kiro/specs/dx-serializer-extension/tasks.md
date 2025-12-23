@@ -135,13 +135,13 @@ This implementation plan creates a VS Code extension that provides seamless edit
   - **Property 4: Smart quoting correctness**
   - **Validates: Requirements 2.3, 2.4**
 
-- [ ] 17. Add extension assets
+- [x] 17. Add extension assets
   - Copy `media/logo.png` for extension icon
   - Copy `media/file-extension-dark.png` for file icon
   - Update package.json with icon references
   - _Requirements: 10.1_
 
-- [ ] 18. Final checkpoint - Complete extension
+- [x] 18. Final checkpoint - Complete extension
   - Run full test suite
   - Verify all property tests pass
   - Test with VS Code auto-save enabled

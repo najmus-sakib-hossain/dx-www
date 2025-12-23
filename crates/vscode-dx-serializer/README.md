@@ -8,6 +8,7 @@ Seamless editing of `.dx` files with human-readable display and dense storage.
 - **Syntax Highlighting**: Full TextMate grammar for `.dx` files
 - **Auto-Save Compatible**: Grace period prevents saving incomplete code during typing
 - **Real-time Validation**: Immediate syntax error feedback with actionable hints
+- **Smart Quoting**: Automatic quote selection for strings with apostrophes and special characters
 - **WASM Performance**: Rust-compiled WebAssembly core with TypeScript fallback
 
 ## How It Works
@@ -23,11 +24,28 @@ This gives you the best of both worlds:
 - **LLMs**: Token-efficient, minimal bytes
 - **Git**: Compact diffs, efficient storage
 
+### Format Example
+
+**Dense format (on disk):**
+```
+server#host:localhost#port:5432#ssl:1
+```
+
+**Human format (in editor):**
+```yaml
+server:
+  host: localhost
+  port: 5432
+  ssl: true
+```
+
 ## Commands
 
-- `DX: Refresh from Disk` - Reload file from disk
-- `DX: Force Save` - Save without validation
-- `DX: Show Dense View` - Preview the dense format
+| Command | Description |
+|---------|-------------|
+| `DX: Refresh from Disk` | Reload file from disk (also in editor title bar) |
+| `DX: Force Save` | Save without validation checks |
+| `DX: Show Dense View` | Preview the dense format in a read-only view |
 
 ## Configuration
 
@@ -38,9 +56,59 @@ This gives you the best of both worlds:
 | `dx.indentSize` | `2` | Indent size (2 or 4 spaces) |
 | `dx.showDensePreview` | `false` | Show dense preview on hover |
 
+## Status Bar
+
+The extension shows validation status in the status bar:
+- ✓ Green checkmark: File is valid and saveable
+- ⚠ Warning: File has syntax errors (click to see details)
+
+## File Type Filtering
+
+The extension only processes pure `.dx` files:
+- ✓ `config.dx` - Processed
+- ✓ `my-app.dx` - Processed
+- ✗ `config.dx.json` - Not processed (compound extension)
+- ✗ `config.dx.bak` - Not processed (backup file)
+
+## Auto-Save Compatibility
+
+The extension works seamlessly with VS Code's auto-save feature:
+- Validates content before saving
+- Skips save during active typing (grace period)
+- Preserves last valid content on disk if validation fails
+- Shows status bar warning when save is skipped
+
 ## Requirements
 
 - VS Code 1.85.0 or higher
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Compile
+npm run compile
+
+# Run tests
+node out/utils.standalone.test.js
+node out/smartQuoting.test.js
+node out/humanFormat.test.js
+node out/validation.test.js
+node out/dxCore.test.js
+```
+
+## Architecture
+
+```
+src/
+├── extension.ts          # Entry point, activation
+├── dxCore.ts             # WASM wrapper with TypeScript fallback
+├── dxDocumentManager.ts  # Document state and validation
+├── dxLensFileSystem.ts   # Virtual file system provider
+└── utils.ts              # Helper functions
+```
 
 ## License
 
