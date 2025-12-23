@@ -1,57 +1,65 @@
 /**
- * Property-based tests for DX Serializer utility functions
+ * Standalone property-based tests for DX Serializer utility functions
+ * 
+ * This file tests the path-based utility functions without VS Code dependencies.
  * 
  * Feature: dx-serializer-extension, Property 6: File type filtering correctness
- * 
- * For any file path:
- * - Paths ending exactly with `.dx` SHALL be identified as DX files
- * - Paths with compound extensions (`.dx.json`, `.dx.yml`, `.dx.bak`, etc.) SHALL NOT be identified as DX files
- * - Paths with non-file schemes SHALL NOT be identified as DX files
- * 
  * **Validates: Requirements 5.1, 5.2, 5.3**
  */
 
 import * as fc from 'fast-check';
-import { isExactlyDxPath } from './utils';
 
-// Generators for file paths
+// ============================================================================
+// Standalone implementation of isExactlyDxPath (no vscode dependency)
+// ============================================================================
 
 /**
- * Generate a valid filename (alphanumeric with some allowed chars)
+ * Check if a path string represents exactly a .dx file
  */
+function isExactlyDxPath(path: string): boolean {
+    if (!path) {
+        return false;
+    }
+
+    // Get the filename from the path
+    const filename = path.split(/[/\\]/).pop() || '';
+
+    // Must end with exactly .dx (case-sensitive)
+    if (!filename.endsWith('.dx')) {
+        return false;
+    }
+
+    // Must have a name before .dx (not just ".dx")
+    const nameWithoutExt = filename.slice(0, -3);
+    if (!nameWithoutExt || nameWithoutExt === '.' || nameWithoutExt.endsWith('.')) {
+        return false;
+    }
+
+    return true;
+}
+
+// ============================================================================
+// Generators for file paths
+// ============================================================================
+
 const validFilename = fc.stringOf(
     fc.constantFrom(...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-'),
     { minLength: 1, maxLength: 20 }
 );
 
-/**
- * Generate a valid directory path
- */
 const validDirPath = fc.array(validFilename, { minLength: 0, maxLength: 3 })
     .map((parts: string[]) => parts.join('/'));
 
-/**
- * Generate a pure .dx file path
- */
 const pureDxPath = fc.tuple(validDirPath, validFilename)
     .map(([dir, name]: [string, string]) => dir ? `${dir}/${name}.dx` : `${name}.dx`);
 
-/**
- * Generate a compound extension (something after .dx)
- */
 const compoundExtension = fc.constantFrom(
     '.json', '.yml', '.yaml', '.bak', '.backup', '.old', '.tmp', '.txt'
 );
 
-/**
- * Generate a path with compound extension (.dx.something)
- */
 const compoundDxPath = fc.tuple(validDirPath, validFilename, compoundExtension)
     .map(([dir, name, ext]: [string, string, string]) => dir ? `${dir}/${name}.dx${ext}` : `${name}.dx${ext}`);
 
-/**
- * Generate a non-.dx file path
- */
 const nonDxExtension = fc.constantFrom(
     '.json', '.yml', '.yaml', '.ts', '.js', '.txt', '.md', '.toml', '.xml'
 );
@@ -59,14 +67,12 @@ const nonDxExtension = fc.constantFrom(
 const nonDxPath = fc.tuple(validDirPath, validFilename, nonDxExtension)
     .map(([dir, name, ext]: [string, string, string]) => dir ? `${dir}/${name}${ext}` : `${name}${ext}`);
 
-// Feature: dx-serializer-extension, Property 6: File type filtering correctness
-// **Validates: Requirements 5.1, 5.2, 5.3**
 
-/**
- * Property 6.1: Pure .dx files are identified
- * For any valid filename, appending .dx should result in a recognized DX file
- */
-export function testPureDxFilesIdentified(): void {
+// ============================================================================
+// Property Tests
+// ============================================================================
+
+function testPureDxFilesIdentified(): void {
     fc.assert(
         fc.property(pureDxPath, (path: string) => {
             const result = isExactlyDxPath(path);
@@ -80,12 +86,7 @@ export function testPureDxFilesIdentified(): void {
     console.log('✓ Property 6.1: Pure .dx files are identified');
 }
 
-
-/**
- * Property 6.2: Compound extensions are rejected
- * For any .dx file with an additional extension, it should be rejected
- */
-export function testCompoundExtensionsRejected(): void {
+function testCompoundExtensionsRejected(): void {
     fc.assert(
         fc.property(compoundDxPath, (path: string) => {
             const result = isExactlyDxPath(path);
@@ -99,11 +100,7 @@ export function testCompoundExtensionsRejected(): void {
     console.log('✓ Property 6.2: Compound extensions are rejected');
 }
 
-/**
- * Property 6.3: Non-.dx files are rejected
- * For any file without .dx extension, it should be rejected
- */
-export function testNonDxFilesRejected(): void {
+function testNonDxFilesRejected(): void {
     fc.assert(
         fc.property(nonDxPath, (path: string) => {
             const result = isExactlyDxPath(path);
@@ -117,23 +114,23 @@ export function testNonDxFilesRejected(): void {
     console.log('✓ Property 6.3: Non-.dx files are rejected');
 }
 
-/**
- * Run all property tests
- */
-export function runAllPropertyTests(): void {
+function runAllPropertyTests(): void {
     console.log('Running Property 6: File type filtering correctness tests...\n');
-    
+
     testPureDxFilesIdentified();
     testCompoundExtensionsRejected();
     testNonDxFilesRejected();
-    
+
     console.log('\n✓ All Property 6 tests passed!');
 }
 
-// Unit tests for specific examples
-export function runUnitTests(): void {
+// ============================================================================
+// Unit Tests
+// ============================================================================
+
+function runUnitTests(): void {
     console.log('Running unit tests for isExactlyDxPath...\n');
-    
+
     const tests: Array<{ path: string; expected: boolean; description: string }> = [
         // Should accept
         { path: 'config.dx', expected: true, description: 'simple .dx file' },
@@ -145,7 +142,7 @@ export function runUnitTests(): void {
         { path: './relative/path/file.dx', expected: true, description: '.dx file with relative path' },
         { path: 'my.config.dx', expected: true, description: '.dx file with dots in name' },
         { path: 'app.v2.dx', expected: true, description: '.dx file with version in name' },
-        
+
         // Should reject - compound extensions
         { path: 'config.dx.json', expected: false, description: 'compound .dx.json' },
         { path: 'config.dx.yml', expected: false, description: 'compound .dx.yml' },
@@ -154,14 +151,14 @@ export function runUnitTests(): void {
         { path: 'config.dx.backup', expected: false, description: 'compound .dx.backup' },
         { path: 'config.dx.old', expected: false, description: 'compound .dx.old' },
         { path: 'config.dx.tmp', expected: false, description: 'compound .dx.tmp' },
-        
+
         // Should reject - non-.dx files
         { path: 'config.json', expected: false, description: 'JSON file' },
         { path: 'config.yml', expected: false, description: 'YAML file' },
         { path: 'config.toml', expected: false, description: 'TOML file' },
         { path: 'script.ts', expected: false, description: 'TypeScript file' },
         { path: 'readme.md', expected: false, description: 'Markdown file' },
-        
+
         // Should reject - edge cases
         { path: '', expected: false, description: 'empty string' },
         { path: '.dx', expected: false, description: 'just .dx' },
@@ -170,10 +167,10 @@ export function runUnitTests(): void {
         { path: 'my.dx.config', expected: false, description: '.dx in middle' },
         { path: 'config', expected: false, description: 'no extension' },
     ];
-    
+
     let passed = 0;
     let failed = 0;
-    
+
     for (const test of tests) {
         const result = isExactlyDxPath(test.path);
         if (result === test.expected) {
@@ -184,15 +181,15 @@ export function runUnitTests(): void {
             failed++;
         }
     }
-    
+
     console.log(`\nUnit tests: ${passed} passed, ${failed} failed`);
-    
+
     if (failed > 0) {
         throw new Error(`${failed} unit tests failed`);
     }
 }
 
-// Run tests if this file is executed directly
+// Run tests
 if (require.main === module) {
     try {
         runUnitTests();

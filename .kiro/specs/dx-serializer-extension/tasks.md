@@ -46,24 +46,24 @@ This implementation plan creates a VS Code extension that provides seamless edit
     - **Property 6: File type filtering correctness**
     - **Validates: Requirements 5.1, 5.2, 5.3**
 
-- [ ] 5. Implement DxCore wrapper
-  - [ ] 5.1 Create `src/dxCore.ts` with WASM wrapper and fallback
+- [x] 5. Implement DxCore wrapper
+  - [x] 5.1 Create `src/dxCore.ts` with WASM wrapper and fallback
     - Implement `loadDxCore()` function to load WASM with fallback
     - Implement `DxCore` interface with `toHuman`, `toDense`, `validate`, `isSaveable`
     - Implement TypeScript fallback for `formatDx()`, `minifyDx()`, `validateDx()`
     - Implement `smartQuote()` function for proper quoting
     - _Requirements: 12.2, 12.3_
-  - [ ] 5.2 Write property test for WASM/fallback equivalence
+  - [x] 5.2 Write property test for WASM/fallback equivalence
     - **Property 7: WASM and Fallback Equivalence**
     - **Validates: Requirements 12.3**
 
-- [ ] 6. Checkpoint - Verify core transformation logic
+- [x] 6. Checkpoint - Verify core transformation logic
   - Ensure all WASM tests pass
   - Ensure fallback implementation matches WASM behavior
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Implement DxDocumentManager
-  - [ ] 7.1 Create `src/dxDocumentManager.ts` with document state management
+- [x] 7. Implement DxDocumentManager
+  - [x] 7.1 Create `src/dxDocumentManager.ts` with document state management
     - Implement `DocumentState` interface for tracking document state
     - Implement `initializeDocument()` for opening files
     - Implement `saveDocument()` with validation gating and grace period
@@ -72,11 +72,11 @@ This implementation plan creates a VS Code extension that provides seamless edit
     - Implement `forceRefresh()` for manual refresh
     - Implement diagnostic updates for validation errors
     - _Requirements: 3.1-3.5, 4.1, 4.6, 6.1-6.5_
-  - [ ] 7.2 Write property test for validation error quality
+  - [x] 7.2 Write property test for validation error quality
     - **Property 5: Validation error quality**
     - **Validates: Requirements 4.2, 4.3, 4.4, 4.5**
 
-- [ ] 8. Implement DxLensFileSystem
+- [x] 8. Implement DxLensFileSystem
   - Create `src/dxLensFileSystem.ts` with virtual file system provider
   - Implement `readFile()` to transform dense to human format
   - Implement `writeFile()` to transform human to dense format
