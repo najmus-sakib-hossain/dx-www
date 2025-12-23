@@ -6,8 +6,8 @@ This implementation plan breaks down the DX Serializer LLM and Human format feat
 
 ## Tasks
 
-- [ ] 1. Set up core data types and abbreviation dictionary
-  - [ ] 1.1 Create `DxDocument`, `DxSection`, and enhanced `DxValue` types in `crates/serializer/src/llm/types.rs`
+- [-] 1. Set up core data types and abbreviation dictionary
+  - [-] 1.1 Create `DxDocument`, `DxSection`, and enhanced `DxValue` types in `crates/serializer/src/llm/types.rs`
     - Define `DxDocument` with context, refs, and sections fields
     - Define `DxSection` with schema and rows
     - Extend `DxValue` enum with `Ref(String)` variant for reference pointers
