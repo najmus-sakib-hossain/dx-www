@@ -5,24 +5,19 @@
  * 
  * Dense (LLM):
  *   name=dx
+ *   description="Orchestrate don't just own your code"
+ *   repository=https://example.com/path
  *   stack=Lang|Runtime|Compiler
- *   [forge]
- *   repository=https://example.com
- *   friends[3]=ana,luis,sam
- *   hikes[3]{id,name,distance}=
- *   1,BlueLake,7.5
  * 
  * Pretty (Human):
  *   name                 = dx
+ *   description          = "Orchestrate don't just own your code"
+ *   repository           = https://example.com/path
  *   stack                = Lang | Runtime | Compiler
- *   
- *   [forge]
- *   repository           = https://example.com
- *   
- *   friends[3]           = ana, luis, sam
- *   
- *   hikes[3]{id, name, distance} =
- *     1, BlueLake, 7.5
+ * 
+ * Special handling:
+ * - URLs with :// are preserved (not treated as key:value)
+ * - Values with special chars (', ", spaces) are quoted
  */
 
 export class DxFormatter {
@@ -35,12 +30,48 @@ export class DxFormatter {
     }
 
     /**
+     * Check if a value needs to be quoted
+     */
+    private needsQuotes(value: string): boolean {
+        // Already quoted
+        if (value.startsWith('"') && value.endsWith('"')) return false;
+        // Contains special characters that need quoting
+        return /['\s]/.test(value) && !value.includes('|') && !value.includes(',');
+    }
+
+    /**
+     * Ensure value is properly quoted if needed
+     */
+    private quoteIfNeeded(value: string): string {
+        if (this.needsQuotes(value)) {
+            // Remove existing quotes if any, then re-quote
+            const unquoted = value.replace(/^["']|["']$/g, '');
+            return `"${unquoted}"`;
+        }
+        return value;
+    }
+
+    /**
+     * Find the first = that is the key-value separator (not part of URL or value)
+     */
+    private findKeyValueSeparator(line: string): number {
+        // Find first = that's not preceded by : (like in https:// or http://)
+        let i = 0;
+        while (i < line.length) {
+            if (line[i] === '=') {
+                // Check if this is after :// (URL scheme)
+                const before = line.substring(0, i);
+                if (!before.endsWith(':') && !before.endsWith(':/')) {
+                    return i;
+                }
+            }
+            i++;
+        }
+        return line.indexOf('=');
+    }
+
+    /**
      * Convert Dense (LLM) format to Pretty (Human) format
-     * - Add spaces around = 
-     * - Add spaces around | in pipe-separated values
-     * - Add spaces after commas
-     * - Align keys
-     * - Add blank lines before sections
      */
     toPretty(content: string, isRootConfig: boolean = false): string {
         const lines = content.split('\n');
@@ -54,7 +85,7 @@ export class DxFormatter {
                 continue;
             }
             
-            const eqIdx = trimmed.indexOf('=');
+            const eqIdx = this.findKeyValueSeparator(trimmed);
             if (eqIdx > 0) {
                 const key = trimmed.substring(0, eqIdx);
                 maxKeyLen = Math.max(maxKeyLen, key.length);
@@ -64,7 +95,6 @@ export class DxFormatter {
         }
         
         const alignCol = Math.max(maxKeyLen + 1, 20);
-        let prevWasSection = false;
         let inTableData = false;
         
         for (let i = 0; i < lines.length; i++) {
@@ -85,26 +115,23 @@ export class DxFormatter {
             
             // Section headers like [forge], [style], [media]
             if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-                // Add blank line before section (unless at start)
                 if (result.length > 0 && result[result.length - 1] !== '') {
                     result.push('');
                 }
                 result.push(trimmed);
-                prevWasSection = true;
                 inTableData = false;
                 continue;
             }
             
             // Check if this is table data (starts with number or is continuation)
             if (inTableData && /^\d/.test(trimmed)) {
-                // Table row - add indent and space after commas
                 const formatted = trimmed.split(',').map(v => v.trim()).join(', ');
                 result.push(this.indent + formatted);
                 continue;
             }
             
-            // Parse key=value
-            const eqIdx = trimmed.indexOf('=');
+            // Parse key=value using smart separator detection
+            const eqIdx = this.findKeyValueSeparator(trimmed);
             
             if (eqIdx < 0) {
                 // No = sign, just a key (like "context")
@@ -114,11 +141,10 @@ export class DxFormatter {
             }
             
             const key = trimmed.substring(0, eqIdx);
-            const value = trimmed.substring(eqIdx + 1);
+            let value = trimmed.substring(eqIdx + 1);
             
             // Check if this is a table header (ends with }= )
             if (key.includes('{') && key.includes('}')) {
-                // Table definition - format schema
                 const bracketIdx = key.indexOf('{');
                 const closeBracket = key.indexOf('}');
                 const basePart = key.substring(0, bracketIdx);
@@ -130,7 +156,6 @@ export class DxFormatter {
                 result.push(`${paddedKey} =`);
                 inTableData = true;
                 
-                // If there's inline data after =, format it
                 if (value.trim()) {
                     const formatted = value.split(',').map(v => v.trim()).join(', ');
                     result.push(this.indent + formatted);
@@ -144,7 +169,6 @@ export class DxFormatter {
                 const basePart = key.substring(0, bracketIdx);
                 const countPart = key.substring(bracketIdx);
                 
-                // Format the value (comma or pipe separated)
                 let formattedValue = value;
                 if (value.includes('|')) {
                     formattedValue = value.split('|').map(v => v.trim()).join(' | ');
@@ -161,15 +185,17 @@ export class DxFormatter {
             // Regular key=value
             let formattedValue = value;
             
-            // Format pipe-separated values
-            if (value.includes('|')) {
+            // Format pipe-separated values (but not URLs)
+            if (value.includes('|') && !value.includes('://')) {
                 formattedValue = value.split('|').map(v => v.trim()).join(' | ');
             }
+            
+            // Quote if needed
+            formattedValue = this.quoteIfNeeded(formattedValue);
             
             const paddedKey = key.padEnd(alignCol);
             result.push(`${paddedKey} = ${formattedValue}`);
             inTableData = false;
-            prevWasSection = false;
         }
         
         return result.join('\n');
@@ -177,11 +203,6 @@ export class DxFormatter {
 
     /**
      * Convert Pretty (Human) format to Dense (LLM) format
-     * - Remove spaces around =
-     * - Remove spaces around | 
-     * - Remove spaces after commas
-     * - Remove blank lines
-     * - Remove comments
      */
     toDense(content: string): string {
         const lines = content.split('\n');
@@ -205,24 +226,23 @@ export class DxFormatter {
             // Table data rows (indented, starts with number)
             if (line.startsWith(' ') || line.startsWith('\t')) {
                 if (/^\s*\d/.test(line)) {
-                    // Table row - compact commas
                     const compacted = trimmed.split(',').map(v => v.trim()).join(',');
                     result.push(compacted);
                     continue;
                 }
             }
             
-            // Parse key = value
-            const eqIdx = trimmed.indexOf('=');
+            // Parse key = value (with spaces)
+            const eqMatch = trimmed.match(/^([^=]+?)\s*=\s*(.*)$/);
             
-            if (eqIdx < 0) {
+            if (!eqMatch) {
                 // No = sign, just a key
                 result.push(trimmed.replace(/\s+/g, ''));
                 continue;
             }
             
-            let key = trimmed.substring(0, eqIdx).trim();
-            let value = trimmed.substring(eqIdx + 1).trim();
+            let key = eqMatch[1].trim();
+            let value = eqMatch[2].trim();
             
             // Remove spaces from key (but preserve brackets and braces)
             key = key.replace(/\s+/g, '');
@@ -232,13 +252,13 @@ export class DxFormatter {
                 return '{' + inner.split(',').map((s: string) => s.trim()).join(',') + '}';
             });
             
-            // Compact value
-            if (value.includes('|')) {
-                // Pipe-separated: remove spaces around pipes
-                value = value.split('|').map(v => v.trim()).join('|');
-            } else if (value.includes(',')) {
-                // Comma-separated: remove spaces after commas
-                value = value.split(',').map(v => v.trim()).join(',');
+            // Compact value (but preserve quoted strings and URLs)
+            if (!value.startsWith('"') && !value.includes('://')) {
+                if (value.includes('|')) {
+                    value = value.split('|').map(v => v.trim()).join('|');
+                } else if (value.includes(',') && !value.startsWith('"')) {
+                    value = value.split(',').map(v => v.trim()).join(',');
+                }
             }
             
             result.push(`${key}=${value}`);
