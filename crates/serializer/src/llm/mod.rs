@@ -9,6 +9,7 @@
 //! a common internal representation (`DxDocument`), ensuring consistent round-trip behavior.
 
 pub mod abbrev;
+pub mod cache_generator;
 pub mod convert;
 pub mod human_formatter;
 pub mod human_formatter_v2;
@@ -29,13 +30,17 @@ mod llm_props;
 
 // Re-export main types
 pub use abbrev::AbbrevDict;
+pub use cache_generator::{CacheConfig, CacheGenerator, CacheError, CachePaths, CacheResult};
 pub use convert::{
-    document_to_human, document_to_llm, document_to_machine, human_to_document, human_to_llm,
-    human_to_machine, llm_to_document, llm_to_human, machine_to_document, machine_to_human,
-    machine_to_llm, ConvertError, MachineFormat,
+    document_to_human, document_to_human_v2, document_to_human_v2_with_config,
+    document_to_llm, document_to_machine, human_to_document, human_to_llm,
+    human_to_llm_v2, human_to_machine, human_v2_to_document, human_v2_to_machine,
+    llm_to_document, llm_to_human, llm_to_human_v2, llm_to_human_v2_with_config,
+    machine_to_document, machine_to_human, machine_to_human_v2, machine_to_llm,
+    ConvertError, MachineFormat,
 };
 pub use human_formatter::{HumanFormatConfig, HumanFormatter, TableStyle};
-pub use human_formatter_v2::{HumanFormatV2Config, HumanFormatterV2};
+pub use human_formatter_v2::{box_chars, HumanFormatV2Config, HumanFormatterV2};
 pub use human_parser::{HumanParseError, HumanParser};
 pub use parser::{LlmParser, ParseError};
 pub use serializer::LlmSerializer;

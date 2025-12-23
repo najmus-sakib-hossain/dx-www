@@ -4,6 +4,7 @@
 //! All conversions go through the common DxDocument representation.
 
 use crate::llm::human_formatter::{HumanFormatConfig, HumanFormatter};
+use crate::llm::human_formatter_v2::{HumanFormatV2Config, HumanFormatterV2};
 use crate::llm::human_parser::{HumanParseError, HumanParser};
 use crate::llm::parser::{LlmParser, ParseError};
 use crate::llm::serializer::LlmSerializer;
@@ -99,6 +100,97 @@ pub fn document_to_human(doc: &DxDocument) -> String {
 pub fn document_to_human_with_config(doc: &DxDocument, config: HumanFormatConfig) -> String {
     let formatter = HumanFormatter::with_config(config);
     formatter.format(doc)
+}
+
+// ============================================================================
+// Human Format V2 Conversion Functions
+// ============================================================================
+
+/// Convert Human format V2 string to LLM format string
+///
+/// Human V2 format features:
+/// - Flat TOML-like structure without indentation
+/// - Full key names (version, workspace, etc.)
+/// - Full section names ([forge] instead of [f])
+/// - Comma-separated arrays without brackets
+///
+/// # Example
+/// ```
+/// use serializer::llm::convert::human_to_llm_v2;
+///
+/// let human_v2 = r#"
+/// [config]
+/// name = "Test"
+/// workspace = frontend/www, frontend/mobile
+/// "#;
+/// let llm = human_to_llm_v2(human_v2).unwrap();
+/// assert!(llm.contains("#c:"));
+/// ```
+pub fn human_to_llm_v2(human_input: &str) -> Result<String, ConvertError> {
+    // The parser already handles V2 format (full key names, full section names)
+    let parser = HumanParser::new();
+    let doc = parser.parse(human_input)?;
+    let serializer = LlmSerializer::new();
+    Ok(serializer.serialize(&doc))
+}
+
+/// Convert LLM format string to Human format V2 string
+///
+/// # Example
+/// ```
+/// use serializer::llm::convert::llm_to_human_v2;
+///
+/// let llm = "#c:nm|Test;ct|42\n#d(id|vl)\n1|Alpha";
+/// let human_v2 = llm_to_human_v2(llm).unwrap();
+/// assert!(human_v2.contains("name")); // Expanded key
+/// assert!(human_v2.contains("[data]")); // Full section name
+/// ```
+pub fn llm_to_human_v2(llm_input: &str) -> Result<String, ConvertError> {
+    let doc = LlmParser::parse(llm_input)?;
+    let formatter = HumanFormatterV2::new();
+    Ok(formatter.format(&doc))
+}
+
+/// Convert LLM format string to Human format V2 string with custom config
+pub fn llm_to_human_v2_with_config(
+    llm_input: &str,
+    config: HumanFormatV2Config,
+) -> Result<String, ConvertError> {
+    let doc = LlmParser::parse(llm_input)?;
+    let formatter = HumanFormatterV2::with_config(config);
+    Ok(formatter.format(&doc))
+}
+
+/// Convert DxDocument to Human format V2 string
+pub fn document_to_human_v2(doc: &DxDocument) -> String {
+    let formatter = HumanFormatterV2::new();
+    formatter.format(doc)
+}
+
+/// Convert DxDocument to Human format V2 string with custom config
+pub fn document_to_human_v2_with_config(doc: &DxDocument, config: HumanFormatV2Config) -> String {
+    let formatter = HumanFormatterV2::with_config(config);
+    formatter.format(doc)
+}
+
+/// Convert Human format V2 string to DxDocument
+pub fn human_v2_to_document(human_input: &str) -> Result<DxDocument, ConvertError> {
+    // Parser handles both V1 and V2 formats
+    let parser = HumanParser::new();
+    Ok(parser.parse(human_input)?)
+}
+
+/// Convert Human format V2 to Machine format (binary)
+pub fn human_v2_to_machine(human_input: &str) -> Result<MachineFormat, ConvertError> {
+    let parser = HumanParser::new();
+    let doc = parser.parse(human_input)?;
+    Ok(document_to_machine(&doc))
+}
+
+/// Convert Machine format to Human format V2 string
+pub fn machine_to_human_v2(machine: &MachineFormat) -> Result<String, ConvertError> {
+    let doc = machine_to_document(machine)?;
+    Ok(document_to_human_v2(&doc))
 }
 
 /// Machine format representation (binary)
@@ -547,5 +639,139 @@ mod tests {
         assert!(back_to_llm.contains("|+")); // true becomes +
         assert!(back_to_llm.contains("|~")); // null becomes ~
         assert!(back_to_llm.contains("|-")); // false becomes -
+    }
+
+    // ========================================================================
+    // Human Format V2 Tests
+    // ========================================================================
+
+    #[test]
+    fn test_llm_to_human_v2() {
+        let llm = "#c:nm|Test;ct|42";
+        let human_v2 = llm_to_human_v2(llm).unwrap();
+        
+        // V2 should have expanded keys
+        assert!(human_v2.contains("name")); // nm expanded to name
+        assert!(human_v2.contains("count")); // ct expanded to count
+        assert!(human_v2.contains("Test"));
+        assert!(human_v2.contains("42"));
+        
+        // V2 should have [config] section
+        assert!(human_v2.contains("[config]"));
+    }
+
+    #[test]
+    fn test_human_to_llm_v2() {
+        let human_v2 = r#"
+[config]
+name = "Test"
+count = 42
+"#;
+        let llm = human_to_llm_v2(human_v2).unwrap();
+        
+        assert!(llm.contains("#c:"));
+        // Keys should be compressed in LLM format
+        assert!(llm.contains("nm|Test") || llm.contains("name|Test")); 
+        assert!(llm.contains("ct|42") || llm.contains("count|42"));
+    }
+
+    #[test]
+    fn test_llm_human_v2_round_trip() {
+        let original_llm = "#c:nm|Test;ct|42\n#d(id|vl)\n1|Alpha\n2|Beta";
+        
+        // LLM -> Human V2 -> LLM
+        let human_v2 = llm_to_human_v2(original_llm).unwrap();
+        let back_to_llm = human_to_llm_v2(&human_v2).unwrap();
+        
+        // Parse both and compare
+        let original_doc = llm_to_document(original_llm).unwrap();
+        let round_trip_doc = llm_to_document(&back_to_llm).unwrap();
+        
+        assert_eq!(original_doc.context.len(), round_trip_doc.context.len());
+        assert_eq!(original_doc.sections.len(), round_trip_doc.sections.len());
+    }
+
+    #[test]
+    fn test_human_v2_full_section_names() {
+        let llm = "#f(id|nm)\n1|Test";
+        let human_v2 = llm_to_human_v2(llm).unwrap();
+        
+        // V2 should use full section name [forge] not [f]
+        assert!(human_v2.contains("[forge]"));
+    }
+
+    #[test]
+    fn test_human_v2_array_format() {
+        let mut doc = DxDocument::new();
+        doc.context.insert(
+            "ws".to_string(),
+            DxLlmValue::Arr(vec![
+                DxLlmValue::Str("frontend/www".to_string()),
+                DxLlmValue::Str("frontend/mobile".to_string()),
+            ]),
+        );
+        
+        let human_v2 = document_to_human_v2(&doc);
+        
+        // V2 arrays should be comma-separated without brackets
+        assert!(human_v2.contains("frontend/www, frontend/mobile"));
+        // Should NOT have brackets around array
+        assert!(!human_v2.contains("[frontend/www"));
+    }
+
+    #[test]
+    fn test_human_v2_no_indentation() {
+        let llm = "#c:nm|Test;ct|42";
+        let human_v2 = llm_to_human_v2(llm).unwrap();
+        
+        // V2 should have no indentation for key-value pairs
+        for line in human_v2.lines() {
+            if line.contains(" = ") && !line.starts_with('#') && !line.starts_with('[') {
+                assert!(!line.starts_with(' '), "Line should not be indented: {}", line);
+            }
+        }
+    }
+
+    #[test]
+    fn test_human_v2_to_machine_round_trip() {
+        let human_v2 = r#"
+[config]
+name = "Test"
+count = 42
+
+[data]
+┌─────┬───────┐
+│ id  │ value │
+├─────┼───────┤
+│ 1   │ Alpha │
+└─────┴───────┘
+"#;
+        
+        // Human V2 -> Machine -> Human V2
+        let machine = human_v2_to_machine(human_v2).unwrap();
+        let back_to_human_v2 = machine_to_human_v2(&machine).unwrap();
+        
+        // Parse both and compare
+        let original_doc = human_v2_to_document(human_v2).unwrap();
+        let round_trip_doc = human_v2_to_document(&back_to_human_v2).unwrap();
+        
+        assert_eq!(original_doc.context.len(), round_trip_doc.context.len());
+        assert_eq!(original_doc.sections.len(), round_trip_doc.sections.len());
+    }
+
+    #[test]
+    fn test_document_to_human_v2_with_config() {
+        let mut doc = DxDocument::new();
+        doc.context.insert("nm".to_string(), DxLlmValue::Str("Test".to_string()));
+        
+        // Test with expand_keys = false
+        let config = HumanFormatV2Config {
+            expand_keys: false,
+            ..Default::default()
+        };
+        let human_v2 = document_to_human_v2_with_config(&doc, config);
+        
+        // With expand_keys = false, should keep abbreviated key
+        assert!(human_v2.contains("nm"));
     }
 }

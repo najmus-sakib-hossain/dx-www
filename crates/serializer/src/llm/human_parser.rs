@@ -215,6 +215,7 @@ impl HumanParser {
     }
 
     /// Parse a config value (string, number, bool, null, array)
+    /// V2: Also supports comma-separated arrays without brackets
     fn parse_config_value(&self, s: &str) -> Result<DxLlmValue, HumanParseError> {
         let s = s.trim();
 
@@ -236,7 +237,7 @@ impl HumanParser {
             return Ok(DxLlmValue::Null);
         }
 
-        // Array
+        // Array with brackets
         if s.starts_with('[') && s.ends_with(']') {
             let inner = s[1..s.len() - 1].trim();
             if inner.is_empty() {
@@ -252,6 +253,17 @@ impl HumanParser {
         // Number
         if let Ok(n) = s.parse::<f64>() {
             return Ok(DxLlmValue::Num(n));
+        }
+
+        // V2: Comma-separated array without brackets (e.g., "frontend/www, frontend/mobile")
+        if s.contains(", ") && !s.starts_with('"') {
+            let items: Vec<DxLlmValue> = s
+                .split(", ")
+                .map(|item| DxLlmValue::Str(item.trim().to_string()))
+                .collect();
+            if items.len() > 1 {
+                return Ok(DxLlmValue::Arr(items));
+            }
         }
 
         // Default to string (unquoted)
@@ -347,6 +359,7 @@ impl HumanParser {
     }
 
     /// Parse Unicode box-drawn table
+    /// V2: Also handles wrapped rows with continuation indicators
     fn parse_unicode_table(
         &self,
         lines: &[&str],
@@ -356,6 +369,7 @@ impl HumanParser {
         let mut rows = Vec::new();
         let mut header_found = false;
         let mut separator_found = false;
+        let mut current_row_cells: Option<Vec<String>> = None;
 
         for line in lines {
             let line = line.trim();
@@ -383,14 +397,45 @@ impl HumanParser {
                         .collect();
                     header_found = true;
                 } else if separator_found {
-                    // This is a data row
-                    let row: Vec<DxLlmValue> = cells
-                        .iter()
-                        .map(|cell| self.parse_cell_value(cell))
-                        .collect();
-                    rows.push(row);
+                    // Check if this is a continuation row (first cell is empty or has ↓)
+                    let is_continuation = cells.first()
+                        .map(|c| c.is_empty() || *c == "↓" || c.trim().is_empty())
+                        .unwrap_or(false);
+
+                    if is_continuation && current_row_cells.is_some() {
+                        // Append to current row cells
+                        let current = current_row_cells.as_mut().unwrap();
+                        for (i, cell) in cells.iter().enumerate() {
+                            if i < current.len() && !cell.is_empty() && *cell != "↓" {
+                                if !current[i].is_empty() {
+                                    current[i].push(' ');
+                                }
+                                current[i].push_str(cell);
+                            }
+                        }
+                    } else {
+                        // Finalize previous row if exists
+                        if let Some(prev_cells) = current_row_cells.take() {
+                            let row: Vec<DxLlmValue> = prev_cells
+                                .iter()
+                                .map(|cell| self.parse_cell_value(cell))
+                                .collect();
+                            rows.push(row);
+                        }
+                        // Start new row
+                        current_row_cells = Some(cells.iter().map(|s| s.to_string()).collect());
+                    }
                 }
             }
+        }
+
+        // Finalize last row
+        if let Some(last_cells) = current_row_cells {
+            let row: Vec<DxLlmValue> = last_cells
+                .iter()
+                .map(|cell| self.parse_cell_value(cell))
+                .collect();
+            rows.push(row);
         }
 
         Ok((schema, rows))
@@ -536,16 +581,37 @@ impl HumanParser {
     }
 
     /// Convert section name to single-character ID
+    /// Supports both V1 short names and V2 full names
     fn section_name_to_id(&self, name: &str) -> char {
         match name.to_lowercase().as_str() {
+            // V2 full names
+            "assets" => 'a',
+            "builds" => 'b',
+            "config" | "configuration" => 'c',
             "data" => 'd',
+            "events" => 'e',
+            "forge" => 'f',
+            "groups" => 'g',
             "hikes" => 'h',
+            "items" => 'i',
+            "jobs" => 'j',
+            "keys" => 'k',
+            "logs" => 'l',
+            "metrics" => 'm',
+            "nodes" => 'n',
             "orders" => 'o',
             "products" => 'p',
-            "users" => 'u',
-            "items" => 'i',
+            "queries" => 'q',
+            "resources" => 'r',
+            "services" => 's',
             "tasks" => 't',
-            "events" => 'e',
+            "users" => 'u',
+            "versions" => 'v',
+            "workflows" => 'w',
+            "extensions" => 'x',
+            "yields" => 'y',
+            "zones" => 'z',
+            // Default: use first character
             _ => name.chars().next().unwrap_or('x').to_ascii_lowercase(),
         }
     }
@@ -711,9 +777,103 @@ mod tests {
     #[test]
     fn test_section_name_to_id() {
         let parser = HumanParser::new();
+        // V1 names
         assert_eq!(parser.section_name_to_id("data"), 'd');
         assert_eq!(parser.section_name_to_id("hikes"), 'h');
         assert_eq!(parser.section_name_to_id("orders"), 'o');
+        // V2 full names
+        assert_eq!(parser.section_name_to_id("forge"), 'f');
+        assert_eq!(parser.section_name_to_id("assets"), 'a');
+        assert_eq!(parser.section_name_to_id("builds"), 'b');
+        assert_eq!(parser.section_name_to_id("workflows"), 'w');
+        assert_eq!(parser.section_name_to_id("zones"), 'z');
+        // Unknown defaults to first char
         assert_eq!(parser.section_name_to_id("unknown"), 'u');
+    }
+
+    #[test]
+    fn test_parse_v2_comma_separated_array() {
+        let parser = HumanParser::new();
+        let input = r#"
+[config]
+workspace = frontend/www, frontend/mobile
+"#;
+        let doc = parser.parse(input).unwrap();
+        
+        let ws = doc.context.get("ws").unwrap();
+        if let DxLlmValue::Arr(items) = ws {
+            assert_eq!(items.len(), 2);
+            assert_eq!(items[0].as_str(), Some("frontend/www"));
+            assert_eq!(items[1].as_str(), Some("frontend/mobile"));
+        } else {
+            panic!("Expected array, got {:?}", ws);
+        }
+    }
+
+    #[test]
+    fn test_parse_v2_full_section_names() {
+        let parser = HumanParser::new();
+        let input = r#"
+[forge]
+    ┌─────┬───────┐
+    │ id  │ name  │
+    ├─────┼───────┤
+    │ 1   │ Test  │
+    └─────┴───────┘
+"#;
+        let doc = parser.parse(input).unwrap();
+        assert!(doc.sections.contains_key(&'f'));
+        
+        let section = doc.sections.get(&'f').unwrap();
+        assert_eq!(section.rows.len(), 1);
+    }
+
+    #[test]
+    fn test_parse_v2_no_indentation() {
+        let parser = HumanParser::new();
+        // V2 format has no indentation
+        let input = r#"
+[config]
+name = "Test"
+version = "1.0"
+
+[forge]
+┌─────┬───────┐
+│ id  │ name  │
+├─────┼───────┤
+│ 1   │ Alpha │
+└─────┴───────┘
+"#;
+        let doc = parser.parse(input).unwrap();
+        
+        assert_eq!(doc.context.get("nm").unwrap().as_str(), Some("Test"));
+        assert!(doc.sections.contains_key(&'f'));
+    }
+
+    #[test]
+    fn test_parse_wrapped_table_rows() {
+        let parser = HumanParser::new();
+        // V2 format with wrapped rows
+        let input = r#"
+[data]
+┌─────┬────────────┐
+│ id  │ desc       │
+├─────┼────────────┤
+│ 1   │ This is a  │
+│     │ long desc  │
+│ 2   │ Short      │
+└─────┴────────────┘
+"#;
+        let doc = parser.parse(input).unwrap();
+        
+        let section = doc.sections.get(&'d').unwrap();
+        assert_eq!(section.rows.len(), 2);
+        
+        // First row should have combined description
+        let desc1 = section.rows[0][1].as_str().unwrap();
+        assert!(desc1.contains("This is a") && desc1.contains("long desc"));
+        
+        // Second row
+        assert_eq!(section.rows[1][1].as_str(), Some("Short"));
     }
 }

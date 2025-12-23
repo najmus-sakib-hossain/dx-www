@@ -71,78 +71,78 @@ This implementation plan transforms the DX Serializer Human Format to provide cl
     - **Property 6: Table wrapping round-trip**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.5**
 
-- [ ] 5. Update Human Parser for V2 Format
-  - [ ] 5.1 Update parse_key_value() to accept full key names
+- [x] 5. Update Human Parser for V2 Format
+  - [x] 5.1 Update parse_key_value() to accept full key names
     - Accept both abbreviated and full key names
     - Normalize to abbreviated form internally
     - _Requirements: 2.2_
-  - [ ] 5.2 Update parse_section_header() to accept full section names
+  - [x] 5.2 Update parse_section_header() to accept full section names
     - Map full names to single-letter IDs
     - Accept both formats for backward compatibility
     - _Requirements: 4.3_
-  - [ ] 5.3 Implement parse_wrapped_table() for multi-line rows
+  - [x] 5.3 Implement parse_wrapped_table() for multi-line rows
     - Detect continuation indicators
     - Reconstruct original row data from wrapped lines
     - _Requirements: 5.5_
-  - [ ] 5.4 Write property test for parser flexibility
+  - [x] 5.4 Write property test for parser flexibility
     - **Property 3: Parser key name flexibility**
     - **Property 5: Parser section name flexibility**
     - **Validates: Requirements 2.2, 4.3**
 
-- [ ] 6. Checkpoint - Verify Parser and Formatter Work Together
+- [x] 6. Checkpoint - Verify Parser and Formatter Work Together
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Implement Cache Generator
-  - [ ] 7.1 Create CacheConfig and CacheGenerator structs
+- [-] 7. Implement Cache Generator
+  - [x] 7.1 Create CacheConfig and CacheGenerator structs
     - Define cache_root path
     - Add flags for generate_llm and generate_machine
     - _Requirements: 6.1, 6.2_
-  - [ ] 7.2 Implement map_path_to_cache() for path preservation
+  - [x] 7.2 Implement map_path_to_cache() for path preservation
     - Extract relative path from source
     - Preserve subfolder structure in cache
     - Normalize path separators
     - _Requirements: 6.3, 7.1, 7.2, 7.3, 7.4_
-  - [ ] 7.3 Implement generate() for cache file creation
+  - [x] 7.3 Implement generate() for cache file creation
     - Convert document to LLM format and write to cache
     - Convert document to Machine format and write to cache
     - Use atomic writes (temp file + rename)
     - _Requirements: 6.1, 6.2, 6.4_
-  - [ ] 7.4 Implement error handling for cache generation
+  - [x] 7.4 Implement error handling for cache generation
     - Don't corrupt existing files on failure
     - Return detailed error information
     - _Requirements: 6.5_
-  - [ ] 7.5 Write property test for cache generation
+  - [x] 7.5 Write property test for cache generation
     - **Property 7: Cache generation with path preservation**
     - **Property 8: Cache error handling**
     - **Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 7.3, 7.4**
 
-- [ ] 8. Implement Table Dynamic Sizing
-  - [ ] 8.1 Update build_table() to recalculate widths dynamically
+- [x] 8. Implement Table Dynamic Sizing
+  - [x] 8.1 Update build_table() to recalculate widths dynamically
     - Recalculate column widths when rows change
     - Adjust borders to match new widths
     - _Requirements: 8.1, 8.2, 8.3_
-  - [ ] 8.2 Add validation for Unicode box-drawing characters
+  - [x] 8.2 Add validation for Unicode box-drawing characters
     - Verify all border characters are valid Unicode
     - Ensure proper corner and intersection characters
     - _Requirements: 8.4_
-  - [ ] 8.3 Write property test for table dynamic sizing
+  - [x] 8.3 Write property test for table dynamic sizing
     - **Property 9: Table dynamic sizing**
     - **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
 
-- [ ] 9. Implement Round-Trip Conversion Functions
-  - [ ] 9.1 Implement human_to_llm_v2() conversion
+- [x] 9. Implement Round-Trip Conversion Functions
+  - [x] 9.1 Implement human_to_llm_v2() conversion
     - Parse Human format to DxDocument
     - Serialize DxDocument to LLM format
     - _Requirements: 9.1_
-  - [ ] 9.2 Implement llm_to_human_v2() conversion
+  - [x] 9.2 Implement llm_to_human_v2() conversion
     - Parse LLM format to DxDocument
     - Format DxDocument to Human format
     - _Requirements: 9.2_
-  - [ ] 9.3 Update machine format conversions
+  - [x] 9.3 Update machine format conversions
     - Ensure Machine format preserves all data
     - Verify round-trip consistency
     - _Requirements: 9.3_
-  - [ ] 9.4 Write property test for format round-trip
+  - [x] 9.4 Write property test for format round-trip
     - **Property 10: Format round-trip consistency**
     - **Validates: Requirements 9.1, 9.2, 9.3, 9.4, 9.5**
 

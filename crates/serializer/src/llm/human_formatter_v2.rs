@@ -30,6 +30,7 @@
 //! ```
 
 use crate::llm::abbrev::AbbrevDict;
+use crate::llm::table_wrapper::{TableWrapper, TableWrapperConfig};
 use crate::llm::types::{DxDocument, DxLlmValue, DxSection};
 use std::collections::HashMap;
 
@@ -109,26 +110,77 @@ fn section_id_to_full_name(id: char) -> String {
     }
 }
 
+/// Unicode box-drawing characters for table borders
+pub mod box_chars {
+    /// Top-left corner: ┌
+    pub const TOP_LEFT: char = '┌';
+    /// Top-right corner: ┐
+    pub const TOP_RIGHT: char = '┐';
+    /// Bottom-left corner: └
+    pub const BOTTOM_LEFT: char = '└';
+    /// Bottom-right corner: ┘
+    pub const BOTTOM_RIGHT: char = '┘';
+    /// Horizontal line: ─
+    pub const HORIZONTAL: char = '─';
+    /// Vertical line: │
+    pub const VERTICAL: char = '│';
+    /// Top T-junction: ┬
+    pub const TOP_T: char = '┬';
+    /// Bottom T-junction: ┴
+    pub const BOTTOM_T: char = '┴';
+    /// Left T-junction: ├
+    pub const LEFT_T: char = '├';
+    /// Right T-junction: ┤
+    pub const RIGHT_T: char = '┤';
+    /// Cross junction: ┼
+    pub const CROSS: char = '┼';
+
+    /// All valid box-drawing characters
+    pub const ALL_BOX_CHARS: [char; 11] = [
+        TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT,
+        HORIZONTAL, VERTICAL, TOP_T, BOTTOM_T,
+        LEFT_T, RIGHT_T, CROSS,
+    ];
+
+    /// Check if a character is a valid box-drawing character
+    pub fn is_box_char(c: char) -> bool {
+        ALL_BOX_CHARS.contains(&c)
+    }
+
+    /// Validate that a string contains only valid box-drawing characters and spaces
+    pub fn validate_border_line(line: &str) -> bool {
+        line.chars().all(|c| is_box_char(c) || c == ' ' || c == '\n')
+    }
+}
+
 /// Format DxDocument to Human Format V2
 pub struct HumanFormatterV2 {
     config: HumanFormatV2Config,
     abbrev: AbbrevDict,
+    table_wrapper: TableWrapper,
 }
 
 impl HumanFormatterV2 {
     /// Create a new formatter with default config
     pub fn new() -> Self {
+        let config = HumanFormatV2Config::default();
+        let wrapper_config = TableWrapperConfig::default()
+            .with_max_width(config.max_line_width);
         Self {
-            config: HumanFormatV2Config::default(),
+            config,
             abbrev: AbbrevDict::new(),
+            table_wrapper: TableWrapper::with_config(wrapper_config),
         }
     }
 
     /// Create a formatter with custom config
     pub fn with_config(config: HumanFormatV2Config) -> Self {
+        let wrapper_config = TableWrapperConfig::default()
+            .with_max_width(config.max_line_width);
         Self {
             config,
             abbrev: AbbrevDict::new(),
+            table_wrapper: TableWrapper::with_config(wrapper_config),
         }
     }
 
@@ -338,7 +390,7 @@ impl HumanFormatterV2 {
         output
     }
 
-    /// Build Unicode box-drawn table (no indentation)
+    /// Build Unicode box-drawn table with dynamic sizing (no indentation)
     fn build_table(
         &self,
         section: &DxSection,
@@ -347,21 +399,22 @@ impl HumanFormatterV2 {
     ) -> String {
         let mut output = String::new();
 
-        // Calculate column widths
-        let col_widths = self.calculate_column_widths(section, context, refs);
+        // Calculate column widths dynamically based on content
+        let col_widths = self.calculate_dynamic_column_widths(section, context, refs);
 
         // Top border: ┌──────┬──────┬──────┐
-        output.push('┌');
+        output.push(box_chars::TOP_LEFT);
         for (i, width) in col_widths.iter().enumerate() {
-            output.push_str(&"─".repeat(*width + 2));
+            output.push_str(&box_chars::HORIZONTAL.to_string().repeat(*width + 2));
             if i < col_widths.len() - 1 {
-                output.push('┬');
+                output.push(box_chars::TOP_T);
             }
         }
-        output.push_str("┐\n");
+        output.push(box_chars::TOP_RIGHT);
+        output.push('\n');
 
         // Header row: │ Col1 │ Col2 │ Col3 │
-        output.push('│');
+        output.push(box_chars::VERTICAL);
         for (i, col) in section.schema.iter().enumerate() {
             let display_col = if self.config.expand_keys {
                 self.abbrev.expand(col, context)
@@ -369,73 +422,80 @@ impl HumanFormatterV2 {
                 col.clone()
             };
             let padding = col_widths[i] - display_col.chars().count();
-            output.push_str(&format!(" {}{} │", display_col, " ".repeat(padding)));
+            output.push_str(&format!(" {}{} {}", display_col, " ".repeat(padding), box_chars::VERTICAL));
         }
         output.push('\n');
 
         // Header separator: ├──────┼──────┼──────┤
-        output.push('├');
+        output.push(box_chars::LEFT_T);
         for (i, width) in col_widths.iter().enumerate() {
-            output.push_str(&"─".repeat(*width + 2));
+            output.push_str(&box_chars::HORIZONTAL.to_string().repeat(*width + 2));
             if i < col_widths.len() - 1 {
-                output.push('┼');
+                output.push(box_chars::CROSS);
             }
         }
-        output.push_str("┤\n");
+        output.push(box_chars::RIGHT_T);
+        output.push('\n');
 
-        // Data rows
+        // Data rows with wrapping support
         for row in &section.rows {
-            output.push('│');
-            for (i, value) in row.iter().enumerate() {
-                let cell = self.format_cell_value(value, refs);
-                let width = col_widths.get(i).copied().unwrap_or(3);
-                let cell_len = cell.chars().count();
-                let padding = width.saturating_sub(cell_len);
+            let wrapped_lines = self.wrap_row_if_needed(row, &col_widths, refs);
+            for line_cells in wrapped_lines {
+                output.push(box_chars::VERTICAL);
+                for (i, cell) in line_cells.iter().enumerate() {
+                    let width = col_widths.get(i).copied().unwrap_or(3);
+                    let cell_len = cell.chars().count();
+                    let padding = width.saturating_sub(cell_len);
 
-                // Right-align numbers, center booleans, left-align strings
-                match value {
-                    DxLlmValue::Num(_) => {
-                        output.push_str(&format!(" {}{} │", " ".repeat(padding), cell));
-                    }
-                    DxLlmValue::Bool(_) | DxLlmValue::Null => {
-                        let left_pad = padding / 2;
-                        let right_pad = padding - left_pad;
-                        output.push_str(&format!(
-                            " {}{}{} │",
-                            " ".repeat(left_pad),
-                            cell,
-                            " ".repeat(right_pad)
-                        ));
-                    }
-                    _ => {
-                        output.push_str(&format!(" {}{} │", cell, " ".repeat(padding)));
+                    // Determine alignment based on original value type
+                    let original_value = row.get(i);
+                    match original_value {
+                        Some(DxLlmValue::Num(_)) => {
+                            output.push_str(&format!(" {}{} {}", " ".repeat(padding), cell, box_chars::VERTICAL));
+                        }
+                        Some(DxLlmValue::Bool(_)) | Some(DxLlmValue::Null) => {
+                            let left_pad = padding / 2;
+                            let right_pad = padding - left_pad;
+                            output.push_str(&format!(
+                                " {}{}{} {}",
+                                " ".repeat(left_pad),
+                                cell,
+                                " ".repeat(right_pad),
+                                box_chars::VERTICAL
+                            ));
+                        }
+                        _ => {
+                            output.push_str(&format!(" {}{} {}", cell, " ".repeat(padding), box_chars::VERTICAL));
+                        }
                     }
                 }
+                output.push('\n');
             }
-            output.push('\n');
         }
 
         // Bottom border: └──────┴──────┴──────┘
-        output.push('└');
+        output.push(box_chars::BOTTOM_LEFT);
         for (i, width) in col_widths.iter().enumerate() {
-            output.push_str(&"─".repeat(*width + 2));
+            output.push_str(&box_chars::HORIZONTAL.to_string().repeat(*width + 2));
             if i < col_widths.len() - 1 {
-                output.push('┴');
+                output.push(box_chars::BOTTOM_T);
             }
         }
-        output.push_str("┘\n");
+        output.push(box_chars::BOTTOM_RIGHT);
+        output.push('\n');
 
         output
     }
 
-    /// Calculate column widths based on content
-    fn calculate_column_widths(
+    /// Calculate column widths dynamically based on content, respecting max_line_width
+    fn calculate_dynamic_column_widths(
         &self,
         section: &DxSection,
         context: &str,
         refs: &HashMap<String, String>,
     ) -> Vec<usize> {
-        let mut widths: Vec<usize> = section
+        // Get header widths
+        let header_widths: Vec<usize> = section
             .schema
             .iter()
             .map(|col| {
@@ -447,18 +507,40 @@ impl HumanFormatterV2 {
             })
             .collect();
 
-        // Check row values
-        for row in &section.rows {
-            for (i, value) in row.iter().enumerate() {
-                if i < widths.len() {
-                    let cell_width = self.format_cell_value(value, refs).chars().count();
-                    widths[i] = widths[i].max(cell_width);
-                }
-            }
-        }
+        // Get cell widths for each row
+        let cell_widths: Vec<Vec<usize>> = section
+            .rows
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .map(|value| self.format_cell_value(value, refs).chars().count())
+                    .collect()
+            })
+            .collect();
 
-        // Ensure minimum width of 3
-        widths.iter().map(|w| (*w).max(3)).collect()
+        // Use table wrapper to calculate optimal widths
+        self.table_wrapper.calculate_widths(section, &header_widths, &cell_widths)
+    }
+
+    /// Wrap a row into multiple display lines if cells exceed column widths
+    fn wrap_row_if_needed(
+        &self,
+        row: &[DxLlmValue],
+        col_widths: &[usize],
+        refs: &HashMap<String, String>,
+    ) -> Vec<Vec<String>> {
+        let format_cell = |v: &DxLlmValue, r: &HashMap<String, String>| self.format_cell_value(v, r);
+        self.table_wrapper.wrap_row(row, col_widths, refs, format_cell)
+    }
+
+    /// Calculate column widths based on content (legacy method for compatibility)
+    fn calculate_column_widths(
+        &self,
+        section: &DxSection,
+        context: &str,
+        refs: &HashMap<String, String>,
+    ) -> Vec<usize> {
+        self.calculate_dynamic_column_widths(section, context, refs)
     }
 
     /// Format cell value for display
@@ -723,5 +805,125 @@ mod tests {
         assert_eq!(section_id_to_full_name('u'), "users");
         assert_eq!(section_id_to_full_name('o'), "orders");
         assert_eq!(section_id_to_full_name('t'), "tasks");
+    }
+
+    #[test]
+    fn test_box_chars_validation() {
+        // Valid box characters
+        assert!(box_chars::is_box_char('┌'));
+        assert!(box_chars::is_box_char('┐'));
+        assert!(box_chars::is_box_char('└'));
+        assert!(box_chars::is_box_char('┘'));
+        assert!(box_chars::is_box_char('─'));
+        assert!(box_chars::is_box_char('│'));
+        assert!(box_chars::is_box_char('┬'));
+        assert!(box_chars::is_box_char('┴'));
+        assert!(box_chars::is_box_char('├'));
+        assert!(box_chars::is_box_char('┤'));
+        assert!(box_chars::is_box_char('┼'));
+
+        // Invalid characters
+        assert!(!box_chars::is_box_char('a'));
+        assert!(!box_chars::is_box_char('+'));
+        assert!(!box_chars::is_box_char('-'));
+        assert!(!box_chars::is_box_char('|'));
+    }
+
+    #[test]
+    fn test_validate_border_line() {
+        // Valid border lines
+        assert!(box_chars::validate_border_line("┌──────┬──────┐"));
+        assert!(box_chars::validate_border_line("│      │      │"));
+        assert!(box_chars::validate_border_line("└──────┴──────┘"));
+        assert!(box_chars::validate_border_line("├──────┼──────┤"));
+
+        // Invalid border lines (contain non-box characters)
+        assert!(!box_chars::validate_border_line("+------+------+"));
+        assert!(!box_chars::validate_border_line("|      |      |"));
+        assert!(!box_chars::validate_border_line("text"));
+    }
+
+    #[test]
+    fn test_dynamic_column_sizing() {
+        let formatter = HumanFormatterV2::new();
+        let mut doc = DxDocument::new();
+
+        // Create a section with varying content lengths
+        let mut section = DxSection::new(vec!["id".to_string(), "description".to_string()]);
+        section.rows.push(vec![
+            DxLlmValue::Num(1.0),
+            DxLlmValue::Str("Short".to_string()),
+        ]);
+        section.rows.push(vec![
+            DxLlmValue::Num(2.0),
+            DxLlmValue::Str("A much longer description".to_string()),
+        ]);
+        doc.sections.insert('d', section);
+
+        let output = formatter.format(&doc);
+
+        // Verify table is properly formatted
+        assert!(output.contains("┌"));
+        assert!(output.contains("┐"));
+        assert!(output.contains("└"));
+        assert!(output.contains("┘"));
+
+        // Verify content is present
+        assert!(output.contains("Short"));
+        assert!(output.contains("A much longer description"));
+    }
+
+    #[test]
+    fn test_table_uses_box_chars_constants() {
+        let formatter = HumanFormatterV2::new();
+        let mut doc = DxDocument::new();
+
+        let mut section = DxSection::new(vec!["id".to_string()]);
+        section.rows.push(vec![DxLlmValue::Num(1.0)]);
+        doc.sections.insert('d', section);
+
+        let output = formatter.format(&doc);
+
+        // Extract table lines and verify they use valid box characters
+        for line in output.lines() {
+            if line.starts_with('┌') || line.starts_with('├') || line.starts_with('└') {
+                // Border lines should only contain box chars and spaces
+                for ch in line.chars() {
+                    assert!(
+                        box_chars::is_box_char(ch) || ch == ' ' || ch == '\n',
+                        "Invalid character in border line: '{}'", ch
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_column_width_recalculation() {
+        let formatter = HumanFormatterV2::new();
+        let mut doc = DxDocument::new();
+
+        // First section with short content
+        let mut section1 = DxSection::new(vec!["id".to_string(), "value".to_string()]);
+        section1.rows.push(vec![
+            DxLlmValue::Num(1.0),
+            DxLlmValue::Str("A".to_string()),
+        ]);
+        doc.sections.insert('a', section1);
+
+        // Second section with longer content
+        let mut section2 = DxSection::new(vec!["id".to_string(), "value".to_string()]);
+        section2.rows.push(vec![
+            DxLlmValue::Num(1.0),
+            DxLlmValue::Str("Much longer value here".to_string()),
+        ]);
+        doc.sections.insert('b', section2);
+
+        let output = formatter.format(&doc);
+
+        // Both tables should be properly formatted with their own widths
+        assert!(output.contains("[assets]"));
+        assert!(output.contains("[builds]"));
+        assert!(output.contains("Much longer value here"));
     }
 }
