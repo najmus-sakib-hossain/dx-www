@@ -39,6 +39,7 @@ pub mod parser;
 pub mod schema;
 pub mod tokenizer;
 pub mod types;
+pub mod wasm;
 pub mod zero;
 
 pub use base62::{decode_base62, encode_base62};
@@ -68,6 +69,9 @@ pub use llm::{
     human_to_machine, llm_to_document, llm_to_human, machine_to_document, machine_to_human,
     machine_to_llm,
 };
+
+// Re-export WASM types for VS Code extension
+pub use wasm::{DxSerializer, SerializerConfig, TransformResult, ValidationResult, smart_quote};
 
 #[cfg(test)]
 mod tests {

@@ -1,0 +1,119 @@
+{
+  "name": "vscode-dx-serializer",
+  "displayName": "DX Serializer",
+  "description": "Seamless editing of .dx files with human-readable display and dense storage",
+  "version": "0.1.0",
+  "publisher": "dx-runtime",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters"
+  ],
+  "keywords": [
+    "dx",
+    "serializer",
+    "format",
+    "llm",
+    "token-efficient"
+  ],
+  "icon": "media/logo.png",
+  "activationEvents": [
+    "onFileSystem:dxlens",
+    "onLanguage:dx"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "dx",
+        "aliases": ["DX", "dx"],
+        "extensions": [".dx"],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./media/file-extension-light.png",
+          "dark": "./media/file-extension-dark.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "dx",
+        "scopeName": "source.dx",
+        "path": "./syntaxes/dx.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "dx.refreshFromDisk",
+        "title": "DX: Refresh from Disk",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "dx.forceSave",
+        "title": "DX: Force Save"
+      },
+      {
+        "command": "dx.showDenseView",
+        "title": "DX: Show Dense View"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "dx.refreshFromDisk",
+          "when": "resourceExtname == .dx",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DX Serializer",
+      "properties": {
+        "dx.validateBeforeSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Validate syntax before saving .dx files"
+        },
+        "dx.autoSaveGracePeriod": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 500,
+          "maximum": 10000,
+          "description": "Grace period in milliseconds after last keystroke before auto-save"
+        },
+        "dx.indentSize": {
+          "type": "number",
+          "enum": [2, 4],
+          "default": 2,
+          "description": "Indent size for human-readable format (2 or 4 spaces)"
+        },
+        "dx.showDensePreview": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show dense format preview on hover"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.55.0",
+    "fast-check": "^3.14.0",
+    "typescript": "^5.3.2"
+  },
+  "dependencies": {}
+}

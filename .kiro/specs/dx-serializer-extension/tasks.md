@@ -6,7 +6,7 @@ This implementation plan creates a VS Code extension that provides seamless edit
 
 ## Tasks
 
-- [ ] 1. Set up extension project structure
+- [x] 1. Set up extension project structure
   - Create `vscode-dx-serializer/` directory in `crates/` folder
   - Create `package.json` with extension manifest, dependencies, and contribution points
   - Create `tsconfig.json` for TypeScript compilation
@@ -15,34 +15,34 @@ This implementation plan creates a VS Code extension that provides seamless edit
   - Create `.vscode/launch.json` for debugging
   - _Requirements: 10.1-10.6, 11.1-11.5_
 
-- [ ] 2. Implement WASM core bindings
-  - [ ] 2.1 Create `crates/serializer/src/wasm.rs` with WASM bindings
+- [x] 2. Implement WASM core bindings
+  - [x] 2.1 Create `crates/serializer/src/wasm.rs` with WASM bindings
     - Implement `DxSerializer` struct with `to_human`, `to_dense`, `validate`, `is_saveable` methods
     - Implement `ValidationResult` and `TransformResult` structs
     - Implement smart quoting logic for apostrophes and mixed quotes
     - Add wasm-bindgen annotations for JavaScript interop
     - _Requirements: 1.1, 1.2, 2.1-2.5_
-  - [ ] 2.2 Write property test for round-trip transformation
+  - [x] 2.2 Write property test for round-trip transformation
     - **Property 1: Round-trip transformation consistency**
     - **Validates: Requirements 1.1, 1.2, 1.6**
-  - [ ] 2.3 Write property test for string preservation
+  - [x] 2.3 Write property test for string preservation
     - **Property 3: String value preservation**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
 
-- [ ] 3. Build WASM and create build script
+- [x] 3. Build WASM and create build script
   - Create `scripts/build-wasm.sh` for building WASM with wasm-pack
   - Update `crates/serializer/Cargo.toml` with wasm feature and dependencies
   - Build WASM to `vscode-dx-serializer/wasm/` directory
   - Verify WASM bindings are generated correctly
   - _Requirements: 12.1, 12.4_
 
-- [ ] 4. Implement utility functions
-  - [ ] 4.1 Create `src/utils.ts` with helper functions
+- [x] 4. Implement utility functions
+  - [x] 4.1 Create `src/utils.ts` with helper functions
     - Implement `isExactlyDxFile()` for file type detection
     - Implement `getDiskUri()` and `getLensUri()` for URI conversion
     - Implement `debounce()` for save operations
     - _Requirements: 5.1, 5.2, 5.3_
-  - [ ] 4.2 Write property test for file type filtering
+  - [x] 4.2 Write property test for file type filtering
     - **Property 6: File type filtering correctness**
     - **Validates: Requirements 5.1, 5.2, 5.3**
 
