@@ -36,37 +36,24 @@ forge|https://dx.vercel.app/essensefromexistence/dx|none
 
 **Human Format V2 (in editor):**
 ```toml
-# ════════════════════════════════════════════════════════════════════════════════
-#                                  CONFIGURATION
-# ════════════════════════════════════════════════════════════════════════════════
-
 [config]
-name        = "dx"
-version     = "0.0.1"
-title       = "Enhanced Developing Experience"
-description = "Orchestrate don't just own your code"
-
-# ════════════════════════════════════════════════════════════════════════════════
-#                                      FORGE
-# ════════════════════════════════════════════════════════════════════════════════
+name        = dx
+version     = 0.0.1
+title       = Enhanced Developing Experience
+description = Orchestrate don't just own your code
 
 [forge]
-┌───────┬─────────────────────────────────────────────────┬───────────┐
-│ Name  │                   Repository                    │ Container │
-├───────┼─────────────────────────────────────────────────┼───────────┤
-│ forge │ https://dx.vercel.app/essensefromexistence/dx   │ none      │
-└───────┴─────────────────────────────────────────────────┴───────────┘
-
-Total: 1 rows
+name   repository                                      container
+forge  https://dx.vercel.app/essensefromexistence/dx  none
 ```
 
 ## Human Format V2 Features
 
-### Flat Structure (No Indentation)
+### Clean, Simple Structure
 ```toml
 [config]
-name    = "MyProject"
-version = "1.0.0"
+name    = MyProject
+version = 1.0.0
 ```
 
 ### Full Key Name Expansion
@@ -94,11 +81,14 @@ version = "1.0.0"
 workspace = frontend/www, frontend/mobile, backend/api
 ```
 
-### Unicode Box-Drawing Tables
-Tables use Unicode box-drawing characters:
-- `┌` `┐` `└` `┘` - Corners
-- `─` `│` - Lines
-- `┬` `┴` `├` `┤` `┼` - Junctions
+### Simple Indented Data Tables
+Data sections use flat rows with column alignment:
+```toml
+[data]
+id  name   active
+1   Alpha  true
+2   Beta   false
+```
 
 ## Commands
 
@@ -180,8 +170,9 @@ src/
 
 ## Related Documentation
 
-- **[HUMAN.md](../../HUMAN.md)** - Complete Human Format V2 specification
-- **[Serializer README](../serializer/README.md)** - DX Serializer library documentation
+See the project repository for complete documentation:
+- `HUMAN.md` - Complete Human Format V2 specification
+- `crates/serializer/README.md` - DX Serializer library documentation
 
 ## License
 

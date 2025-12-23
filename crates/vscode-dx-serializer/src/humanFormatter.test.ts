@@ -18,7 +18,6 @@ import {
     compressKey,
     formatValue,
     formatTableValue,
-    formatSectionHeader,
     formatConfigSection,
     formatDataSection,
     generateSummary,
@@ -182,59 +181,51 @@ export function testFormatValueTypes(): void {
 }
 
 /**
- * Property 2.3: formatTableValue uses special symbols
+ * Property 2.3: formatTableValue formats values for display
  */
 export function testFormatTableValueSymbols(): void {
-    // Boolean true -> ✓
+    // Boolean true -> true (simple text)
     const trueResult = formatTableValue(boolValue(true));
-    if (trueResult !== '✓') {
-        throw new Error(`Expected '✓', got '${trueResult}'`);
+    if (trueResult !== 'true') {
+        throw new Error(`Expected 'true', got '${trueResult}'`);
     }
 
-    // Boolean false -> ✗
+    // Boolean false -> false (simple text)
     const falseResult = formatTableValue(boolValue(false));
-    if (falseResult !== '✗') {
-        throw new Error(`Expected '✗', got '${falseResult}'`);
+    if (falseResult !== 'false') {
+        throw new Error(`Expected 'false', got '${falseResult}'`);
     }
 
-    // Null -> —
+    // Null -> -
     const nullResult = formatTableValue(nullValue());
-    if (nullResult !== '—') {
-        throw new Error(`Expected '—', got '${nullResult}'`);
+    if (nullResult !== '-') {
+        throw new Error(`Expected '-', got '${nullResult}'`);
     }
 
-    console.log('✓ Property 2.3: formatTableValue uses special symbols');
+    console.log('✓ Property 2.3: formatTableValue formats values for display');
 }
 
 /**
- * Property 2.2: formatSectionHeader creates box-drawing headers
+ * Property 2.2: formatDocument creates clean output
  */
 export function testFormatSectionHeader(): void {
-    const header = formatSectionHeader('TEST', 40);
-    const lines = header.split('\n');
+    // Test that formatDocument produces clean output without decorative headers
+    const doc = createDocument();
+    doc.context.set('nm', strValue('Test'));
 
-    if (lines.length !== 3) {
-        throw new Error(`Expected 3 lines, got ${lines.length}`);
+    const result = formatDocument(doc);
+
+    // Should NOT contain decorative headers
+    if (result.includes('═')) {
+        throw new Error(`Should not contain decorative headers: ${result}`);
     }
 
-    // Check that lines start with #
-    for (const line of lines) {
-        if (!line.startsWith('#')) {
-            throw new Error(`Line should start with '#': ${line}`);
-        }
+    // Should contain [config]
+    if (!result.includes('[config]')) {
+        throw new Error(`Should contain '[config]': ${result}`);
     }
 
-    // Check that header contains the title
-    if (!header.includes('TEST')) {
-        throw new Error(`Header should contain 'TEST': ${header}`);
-    }
-
-    // Check for box-drawing characters (V2 uses ═ instead of ─)
-    if (!header.includes('═')) {
-        throw new Error(`Header should contain box-drawing characters: ${header}`);
-    }
-
-    console.log('✓ Property 2.2: formatSectionHeader creates box-drawing headers');
+    console.log('✓ Property 2.2: formatDocument creates clean output');
 }
 
 /**
@@ -267,7 +258,7 @@ export function testFormatConfigSectionExpandsKeys(): void {
 }
 
 /**
- * Property 2.5: formatDataSection creates Unicode tables
+ * Property 2.5: formatDataSection creates simple indented rows
  */
 export function testFormatDataSectionCreatesTable(): void {
     const section = createSection('d', ['id', 'nm', 'ac']);
@@ -276,17 +267,14 @@ export function testFormatDataSectionCreatesTable(): void {
 
     const result = formatDataSection(section);
 
-    // V2: Should contain full section name '[data]' instead of '[d]'
+    // V2: Should contain full section name '[data]'
     if (!result.includes('[data]')) {
         throw new Error(`Should contain section header '[data]': ${result}`);
     }
 
-    // Should contain box-drawing characters
-    if (!result.includes('┌') || !result.includes('┐') || !result.includes('└') || !result.includes('┘')) {
-        throw new Error(`Should contain box corners: ${result}`);
-    }
-    if (!result.includes('│')) {
-        throw new Error(`Should contain vertical lines: ${result}`);
+    // Should NOT contain box-drawing characters (simple format)
+    if (result.includes('┌') || result.includes('│') || result.includes('└')) {
+        throw new Error(`Should NOT contain box-drawing characters: ${result}`);
     }
 
     // Should contain data
@@ -294,16 +282,16 @@ export function testFormatDataSectionCreatesTable(): void {
         throw new Error(`Should contain data values: ${result}`);
     }
 
-    // Should use checkmarks for booleans
-    if (!result.includes('✓') || !result.includes('✗')) {
-        throw new Error(`Should use checkmarks for booleans: ${result}`);
+    // Should contain indented rows
+    if (!result.includes('    ')) {
+        throw new Error(`Should contain indented rows: ${result}`);
     }
 
-    console.log('✓ Property 2.5: formatDataSection creates Unicode tables');
+    console.log('✓ Property 2.5: formatDataSection creates simple indented rows');
 }
 
 /**
- * Property 2.7: generateSummary calculates totals
+ * Property 2.7: generateSummary returns item count
  */
 export function testGenerateSummaryCalculatesTotals(): void {
     const section = createSection('d', ['id', 'pr', 'ac']);
@@ -318,17 +306,7 @@ export function testGenerateSummaryCalculatesTotals(): void {
         throw new Error(`Should contain 'Total: 3 items': ${summary}`);
     }
 
-    // Should contain numeric total (100 + 200 + 150 = 450)
-    if (!summary.includes('450')) {
-        throw new Error(`Should contain numeric total '450': ${summary}`);
-    }
-
-    // Should contain boolean count (2/3 true)
-    if (!summary.includes('2/3')) {
-        throw new Error(`Should contain boolean count '2/3': ${summary}`);
-    }
-
-    console.log('✓ Property 2.7: generateSummary calculates totals');
+    console.log('✓ Property 2.7: generateSummary returns item count');
 }
 
 // ============================================================================
@@ -402,7 +380,8 @@ export function runUnitTests(): void {
                 doc.sections.set('d', section);
 
                 const result = formatDocument(doc);
-                return result.includes('CONFIG') && result.includes('DATA');
+                // V2: uses [config] and [data] section headers
+                return result.includes('[config]') && result.includes('[data]');
             }
         },
         {

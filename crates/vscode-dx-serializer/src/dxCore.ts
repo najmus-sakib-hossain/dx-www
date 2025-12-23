@@ -623,7 +623,9 @@ class FallbackDxCore implements DxCore {
 let cachedCore: DxCore | null = null;
 
 /**
- * Load the DxCore, preferring WASM with TypeScript fallback
+ * Load the DxCore, using TypeScript implementation
+ * 
+ * Note: WASM is disabled to use the updated TypeScript formatter
  * 
  * @param extensionPath - Path to the extension directory
  * @param indentSize - Indent size for formatting (default: 2)
@@ -638,25 +640,9 @@ export async function loadDxCore(
         return cachedCore;
     }
 
-    // Try to load WASM
-    try {
-        const wasmPath = path.join(extensionPath, 'wasm', 'dx_serializer.js');
-
-        if (fs.existsSync(wasmPath)) {
-            // Dynamic import of WASM module
-            const wasmModule = await import(wasmPath) as WasmModule;
-            const serializer = new wasmModule.DxSerializer();
-            cachedCore = new WasmDxCore(serializer);
-            console.log('DX Serializer: Using WASM core');
-            return cachedCore;
-        }
-    } catch (error) {
-        console.warn('DX Serializer: WASM load failed, using fallback:', error);
-    }
-
-    // Fall back to TypeScript implementation
+    // Use TypeScript implementation (WASM disabled for V2 format)
     cachedCore = new FallbackDxCore(indentSize);
-    console.log('DX Serializer: Using TypeScript fallback');
+    console.log('DX Serializer: Using TypeScript core (V2 format)');
     return cachedCore;
 }
 

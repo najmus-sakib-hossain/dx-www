@@ -289,6 +289,10 @@ export function detectReferences(doc: DxDocument): Map<string, string> {
 
 /**
  * Parse human-readable format into DxDocument
+ * Supports:
+ * - V2 flat format (no indentation for data rows)
+ * - V1 Unicode table format (with │ borders)
+ * - Legacy indented format
  */
 export function parseHuman(input: string): HumanParseResult {
     const doc = createDocument();
@@ -296,8 +300,6 @@ export function parseHuman(input: string): HumanParseResult {
 
     let currentSection: string | null = null;
     let currentDataSection: DxSection | null = null;
-    let inTable = false;
-    let tableSchema: string[] = [];
     let isHeaderRow = true;
     let lineNum = 0;
 
@@ -319,7 +321,6 @@ export function parseHuman(input: string): HumanParseResult {
         const sectionName = parseSectionHeader(trimmed);
         if (sectionName) {
             currentSection = sectionName.toLowerCase();
-            inTable = false;
             isHeaderRow = true;
 
             // Create data section if not config
@@ -337,7 +338,7 @@ export function parseHuman(input: string): HumanParseResult {
         const schema = parseSchemaComment(trimmed);
         if (schema && currentDataSection) {
             currentDataSection.schema = schema;
-            tableSchema = schema;
+            isHeaderRow = false; // Schema comment counts as header
             continue;
         }
 
@@ -355,13 +356,12 @@ export function parseHuman(input: string): HumanParseResult {
             continue;
         }
 
-        // Handle table borders
+        // Handle table borders (V1 format)
         if (isTableBorder(trimmed)) {
-            inTable = true;
             continue;
         }
 
-        // Handle table rows
+        // Handle table rows with │ (V1 format)
         if (isTableRow(trimmed) && currentDataSection) {
             const cells = parseTableRow(trimmed);
 
@@ -369,13 +369,34 @@ export function parseHuman(input: string): HumanParseResult {
                 // First row is header - extract schema if not already set
                 if (currentDataSection.schema.length === 0) {
                     currentDataSection.schema = cells.map(cell => compressKey(cell.toLowerCase()));
-                    tableSchema = currentDataSection.schema;
                 }
                 isHeaderRow = false;
             } else {
                 // Data row
                 const row = cells.map(cell => parseTableCellValue(cell));
                 currentDataSection.rows.push(row);
+            }
+            continue;
+        }
+
+        // Handle flat data rows (V2 format) - space-separated columns
+        // This handles both indented and non-indented rows
+        if (currentDataSection) {
+            // Parse space-separated columns (2+ spaces as delimiter)
+            const cells = parseIndentedRow(trimmed);
+
+            if (cells.length > 0) {
+                if (isHeaderRow) {
+                    // First row is header
+                    if (currentDataSection.schema.length === 0) {
+                        currentDataSection.schema = cells.map(cell => compressKey(cell.toLowerCase()));
+                    }
+                    isHeaderRow = false;
+                } else {
+                    // Data row
+                    const row = cells.map(cell => parseTableCellValue(cell));
+                    currentDataSection.rows.push(row);
+                }
             }
             continue;
         }
@@ -390,6 +411,16 @@ export function parseHuman(input: string): HumanParseResult {
         success: true,
         document: doc,
     };
+}
+
+/**
+ * Parse an indented row (V2 simple format)
+ * Columns are separated by 2+ spaces
+ */
+export function parseIndentedRow(line: string): string[] {
+    // Split by 2 or more spaces
+    const parts = line.split(/\s{2,}/);
+    return parts.map(p => p.trim()).filter(p => p.length > 0);
 }
 
 // ============================================================================
