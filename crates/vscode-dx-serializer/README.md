@@ -1,11 +1,12 @@
 # DX Serializer VS Code Extension
 
-Seamless editing of `.dx` files with human-readable display and dense storage.
+Seamless editing of `.dx` files and files named exactly `dx` with human-readable display and dense storage.
 
 ## Features
 
-- **Dual Format**: Edit human-readable format while storing token-efficient dense format on disk
-- **Syntax Highlighting**: Full TextMate grammar for `.dx` files
+- **Dual Format**: Edit human-readable format while storing token-efficient LLM format on disk
+- **File Support**: Handles both `.dx` extension files AND files named exactly `dx` (no extension)
+- **Syntax Highlighting**: Full TextMate grammar for DX files
 - **Auto-Save Compatible**: Grace period prevents saving incomplete code during typing
 - **Real-time Validation**: Immediate syntax error feedback with actionable hints
 - **Smart Quoting**: Automatic quote selection for strings with apostrophes and special characters
@@ -13,30 +14,50 @@ Seamless editing of `.dx` files with human-readable display and dense storage.
 
 ## How It Works
 
-When you open a `.dx` file:
-1. The extension reads the dense format from disk
+When you open a `.dx` file or a file named exactly `dx`:
+1. The extension reads the LLM format from disk
 2. Transforms it to human-readable format for display
 3. You edit the readable format in the editor
-4. On save, it transforms back to dense format for storage
+4. On save, it transforms back to LLM format for storage
 
 This gives you the best of both worlds:
-- **Humans**: Beautiful, readable, indented code
-- **LLMs**: Token-efficient, minimal bytes
+- **Humans**: Beautiful, readable, TOML-like format with Unicode tables
+- **LLMs**: Token-efficient sigil-based format (37% smaller than TOON)
 - **Git**: Compact diffs, efficient storage
 
 ### Format Example
 
-**Dense format (on disk):**
-```
-server#host:localhost#port:5432#ssl:1
+**LLM format (on disk):**
+```dx
+#c:nm|dx;v|0.0.1;tt|Enhanced Developing Experience;ds|Orchestrate don't just own your code
+#f(nm|repo|container)
+forge|https://dx.vercel.app/essensefromexistence/dx|none
 ```
 
 **Human format (in editor):**
-```yaml
-server:
-  host: localhost
-  port: 5432
-  ssl: true
+```toml
+# ═══════════════════════════════════════════════════════════════════════════════
+#                                   CONFIG
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[config]
+    name        = "dx"
+    version     = "0.0.1"
+    title       = "Enhanced Developing Experience"
+    description = "Orchestrate don't just own your code"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#                                   FORGE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[forge]
+    # Schema: name | repository | container
+
+    ┌───────┬─────────────────────────────────────────────────┬───────────┐
+    │ Name  │ Repository                                      │ Container │
+    ├───────┼─────────────────────────────────────────────────┼───────────┤
+    │ forge │ https://dx.vercel.app/essensefromexistence/dx   │ none      │
+    └───────┴─────────────────────────────────────────────────┴───────────┘
 ```
 
 ## Commands
@@ -64,11 +85,16 @@ The extension shows validation status in the status bar:
 
 ## File Type Filtering
 
-The extension only processes pure `.dx` files:
-- ✓ `config.dx` - Processed
-- ✓ `my-app.dx` - Processed
+The extension processes:
+- ✓ `config.dx` - Processed (`.dx` extension)
+- ✓ `my-app.dx` - Processed (`.dx` extension)
+- ✓ `dx` - Processed (file named exactly "dx")
+- ✓ `/path/to/dx` - Processed (file named exactly "dx" in any directory)
 - ✗ `config.dx.json` - Not processed (compound extension)
 - ✗ `config.dx.bak` - Not processed (backup file)
+- ✗ `mydx` - Not processed (not exactly "dx")
+- ✗ `dxconfig` - Not processed (not exactly "dx")
+- ✗ `dx.json` - Not processed ("dx" with extension)
 
 ## Auto-Save Compatibility
 

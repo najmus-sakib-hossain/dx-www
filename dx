@@ -1,0 +1,18 @@
+#c:nm|dx;v|0.0.1;tt|Enhanced Developing Experience;ds|Orchestrate don't just own your code;au|essensefromexistence;ws|*frontend/www,frontend/mobile;ed|*vscode,vim,gitpod,github-codespace,replit,firebase-studio,cursor,windsurf,stackblitz
+#:js|javascript/typescript|bun|tsc|vite|bun|react;py|python|cpython|-|-|uv|django;rs|rust|native|rustc|-|cargo|-
+#f(nm|repo|container|ci_cd|tasks|items)
+forge|https://dx.vercel.app/essensefromexistence/dx|none|none|none|*cli,docs,examples,packages,scripts,style,tests
+#k(nm|pt|engine|themes)
+stack|@/stack|atomic|enhanced|logical|*dx,vercel,claude
+#y(nm|pt|engine|themes)
+style|@/style|atomic|enhanced|logical|*dx,vercel,claude
+#u(nm|pt|components)
+ui|@/components/ui|*button,card,modal,navbar,footer
+#m(nm|images_path|images|videos_path|videos|sounds_path|sounds|assets_path|assets)
+media|@/public/images/*|*dummy1.jpg,dummy2.png|@/public/videos/*|*dummy1.mp4|@/public/sounds/*|*dummy1.wav|@/public/assets/*|*dummy1.asset
+#i(nm|locales_path|locales_default|locales_dev|locales_prod|ttses_path|ttses_default|ttses_dev|ttses_prod)
+i18n|@/locales|en-US|en-US|all|./ttses|en-US|*en-US,bn-BD|all
+#o(nm|pt|pack|variant)
+icon|@/components/icons|lucide-react|default
+#t(nm|pt|default|primary|secondary)
+font|@/font|Inter|Manrope|RobotoMono

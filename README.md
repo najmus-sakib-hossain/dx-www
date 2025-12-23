@@ -141,8 +141,9 @@
 - **JSON → serializer:** World record 37% better than TOON
 
 ### 🛠️ VS Code Extension
-- **vscode-dx-serializer:** Seamless `.dx` file editing with human-readable display
-- **Dual Format:** Edit readable format, store token-efficient dense format on disk
+- **vscode-dx-serializer:** Seamless `.dx` file and `dx` filename editing with human-readable display
+- **Dual Format:** Edit readable TOML-like format, store token-efficient LLM format on disk
+- **File Support:** Handles both `.dx` extension files AND files named exactly `dx` (no extension)
 - **Smart Quoting:** Automatic quote selection for strings with apostrophes
 - **Auto-Save Compatible:** Grace period prevents saving incomplete code during typing
 - **Real-time Validation:** Immediate syntax error feedback with actionable hints

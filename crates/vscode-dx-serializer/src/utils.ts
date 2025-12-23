@@ -15,15 +15,17 @@ import * as vscode from 'vscode';
 export const DX_LENS_SCHEME = 'dxlens';
 
 /**
- * Check if a URI points to exactly a .dx file (not .dx.json, .dx.yml, etc.)
+ * Check if a URI points to a DX file:
+ * - Files ending with exactly .dx (not .dx.json, .dx.yml, etc.)
+ * - Files named exactly "dx" (no extension, no prefix, no suffix)
  * 
  * This function ensures we only intercept pure .dx files and not files
  * with compound extensions like .dx.json, .dx.yml, .dx.bak, etc.
  * 
  * @param uri - The URI to check
- * @returns true if the URI points to a pure .dx file
+ * @returns true if the URI points to a DX file
  * 
- * Requirements: 5.1, 5.2, 5.3
+ * Requirements: 4.1-4.7
  */
 export function isExactlyDxFile(uri: vscode.Uri): boolean {
     // Must be a file scheme (not git, untitled, etc.)
@@ -32,7 +34,7 @@ export function isExactlyDxFile(uri: vscode.Uri): boolean {
     }
 
     const path = uri.fsPath || uri.path;
-    
+
     // Must have a path
     if (!path) {
         return false;
@@ -40,7 +42,12 @@ export function isExactlyDxFile(uri: vscode.Uri): boolean {
 
     // Get the filename from the path
     const filename = path.split(/[/\\]/).pop() || '';
-    
+
+    // Check if filename is exactly "dx" (no extension, no prefix, no suffix)
+    if (filename === 'dx') {
+        return true;
+    }
+
     // Must end with exactly .dx
     if (!filename.endsWith('.dx')) {
         return false;
@@ -50,7 +57,7 @@ export function isExactlyDxFile(uri: vscode.Uri): boolean {
     // If there's another dot before .dx (like file.json.dx or file.dx.json),
     // we need to check if .dx is the final extension
     const parts = filename.split('.');
-    
+
     // Must have at least 2 parts (name and dx)
     if (parts.length < 2) {
         return false;
@@ -66,19 +73,19 @@ export function isExactlyDxFile(uri: vscode.Uri): boolean {
     // We want to reject files where .dx is followed by another extension
     // But "file.dx" with parts ['file', 'dx'] is valid
     // And "file.name.dx" with parts ['file', 'name', 'dx'] is also valid
-    
+
     // The key insight: we already checked that the filename ends with '.dx'
     // So we just need to make sure there's no extension AFTER .dx
     // which is already guaranteed by the endsWith check above
-    
+
     return true;
 }
 
 /**
- * Check if a path string represents exactly a .dx file
+ * Check if a path string represents exactly a .dx file or a file named exactly "dx"
  * 
  * @param path - The file path to check
- * @returns true if the path is a pure .dx file
+ * @returns true if the path is a pure .dx file or named exactly "dx"
  */
 export function isExactlyDxPath(path: string): boolean {
     if (!path) {
@@ -87,7 +94,12 @@ export function isExactlyDxPath(path: string): boolean {
 
     // Get the filename from the path
     const filename = path.split(/[/\\]/).pop() || '';
-    
+
+    // Check if filename is exactly "dx" (no extension, no prefix, no suffix)
+    if (filename === 'dx') {
+        return true;
+    }
+
     // Must end with exactly .dx (case-sensitive)
     if (!filename.endsWith('.dx')) {
         return false;

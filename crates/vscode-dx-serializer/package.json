@@ -28,8 +28,16 @@
     "languages": [
       {
         "id": "dx",
-        "aliases": ["DX", "dx"],
-        "extensions": [".dx"],
+        "aliases": [
+          "DX",
+          "dx"
+        ],
+        "extensions": [
+          ".dx"
+        ],
+        "filenames": [
+          "dx"
+        ],
         "configuration": "./language-configuration.json",
         "icon": {
           "light": "./media/file-extension-light.png",
@@ -63,7 +71,7 @@
       "editor/title": [
         {
           "command": "dx.refreshFromDisk",
-          "when": "resourceExtname == .dx",
+          "when": "resourceExtname == .dx || resourceFilename == dx",
           "group": "navigation"
         }
       ]
@@ -85,7 +93,10 @@
         },
         "dx.indentSize": {
           "type": "number",
-          "enum": [2, 4],
+          "enum": [
+            2,
+            4
+          ],
           "default": 2,
           "description": "Indent size for human-readable format (2 or 4 spaces)"
         },
