@@ -57,6 +57,18 @@ pub use parser::{parse, parse_stream, Parser};
 pub use schema::{Schema, TypeHint};
 pub use types::{DxArray, DxObject, DxValue};
 
+// Re-export LLM/Human format types at crate root for convenience
+pub use llm::{
+    AbbrevDict, ConvertError, DxDocument, DxLlmValue, DxSection, HumanFormatConfig,
+    HumanFormatter as LlmHumanFormatter, HumanParseError, HumanParser, LlmParser, LlmSerializer,
+    MachineFormat, ParseError as LlmParseError, TableStyle,
+};
+pub use llm::{
+    document_to_human, document_to_llm, document_to_machine, human_to_document, human_to_llm,
+    human_to_machine, llm_to_document, llm_to_human, machine_to_document, machine_to_human,
+    machine_to_llm,
+};
+
 #[cfg(test)]
 mod tests {
     use super::*;
