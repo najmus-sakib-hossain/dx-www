@@ -33,7 +33,8 @@
       {
         "id": "dx",
         "aliases": ["DX Config", "dx"],
-        "filenames": ["dx"],
+        "filenames": ["dx", "dx.human"],
+        "extensions": [".human"],
         "icon": {
           "light": "./media/file-extension-dark.png",
           "dark": "./media/file-extension-dark.png"
@@ -56,6 +57,14 @@
       }
     ],
     "configurationDefaults": {
+      "workbench.editor.customLabels": {
+        "patterns": {
+          "**/.dx/cache/dx.human": "dx"
+        }
+      },
+      "files.exclude": {
+        "**/.dx": true
+      },
       "editor.tokenColorCustomizations": {
         "textMateRules": [
           {
