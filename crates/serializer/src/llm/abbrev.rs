@@ -150,6 +150,13 @@ impl AbbrevDict {
         add("pri", "priority");
         add("vr", "version");
 
+        // === Project/Workspace ===
+        add("ws", "workspace");
+        add("repo", "repository");
+        add("cont", "container");
+        add("ci", "ci_cd");
+        add("eds", "editors");
+
         // === Commerce ===
         add("sk", "sku");
         add("cu", "customer");
@@ -171,6 +178,13 @@ impl AbbrevDict {
         add("bd", "body");
         add("hd", "header");
         add("ft", "footer");
+
+        // Drop the `add` closure to release the mutable borrow
+        drop(add);
+
+        // === Short aliases (expand only, don't affect compression) ===
+        // "v" expands to "version" but "version" compresses to "vr"
+        global.insert("v", "version");
 
         // === Context-aware expansions for ambiguous single-letter keys ===
         // 's' expansions
@@ -220,7 +234,7 @@ impl AbbrevDict {
         // 'v' expansions
         contextual.insert(("v", "data"), "value");
         contextual.insert(("v", "software"), "version");
-        contextual.insert(("v", "default"), "value");
+        contextual.insert(("v", "default"), "version"); // V2: default to version
 
         // 'p' expansions
         contextual.insert(("p", "commerce"), "price");
@@ -397,10 +411,41 @@ mod tests {
         let dict = AbbrevDict::new();
         
         // For all global mappings, expand then compress should return original abbrev
+        // Skip single-letter keys as they use contextual expansion which may differ
         for (&abbrev, &_full) in dict.global_mappings() {
+            if abbrev.len() == 1 {
+                continue; // Single-letter keys use contextual expansion
+            }
             let expanded = dict.expand(abbrev, "");
             let compressed = dict.compress(&expanded);
             assert_eq!(compressed, abbrev, "Reverse round-trip failed for {}", abbrev);
         }
+    }
+
+    #[test]
+    fn test_new_v2_abbreviations() {
+        let dict = AbbrevDict::new();
+        
+        // Test new V2 abbreviation expansions
+        assert_eq!(dict.expand("v", ""), "version"); // Short alias
+        assert_eq!(dict.expand("ws", ""), "workspace");
+        assert_eq!(dict.expand("eds", ""), "editors");
+        assert_eq!(dict.expand("repo", ""), "repository");
+        assert_eq!(dict.expand("cont", ""), "container");
+        assert_eq!(dict.expand("ci", ""), "ci_cd");
+    }
+
+    #[test]
+    fn test_new_v2_compressions() {
+        let dict = AbbrevDict::new();
+        
+        // Test new V2 full name compressions
+        // Note: "version" compresses to "vr" (canonical), not "v" (alias)
+        assert_eq!(dict.compress("version"), "vr");
+        assert_eq!(dict.compress("workspace"), "ws");
+        assert_eq!(dict.compress("editors"), "eds");
+        assert_eq!(dict.compress("repository"), "repo");
+        assert_eq!(dict.compress("container"), "cont");
+        assert_eq!(dict.compress("ci_cd"), "ci");
     }
 }

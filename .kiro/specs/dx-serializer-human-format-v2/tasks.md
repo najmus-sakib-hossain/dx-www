@@ -6,68 +6,68 @@ This implementation plan transforms the DX Serializer Human Format to provide cl
 
 ## Tasks
 
-- [ ] 1. Fix Sigil Parsing Error in Human Parser
-  - [ ] 1.1 Update is_comment_line() to handle '# ' prefix correctly
+- [x] 1. Fix Sigil Parsing Error in Human Parser
+  - [x] 1.1 Update is_comment_line() to handle '# ' prefix correctly
     - Modify the condition to check for '# ' (hash + space) as a comment
     - Add handling for decorative lines like '# ═══'
     - Ensure '#c:', '#:', and '#<letter>(' are NOT treated as comments
     - _Requirements: 1.1, 1.5_
-  - [ ] 1.2 Update parse_line() to skip comment lines before sigil checking
+  - [x] 1.2 Update parse_line() to skip comment lines before sigil checking
     - Move comment detection before sigil parsing
     - Return early for comment lines without error
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
-  - [ ] 1.3 Write property test for comment and sigil parsing
+  - [x] 1.3 Write property test for comment and sigil parsing
     - **Property 1: Comment and sigil parsing**
     - **Validates: Requirements 1.1, 1.2, 1.3, 1.4**
 
-- [ ] 2. Extend Abbreviation Dictionary
-  - [ ] 2.1 Add new key mappings to AbbrevDict
-    - Add "v" → "version"
-    - Add "ws" → "workspace" (singular)
-    - Add "ed" → "editors"
+- [x] 2. Extend Abbreviation Dictionary
+  - [x] 2.1 Add new key mappings to AbbrevDict
+    - Add "v" → "version" (contextual default)
+    - Add "ws" → "workspace"
+    - Add "eds" → "editors"
     - Add "repo" → "repository"
     - Add "cont" → "container"
     - Add "ci" → "ci_cd"
     - _Requirements: 2.4_
-  - [ ] 2.2 Write unit tests for new abbreviation mappings
+  - [x] 2.2 Write unit tests for new abbreviation mappings
     - Test expansion of new keys
     - Test compression of new full names
     - _Requirements: 2.4_
 
-- [ ] 3. Implement HumanFormatterV2 with Flat Structure
-  - [ ] 3.1 Create FormatterConfig with new options
+- [x] 3. Implement HumanFormatterV2 with Flat Structure
+  - [x] 3.1 Create FormatterConfig with new options
     - Add expand_keys option (default: true)
     - Add max_line_width option (default: 120)
     - Add use_flat_structure option (default: true)
     - _Requirements: 3.1, 5.4_
-  - [ ] 3.2 Implement format_config_section() without indentation
+  - [x] 3.2 Implement format_config_section() without indentation
     - Remove leading indentation from key-value pairs
     - Align '=' signs using spaces after key names
     - Format arrays as comma-separated lists without brackets
     - _Requirements: 3.1, 3.2, 3.3_
-  - [ ] 3.3 Implement format_data_section() with full section names
+  - [x] 3.3 Implement format_data_section() with full section names
     - Use full section name in brackets (e.g., '[forge]' not '[f]')
     - Place table directly after header without indentation
     - _Requirements: 4.1, 4.2_
-  - [ ] 3.4 Write property test for format structure validation
+  - [x] 3.4 Write property test for format structure validation
     - **Property 4: Format structure validation**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2**
 
-- [ ] 4. Implement Table Wrapper for Wide Tables
-  - [ ] 4.1 Create TableWrapper struct with configuration
+- [x] 4. Implement Table Wrapper for Wide Tables
+  - [x] 4.1 Create TableWrapper struct with configuration
     - Store max_width setting
     - Implement needs_wrapping() to check if wrapping is needed
     - _Requirements: 5.4_
-  - [ ] 4.2 Implement calculate_widths() for optimal column sizing
+  - [x] 4.2 Implement calculate_widths() for optimal column sizing
     - Calculate minimum width for each column based on content
     - Consider max_line_width constraint
     - _Requirements: 5.1_
-  - [ ] 4.3 Implement wrap_row() for splitting wide rows
+  - [x] 4.3 Implement wrap_row() for splitting wide rows
     - Split row into multiple display lines when exceeding max width
     - Maintain column alignment across wrapped lines
     - Add continuation indicators (e.g., '...' or '↓')
     - _Requirements: 5.1, 5.2, 5.3_
-  - [ ] 4.4 Write property test for table wrapping round-trip
+  - [x] 4.4 Write property test for table wrapping round-trip
     - **Property 6: Table wrapping round-trip**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.5**
 

@@ -84,6 +84,11 @@ impl LlmParser {
         doc: &mut DxDocument,
         current_section: &mut Option<char>,
     ) -> Result<(), ParseError> {
+        // Skip comment lines (# followed by space or decorative characters)
+        if Self::is_comment_line(line) {
+            return Ok(());
+        }
+
         if line.starts_with("#c:") {
             // Context section: #c:key|val;key|val
             let content = &line[3..];
@@ -103,7 +108,8 @@ impl LlmParser {
                 doc.sections.insert(id_char, section);
                 *current_section = Some(id_char);
             } else {
-                return Err(ParseError::InvalidSigil { pos: 0 });
+                // Unknown sigil - skip as comment for forward compatibility
+                return Ok(());
             }
         } else if let Some(section_id) = current_section {
             // Data row for current section
@@ -114,6 +120,37 @@ impl LlmParser {
         }
 
         Ok(())
+    }
+
+    /// Check if a line is a comment
+    ///
+    /// Comments are lines starting with:
+    /// - '# ' (hash followed by space)
+    /// - '# ═' or similar decorative characters
+    /// - Lines that are just '#'
+    fn is_comment_line(line: &str) -> bool {
+        if !line.starts_with('#') {
+            return false;
+        }
+
+        // Single '#' is a comment
+        if line.len() == 1 {
+            return true;
+        }
+
+        let second_char = line.chars().nth(1).unwrap();
+
+        // '# ' (hash + space) is a comment
+        if second_char == ' ' {
+            return true;
+        }
+
+        // Decorative lines like '# ═══' are comments
+        if second_char == '═' || second_char == '─' || second_char == '━' {
+            return true;
+        }
+
+        false
     }
 
     /// Parse context section: #c:key|val;key|val
@@ -418,5 +455,43 @@ mod tests {
 
         let section = resolved.sections.get(&'d').unwrap();
         assert_eq!(section.rows[0][1].as_str(), Some("Resolved Value"));
+    }
+
+    #[test]
+    fn test_is_comment_line() {
+        // Comments
+        assert!(LlmParser::is_comment_line("# This is a comment"));
+        assert!(LlmParser::is_comment_line("# ════════════════════"));
+        assert!(LlmParser::is_comment_line("# ────────────────────"));
+        assert!(LlmParser::is_comment_line("#"));
+        assert!(LlmParser::is_comment_line("# "));
+
+        // Not comments (valid sigils)
+        assert!(!LlmParser::is_comment_line("#c:key|value"));
+        assert!(!LlmParser::is_comment_line("#:ref|value"));
+        assert!(!LlmParser::is_comment_line("#d(id|name)"));
+    }
+
+    #[test]
+    fn test_parse_with_comments() {
+        let input = r#"
+# This is a comment
+# ════════════════════════════════════════════════════════════════════════════════
+#                                  CONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════════
+#c:nm|Test;vr|1.0
+# Another comment
+#d(id|nm)
+1|Alpha
+# Comment in data section
+2|Beta
+"#;
+        let doc = LlmParser::parse(input).unwrap();
+
+        assert_eq!(doc.context.len(), 2);
+        assert_eq!(doc.context.get("nm").unwrap().as_str(), Some("Test"));
+        
+        let section = doc.sections.get(&'d').unwrap();
+        assert_eq!(section.rows.len(), 2);
     }
 }

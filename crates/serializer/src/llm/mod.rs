@@ -11,9 +11,11 @@
 pub mod abbrev;
 pub mod convert;
 pub mod human_formatter;
+pub mod human_formatter_v2;
 pub mod human_parser;
 pub mod parser;
 pub mod serializer;
+pub mod table_wrapper;
 pub mod types;
 
 #[cfg(test)]
@@ -33,7 +35,9 @@ pub use convert::{
     machine_to_llm, ConvertError, MachineFormat,
 };
 pub use human_formatter::{HumanFormatConfig, HumanFormatter, TableStyle};
+pub use human_formatter_v2::{HumanFormatV2Config, HumanFormatterV2};
 pub use human_parser::{HumanParseError, HumanParser};
 pub use parser::{LlmParser, ParseError};
 pub use serializer::LlmSerializer;
+pub use table_wrapper::{TableWrapper, TableWrapperConfig};
 pub use types::{DxDocument, DxLlmValue, DxSection};
