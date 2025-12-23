@@ -1087,5 +1087,3 @@ Welcome to the future. Welcome to **Dx.**
 
 **Star this repo if Dx excites you! ⭐**  
 **Follow our progress as we march toward the January 1, 2026 launch.**
-
-Good, now please make sure that it only does that in "dx" no prefix or suffix and no other files like json, yml and others + Also please format the dx config more correctly and may use 
