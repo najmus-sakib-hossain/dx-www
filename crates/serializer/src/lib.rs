@@ -32,6 +32,7 @@ pub mod encoder;
 pub mod error;
 pub mod formatter;
 pub mod hologram;
+pub mod llm;
 pub mod mappings;
 pub mod optimizer;
 pub mod parser;
