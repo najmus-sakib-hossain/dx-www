@@ -1,11 +1,28 @@
 /**
  * DX Formatter - Bidirectional Dense ↔ Pretty
  * 
- * Dense (LLM):   name:dx, ^container:none
- * Pretty (Human): name       : dx
- *                 container  : none
+ * NEW DX FORMAT:
  * 
- * The ^ symbol should NEVER appear in Human format.
+ * Dense (LLM):
+ *   name=dx
+ *   stack=Lang|Runtime|Compiler
+ *   [forge]
+ *   repository=https://example.com
+ *   friends[3]=ana,luis,sam
+ *   hikes[3]{id,name,distance}=
+ *   1,BlueLake,7.5
+ * 
+ * Pretty (Human):
+ *   name                 = dx
+ *   stack                = Lang | Runtime | Compiler
+ *   
+ *   [forge]
+ *   repository           = https://example.com
+ *   
+ *   friends[3]           = ana, luis, sam
+ *   
+ *   hikes[3]{id, name, distance} =
+ *     1, BlueLake, 7.5
  */
 
 export class DxFormatter {
@@ -18,205 +35,215 @@ export class DxFormatter {
     }
 
     /**
-     * Convert to Human-readable Pretty format
-     * - Remove ALL ^ prefixes, convert to indentation
-     * - Add spaces around : and >
-     * - Add section breaks
-     * - Add comments for root 'dx' config file
+     * Convert Dense (LLM) format to Pretty (Human) format
+     * - Add spaces around = 
+     * - Add spaces around | in pipe-separated values
+     * - Add spaces after commas
      * - Align keys
+     * - Add blank lines before sections
      */
     toPretty(content: string, isRootConfig: boolean = false): string {
         const lines = content.split('\n');
+        const result: string[] = [];
         
-        interface Parsed {
-            indentLevel: number;
-            key: string;
-            op: string;
-            value: string;
-            isContent: boolean;
-            raw: string;
-            section: string;
-        }
-
-        const parsed: Parsed[] = [];
+        // First pass: find max key length for alignment
         let maxKeyLen = 0;
-        let lastSection = '';
-
-        // First pass: parse all lines
         for (const line of lines) {
             const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//') || trimmed.startsWith('[')) {
+                continue;
+            }
             
-            // Empty lines
-            if (!trimmed) {
-                parsed.push({ indentLevel: 0, key: '', op: '', value: '', isContent: false, raw: '', section: '' });
-                continue;
-            }
-
-            // Comments - preserve as-is
-            if (trimmed.startsWith('#') || trimmed.startsWith('//')) {
-                parsed.push({ indentLevel: 0, key: '', op: '', value: '', isContent: false, raw: trimmed, section: '' });
-                continue;
-            }
-
-            // Determine indent level - strip ALL ^ and convert to indent
-            let work = trimmed;
-            let indentLevel = 0;
-
-            // Strip ^ prefix (can be multiple: ^^key would be level 2)
-            while (work.startsWith('^')) {
-                indentLevel++;
-                work = work.substring(1);
-            }
-
-            // If no ^, check for existing whitespace indent
-            if (indentLevel === 0) {
-                const leadSpaces = line.length - line.trimStart().length;
-                indentLevel = Math.floor(leadSpaces / this.indentSize);
-            }
-
-            work = work.trim();
-
-            // Detect section changes (keys with dots indicate new sections)
-            const dotIdx = work.indexOf('.');
-            const section = dotIdx > 0 ? work.substring(0, dotIdx) : '';
-
-            // Parse operator and key/value
-            const arrowIdx = work.indexOf('>');
-            const colonIdx = work.indexOf(':');
-
-            let opIdx = -1;
-            let op = '';
-
-            if (arrowIdx > 0 && (colonIdx < 0 || arrowIdx < colonIdx)) {
-                opIdx = arrowIdx;
-                op = '>';
-            } else if (colonIdx > 0) {
-                opIdx = colonIdx;
-                op = ':';
-            }
-
-            if (opIdx < 0) {
-                // No operator - just content
-                parsed.push({ indentLevel, key: work, op: '', value: '', isContent: true, raw: line, section });
-                maxKeyLen = Math.max(maxKeyLen, work.length);
-                lastSection = section;
-                continue;
-            }
-
-            const key = work.substring(0, opIdx).trim();
-            const value = work.substring(opIdx + 1).trim();
-
-            parsed.push({ indentLevel, key, op, value, isContent: true, raw: line, section });
-            maxKeyLen = Math.max(maxKeyLen, key.length + (indentLevel * this.indentSize));
-            lastSection = section;
-        }
-
-        // Second pass: format with alignment and section breaks
-        const alignCol = Math.max(maxKeyLen + 2, 18);
-        const result: string[] = [];
-        let prevSection = '';
-        
-        // Add comments for root dx config
-        const sectionComments: Record<string, string> = isRootConfig ? {
-            'stack': '# Technology Stack',
-            'forge': '# Forge Configuration',
-            'style': '# Style Configuration',
-            'ui': '# UI Components',
-            'media': '# Media Assets',
-            'i18n': '# Internationalization',
-            'icon': '# Icon Configuration',
-            'font': '# Font Configuration',
-            'workspace': '# Workspace & Editors'
-        } : {};
-
-        for (let i = 0; i < parsed.length; i++) {
-            const p = parsed[i];
-
-            // Add blank line before new section (unless at start)
-            if (i > 0 && p.section && p.section !== prevSection && p.indentLevel === 0) {
-                result.push('');
-                
-                // Add section comment for root config
-                if (isRootConfig && sectionComments[p.section]) {
-                    result.push(sectionComments[p.section]);
-                }
-            }
-
-            if (!p.isContent) {
-                result.push(p.raw);
-                continue;
-            }
-
-            const indentStr = this.indent.repeat(p.indentLevel);
-
-            if (!p.op) {
-                result.push(indentStr + p.key);
-                prevSection = p.section;
-                continue;
-            }
-
-            const keyWidth = alignCol - indentStr.length;
-            const paddedKey = p.key.padEnd(Math.max(keyWidth, p.key.length + 1));
-
-            if (p.op === '>') {
-                const items = p.value.split('|').map(v => v.trim()).filter(Boolean);
-                result.push(`${indentStr}${paddedKey} > ${items.join(' | ')}`);
+            const eqIdx = trimmed.indexOf('=');
+            if (eqIdx > 0) {
+                const key = trimmed.substring(0, eqIdx);
+                maxKeyLen = Math.max(maxKeyLen, key.length);
             } else {
-                result.push(`${indentStr}${paddedKey} : ${p.value}`);
+                maxKeyLen = Math.max(maxKeyLen, trimmed.length);
             }
-
-            prevSection = p.section;
         }
-
+        
+        const alignCol = Math.max(maxKeyLen + 1, 20);
+        let prevWasSection = false;
+        let inTableData = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmed = line.trim();
+            
+            // Empty lines - preserve
+            if (!trimmed) {
+                result.push('');
+                continue;
+            }
+            
+            // Comments - preserve
+            if (trimmed.startsWith('#') || trimmed.startsWith('//')) {
+                result.push(trimmed);
+                continue;
+            }
+            
+            // Section headers like [forge], [style], [media]
+            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                // Add blank line before section (unless at start)
+                if (result.length > 0 && result[result.length - 1] !== '') {
+                    result.push('');
+                }
+                result.push(trimmed);
+                prevWasSection = true;
+                inTableData = false;
+                continue;
+            }
+            
+            // Check if this is table data (starts with number or is continuation)
+            if (inTableData && /^\d/.test(trimmed)) {
+                // Table row - add indent and space after commas
+                const formatted = trimmed.split(',').map(v => v.trim()).join(', ');
+                result.push(this.indent + formatted);
+                continue;
+            }
+            
+            // Parse key=value
+            const eqIdx = trimmed.indexOf('=');
+            
+            if (eqIdx < 0) {
+                // No = sign, just a key (like "context")
+                result.push(trimmed);
+                inTableData = false;
+                continue;
+            }
+            
+            const key = trimmed.substring(0, eqIdx);
+            const value = trimmed.substring(eqIdx + 1);
+            
+            // Check if this is a table header (ends with }= )
+            if (key.includes('{') && key.includes('}')) {
+                // Table definition - format schema
+                const bracketIdx = key.indexOf('{');
+                const closeBracket = key.indexOf('}');
+                const basePart = key.substring(0, bracketIdx);
+                const schema = key.substring(bracketIdx + 1, closeBracket);
+                const formattedSchema = schema.split(',').map(s => s.trim()).join(', ');
+                const formattedKey = `${basePart}{${formattedSchema}}`;
+                
+                const paddedKey = formattedKey.padEnd(alignCol);
+                result.push(`${paddedKey} =`);
+                inTableData = true;
+                
+                // If there's inline data after =, format it
+                if (value.trim()) {
+                    const formatted = value.split(',').map(v => v.trim()).join(', ');
+                    result.push(this.indent + formatted);
+                }
+                continue;
+            }
+            
+            // Check if this is an array (has [n] but no {})
+            if (key.includes('[') && !key.includes('{')) {
+                const bracketIdx = key.indexOf('[');
+                const basePart = key.substring(0, bracketIdx);
+                const countPart = key.substring(bracketIdx);
+                
+                // Format the value (comma or pipe separated)
+                let formattedValue = value;
+                if (value.includes('|')) {
+                    formattedValue = value.split('|').map(v => v.trim()).join(' | ');
+                } else if (value.includes(',')) {
+                    formattedValue = value.split(',').map(v => v.trim()).join(', ');
+                }
+                
+                const paddedKey = (basePart + countPart).padEnd(alignCol);
+                result.push(`${paddedKey} = ${formattedValue}`);
+                inTableData = false;
+                continue;
+            }
+            
+            // Regular key=value
+            let formattedValue = value;
+            
+            // Format pipe-separated values
+            if (value.includes('|')) {
+                formattedValue = value.split('|').map(v => v.trim()).join(' | ');
+            }
+            
+            const paddedKey = key.padEnd(alignCol);
+            result.push(`${paddedKey} = ${formattedValue}`);
+            inTableData = false;
+            prevWasSection = false;
+        }
+        
         return result.join('\n');
     }
 
     /**
-     * Convert to LLM-optimized Dense format
-     * - Add ^ prefix for indented lines
-     * - Remove spaces around operators
-     * - Strip comments and empty lines
+     * Convert Pretty (Human) format to Dense (LLM) format
+     * - Remove spaces around =
+     * - Remove spaces around | 
+     * - Remove spaces after commas
+     * - Remove blank lines
+     * - Remove comments
      */
     toDense(content: string): string {
         const lines = content.split('\n');
         const result: string[] = [];
-
+        
         for (const line of lines) {
             const trimmed = line.trim();
-
-            // Skip empty and comments
+            
+            // Skip empty lines
             if (!trimmed) continue;
+            
+            // Skip comments
             if (trimmed.startsWith('#') || trimmed.startsWith('//')) continue;
-
-            // Calculate indent level from spaces
-            const leadSpaces = line.length - line.trimStart().length;
-            const indentLevel = Math.floor(leadSpaces / this.indentSize);
-            const prefix = indentLevel > 0 ? '^' : '';
-
-            // Strip any existing ^ prefix
-            let work = trimmed;
-            while (work.startsWith('^')) {
-                work = work.substring(1);
+            
+            // Section headers - keep as-is
+            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                result.push(trimmed);
+                continue;
             }
-            work = work.trim();
-
-            // Parse and compact
-            const arrowIdx = work.indexOf('>');
-            const colonIdx = work.indexOf(':');
-
-            if (arrowIdx > 0 && (colonIdx < 0 || arrowIdx < colonIdx)) {
-                const key = work.substring(0, arrowIdx).trim().replace(/\s+/g, '');
-                const items = work.substring(arrowIdx + 1).split('|').map(v => v.trim()).filter(Boolean).join('|');
-                result.push(`${prefix}${key}>${items}`);
-            } else if (colonIdx > 0) {
-                const key = work.substring(0, colonIdx).trim().replace(/\s+/g, '');
-                const value = work.substring(colonIdx + 1).trim();
-                result.push(`${prefix}${key}:${value}`);
-            } else {
-                result.push(`${prefix}${work.replace(/\s+/g, '')}`);
+            
+            // Table data rows (indented, starts with number)
+            if (line.startsWith(' ') || line.startsWith('\t')) {
+                if (/^\s*\d/.test(line)) {
+                    // Table row - compact commas
+                    const compacted = trimmed.split(',').map(v => v.trim()).join(',');
+                    result.push(compacted);
+                    continue;
+                }
             }
+            
+            // Parse key = value
+            const eqIdx = trimmed.indexOf('=');
+            
+            if (eqIdx < 0) {
+                // No = sign, just a key
+                result.push(trimmed.replace(/\s+/g, ''));
+                continue;
+            }
+            
+            let key = trimmed.substring(0, eqIdx).trim();
+            let value = trimmed.substring(eqIdx + 1).trim();
+            
+            // Remove spaces from key (but preserve brackets and braces)
+            key = key.replace(/\s+/g, '');
+            
+            // Compact schema in braces: {id, name} -> {id,name}
+            key = key.replace(/\{\s*([^}]+)\s*\}/g, (match, inner) => {
+                return '{' + inner.split(',').map((s: string) => s.trim()).join(',') + '}';
+            });
+            
+            // Compact value
+            if (value.includes('|')) {
+                // Pipe-separated: remove spaces around pipes
+                value = value.split('|').map(v => v.trim()).join('|');
+            } else if (value.includes(',')) {
+                // Comma-separated: remove spaces after commas
+                value = value.split(',').map(v => v.trim()).join(',');
+            }
+            
+            result.push(`${key}=${value}`);
         }
-
+        
         return result.join('\n');
     }
 }
