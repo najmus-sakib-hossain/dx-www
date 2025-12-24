@@ -21,7 +21,9 @@
   "icon": "media/logo.png",
   "activationEvents": [
     "onFileSystem:dxlens",
-    "onLanguage:dx"
+    "onLanguage:dx",
+    "workspaceContains:**/*.dx",
+    "workspaceContains:dx"
   ],
   "main": "./out/extension.js",
   "contributes": {

@@ -263,6 +263,9 @@ function registerCommands(
  * Requirements: 1.1-1.7, 3.2-3.4
  */
 function setupAutoRedirect(context: vscode.ExtensionContext, dxCore: DxCore): void {
+    // Track URIs we're currently redirecting to avoid loops
+    const redirectingUris = new Set<string>();
+
     // Listen for document opens
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(async (document) => {
@@ -275,37 +278,55 @@ function setupAutoRedirect(context: vscode.ExtensionContext, dxCore: DxCore): vo
                 return;
             }
 
-            // Detect format and convert if needed
-            const content = document.getText();
-            const detection = detectFormat(content);
+            const uriString = document.uri.toString();
 
-            if (isSourceFormat(detection.format)) {
-                // Convert source format to LLM format
-                await convertAndSaveFile(document.uri, content, detection.format, dxCore);
+            // Avoid redirect loops
+            if (redirectingUris.has(uriString)) {
+                return;
             }
 
-            // Close the file:// document and open with dxlens://
-            const lensUri = getLensUri(document.uri);
+            redirectingUris.add(uriString);
 
-            // Use a small delay to avoid race conditions
-            setTimeout(async () => {
-                try {
-                    // Close the current editor if it's showing the file:// version
-                    const editors = vscode.window.visibleTextEditors;
-                    for (const editor of editors) {
-                        if (editor.document.uri.toString() === document.uri.toString()) {
-                            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-                            break;
-                        }
-                    }
+            try {
+                // Detect format and convert if needed
+                const content = document.getText();
+                const detection = detectFormat(content);
 
-                    // Open with dxlens:// scheme
-                    const doc = await vscode.workspace.openTextDocument(lensUri);
-                    await vscode.window.showTextDocument(doc);
-                } catch (error) {
-                    console.error('DX Serializer: Auto-redirect failed:', error);
+                if (isSourceFormat(detection.format)) {
+                    // Convert source format to LLM format
+                    await convertAndSaveFile(document.uri, content, detection.format, dxCore);
                 }
-            }, 50);
+
+                // Close the file:// document and open with dxlens://
+                const lensUri = getLensUri(document.uri);
+
+                // Use a small delay to avoid race conditions
+                setTimeout(async () => {
+                    try {
+                        // Close all editors showing the file:// version
+                        for (const tabGroup of vscode.window.tabGroups.all) {
+                            for (const tab of tabGroup.tabs) {
+                                if (tab.input instanceof vscode.TabInputText) {
+                                    if (tab.input.uri.toString() === uriString) {
+                                        await vscode.window.tabGroups.close(tab);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Open with dxlens:// scheme
+                        const doc = await vscode.workspace.openTextDocument(lensUri);
+                        await vscode.window.showTextDocument(doc);
+                    } catch (error) {
+                        console.error('DX Serializer: Auto-redirect failed:', error);
+                    } finally {
+                        redirectingUris.delete(uriString);
+                    }
+                }, 50);
+            } catch (error) {
+                redirectingUris.delete(uriString);
+                console.error('DX Serializer: Auto-redirect error:', error);
+            }
         })
     );
 }

@@ -141,11 +141,13 @@
 - **JSON → serializer:** World record 37% better than TOON
 
 ### 🛠️ VS Code Extension
-- **vscode-dx-serializer:** Seamless `.dx` file and `dx` filename editing with Human Format V2
-- **Human Format V2:** Flat TOML-like structure with full key names, Unicode tables, comma-separated arrays
-- **Dual Format:** Edit readable V2 format, store token-efficient LLM format on disk
+- **vscode-dx-serializer:** Seamless `.dx` file and `dx` filename editing with Human Format V3
+- **Triple Format System:** LLM format (disk) + Human V3 (editor) + Machine binary (cache)
+- **Universal Converter:** Auto-convert JSON, YAML, TOML, CSV to DX format
+- **Section Order Preservation:** Reorder sections in editor, preserved on save
+- **Syntax Highlighting:** Professional colors (pink keys, green values, blue headers)
 - **File Support:** Handles both `.dx` extension files AND files named exactly `dx` (no extension)
-- **Smart Quoting:** Automatic quote selection for strings with apostrophes
+- **Cache Generation:** Automatic `.dx/cache/dx.human` (text) and `.dx/cache/dx.machine` (binary)
 - **Auto-Save Compatible:** Grace period prevents saving incomplete code during typing
 - **Real-time Validation:** Immediate syntax error feedback with actionable hints
 - **Install:** `kiro --install-extension crates/vscode-dx-serializer/vscode-dx-serializer-0.1.0.vsix`

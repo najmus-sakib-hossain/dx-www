@@ -167,6 +167,10 @@ export function formatValueV3(value: DxValue, config: HumanFormatV3Config = DEFA
             if (config.quoteStringsWithSpaces && str.includes(' ')) {
                 return `"${str}"`;
             }
+            // Quote strings that look like null markers to preserve type
+            if (str === '-' || str === '~') {
+                return `"${str}"`;
+            }
             // Quote strings that look like numbers to preserve type
             if (/^-?\d+(\.\d+)?$/.test(str)) {
                 return `"${str}"`;
