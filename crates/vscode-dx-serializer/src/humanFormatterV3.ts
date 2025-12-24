@@ -343,7 +343,7 @@ export function formatDataSectionV3(
     // Only use special formatting if the schema has the expected prefixes
     if (section.id === 'm' && section.rows.length === 1) {
         const hasMediaPrefixes = section.schema.some(s =>
-            s.endsWith('_path') || ['images', 'videos', 'sounds', 'assets'].includes(s)
+            s.endsWith('_path') || ['images', 'videos', 'sounds', 'assets', 'img', 'vid', 'snd', 'ast'].includes(s)
         );
         if (hasMediaPrefixes) {
             return formatMediaSection(section, config);
@@ -419,16 +419,26 @@ function formatI18nSection(
     const localesFields: Array<{ key: string; value: DxValue }> = [];
     const ttsesFields: Array<{ key: string; value: DxValue }> = [];
 
+    // Map abbreviated keys to full names
+    const keyExpansion: Record<string, string> = {
+        'pt': 'path',
+        'df': 'default',
+        'dv': 'dev',
+        'pd': 'prod',
+    };
+
     for (let i = 0; i < schema.length && i < row.length; i++) {
         const key = schema[i];
         const value = row[i];
 
         if (key.startsWith('locales_')) {
             const shortKey = key.replace('locales_', '');
-            localesFields.push({ key: shortKey, value });
+            const expandedKey = keyExpansion[shortKey] || shortKey;
+            localesFields.push({ key: expandedKey, value });
         } else if (key.startsWith('ttses_')) {
             const shortKey = key.replace('ttses_', '');
-            ttsesFields.push({ key: shortKey, value });
+            const expandedKey = keyExpansion[shortKey] || shortKey;
+            ttsesFields.push({ key: expandedKey, value });
         }
     }
 
@@ -471,16 +481,20 @@ function formatMediaSection(
 
     lines.push('[media]');
 
-    // Map schema to simplified keys
+    // Map schema to simplified keys (handle both abbreviated and full names)
     const keyMap: Record<string, string> = {
         'images_path': 'images',
         'images': 'images',
+        'img': 'images',
         'videos_path': 'videos',
         'videos': 'videos',
+        'vid': 'videos',
         'sounds_path': 'sounds',
         'sounds': 'sounds',
+        'snd': 'sounds',
         'assets_path': 'assets',
         'assets': 'assets',
+        'ast': 'assets',
     };
 
     // Group path and content together
@@ -490,10 +504,10 @@ function formatMediaSection(
         const key = schema[i];
         const value = row[i];
 
-        // Use path values, skip content arrays (they're usually wildcards)
-        if (key.endsWith('_path')) {
-            const shortKey = keyMap[key] || key;
-            mediaGroups.set(shortKey, value);
+        // Map abbreviated or full key to display name
+        const displayKey = keyMap[key];
+        if (displayKey) {
+            mediaGroups.set(displayKey, value);
         }
     }
 

@@ -196,12 +196,8 @@ export class DxDocumentManager implements vscode.Disposable {
         const humanContent = new TextDecoder().decode(content);
         state.currentHuman = humanContent;
 
-        // Check grace period
-        const timeSinceLastKeystroke = Date.now() - state.lastKeystroke;
-        if (timeSinceLastKeystroke < this.config.autoSaveGracePeriod) {
-            // Skip save during grace period
-            return false;
-        }
+        // Note: Grace period check removed to ensure saves happen immediately
+        // The grace period was causing saves to be skipped
 
         // Validate if configured
         if (this.config.validateBeforeSave) {
