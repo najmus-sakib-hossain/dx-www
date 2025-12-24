@@ -1,9 +1,9 @@
 #c:nm|dx;v|0.0.1;tt|Enhanced Developing Experience;ds|Orchestrate don't just own your code;au|essensefromexistence;ws|*@/www,@/backend;ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio
+#f(repo|cont|pl|tk|it)
+https://dx.vercel.app/essensefromexistence/dx|none|none|none|cli
 #:js|javascript/typescript|bun|tsc|vite|bun|react
 #:python|py|python|python|uv|django
 #:rust|rs|rust|native|rustc|cargo|actix-web
-#f(repo|cont|pl|tk|it)
-https://dx.vercel.app/essensefromexistence/dx|none|none|none|cli
 #y(pt|th)
 @/style|dx
 #u(pt|cp)
@@ -14,12 +14,14 @@ https://dx.vercel.app/essensefromexistence/dx|none|none|none|cli
 @/icons|Lucide|Hugeicons
 #t(pt|df)
 @/fonts|Inter
-#d(dx-package-1|dx-package-2)
-0.0.1|0.0.1
-#g(pt)
-@/generator
 #s(st|build)
 dx forge status|dx workspace build
+#d(pt)
+@/driven
+#g(pt)
+@/generator
+#x(dx-package-1|dx-package-2)
+0.0.1|0.0.1
 #i(locales_pt|locales_df|locales_dv|locales_pd|ttses_pt|ttses_df|ttses_dv|ttses_pd)
 @/locales|en-US|en-US|all|@/media/sounds|en-US|en-US|bn-BD
 #j(dependencies_react|dependencies_next)
