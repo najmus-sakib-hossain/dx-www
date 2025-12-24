@@ -1093,15 +1093,8 @@ Welcome to the future. Welcome to **Dx.**
 **Star this repo if Dx excites you! ⭐**  
 **Follow our progress as we march toward the January 1, 2026 launch.**
 
+Please do these 3 tasks about the crates/vscode-dx-serializer forlder's vs code extension
+Let's say someone is changing table in dx serializer human version now when the are changing one item on save at human version the table will be formatted corectly with the new lengith of the items correctly
 
-Please use these colors as I mentioned:
-Keys: #ff0313
-Values: Light green
-Numbers: Light yellow
-Booleans/null: Blue (#569CD6)
-Section headers: Light blue (#9CDCFE)
-Comments: comment like muted
-
-Keys/property names: #f05b8d
-Strings/values: Green (#58c760)
-Keywords: yellow
+Have to add deps and driven, generator at dx file at the root
+Like the vscode extension for vscode code editors like cursor, kiro and other please create extension for Neovim extension, zed extension

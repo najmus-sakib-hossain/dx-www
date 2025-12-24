@@ -2,7 +2,7 @@
 #f(repo|cont|pl|tk|it)
 https://dx.vercel.app/essensefromexistence/dx|none|none|none|*cli,docs,examples,packages,scripts,style,tests
 #:js|javascript/typescript|bun|tsc|vite|bun|react
-#:python|py|python|cpython|-|uv|django
+#:python|py|python|cpython|python| uv|django
 #:rust|rs|rust|native|rustc|cargo|actix-web
 #y(pt|th)
 @/style|dx
@@ -14,5 +14,15 @@ https://dx.vercel.app/essensefromexistence/dx|none|none|none|*cli,docs,examples,
 @/icons|*Lucide,Hugeicons,all|default
 #t(pt|df)
 @/fonts|*Inter,Jetbrain Mono,all
+#d(pt)
+@/components/driven
+#g(pt)
+@/components/generator
 #i(locales_pt|locales_df|locales_dv|locales_pd|ttses_pt|ttses_df|ttses_dv|ttses_pd)
 @/locales|en-US|en-US|all|@/media/sounds|en-US|*en-US,bn-BD|all
+#j(dependencies_react|dependencies_next)
+*https://npm/react,@19.0.1|*https://npm/next,@16.0.1
+#p(dependencies_django|dependencies_numpy)
+*https://pip/django,latest|*https://python/numpy,latest
+#r(dependencies_actix_web|dependencies_rust_crypto)
+*https://cargo/axtix-web,latest|*https://cargo/rust-crypto,latest
