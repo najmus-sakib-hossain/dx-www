@@ -14,9 +14,9 @@ tasks               = none
 items               = cli | docs | examples | packages | scripts | style | tests
 
 [stack]
-js                  = javascript/typescript | bun       | tsc       | vite    | bun   | react
-python              = py                    | python    | cpython   | -       | uv    | django
-rust                = rs                    | rust      | native    | rustc   | cargo | actix-web
+js                  = javascript/typescript | bun    | tsc     | vite  | bun   | react    
+python              = py                    | python | cpython | python| uv    | django   
+rust                = rs                    | rust   | native  | rustc | cargo | actix-web
 
 [style]
 path                = @/style
@@ -32,21 +32,49 @@ videos              = @/media/videos
 sounds              = @/media/sounds
 assets              = @/media/assets
 
+[icon]
+path                = @/icons
+pack                = Lucide | Hugeicons | all
+variant             = default
+
+[font]
+path                = @/fonts
+default             = Inter | "Jetbrain Mono" | all
+
 [i18n.locales]
 path                = @/locales
 default             = en-US
 dev                 = en-US
 prod                = all
+
 [i18n.ttses]
 path                = @/media/sounds
 default             = en-US
 dev                 = en-US | bn-BD
 prod                = all
 
-[icon]
-path                = @/icons
-pack                = Lucide | Hugeicons | all
+[driven]
+path                = @/driven
 
-[font]
-path                = @/fonts
-default             = Inter | "Jetbrain Mono" | all
+[generator]
+path                = @/generator
+
+[scripts]
+status              = dx forge status
+build               = dx workspace build
+
+[dependencies]
+dx-package-1        = 0.0.1
+dx-package-2        = 0.0.1
+
+[js.dependencies]
+react               = 19.0.1
+next                = 16.0.1
+
+[python.dependencies]
+django              = latest
+numpy               = latest
+
+[rust.dependencies]
+actix-web           = latest
+rust-crypto         = latest
