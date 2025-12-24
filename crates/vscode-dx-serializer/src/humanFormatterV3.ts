@@ -293,12 +293,13 @@ export function formatReferenceSectionV3(
     let maxCols = 0;
 
     for (const [key, value] of refs) {
-        const values = value.split('|');
+        // Split by | but preserve spacing
+        const values = value.split('|').map(v => v.trim());
         rows.push({ key, values });
         maxCols = Math.max(maxCols, values.length);
     }
 
-    // Calculate column widths
+    // Calculate column widths (minimum width for each column)
     const colWidths: number[] = new Array(maxCols).fill(0);
     let maxKeyLen = config.keyPadding;
 
@@ -313,7 +314,8 @@ export function formatReferenceSectionV3(
     for (const row of rows) {
         const keyPadding = ' '.repeat(maxKeyLen - row.key.length);
         const formattedValues = row.values.map((val, i) => {
-            const padding = ' '.repeat(colWidths[i] - val.length);
+            // Pad each value to align columns
+            const padding = ' '.repeat(Math.max(0, colWidths[i] - val.length));
             return val + padding;
         });
         lines.push(`${row.key}${keyPadding}= ${formattedValues.join(' | ')}`);

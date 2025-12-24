@@ -261,13 +261,20 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
     let isMultiRowSection = false;
     let lineNum = 0;
 
+    // Track nested sections for proper reconstruction
     const nestedSections: Map<string, Map<string, Array<{ key: string; value: DxValue }>>> = new Map();
+
+    // Track section order for nested sections
+    const nestedSectionOrder: Map<string, string[]> = new Map();
 
     for (const line of lines) {
         lineNum++;
         const trimmed = line.trim();
         if (!trimmed) continue;
-        if (trimmed.startsWith('#') || trimmed.startsWith('//')) continue;
+        if (trimmed.startsWith('//')) continue;
+
+        // Skip LLM format lines (sigils) - these shouldn't be in human format
+        if (trimmed.startsWith('#')) continue;
 
         // Validate section headers
         if (trimmed.startsWith('[')) {
@@ -313,27 +320,16 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                     fullName: sectionName,
                 };
 
-                // Check if this is a language-specific dependency section
-                const parentId = NESTED_SECTION_PARENTS[parentName];
-                if (parentId && subsectionName === 'dependencies') {
-                    // Store as a section with prefixed keys for round-trip
-                    if (!nestedSections.has(parentName)) {
-                        nestedSections.set(parentName, new Map());
-                    }
-                    if (!nestedSections.get(parentName)!.has(subsectionName)) {
-                        nestedSections.get(parentName)!.set(subsectionName, []);
-                    }
-                    currentDataSection = null;
-                } else {
-                    // Regular nested section (like i18n.locales)
-                    if (!nestedSections.has(parentName)) {
-                        nestedSections.set(parentName, new Map());
-                    }
-                    if (!nestedSections.get(parentName)!.has(subsectionName)) {
-                        nestedSections.get(parentName)!.set(subsectionName, []);
-                    }
-                    currentDataSection = null;
+                // Initialize nested section tracking
+                if (!nestedSections.has(parentName)) {
+                    nestedSections.set(parentName, new Map());
+                    nestedSectionOrder.set(parentName, []);
                 }
+                if (!nestedSections.get(parentName)!.has(subsectionName)) {
+                    nestedSections.get(parentName)!.set(subsectionName, []);
+                    nestedSectionOrder.get(parentName)!.push(subsectionName);
+                }
+                currentDataSection = null;
             } else {
                 currentSection = sectionName;
                 currentSubsection = null;
@@ -355,12 +351,15 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
             const compressedKey = key.includes('-') ? key : compressKey(key.toLowerCase());
 
             if (currentSection === null) {
+                // Config section (no header) - these go into context
                 const parsedValue = parseArrayValueV3(value);
                 doc.context.set(compressedKey, parsedValue);
             } else if (isStackSection) {
+                // Stack section - store as refs with pipe-separated values
                 const refValue = value.split(' | ').map(v => v.trim()).join('|');
                 doc.refs.set(key, refValue);
             } else if (currentSubsection !== null) {
+                // Nested section (like i18n.locales, js.dependencies)
                 const parsedValue = parseArrayValueV3(value);
                 const parentSections = nestedSections.get(currentSection);
                 if (parentSections) {
@@ -372,6 +371,7 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                 }
             } else if (currentDataSection) {
                 if (isMultiRowSection) {
+                    // Multi-row section with schema header
                     const rowValues = value.split(' | ').map(v => parseValueV3(v.trim()));
                     const row: DxValue[] = [strValue(key)];
                     row.push(...rowValues);
@@ -380,6 +380,7 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                     }
                     currentDataSection.rows.push(row);
                 } else {
+                    // Single-row section - accumulate key-value pairs
                     // Store key as-is (preserve hyphens in package names)
                     currentDataSection.schema.push(key.includes('-') ? key : compressedKey);
                     if (currentDataSection.rows.length === 0) {
@@ -393,17 +394,25 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
         }
     }
 
+    // Convert nested sections to proper DxSection format
     for (const [parentName, subsections] of nestedSections) {
         const sectionId = NESTED_SECTION_PARENTS[parentName] || compressSectionName(parentName);
         const schema: string[] = [];
         const row: DxValue[] = [];
-        for (const [subsectionName, fields] of subsections) {
-            for (const field of fields) {
-                const prefixedKey = `${subsectionName}_${field.key}`;
-                schema.push(prefixedKey);
-                row.push(field.value);
+
+        // Use the order in which subsections were encountered
+        const subsectionOrder = nestedSectionOrder.get(parentName) || [];
+        for (const subsectionName of subsectionOrder) {
+            const fields = subsections.get(subsectionName);
+            if (fields) {
+                for (const field of fields) {
+                    const prefixedKey = `${subsectionName}_${field.key}`;
+                    schema.push(prefixedKey);
+                    row.push(field.value);
+                }
             }
         }
+
         if (schema.length > 0) {
             const section = createSection(sectionId, schema);
             section.rows.push(row);
