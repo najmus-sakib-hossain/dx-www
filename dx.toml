@@ -46,8 +46,7 @@ prod                = all
 [icon]
 path                = @/icons
 pack                = Lucide | Hugeicons | all
-variant             = default
 
 [font]
 path                = @/fonts
-default             = Inter | Jetbrain Mono | all
+default             = Inter | "Jetbrain Mono" | all

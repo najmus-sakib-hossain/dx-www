@@ -180,6 +180,7 @@ export function parseKeyValueLineV3(line: string): [string, string] | null {
  * 
  * Format:
  * - Lines before first [section] are config values
+ * - [stack] section contains reference definitions (key = val1 | val2 | ...)
  * - [section] starts a new data section
  * - [section.subsection] creates nested sections (merged into parent)
  * - [section] = Col1 | Col2 defines schema for multi-row section
@@ -191,8 +192,9 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
 
     let currentSection: string | null = null;
     let currentDataSection: DxSection | null = null;
-    let currentSchema: string[] = [];
     let currentSubsection: string | null = null;
+    let isStackSection = false; // Track if we're in [stack] section (reference definitions)
+    let isMultiRowSection = false; // Track if section has schema from header (multi-row mode)
     let lineNum = 0;
 
     // Track nested sections for merging
@@ -216,7 +218,20 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
         const sectionHeader = parseSectionHeaderV3(trimmed);
         if (sectionHeader) {
             const [sectionName, schema] = sectionHeader;
-            currentSchema = schema;
+
+            // Check if this is the [stack] section (reference definitions)
+            if (sectionName === 'stack') {
+                isStackSection = true;
+                isMultiRowSection = false;
+                currentSection = sectionName;
+                currentSubsection = null;
+                currentDataSection = null;
+                continue;
+            }
+
+            isStackSection = false;
+            // Multi-row mode if schema was provided in header
+            isMultiRowSection = schema.length > 0;
 
             // Check for nested section (e.g., i18n.locales)
             if (sectionName.includes('.')) {
@@ -257,6 +272,12 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                 // Config section (before any [section] header)
                 const parsedValue = parseArrayValueV3(value);
                 doc.context.set(compressedKey, parsedValue);
+            } else if (isStackSection) {
+                // [stack] section: reference definitions
+                // key = val1 | val2 | val3 becomes #:key|val1|val2|val3
+                // Store as raw pipe-separated string (not parsed as array)
+                const refValue = value.split(' | ').map(v => v.trim()).join('|');
+                doc.refs.set(key, refValue);
             } else if (currentSubsection !== null) {
                 // Nested section (e.g., i18n.locales)
                 const parsedValue = parseArrayValueV3(value);
@@ -268,8 +289,7 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                     }
                 }
             } else if (currentDataSection) {
-                // Data section
-                if (currentSchema.length > 0) {
+                if (isMultiRowSection) {
                     // Multi-row section: key = val1 | val2 | val3
                     // First value is the row name, rest are column values
                     const rowValues = value.split(' | ').map(v => parseValueV3(v.trim()));
@@ -279,7 +299,7 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                     row.push(...rowValues);
 
                     // Pad to schema length
-                    while (row.length < currentSchema.length) {
+                    while (row.length < currentDataSection.schema.length) {
                         row.push(nullValue());
                     }
 

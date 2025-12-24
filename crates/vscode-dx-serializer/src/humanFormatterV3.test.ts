@@ -98,9 +98,10 @@ const contextMap = fc.array(
 
 /**
  * Generate a DxSection
+ * Note: 'k' (stack) is excluded because [stack] is reserved for reference definitions
  */
 const dxSection = fc.tuple(
-    fc.constantFrom('f', 'k', 'y', 'u', 'm', 'i', 'o', 't', 'd'),
+    fc.constantFrom('f', 'y', 'u', 'm', 'o', 't', 'd'),  // Exclude 'k' (stack) and 'i' (i18n has special handling)
     fc.array(abbreviatedKey, { minLength: 1, maxLength: 4 }),
     fc.array(fc.array(dxValue, { minLength: 1, maxLength: 4 }), { minLength: 1, maxLength: 3 })
 ).map(([id, schema, rows]) => {
