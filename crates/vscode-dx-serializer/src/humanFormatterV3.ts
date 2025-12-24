@@ -528,6 +528,7 @@ function formatMediaSection(
 
 /**
  * Format a complete DxDocument to Human Format V3
+ * Preserves section order if available
  */
 export function formatDocumentV3(
     doc: DxDocument,
@@ -535,30 +536,64 @@ export function formatDocumentV3(
 ): string {
     const sections: string[] = [];
 
-    // Config section (no header)
+    // Config section (no header) - always first
     if (doc.context.size > 0) {
         sections.push(formatConfigSectionV3(doc.context, config));
     }
 
-    // Reference section as [stack] if present
-    if (doc.refs.size > 0) {
-        sections.push('');
-        sections.push(formatReferenceSectionV3(doc.refs, config));
-    }
+    // Check if document has section order tracking
+    const docWithOrder = doc as any;
+    const sectionOrder: string[] = docWithOrder.sectionOrder || [];
 
-    // Data sections
-    for (const [sectionId, section] of doc.sections) {
-        // Skip 'k' (stack) section if we already have refs (to avoid duplicate [stack])
-        if (sectionId === 'k' && doc.refs.size > 0) {
-            // Rename to [stack.config] or skip if redundant
-            const renamedSection = { ...section, id: 'k' };
-            sections.push('');
-            sections.push(formatDataSectionAsConfig(renamedSection, config));
-            continue;
+    if (sectionOrder.length > 0) {
+        // Use section order to output sections in the correct order
+        for (const sectionId of sectionOrder) {
+            if (sectionId === 'stack') {
+                // Output [stack] section for refs
+                if (doc.refs.size > 0) {
+                    sections.push('');
+                    sections.push(formatReferenceSectionV3(doc.refs, config));
+                }
+            } else {
+                // Output data section
+                const section = doc.sections.get(sectionId);
+                if (section) {
+                    sections.push('');
+                    sections.push(formatDataSectionV3(section, config));
+                }
+            }
         }
 
-        sections.push('');
-        sections.push(formatDataSectionV3(section, config));
+        // Output any sections not in the order list
+        for (const [sectionId, section] of doc.sections) {
+            if (!sectionOrder.includes(sectionId)) {
+                sections.push('');
+                sections.push(formatDataSectionV3(section, config));
+            }
+        }
+
+        // Output refs if not in order list
+        if (!sectionOrder.includes('stack') && doc.refs.size > 0) {
+            sections.push('');
+            sections.push(formatReferenceSectionV3(doc.refs, config));
+        }
+    } else {
+        // Fallback: refs first, then sections (old behavior)
+        if (doc.refs.size > 0) {
+            sections.push('');
+            sections.push(formatReferenceSectionV3(doc.refs, config));
+        }
+
+        for (const [sectionId, section] of doc.sections) {
+            if (sectionId === 'k' && doc.refs.size > 0) {
+                const renamedSection = { ...section, id: 'k' };
+                sections.push('');
+                sections.push(formatDataSectionAsConfig(renamedSection, config));
+                continue;
+            }
+            sections.push('');
+            sections.push(formatDataSectionV3(section, config));
+        }
     }
 
     return sections.join('\n');
