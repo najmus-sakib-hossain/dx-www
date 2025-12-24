@@ -18,6 +18,8 @@ import { DxCore, ValidationResult } from './dxCore';
 import { getDiskUri, getDocumentKey, DX_LENS_SCHEME } from './utils';
 import { writeCache, deleteCache } from './cacheManager';
 import { parseLlm } from './llmParser';
+import { parseHumanV3 } from './humanParserV3';
+import { formatDocumentV3, DEFAULT_CONFIG } from './humanFormatterV3';
 
 /**
  * State for a single document
@@ -191,7 +193,7 @@ export class DxDocumentManager implements vscode.Disposable {
     }
 
     /**
-     * Save document with validation gating
+     * Save document with validation gating and format-on-save
      * 
      * @param uri - The URI of the document
      * @param content - The human-readable content to save
@@ -207,7 +209,7 @@ export class DxDocumentManager implements vscode.Disposable {
             return this.saveDocument(uri, content);
         }
 
-        const humanContent = new TextDecoder().decode(content);
+        let humanContent = new TextDecoder().decode(content);
         state.currentHuman = humanContent;
 
         // Note: Grace period check removed to ensure saves happen immediately
@@ -226,6 +228,25 @@ export class DxDocumentManager implements vscode.Disposable {
                 // Skip save for invalid content
                 this.showValidationWarning(validation);
                 return false;
+            }
+        }
+
+        // Format-on-save: parse and reformat content for consistency
+        if (this.config.formatOnSave) {
+            try {
+                const parseResult = parseHumanV3(humanContent);
+                if (parseResult.success && parseResult.document) {
+                    const formattedContent = formatDocumentV3(parseResult.document, {
+                        ...DEFAULT_CONFIG,
+                        keyPadding: this.config.keyPadding,
+                    });
+                    humanContent = formattedContent;
+                    state.currentHuman = humanContent;
+                }
+                // If parsing fails, continue with original content (graceful degradation)
+            } catch (formatError) {
+                // Format-on-save failed - log warning but continue with original content
+                console.warn(`DX: Format-on-save failed, using original content: ${formatError}`);
             }
         }
 
@@ -251,8 +272,10 @@ export class DxDocumentManager implements vscode.Disposable {
             // Generate cache files (Requirements: 4.1-4.3)
             await this.generateCacheFiles(diskUri.fsPath, denseResult.content);
 
-            // Note: Format-on-save disabled to prevent corruption issues
-            // The content is already properly formatted when displayed
+            // Update editor with formatted content if format-on-save is enabled
+            if (this.config.formatOnSave) {
+                await this.updateEditorContent(uri, humanContent);
+            }
 
             return true;
         } catch (error) {

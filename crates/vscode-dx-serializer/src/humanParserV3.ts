@@ -112,15 +112,36 @@ export function parseSectionHeaderV3(line: string): [string, string[]] | null {
     return [sectionName, schema];
 }
 
+/**
+ * Parse a key-value line in format: key = value
+ * Correctly splits on the FIRST = sign only, handling values that may contain = signs
+ * 
+ * @param line - The line to parse
+ * @returns [key, value] tuple or null if not a valid key-value line
+ */
 export function parseKeyValueLineV3(line: string): [string, string] | null {
     const trimmed = line.trim();
+
+    // Skip empty lines, comments, and section headers
     if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//')) return null;
     if (trimmed.startsWith('[')) return null;
+
+    // Find the FIRST = sign only (values may contain additional = signs)
     const eqIndex = trimmed.indexOf('=');
     if (eqIndex === -1) return null;
+
+    // Extract key (text before first =) and value (text after first =)
     const key = trimmed.substring(0, eqIndex).trim();
     const value = trimmed.substring(eqIndex + 1).trim();
+
+    // Key must not be empty
     if (!key) return null;
+
+    // Validate: value should not start with '=' (indicates malformed input like "key = = value")
+    if (value.startsWith('=')) {
+        console.warn(`[DX Parser] Warning: Value starts with '=' for key '${key}'. Input may be malformed.`);
+    }
+
     return [key, value];
 }
 
@@ -219,26 +240,34 @@ function validateKeyValueLine(line: string, lineNum: number): HumanParseResultV3
     }
 
     // Check for unclosed quotes in value
+    // Only check for quotes that are used as string delimiters (value starts with quote)
     const value = trimmed.substring(eqIndex + 1).trim();
-    const doubleQuotes = (value.match(/"/g) || []).length;
-    const singleQuotes = (value.match(/'/g) || []).length;
 
-    if (doubleQuotes % 2 !== 0) {
-        return createParseError(
-            `Unclosed double quote at line ${lineNum}`,
-            lineNum,
-            eqIndex + 2 + value.indexOf('"'),
-            'Add closing double quote'
-        );
+    // Check for unclosed double quotes only if value starts with "
+    if (value.startsWith('"')) {
+        const doubleQuotes = (value.match(/"/g) || []).length;
+        if (doubleQuotes % 2 !== 0) {
+            return createParseError(
+                `Unclosed double quote at line ${lineNum}`,
+                lineNum,
+                eqIndex + 2 + value.indexOf('"'),
+                'Add closing double quote'
+            );
+        }
     }
 
-    if (singleQuotes % 2 !== 0) {
-        return createParseError(
-            `Unclosed single quote at line ${lineNum}`,
-            lineNum,
-            eqIndex + 2 + value.indexOf("'"),
-            'Add closing single quote'
-        );
+    // Check for unclosed single quotes only if value starts with '
+    // Don't flag apostrophes in words like "don't"
+    if (value.startsWith("'")) {
+        const singleQuotes = (value.match(/'/g) || []).length;
+        if (singleQuotes % 2 !== 0) {
+            return createParseError(
+                `Unclosed single quote at line ${lineNum}`,
+                lineNum,
+                eqIndex + 2 + value.indexOf("'"),
+                'Add closing single quote'
+            );
+        }
     }
 
     return null;
@@ -356,7 +385,13 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                 doc.context.set(compressedKey, parsedValue);
             } else if (isStackSection) {
                 // Stack section - store as refs with pipe-separated values
-                const refValue = value.split(' | ').map(v => v.trim()).join('|');
+                // The value from parseKeyValueLineV3 is already the text after '=' (trimmed)
+                // Split on ' | ', trim each part, filter out empty strings, and join with '|'
+                const refValue = value
+                    .split(' | ')
+                    .map(v => v.trim())
+                    .filter(v => v.length > 0)  // Remove empty values
+                    .join('|');
                 doc.refs.set(key, refValue);
             } else if (currentSubsection !== null) {
                 // Nested section (like i18n.locales, js.dependencies)
