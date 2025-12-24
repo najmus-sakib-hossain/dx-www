@@ -1,11 +1,11 @@
-#k(js|= javascript/typescript | bun|| tsc|| vite|| bun|| react)
-python|= py|| python | cpython | python | uv|| django
-rust|= rs|| rust|| native|| rustc|| cargo | actix-web
 #f(repo|= https://dx.vercel.app/essensefromexistence/dx)
 container|= none
 pipeline|= none
 tasks|= none
 items|= cli | docs | examples | packages | scripts | style | tests
+#k(js|= javascript/typescript | bun|| tsc|| vite|| bun|| react)
+python|= py|| python | cpython | python| uv|| django
+rust|= rs|| rust|| native|| rustc | cargo | actix-web
 #y(pt|= @/style)
 themes|= dx
 #u(pt|= @/components/ui)
