@@ -54,7 +54,6 @@ export const ABBREVIATIONS: Record<string, string> = {
     'repo': 'repository',
     'cont': 'container',
     'ci': 'ci_cd',
-    'ci_cd': 'pipeline',
     'pl': 'pipeline',
     'tk': 'tasks',
     'it': 'items',
@@ -98,6 +97,21 @@ export const ABBREVIATIONS: Record<string, string> = {
     'wr': 'warning',
     'in': 'info',
     'ok': 'success',
+
+    // Style & UI
+    'th': 'themes',
+    'cp': 'components',
+    'pk': 'pack',
+    'vr': 'variant',
+    'df': 'default',
+    'dv': 'dev',
+    'pd': 'prod',
+
+    // Media
+    'img': 'images',
+    'vid': 'videos',
+    'snd': 'sounds',
+    'ast': 'assets',
 };
 
 export const SECTION_NAMES: Record<string, string> = {
