@@ -3,6 +3,8 @@
   "displayName": "DX Serializer",
   "description": "Seamless editing of .dx files with human-readable display and dense storage",
   "version": "0.1.0",
+  "repository": "https://github.com/manfromexistence/dx",
+  "license": "MIT",
   "publisher": "dx-runtime",
   "engines": {
     "vscode": "^1.85.0"

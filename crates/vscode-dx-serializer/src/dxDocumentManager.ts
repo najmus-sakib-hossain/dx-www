@@ -251,6 +251,9 @@ export class DxDocumentManager implements vscode.Disposable {
             // Generate cache files (Requirements: 4.1-4.3)
             await this.generateCacheFiles(diskUri.fsPath, denseResult.content);
 
+            // Note: Format-on-save disabled to prevent corruption issues
+            // The content is already properly formatted when displayed
+
             return true;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -260,6 +263,37 @@ export class DxDocumentManager implements vscode.Disposable {
             state.isSaving = false;
             // Remove from writing set after a short delay to handle file watcher events
             setTimeout(() => this.writingFiles.delete(key), 100);
+        }
+    }
+
+    /**
+     * Update editor content with reformatted text
+     * 
+     * @param uri - The URI of the document
+     * @param newContent - The new content to display
+     */
+    private async updateEditorContent(uri: vscode.Uri, newContent: string): Promise<void> {
+        // Find the editor showing this document
+        for (const editor of vscode.window.visibleTextEditors) {
+            // Check both the direct URI and the lens URI
+            const editorUriStr = editor.document.uri.toString();
+            const targetUriStr = uri.toString();
+            const lensUriStr = uri.with({ scheme: DX_LENS_SCHEME }).toString();
+
+            if (editorUriStr === targetUriStr || editorUriStr === lensUriStr) {
+                const fullRange = new vscode.Range(
+                    editor.document.positionAt(0),
+                    editor.document.positionAt(editor.document.getText().length)
+                );
+
+                const edit = new vscode.WorkspaceEdit();
+                edit.replace(editor.document.uri, fullRange, newContent);
+                await vscode.workspace.applyEdit(edit);
+
+                // Save the document again to persist the reformatted content
+                // (This won't cause infinite loop because content will match)
+                break;
+            }
         }
     }
 
