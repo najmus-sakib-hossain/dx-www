@@ -1093,8 +1093,81 @@ Welcome to the future. Welcome to **Dx.**
 **Star this repo if Dx excites you! ⭐**  
 **Follow our progress as we march toward the January 1, 2026 launch.**
 
-Please do these 3 tasks about the crates/vscode-dx-serializer forlder's vs code extension
-Let's say someone is changing table in dx serializer human version now when the are changing one item on save at human version the table will be formatted corectly with the new lengith of the items correctly
+Please do these tasks about the crates/vscode-dx-serializer forlder's vs code extension
+Let's say someone is changing table in dx serializer human version now when the are changing it on file save at human version will format the table it will be formatted corectly with the new lengith of the items correctly!!!
 
-Have to add deps and driven, generator at dx file at the root
+```dx
+name                = dx
+version             = 0.0.1
+title               = "Enhanced Developing Experience"
+description         = "Orchestrate don't just own your code"
+author              = essensefromexistence
+workspace           = @/www | @/backend
+editors             = neovim | zed | vscode | cursor | antigravity | replit | firebase-studio
+
+[forge]
+repository          = https://dx.vercel.app/essensefromexistence/dx
+container           = none
+pipeline            = none
+tasks               = none
+items               = cli | docs | examples | packages | scripts | style | tests
+
+[stack]
+js                  = javascript/typescript | bun    | tsc     | vite  | bun   | react    
+python              = py                    | python | cpython | python| uv    | django   
+rust                = rs                    | rust   | native  | rustc | cargo | actix-web
+
+[style]
+path                = @/style
+themes              = dx
+
+[ui]
+path                = @/components/ui
+components          = button | card | modal | navbar | footer | all
+
+[media]
+images              = @/media/images
+videos              = @/media/videos
+sounds              = @/media/sounds
+assets              = @/media/assets
+
+[icon]
+path                = @/icons
+pack                = Lucide | Hugeicons | all
+variant             = default
+
+[font]
+path                = @/fonts
+default             = Inter | "Jetbrain Mono" | all
+
+[i18n.locales]
+path                = @/locales
+default             = en-US
+dev                 = en-US
+prod                = all
+
+[i18n.ttses]
+path                = @/media/sounds
+default             = en-US
+dev                 = en-US | bn-BD
+prod                = all
+
+[driven]
+path                = @/components/driven
+
+[generator]
+path                = @/components/generator
+
+[js.dependencies]
+react               = https://npm/react | @19.0.1
+next                = https://npm/next  | @16.0.1
+
+[python.dependencies]
+django              = https://pip/django   | latest
+numpy               = https://python/numpy | latest
+
+[rust.dependencies]
+actix_web           = https://cargo/axtix-web   | latest
+rust_crypto         = https://cargo/rust-crypto | latest
+```
 Like the vscode extension for vscode code editors like cursor, kiro and other please create extension for Neovim extension, zed extension
