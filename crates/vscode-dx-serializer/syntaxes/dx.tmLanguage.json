@@ -10,25 +10,7 @@
       "include": "#section-headers"
     },
     {
-      "include": "#key-value-pairs"
-    },
-    {
-      "include": "#strings"
-    },
-    {
-      "include": "#numbers"
-    },
-    {
-      "include": "#booleans"
-    },
-    {
-      "include": "#null-values"
-    },
-    {
-      "include": "#operators"
-    },
-    {
-      "include": "#paths"
+      "include": "#key-value-line"
     },
     {
       "include": "#llm-format"
@@ -46,28 +28,61 @@
     "section-headers": {
       "patterns": [
         {
-          "name": "meta.section.dx",
-          "match": "^(\\[[a-zA-Z0-9_.]+\\])",
+          "name": "entity.name.tag.dx",
+          "match": "^\\[[a-zA-Z0-9_.]+\\]"
+        }
+      ]
+    },
+    "key-value-line": {
+      "patterns": [
+        {
+          "match": "^([a-zA-Z_][a-zA-Z0-9_]*)\\s*(=)\\s*(.*)$",
           "captures": {
             "1": {
-              "name": "entity.name.section.dx"
+              "name": "support.type.property-name.dx"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value.dx"
+            },
+            "3": {
+              "patterns": [
+                {
+                  "include": "#value-content"
+                }
+              ]
             }
           }
         }
       ]
     },
-    "key-value-pairs": {
+    "value-content": {
       "patterns": [
         {
-          "match": "^([a-zA-Z_][a-zA-Z0-9_]*)\\s*(=)",
-          "captures": {
-            "1": {
-              "name": "variable.other.property.dx"
-            },
-            "2": {
-              "name": "keyword.operator.assignment.dx"
-            }
-          }
+          "include": "#strings"
+        },
+        {
+          "include": "#urls"
+        },
+        {
+          "include": "#paths"
+        },
+        {
+          "include": "#versions"
+        },
+        {
+          "include": "#numbers"
+        },
+        {
+          "include": "#booleans"
+        },
+        {
+          "include": "#null-values"
+        },
+        {
+          "include": "#pipe-separator"
+        },
+        {
+          "include": "#plain-values"
         }
       ]
     },
@@ -83,53 +98,14 @@
               "match": "\\\\."
             }
           ]
-        },
-        {
-          "name": "string.quoted.single.dx",
-          "begin": "'",
-          "end": "'",
-          "patterns": [
-            {
-              "name": "constant.character.escape.dx",
-              "match": "\\\\."
-            }
-          ]
         }
       ]
     },
-    "numbers": {
+    "urls": {
       "patterns": [
         {
-          "name": "constant.numeric.version.dx",
-          "match": "(?<==\\s*)[0-9]+\\.[0-9]+\\.[0-9]+"
-        },
-        {
-          "name": "constant.numeric.float.dx",
-          "match": "(?<==\\s*)[0-9]+\\.[0-9]+"
-        },
-        {
-          "name": "constant.numeric.integer.dx",
-          "match": "(?<==\\s*)[0-9]+"
-        }
-      ]
-    },
-    "booleans": {
-      "patterns": [
-        {
-          "name": "constant.language.boolean.true.dx",
-          "match": "(?<==\\s*)(true|True|TRUE|yes|Yes|YES)(?=\\s|$|\\|)"
-        },
-        {
-          "name": "constant.language.boolean.false.dx",
-          "match": "(?<==\\s*)(false|False|FALSE|no|No|NO)(?=\\s|$|\\|)"
-        }
-      ]
-    },
-    "null-values": {
-      "patterns": [
-        {
-          "name": "constant.language.null.dx",
-          "match": "(?<==\\s*)(null|none|None|NONE|-|all|All|ALL)(?=\\s|$|\\|)"
+          "name": "markup.underline.link.dx",
+          "match": "https?://[^\\s|]+"
         }
       ]
     },
@@ -138,18 +114,54 @@
         {
           "name": "string.other.link.dx",
           "match": "@/[a-zA-Z0-9_/.-]+"
-        },
-        {
-          "name": "string.other.link.dx",
-          "match": "https?://[^\\s|]+"
         }
       ]
     },
-    "operators": {
+    "versions": {
+      "patterns": [
+        {
+          "name": "constant.numeric.version.dx",
+          "match": "[0-9]+\\.[0-9]+\\.[0-9]+"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.dx",
+          "match": "\\b[0-9]+\\.?[0-9]*\\b"
+        }
+      ]
+    },
+    "booleans": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.dx",
+          "match": "\\b(true|false|True|False|TRUE|FALSE|yes|no|Yes|No|YES|NO)\\b"
+        }
+      ]
+    },
+    "null-values": {
+      "patterns": [
+        {
+          "name": "constant.language.null.dx",
+          "match": "\\b(null|none|None|NONE|all|All|ALL)\\b|(?<=\\s)-(?=\\s|$)"
+        }
+      ]
+    },
+    "pipe-separator": {
       "patterns": [
         {
           "name": "punctuation.separator.pipe.dx",
           "match": "\\|"
+        }
+      ]
+    },
+    "plain-values": {
+      "patterns": [
+        {
+          "name": "string.unquoted.dx",
+          "match": "[a-zA-Z][a-zA-Z0-9_-]*"
         }
       ]
     },

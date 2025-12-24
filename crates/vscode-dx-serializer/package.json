@@ -76,6 +76,103 @@
         }
       ]
     },
+    "configurationDefaults": {
+      "editor.tokenColorCustomizations": {
+        "textMateRules": [
+          {
+            "scope": "support.type.property-name.dx",
+            "settings": {
+              "foreground": "#F44747",
+              "fontStyle": ""
+            }
+          },
+          {
+            "scope": "string.quoted.double.dx",
+            "settings": {
+              "foreground": "#6A9955",
+              "fontStyle": ""
+            }
+          },
+          {
+            "scope": "string.unquoted.dx",
+            "settings": {
+              "foreground": "#4EC9B0",
+              "fontStyle": ""
+            }
+          },
+          {
+            "scope": "string.other.link.dx",
+            "settings": {
+              "foreground": "#4FC1FF",
+              "fontStyle": ""
+            }
+          },
+          {
+            "scope": "markup.underline.link.dx",
+            "settings": {
+              "foreground": "#3794FF",
+              "fontStyle": "underline"
+            }
+          },
+          {
+            "scope": "constant.numeric.dx",
+            "settings": {
+              "foreground": "#B5CEA8",
+              "fontStyle": ""
+            }
+          },
+          {
+            "scope": "constant.numeric.version.dx",
+            "settings": {
+              "foreground": "#DCDCAA",
+              "fontStyle": ""
+            }
+          },
+          {
+            "scope": "constant.language.boolean.dx",
+            "settings": {
+              "foreground": "#569CD6",
+              "fontStyle": ""
+            }
+          },
+          {
+            "scope": "constant.language.null.dx",
+            "settings": {
+              "foreground": "#808080",
+              "fontStyle": "italic"
+            }
+          },
+          {
+            "scope": "entity.name.tag.dx",
+            "settings": {
+              "foreground": "#C586C0",
+              "fontStyle": "bold"
+            }
+          },
+          {
+            "scope": "punctuation.separator.pipe.dx",
+            "settings": {
+              "foreground": "#D4D4D4",
+              "fontStyle": ""
+            }
+          },
+          {
+            "scope": "punctuation.separator.key-value.dx",
+            "settings": {
+              "foreground": "#D4D4D4",
+              "fontStyle": ""
+            }
+          },
+          {
+            "scope": "comment.line.double-slash.dx",
+            "settings": {
+              "foreground": "#6A9955",
+              "fontStyle": "italic"
+            }
+          }
+        ]
+      }
+    },
     "configuration": {
       "title": "DX Serializer",
       "properties": {
