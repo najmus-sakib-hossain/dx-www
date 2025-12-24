@@ -2,7 +2,7 @@
 #f(repo|cont|pl|tk|it)
 https://dx.vercel.app/essensefromexistence/dx|none|none|none|cli
 #:js|javascript/typescript|bun|tsc|vite|bun|react
-#:python|py|python|python|uv|django
+#:python|py|python|python|uv|pip|django
 #:rust|rs|rust|native|rustc|cargo|actix-web
 #y(pt|th)
 @/style|dx
