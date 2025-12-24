@@ -10,9 +10,9 @@ https://dx.vercel.app/essensefromexistence/dx|none|none|none|*cli,docs,examples,
 @/components/ui|*button,card,modal,navbar,footer,all
 #m(img|vid|snd|ast)
 @/media/images|@/media/videos|@/media/sounds|@/media/assets
-#i(locales_pt|locales_df|locales_dv|locales_pd|ttses_pt|ttses_df|ttses_dv|ttses_pd)
-@/locales|en-US|en-US|all|@/media/sounds|en-US|*en-US,bn-BD|all
 #o(pt|pk|vr)
 @/icons|*Lucide,Hugeicons,all|default
 #t(pt|df)
 @/fonts|*Inter,Jetbrain Mono,all
+#i(locales_pt|locales_df|locales_dv|locales_pd|ttses_pt|ttses_df|ttses_dv|ttses_pd)
+@/locales|en-US|en-US|all|@/media/sounds|en-US|*en-US,bn-BD|all
