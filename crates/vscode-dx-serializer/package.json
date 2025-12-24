@@ -82,43 +82,43 @@
           {
             "scope": "support.type.property-name.dx",
             "settings": {
-              "foreground": "#9CDCFE"
+              "foreground": "#ff0313"
             }
           },
           {
             "scope": "string.quoted.double.dx",
             "settings": {
-              "foreground": "#CE9178"
+              "foreground": "#B5CEA8"
             }
           },
           {
             "scope": "string.unquoted.dx",
             "settings": {
-              "foreground": "#CE9178"
+              "foreground": "#B5CEA8"
             }
           },
           {
             "scope": "string.other.link.dx",
             "settings": {
-              "foreground": "#CE9178"
+              "foreground": "#B5CEA8"
             }
           },
           {
             "scope": "markup.underline.link.dx",
             "settings": {
-              "foreground": "#CE9178"
+              "foreground": "#B5CEA8"
             }
           },
           {
             "scope": "constant.numeric.dx",
             "settings": {
-              "foreground": "#B5CEA8"
+              "foreground": "#FDD663"
             }
           },
           {
             "scope": "constant.numeric.version.dx",
             "settings": {
-              "foreground": "#B5CEA8"
+              "foreground": "#FDD663"
             }
           },
           {
@@ -142,7 +142,7 @@
           {
             "scope": "comment.line.double-slash.dx",
             "settings": {
-              "foreground": "#6A9955",
+              "foreground": "#6A6A6A",
               "fontStyle": "italic"
             }
           }

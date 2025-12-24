@@ -1093,9 +1093,9 @@ Welcome to the future. Welcome to **Dx.**
 
 
 Please use these colors as I mentioned:
-Keys: Light red
-Values: Light yellow
-Numbers: Light green (#B5CEA8)
+Keys: #ff0313
+Values: Light green
+Numbers: Light yellow
 Booleans/null: Blue (#569CD6)
 Section headers: Light blue (#9CDCFE)
 Comments: comment like muted
