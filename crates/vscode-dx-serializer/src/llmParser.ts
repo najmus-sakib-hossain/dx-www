@@ -55,6 +55,7 @@ export interface DxDocument {
     context: Map<string, DxValue>;
     refs: Map<string, string>;
     sections: Map<string, DxSection>;
+    sectionOrder?: string[];  // Track order of sections (including 'stack' for refs)
 }
 
 /**
@@ -113,6 +114,7 @@ export function createDocument(): DxDocument {
         context: new Map(),
         refs: new Map(),
         sections: new Map(),
+        sectionOrder: [],
     };
 }
 
@@ -307,6 +309,10 @@ export function parseLlm(input: string): ParseResult {
                     doc.refs.set(ref[0], ref[1]);
                 }
             }
+            // Track 'stack' in section order (only once)
+            if (doc.sectionOrder && !doc.sectionOrder.includes('stack')) {
+                doc.sectionOrder.push('stack');
+            }
             currentSection = null;
             continue;
         }
@@ -318,6 +324,10 @@ export function parseLlm(input: string): ParseResult {
                 const [sectionId, schema] = header;
                 currentSection = createSection(sectionId, schema);
                 doc.sections.set(sectionId, currentSection);
+                // Track section in order
+                if (doc.sectionOrder && !doc.sectionOrder.includes(sectionId)) {
+                    doc.sectionOrder.push(sectionId);
+                }
                 continue;
             } else {
                 return {
