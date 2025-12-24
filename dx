@@ -1,45 +1,29 @@
-#k(js|= javascript/typescript | bun|| tsc|| vite|| bun|| react)
-python|= py|| python | cpython | python | uv|| django
-rust|= rs|| rust|| native|| rustc|| cargo | actix-web
-#f(repo|= https://dx.vercel.app/essensefromexistence/dx)
-container|= none
-pipeline|= none
-tasks|= none
-items|= cli | docs | examples | packages | scripts | style | tests
-#y(pt|= @/style)
-themes|= dx
-#u(pt|= @/components/ui)
-components|= button | card | modal | navbar | footer | all
-#m(images|= @/media/images)
-videos|= @/media/videos
-sounds|= @/media/sounds
-assets|= @/media/assets
-#o(pt|= @/icons)
-pack|= Lucide | Hugeicons | all
-variant|= default
-#t(pt|= @/fonts)
-default|= Inter | "Jetbrain Mono" | all
-[i18n.locales]
-path|= @/locales
-default|= en-US
-dev|= en-US
-prod|= all
-[i18n.ttses]
-path|= @/media/sounds
-default|= en-US
-dev|= en-US | bn-BD
-prod|= all
-#d(dx-package-1|= 0.0.1)
-dx-package-2|= 0.0.1
-[js.dependencies]
-react|= 19.0.1
-next|= 16.0.1
-[python.dependencies]
-django|= latest
-numpy|= latest
-[rust.dependencies]
-actix-web|= latest
-rust-crypto|= latest
-#g(pt|= @/generator)
-#s(st|= dx forge status)
-build|= dx workspace build
+#:js|javascript/typescript|bun|tsc|vite|bun|react
+#:python|py|python|python|uv|django
+#:rust|rs|rust|native|rustc|cargo|actix-web
+#f(repo|cont|pl|tk|it)
+https://dx.vercel.app/essensefromexistence/dx|none|none|none|cli
+#y(pt|th)
+@/style|dx
+#u(pt|cp)
+@/components/ui|button
+#m(img|vid|snd|ast)
+@/media/images|@/media/videos|@/media/sounds|@/media/assets
+#o(pt|pk|vr)
+@/icons|Lucide|Hugeicons
+#t(pt|df)
+@/fonts|Inter
+#d(dx-package-1|dx-package-2)
+0.0.1|0.0.1
+#g(pt)
+@/generator
+#s(st|build)
+dx forge status|dx workspace build
+#i(locales_pt|locales_df|locales_dv|locales_pd|ttses_pt|ttses_df|ttses_dv|ttses_pd)
+@/locales|en-US|en-US|all|@/media/sounds|en-US|en-US|bn-BD
+#j(dependencies_react|dependencies_next)
+19.0.1|16.0.1
+#p(dependencies_django|dependencies_numpy)
+latest|latest
+#r(dependencies_actix-web|dependencies_rust-crypto)
+latest|latest

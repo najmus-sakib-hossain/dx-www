@@ -232,16 +232,21 @@ export class DxDocumentManager implements vscode.Disposable {
         }
 
         // Format-on-save: parse and reformat content for consistency
-        if (this.config.formatOnSave) {
+        // Only apply to human format content (not LLM format)
+        if (this.config.formatOnSave && !humanContent.trim().startsWith('#')) {
             try {
                 const parseResult = parseHumanV3(humanContent);
                 if (parseResult.success && parseResult.document) {
-                    const formattedContent = formatDocumentV3(parseResult.document, {
-                        ...DEFAULT_CONFIG,
-                        keyPadding: this.config.keyPadding,
-                    });
-                    humanContent = formattedContent;
-                    state.currentHuman = humanContent;
+                    // Check if the parsed document has any content
+                    const doc = parseResult.document;
+                    if (doc.context.size > 0 || doc.refs.size > 0 || doc.sections.size > 0) {
+                        const formattedContent = formatDocumentV3(parseResult.document, {
+                            ...DEFAULT_CONFIG,
+                            keyPadding: this.config.keyPadding,
+                        });
+                        humanContent = formattedContent;
+                        state.currentHuman = humanContent;
+                    }
                 }
                 // If parsing fails, continue with original content (graceful degradation)
             } catch (formatError) {

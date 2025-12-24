@@ -256,12 +256,24 @@ export function minifyDx(human: string): string {
         return '';
     }
 
+    // Check if content is already in LLM format (starts with sigil)
+    const trimmed = human.trim();
+    if (trimmed.startsWith('#')) {
+        // Already in LLM format - return as-is
+        return human;
+    }
+
     // Try parsing as Human V3 format first
     const parseResultV3 = parseHumanV3(human);
 
     if (parseResultV3.success && parseResultV3.document) {
-        // Serialize to LLM format using V3 serializer
-        return serializeToLlmV3(parseResultV3.document);
+        // Check if the parsed document has any content
+        // (empty document means parsing failed silently)
+        const doc = parseResultV3.document;
+        if (doc.context.size > 0 || doc.refs.size > 0 || doc.sections.size > 0) {
+            // Serialize to LLM format using V3 serializer
+            return serializeToLlmV3(parseResultV3.document);
+        }
     }
 
     // Fall back to old human format parser
