@@ -315,13 +315,25 @@ export function formatDataSectionV3(
     const expandedSchema = section.schema.map(col => expandKey(col));
 
     // Check for special sections that need sub-sections (like i18n)
+    // Only use special formatting if the schema has the expected prefixes
     if (section.id === 'i' && section.rows.length === 1) {
-        return formatI18nSection(section, config);
+        const hasI18nPrefixes = section.schema.some(s =>
+            s.startsWith('locales_') || s.startsWith('ttses_')
+        );
+        if (hasI18nPrefixes) {
+            return formatI18nSection(section, config);
+        }
     }
 
     // Check for media section (special handling)
+    // Only use special formatting if the schema has the expected prefixes
     if (section.id === 'm' && section.rows.length === 1) {
-        return formatMediaSection(section, config);
+        const hasMediaPrefixes = section.schema.some(s =>
+            s.endsWith('_path') || ['images', 'videos', 'sounds', 'assets'].includes(s)
+        );
+        if (hasMediaPrefixes) {
+            return formatMediaSection(section, config);
+        }
     }
 
     // Single row section: vertical key-value pairs

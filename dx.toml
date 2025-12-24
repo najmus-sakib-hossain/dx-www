@@ -3,8 +3,8 @@ version             = 0.0.1
 title               = "Enhanced Developing Experience"
 description         = "Orchestrate don't just own your code"
 author              = essensefromexistence
-workspace           = frontend/www | frontend/mobile
-editors             = vscode | vim | neovim | github-codespace | replit | firebase-studio | cursor | windsurf
+workspace           = @/www | @/backend
+editors             = neovim | zed | vscode | cursor | antigravity | replit | firebase-studio
 
 [forge]
 repository          = https://dx.vercel.app/essensefromexistence/dx
@@ -45,11 +45,9 @@ prod                = all
 
 [icon]
 path                = @/icons
-pack                = lucide-react
+pack                = Lucide | Hugeicons | all
 variant             = default
 
 [font]
 path                = @/fonts
-default             = Inter
-primary             = Manrope
-secondary           = RobotoMono
+default             = Inter | Jetbrain Mono | all
