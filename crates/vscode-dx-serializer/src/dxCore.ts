@@ -17,7 +17,7 @@ import * as fs from 'fs';
 import { parseLlm, DxDocument, DxValue, DxSection } from './llmParser';
 import { formatDocument } from './humanFormatter';
 import { parseHuman, serializeToLlm } from './humanParser';
-import { formatDocumentV3 } from './humanFormatterV3';
+import { formatDocumentV3, HumanFormatV3Config, DEFAULT_CONFIG } from './humanFormatterV3';
 import { parseHumanV3, serializeToLlmV3 } from './humanParserV3';
 
 /**
@@ -192,7 +192,7 @@ export function smartQuote(value: string): string {
  * 
  * Requirements: 1.1-1.9, 2.1-2.7
  */
-export function formatDx(dense: string, indentSize: number = 2): string {
+export function formatDx(dense: string, indentSize: number = 2, keyPadding: number = 20): string {
     if (!dense.trim()) {
         return '';
     }
@@ -206,8 +206,12 @@ export function formatDx(dense: string, indentSize: number = 2): string {
         return dense;
     }
 
-    // Format to Human V3 format
-    return formatDocumentV3(parseResult.document);
+    // Format to Human V3 format with config
+    const config: HumanFormatV3Config = {
+        ...DEFAULT_CONFIG,
+        keyPadding,
+    };
+    return formatDocumentV3(parseResult.document, config);
 }
 
 /**
@@ -574,14 +578,16 @@ function validateHumanFormat(content: string): ValidationResult {
 class FallbackDxCore implements DxCore {
     readonly isWasm = false;
     private indentSize: number;
+    private keyPadding: number;
 
-    constructor(indentSize: number = 2) {
+    constructor(indentSize: number = 2, keyPadding: number = 20) {
         this.indentSize = indentSize;
+        this.keyPadding = keyPadding;
     }
 
     toHuman(dense: string): TransformResult {
         try {
-            const content = formatDx(dense, this.indentSize);
+            const content = formatDx(dense, this.indentSize, this.keyPadding);
             return { success: true, content };
         } catch (error) {
             return {
@@ -627,11 +633,13 @@ let cachedCore: DxCore | null = null;
  * 
  * @param extensionPath - Path to the extension directory
  * @param indentSize - Indent size for formatting (default: 2)
+ * @param keyPadding - Minimum key padding width (default: 20)
  * @returns DxCore instance
  */
 export async function loadDxCore(
     extensionPath: string,
-    indentSize: number = 2
+    indentSize: number = 2,
+    keyPadding: number = 20
 ): Promise<DxCore> {
     // Return cached instance if available
     if (cachedCore) {
@@ -639,7 +647,7 @@ export async function loadDxCore(
     }
 
     // Use TypeScript implementation (WASM disabled for V3 format)
-    cachedCore = new FallbackDxCore(indentSize);
+    cachedCore = new FallbackDxCore(indentSize, keyPadding);
     console.log('DX Serializer: Using TypeScript core (V3 format)');
     return cachedCore;
 }
@@ -647,9 +655,9 @@ export async function loadDxCore(
 /**
  * Get the cached DxCore instance, or create a fallback if not loaded
  */
-export function getDxCore(indentSize: number = 2): DxCore {
+export function getDxCore(indentSize: number = 2, keyPadding: number = 20): DxCore {
     if (!cachedCore) {
-        cachedCore = new FallbackDxCore(indentSize);
+        cachedCore = new FallbackDxCore(indentSize, keyPadding);
     }
     return cachedCore;
 }
@@ -664,6 +672,6 @@ export function clearDxCoreCache(): void {
 /**
  * Create a fallback DxCore instance directly (for testing)
  */
-export function createFallbackCore(indentSize: number = 2): DxCore {
-    return new FallbackDxCore(indentSize);
+export function createFallbackCore(indentSize: number = 2, keyPadding: number = 20): DxCore {
+    return new FallbackDxCore(indentSize, keyPadding);
 }

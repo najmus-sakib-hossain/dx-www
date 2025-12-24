@@ -46,6 +46,21 @@ export interface DxDocumentWithOrder extends DxDocument {
     sectionOrder: string[];
 }
 
+// Nested section info for tracking parent.child relationships
+export interface NestedSectionInfo {
+    parent: string;      // e.g., 'js', 'python', 'rust'
+    child: string;       // e.g., 'dependencies'
+    fullName: string;    // e.g., 'js.dependencies'
+}
+
+// Map of parent section IDs to their nested section info
+const NESTED_SECTION_PARENTS: Record<string, string> = {
+    'js': 'j',
+    'python': 'p',
+    'rust': 'r',
+    'i18n': 'i',
+};
+
 // ============================================================================
 // Value Parsing
 // ============================================================================
@@ -110,6 +125,126 @@ export function parseKeyValueLineV3(line: string): [string, string] | null {
 }
 
 // ============================================================================
+// Error Helpers
+// ============================================================================
+
+/**
+ * Create a parse error result with line number, column, and hint
+ */
+function createParseError(
+    message: string,
+    line: number,
+    column: number = 1,
+    hint?: string
+): HumanParseResultV3 {
+    return {
+        success: false,
+        error: {
+            message,
+            line,
+            column,
+            hint,
+        },
+    };
+}
+
+/**
+ * Validate a section header format
+ * Returns error message if invalid, null if valid
+ */
+function validateSectionHeader(line: string, lineNum: number): HumanParseResultV3 | null {
+    const trimmed = line.trim();
+
+    // Check for unclosed bracket
+    if (trimmed.startsWith('[') && !trimmed.includes(']')) {
+        return createParseError(
+            `Unclosed section header at line ${lineNum}`,
+            lineNum,
+            trimmed.length,
+            'Section headers should be [name] or [parent.child]'
+        );
+    }
+
+    // Check for invalid characters in section name
+    const match = trimmed.match(/^\[([^\]]+)\]/);
+    if (match) {
+        const sectionName = match[1];
+        if (!/^[a-zA-Z0-9_.]+$/.test(sectionName)) {
+            return createParseError(
+                `Invalid section name "${sectionName}" at line ${lineNum}`,
+                lineNum,
+                2,
+                'Section names can only contain letters, numbers, underscores, and dots'
+            );
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Validate a key-value line format
+ * Returns error message if invalid, null if valid
+ */
+function validateKeyValueLine(line: string, lineNum: number): HumanParseResultV3 | null {
+    const trimmed = line.trim();
+
+    // Skip empty lines, comments, and section headers
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//') || trimmed.startsWith('[')) {
+        return null;
+    }
+
+    const eqIndex = trimmed.indexOf('=');
+
+    // Check for missing equals sign (only if line looks like it should be a key-value)
+    if (eqIndex === -1) {
+        // If it's not a valid line format, report error
+        return createParseError(
+            `Invalid line format at line ${lineNum}`,
+            lineNum,
+            1,
+            'Expected key = value format or section header [name]'
+        );
+    }
+
+    // Check for missing key
+    const key = trimmed.substring(0, eqIndex).trim();
+    if (!key) {
+        return createParseError(
+            `Missing key before '=' at line ${lineNum}`,
+            lineNum,
+            1,
+            'Add a key name before the equals sign'
+        );
+    }
+
+    // Check for unclosed quotes in value
+    const value = trimmed.substring(eqIndex + 1).trim();
+    const doubleQuotes = (value.match(/"/g) || []).length;
+    const singleQuotes = (value.match(/'/g) || []).length;
+
+    if (doubleQuotes % 2 !== 0) {
+        return createParseError(
+            `Unclosed double quote at line ${lineNum}`,
+            lineNum,
+            eqIndex + 2 + value.indexOf('"'),
+            'Add closing double quote'
+        );
+    }
+
+    if (singleQuotes % 2 !== 0) {
+        return createParseError(
+            `Unclosed single quote at line ${lineNum}`,
+            lineNum,
+            eqIndex + 2 + value.indexOf("'"),
+            'Add closing single quote'
+        );
+    }
+
+    return null;
+}
+
+// ============================================================================
 // Main Parser
 // ============================================================================
 
@@ -121,6 +256,7 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
     let currentSection: string | null = null;
     let currentDataSection: DxSection | null = null;
     let currentSubsection: string | null = null;
+    let currentNestedInfo: NestedSectionInfo | null = null;
     let isStackSection = false;
     let isMultiRowSection = false;
     let lineNum = 0;
@@ -133,6 +269,20 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
         if (!trimmed) continue;
         if (trimmed.startsWith('#') || trimmed.startsWith('//')) continue;
 
+        // Validate section headers
+        if (trimmed.startsWith('[')) {
+            const headerError = validateSectionHeader(trimmed, lineNum);
+            if (headerError) {
+                return headerError;
+            }
+        } else {
+            // Validate key-value lines
+            const kvError = validateKeyValueLine(trimmed, lineNum);
+            if (kvError) {
+                return kvError;
+            }
+        }
+
         const sectionHeader = parseSectionHeaderV3(trimmed);
         if (sectionHeader) {
             const [sectionName, schema] = sectionHeader;
@@ -142,6 +292,7 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                 isMultiRowSection = false;
                 currentSection = sectionName;
                 currentSubsection = null;
+                currentNestedInfo = null;
                 currentDataSection = null;
                 if (!doc.sectionOrder.includes('stack')) {
                     doc.sectionOrder.push('stack');
@@ -156,16 +307,37 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                 const [parentName, subsectionName] = sectionName.split('.');
                 currentSection = parentName;
                 currentSubsection = subsectionName;
-                if (!nestedSections.has(parentName)) {
-                    nestedSections.set(parentName, new Map());
+                currentNestedInfo = {
+                    parent: parentName,
+                    child: subsectionName,
+                    fullName: sectionName,
+                };
+
+                // Check if this is a language-specific dependency section
+                const parentId = NESTED_SECTION_PARENTS[parentName];
+                if (parentId && subsectionName === 'dependencies') {
+                    // Store as a section with prefixed keys for round-trip
+                    if (!nestedSections.has(parentName)) {
+                        nestedSections.set(parentName, new Map());
+                    }
+                    if (!nestedSections.get(parentName)!.has(subsectionName)) {
+                        nestedSections.get(parentName)!.set(subsectionName, []);
+                    }
+                    currentDataSection = null;
+                } else {
+                    // Regular nested section (like i18n.locales)
+                    if (!nestedSections.has(parentName)) {
+                        nestedSections.set(parentName, new Map());
+                    }
+                    if (!nestedSections.get(parentName)!.has(subsectionName)) {
+                        nestedSections.get(parentName)!.set(subsectionName, []);
+                    }
+                    currentDataSection = null;
                 }
-                if (!nestedSections.get(parentName)!.has(subsectionName)) {
-                    nestedSections.get(parentName)!.set(subsectionName, []);
-                }
-                currentDataSection = null;
             } else {
                 currentSection = sectionName;
                 currentSubsection = null;
+                currentNestedInfo = null;
                 const sectionId = compressSectionName(sectionName);
                 currentDataSection = createSection(sectionId, schema);
                 doc.sections.set(sectionId, currentDataSection);
@@ -179,7 +351,8 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
         const keyValue = parseKeyValueLineV3(trimmed);
         if (keyValue) {
             const [key, value] = keyValue;
-            const compressedKey = compressKey(key.toLowerCase());
+            // Don't lowercase keys that contain hyphens (like package names)
+            const compressedKey = key.includes('-') ? key : compressKey(key.toLowerCase());
 
             if (currentSection === null) {
                 const parsedValue = parseArrayValueV3(value);
@@ -193,7 +366,8 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                 if (parentSections) {
                     const subsectionData = parentSections.get(currentSubsection);
                     if (subsectionData) {
-                        subsectionData.push({ key: compressedKey, value: parsedValue });
+                        // Store key as-is (preserve hyphens in package names)
+                        subsectionData.push({ key: key.includes('-') ? key : compressedKey, value: parsedValue });
                     }
                 }
             } else if (currentDataSection) {
@@ -206,7 +380,8 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
                     }
                     currentDataSection.rows.push(row);
                 } else {
-                    currentDataSection.schema.push(compressedKey);
+                    // Store key as-is (preserve hyphens in package names)
+                    currentDataSection.schema.push(key.includes('-') ? key : compressedKey);
                     if (currentDataSection.rows.length === 0) {
                         currentDataSection.rows.push([]);
                     }
@@ -219,7 +394,7 @@ export function parseHumanV3(input: string): HumanParseResultV3 {
     }
 
     for (const [parentName, subsections] of nestedSections) {
-        const sectionId = compressSectionName(parentName);
+        const sectionId = NESTED_SECTION_PARENTS[parentName] || compressSectionName(parentName);
         const schema: string[] = [];
         const row: DxValue[] = [];
         for (const [subsectionName, fields] of subsections) {

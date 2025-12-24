@@ -13,6 +13,7 @@
  */
 
 import { DxDocument, DxValue, DxSection } from './llmParser';
+import { DxDocumentWithOrder } from './humanParserV3';
 
 // ============================================================================
 // Configuration
@@ -124,7 +125,13 @@ export const SECTION_NAMES: Record<string, string> = {
     'i': 'i18n',
     'o': 'icon',
     't': 'font',
-    'd': 'data',
+    'd': 'driven',        // Changed from 'data' to 'driven'
+    'g': 'generator',     // Added for generator section
+    's': 'scripts',       // Added for scripts section
+    'x': 'dependencies',  // Added for DX registry dependencies (secured)
+    'j': 'js',            // Added for js.dependencies (external)
+    'p': 'python',        // Added for python.dependencies (external)
+    'r': 'rust',          // Added for rust.dependencies (external)
 };
 
 export const REVERSE_ABBREVIATIONS: Record<string, string> = Object.fromEntries(
@@ -332,6 +339,22 @@ export function formatDataSectionV3(
     const fullSectionName = expandSectionName(section.id);
     const expandedSchema = section.schema.map(col => expandKey(col));
 
+    // Check for nested dependency sections (js.dependencies, python.dependencies, rust.dependencies)
+    const nestedInfo = detectNestedDependencySection(section.id, section.schema);
+    if (nestedInfo && section.rows.length === 1) {
+        return formatNestedDependencySection(section, nestedInfo, config);
+    }
+
+    // Check for scripts section (special handling - don't quote command strings)
+    if (section.id === 's' && section.rows.length === 1) {
+        return formatScriptsSection(section, config);
+    }
+
+    // Check for dependencies section (DX registry packages)
+    if (section.id === 'x' && section.rows.length === 1) {
+        return formatDependenciesSection(section, config);
+    }
+
     // Check for special sections that need sub-sections (like i18n)
     // Only use special formatting if the schema has the expected prefixes
     if (section.id === 'i' && section.rows.length === 1) {
@@ -403,6 +426,85 @@ export function formatDataSectionV3(
     } else {
         // Empty section
         lines.push(`[${fullSectionName}]`);
+    }
+
+    return lines.join('\n');
+}
+
+/**
+ * Format scripts section - preserves command strings without quoting
+ */
+function formatScriptsSection(
+    section: DxSection,
+    config: HumanFormatV3Config = DEFAULT_CONFIG
+): string {
+    const lines: string[] = [];
+    const row = section.rows[0];
+    const schema = section.schema;
+
+    lines.push('[scripts]');
+
+    // Collect entries
+    const entries: Array<{ key: string; value: DxValue }> = [];
+    for (let i = 0; i < schema.length && i < row.length; i++) {
+        const key = expandKey(schema[i]);
+        const value = row[i];
+        entries.push({ key, value });
+    }
+
+    // Calculate padding
+    const maxKeyLen = Math.max(
+        config.keyPadding,
+        ...entries.map(e => e.key.length + 1)
+    );
+
+    // Format each entry - don't quote command strings
+    for (const entry of entries) {
+        const padding = ' '.repeat(maxKeyLen - entry.key.length);
+        // For scripts, output the value as-is without quoting
+        const valueStr = entry.value.type === 'string'
+            ? String(entry.value.value)
+            : formatValueV3(entry.value, config);
+        lines.push(`${entry.key}${padding}= ${valueStr}`);
+    }
+
+    return lines.join('\n');
+}
+
+/**
+ * Format dependencies section (DX registry packages)
+ * Handles hyphenated package names
+ */
+function formatDependenciesSection(
+    section: DxSection,
+    config: HumanFormatV3Config = DEFAULT_CONFIG
+): string {
+    const lines: string[] = [];
+    const row = section.rows[0];
+    const schema = section.schema;
+
+    lines.push('[dependencies]');
+
+    // Collect entries - preserve hyphenated keys
+    const entries: Array<{ key: string; value: DxValue }> = [];
+    for (let i = 0; i < schema.length && i < row.length; i++) {
+        // Don't expand keys that contain hyphens (package names)
+        const key = schema[i].includes('-') ? schema[i] : expandKey(schema[i]);
+        const value = row[i];
+        entries.push({ key, value });
+    }
+
+    // Calculate padding
+    const maxKeyLen = Math.max(
+        config.keyPadding,
+        ...entries.map(e => e.key.length + 1)
+    );
+
+    // Format each entry
+    for (const entry of entries) {
+        const padding = ' '.repeat(maxKeyLen - entry.key.length);
+        const formattedValue = formatValueV3(entry.value, config);
+        lines.push(`${entry.key}${padding}= ${formattedValue}`);
     }
 
     return lines.join('\n');
@@ -527,6 +629,94 @@ function formatMediaSection(
 }
 
 // ============================================================================
+// Nested Section Formatting (for js.dependencies, python.dependencies, etc.)
+// ============================================================================
+
+/**
+ * Check if a section is a nested dependency section
+ * Returns the parent and child names if it is, null otherwise
+ */
+export function detectNestedDependencySection(
+    sectionId: string,
+    schema: string[]
+): { parent: string; child: string } | null {
+    // Check for language-specific dependency sections (j, p, r)
+    const languageSections: Record<string, string> = {
+        'j': 'js',
+        'p': 'python',
+        'r': 'rust',
+    };
+
+    if (languageSections[sectionId]) {
+        // Check if schema has dependencies_ prefix
+        const hasDependenciesPrefix = schema.some(s => s.startsWith('dependencies_'));
+        if (hasDependenciesPrefix) {
+            return {
+                parent: languageSections[sectionId],
+                child: 'dependencies',
+            };
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Format a nested dependency section like [js.dependencies]
+ * Strips the prefix from keys (e.g., dependencies_react -> react)
+ * Preserves hyphenated package names
+ */
+export function formatNestedDependencySection(
+    section: DxSection,
+    nestedInfo: { parent: string; child: string },
+    config: HumanFormatV3Config = DEFAULT_CONFIG
+): string {
+    const lines: string[] = [];
+    const row = section.rows[0];
+    const schema = section.schema;
+
+    // Output section header as [parent.child]
+    lines.push(`[${nestedInfo.parent}.${nestedInfo.child}]`);
+
+    // Extract keys by stripping the prefix
+    const prefix = `${nestedInfo.child}_`;
+    const entries: Array<{ key: string; value: DxValue }> = [];
+
+    for (let i = 0; i < schema.length && i < row.length; i++) {
+        const schemaKey = schema[i];
+        const value = row[i];
+
+        // Strip prefix if present
+        let displayKey = schemaKey;
+        if (schemaKey.startsWith(prefix)) {
+            displayKey = schemaKey.substring(prefix.length);
+        }
+
+        // Only expand abbreviated keys, preserve hyphenated package names
+        if (!displayKey.includes('-')) {
+            displayKey = expandKey(displayKey);
+        }
+
+        entries.push({ key: displayKey, value });
+    }
+
+    // Calculate padding for this section
+    const maxKeyLen = Math.max(
+        config.keyPadding,
+        ...entries.map(e => e.key.length + 1)
+    );
+
+    // Format each key-value pair
+    for (const entry of entries) {
+        const padding = ' '.repeat(maxKeyLen - entry.key.length);
+        const formattedValue = formatValueV3(entry.value, config);
+        lines.push(`${entry.key}${padding}= ${formattedValue}`);
+    }
+
+    return lines.join('\n');
+}
+
+// ============================================================================
 // Document Formatting
 // ============================================================================
 
@@ -546,7 +736,7 @@ export function formatDocumentV3(
     }
 
     // Check if document has section order tracking
-    const docWithOrder = doc as any;
+    const docWithOrder = doc as DxDocumentWithOrder;
     const sectionOrder: string[] = docWithOrder.sectionOrder || [];
 
     if (sectionOrder.length > 0) {

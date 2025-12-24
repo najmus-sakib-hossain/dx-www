@@ -1093,6 +1093,12 @@ Welcome to the future. Welcome to **Dx.**
 **Star this repo if Dx excites you! ⭐**  
 **Follow our progress as we march toward the January 1, 2026 launch.**
 
+
+
+
+
+
+
 Please do these tasks about the crates/vscode-dx-serializer forlder's vs code extension
 Let's say someone is changing table in dx serializer human version now when the are changing it on file save at human version will format the table it will be formatted corectly with the new lengith of the items correctly!!!
 

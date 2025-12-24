@@ -44,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         const config = loadConfiguration();
 
         // 2. Load WASM core (with fallback)
-        const dxCore = await loadDxCore(context.extensionPath, config.indentSize);
+        const dxCore = await loadDxCore(context.extensionPath, config.indentSize, config.keyPadding);
         console.log(`DX Serializer: Using ${dxCore.isWasm ? 'WASM' : 'TypeScript fallback'} core`);
 
         // 3. Initialize DocumentManager
@@ -119,6 +119,8 @@ function loadConfiguration(): DocumentManagerConfig {
         validateBeforeSave: config.get<boolean>('validateBeforeSave', true),
         autoSaveGracePeriod: config.get<number>('autoSaveGracePeriod', 2000),
         indentSize: config.get<number>('indentSize', 2) as 2 | 4,
+        keyPadding: config.get<number>('keyPadding', 20),
+        formatOnSave: config.get<boolean>('formatOnSave', true),
     };
 }
 

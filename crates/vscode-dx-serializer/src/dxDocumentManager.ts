@@ -60,6 +60,12 @@ export interface DocumentManagerConfig {
 
     /** Indent size: 2 or 4 spaces (default: 2) */
     indentSize: number;
+
+    /** Minimum key padding width (default: 20) */
+    keyPadding: number;
+
+    /** Format on save (default: true) */
+    formatOnSave: boolean;
 }
 
 
@@ -80,6 +86,8 @@ export class DxDocumentManager implements vscode.Disposable {
             validateBeforeSave: config?.validateBeforeSave ?? true,
             autoSaveGracePeriod: config?.autoSaveGracePeriod ?? 2000,
             indentSize: config?.indentSize ?? 2,
+            keyPadding: config?.keyPadding ?? 20,
+            formatOnSave: config?.formatOnSave ?? true,
         };
 
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('dx');
@@ -98,6 +106,12 @@ export class DxDocumentManager implements vscode.Disposable {
         }
         if (config.indentSize !== undefined) {
             this.config.indentSize = config.indentSize;
+        }
+        if (config.keyPadding !== undefined) {
+            this.config.keyPadding = config.keyPadding;
+        }
+        if (config.formatOnSave !== undefined) {
+            this.config.formatOnSave = config.formatOnSave;
         }
     }
 

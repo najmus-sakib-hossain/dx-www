@@ -175,6 +175,18 @@
           "default": 2,
           "description": "Indent size for human-readable format (2 or 4 spaces)"
         },
+        "dx.keyPadding": {
+          "type": "number",
+          "default": 20,
+          "minimum": 10,
+          "maximum": 50,
+          "description": "Minimum padding width for keys in formatted output (default: 20)"
+        },
+        "dx.formatOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically format .dx files on save"
+        },
         "dx.showDensePreview": {
           "type": "boolean",
           "default": false,
