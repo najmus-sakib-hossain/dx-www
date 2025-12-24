@@ -1,4 +1,4 @@
-#c:nm|dx;v|0.0.1;tt|Enhanced Developing Experience;ds|Orchestrate don't just own your code;au|essensefromexistence;ws|*@/www,@/backend;ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio
+#c:nm|dxs;v|0.0.1;tt|Enhanced Developing Experience;ds|Orchestrate don't just own your code;au|essensefromexistence;ws|*@/www,@/backend;ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio
 #:js|javascript/typescript|bun|tsc|vite|bun|react
 #:python|py|python|cpython|-|uv|django
 #:rust|rs|rust|native|rustc|cargo|actix-web
