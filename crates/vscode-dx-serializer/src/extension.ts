@@ -478,6 +478,54 @@ function updateStatusBar(
 }
 
 /**
+ * Format a DX document and return TextEdit array
+ * Shared logic for both formatting provider and willSave handler
+ */
+function formatDxDocument(document: vscode.TextDocument): vscode.TextEdit[] | null {
+    try {
+        const content = document.getText();
+
+        // Skip empty documents
+        if (!content.trim()) {
+            return null;
+        }
+
+        // Parse the human format content
+        const parseResult = parseHumanV3(content);
+        if (!parseResult.success || !parseResult.document) {
+            console.log('DX Format: Parse failed, skipping format');
+            return null;
+        }
+
+        // Get config from settings
+        const config = vscode.workspace.getConfiguration('dx');
+        const keyPadding = config.get<number>('keyPadding', 20);
+
+        // Format the document with proper alignment
+        const formattedContent = formatDocumentV3(parseResult.document, {
+            ...DEFAULT_CONFIG,
+            keyPadding,
+        });
+
+        // Skip if content is unchanged
+        if (formattedContent === content) {
+            return null;
+        }
+
+        // Return a single edit that replaces the entire document
+        const fullRange = new vscode.Range(
+            document.positionAt(0),
+            document.positionAt(content.length)
+        );
+
+        return [vscode.TextEdit.replace(fullRange, formattedContent)];
+    } catch (error) {
+        console.error('DX Format: Error during formatting:', error);
+        return null;
+    }
+}
+
+/**
  * Register DocumentFormattingEditProvider for safe format-on-save
  * 
  * This is the proper VS Code way to handle formatting:
@@ -485,6 +533,8 @@ function updateStatusBar(
  * 2. Convert to LLM format (normalizes the data)
  * 3. Convert back to human format (applies proper alignment)
  * 4. Return TextEdit array for VS Code to apply safely
+ * 
+ * Also registers willSaveTextDocument handler for auto-save support
  */
 function registerFormattingProvider(
     context: vscode.ExtensionContext,
@@ -497,47 +547,7 @@ function registerFormattingProvider(
             _options: vscode.FormattingOptions,
             _token: vscode.CancellationToken
         ): vscode.TextEdit[] | null {
-            try {
-                const content = document.getText();
-
-                // Skip empty documents
-                if (!content.trim()) {
-                    return null;
-                }
-
-                // Parse the human format content
-                const parseResult = parseHumanV3(content);
-                if (!parseResult.success || !parseResult.document) {
-                    console.log('DX Format: Parse failed, skipping format');
-                    return null;
-                }
-
-                // Get config from settings
-                const config = vscode.workspace.getConfiguration('dx');
-                const keyPadding = config.get<number>('keyPadding', 20);
-
-                // Format the document with proper alignment
-                const formattedContent = formatDocumentV3(parseResult.document, {
-                    ...DEFAULT_CONFIG,
-                    keyPadding,
-                });
-
-                // Skip if content is unchanged
-                if (formattedContent === content) {
-                    return null;
-                }
-
-                // Return a single edit that replaces the entire document
-                const fullRange = new vscode.Range(
-                    document.positionAt(0),
-                    document.positionAt(content.length)
-                );
-
-                return [vscode.TextEdit.replace(fullRange, formattedContent)];
-            } catch (error) {
-                console.error('DX Format: Error during formatting:', error);
-                return null;
-            }
+            return formatDxDocument(document);
         }
     };
 
@@ -554,6 +564,32 @@ function registerFormattingProvider(
             { scheme: 'file', language: 'dx' },
             formattingProvider
         )
+    );
+
+    // Register willSaveTextDocument handler for auto-save support
+    // This triggers formatting before ANY save, including auto-save (afterDelay)
+    context.subscriptions.push(
+        vscode.workspace.onWillSaveTextDocument((event) => {
+            // Only format .dx files
+            if (!isExactlyDxFile(event.document.uri)) {
+                return;
+            }
+
+            // Check if formatOnSave is enabled
+            const config = vscode.workspace.getConfiguration('dx');
+            const formatOnSave = config.get<boolean>('formatOnSave', true);
+            if (!formatOnSave) {
+                return;
+            }
+
+            // Wait for formatting edits and apply them before save
+            event.waitUntil(
+                Promise.resolve().then(() => {
+                    const edits = formatDxDocument(event.document);
+                    return edits || [];
+                })
+            );
+        })
     );
 
     // Register the "DX: Format Document" command
@@ -575,5 +611,5 @@ function registerFormattingProvider(
         })
     );
 
-    console.log('DX Serializer: Formatting provider registered');
+    console.log('DX Serializer: Formatting provider registered (with auto-save support)');
 }

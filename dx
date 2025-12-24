@@ -1,5 +1,5 @@
 #k(js|= javascript/typescript | bun|| tsc|| vite|| bun|| react)
-python|= py|| c | cpython | python | uv|| django
+python|= py|| python | cpython | python | uv|| django
 rust|= rs|| rust|| native|| rustc|| cargo | actix-web
 #f(repo|= https://dx.vercel.app/essensefromexistence/dx)
 container|= none
