@@ -3,14 +3,36 @@
   "name": "DX",
   "scopeName": "source.dx",
   "patterns": [
-    { "include": "#comments" },
-    { "include": "#strings" },
-    { "include": "#numbers" },
-    { "include": "#keywords" },
-    { "include": "#operators" },
-    { "include": "#punctuation" },
-    { "include": "#sections" },
-    { "include": "#keys" }
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#section-headers"
+    },
+    {
+      "include": "#key-value-pairs"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#booleans"
+    },
+    {
+      "include": "#null-values"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#paths"
+    },
+    {
+      "include": "#llm-format"
+    }
   ],
   "repository": {
     "comments": {
@@ -18,15 +40,34 @@
         {
           "name": "comment.line.double-slash.dx",
           "match": "//.*$"
-        },
+        }
+      ]
+    },
+    "section-headers": {
+      "patterns": [
         {
-          "name": "comment.block.dx",
-          "begin": "/\\*",
-          "end": "\\*/"
-        },
+          "name": "meta.section.dx",
+          "match": "^(\\[[a-zA-Z0-9_.]+\\])",
+          "captures": {
+            "1": {
+              "name": "entity.name.section.dx"
+            }
+          }
+        }
+      ]
+    },
+    "key-value-pairs": {
+      "patterns": [
         {
-          "name": "comment.anchor.dx",
-          "match": "!([^!]*)!"
+          "match": "^([a-zA-Z_][a-zA-Z0-9_]*)\\s*(=)",
+          "captures": {
+            "1": {
+              "name": "variable.other.property.dx"
+            },
+            "2": {
+              "name": "keyword.operator.assignment.dx"
+            }
+          }
         }
       ]
     },
@@ -59,122 +100,72 @@
     "numbers": {
       "patterns": [
         {
-          "name": "constant.numeric.scientific.dx",
-          "match": "\\b[0-9]+\\.?[0-9]*[eE][+-]?[0-9]+\\b"
+          "name": "constant.numeric.version.dx",
+          "match": "(?<==\\s*)[0-9]+\\.[0-9]+\\.[0-9]+"
         },
         {
           "name": "constant.numeric.float.dx",
-          "match": "\\b[0-9]+\\.[0-9]+\\b"
+          "match": "(?<==\\s*)[0-9]+\\.[0-9]+"
         },
         {
           "name": "constant.numeric.integer.dx",
-          "match": "\\b[0-9]+\\b"
-        },
-        {
-          "name": "constant.numeric.base62.dx",
-          "match": "%[0-9a-zA-Z]+"
+          "match": "(?<==\\s*)[0-9]+"
         }
       ]
     },
-    "keywords": {
+    "booleans": {
       "patterns": [
         {
           "name": "constant.language.boolean.true.dx",
-          "match": "\\b(true|True|TRUE|yes|Yes|YES)\\b|\\+|\\u2713"
+          "match": "(?<==\\s*)(true|True|TRUE|yes|Yes|YES)(?=\\s|$|\\|)"
         },
         {
           "name": "constant.language.boolean.false.dx",
-          "match": "\\b(false|False|FALSE|no|No|NO)\\b|-|\\u2717"
-        },
+          "match": "(?<==\\s*)(false|False|FALSE|no|No|NO)(?=\\s|$|\\|)"
+        }
+      ]
+    },
+    "null-values": {
+      "patterns": [
         {
           "name": "constant.language.null.dx",
-          "match": "\\b(null|Null|NULL|none|None|NONE)\\b|~|\\u2014"
+          "match": "(?<==\\s*)(null|none|None|NONE|-|all|All|ALL)(?=\\s|$|\\|)"
+        }
+      ]
+    },
+    "paths": {
+      "patterns": [
+        {
+          "name": "string.other.link.dx",
+          "match": "@/[a-zA-Z0-9_/.-]+"
+        },
+        {
+          "name": "string.other.link.dx",
+          "match": "https?://[^\\s|]+"
         }
       ]
     },
     "operators": {
       "patterns": [
         {
-          "name": "keyword.operator.assignment.dx",
-          "match": ":"
-        },
-        {
-          "name": "keyword.operator.separator.dx",
+          "name": "punctuation.separator.pipe.dx",
           "match": "\\|"
-        },
-        {
-          "name": "keyword.operator.hash.dx",
-          "match": "#"
-        },
-        {
-          "name": "keyword.operator.caret.dx",
-          "match": "\\^"
-        },
-        {
-          "name": "keyword.operator.at.dx",
-          "match": "@"
-        },
-        {
-          "name": "keyword.operator.arrow.dx",
-          "match": ">|\\u2192"
-        },
-        {
-          "name": "keyword.operator.reference.dx",
-          "match": "\\*"
         }
       ]
     },
-    "punctuation": {
+    "llm-format": {
       "patterns": [
         {
-          "name": "punctuation.definition.bracket.curly.dx",
-          "match": "[{}]"
+          "name": "keyword.control.context.dx",
+          "match": "^#c:.*$"
         },
         {
-          "name": "punctuation.definition.bracket.square.dx",
-          "match": "[\\[\\]]"
+          "name": "keyword.control.reference.dx",
+          "match": "^#:.*$"
         },
         {
-          "name": "punctuation.definition.bracket.round.dx",
-          "match": "[()]"
-        },
-        {
-          "name": "punctuation.separator.comma.dx",
-          "match": ","
-        },
-        {
-          "name": "punctuation.definition.bullet.dx",
-          "match": "\\u2022|\\u00B7"
-        }
-      ]
-    },
-    "sections": {
-      "patterns": [
-        {
-          "name": "markup.heading.section.dx",
-          "match": "^\\s*(\\u25BC|\\u25BE|>)\\s+(.+)$",
-          "captures": {
-            "1": { "name": "punctuation.definition.section.dx" },
-            "2": { "name": "entity.name.section.dx" }
-          }
-        }
-      ]
-    },
-    "keys": {
-      "patterns": [
-        {
-          "name": "variable.other.key.dx",
-          "match": "^\\s*([\\w\\-\\.]+)\\s*(?=:)",
-          "captures": {
-            "1": { "name": "entity.name.tag.dx" }
-          }
-        },
-        {
-          "name": "variable.other.inherited.dx",
-          "match": "\\^([\\w\\-\\.]+)",
-          "captures": {
-            "1": { "name": "entity.name.tag.inherited.dx" }
-          }
+          "name": "keyword.control.section.dx",
+          "match": "^#[a-zA-Z]\\([^)]+\\)$"
         }
       ]
     }

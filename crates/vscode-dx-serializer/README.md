@@ -1,19 +1,21 @@
-# DX Serializer VS Code Extension
+# DX Serializer VS Code Extension ✅ COMPLETE
+
+> **Status: Fully Working** - The DX Serializer VS Code extension is complete and production-ready!
 
 Seamless editing of `.dx` files and files named exactly `dx` with human-readable display and dense storage.
 
-## Features
+## ✨ Features
 
 - **Dual Format**: Edit human-readable format while storing token-efficient LLM format on disk
 - **Human Format V3**: Clean vertical key-value layout with aligned equals signs
+- **Syntax Highlighting**: Full color-coded syntax highlighting for DX files
 - **Multi-Format Input**: Auto-convert JSON, YAML, TOML, CSV to DX format
-- **Cache Generation**: Automatic `.dx/cache/{filename}.human` and `.machine` files
+- **Cache Generation**: Automatic `.dx/cache/{filename}.human` (text) and `.machine` (binary) files
 - **File Support**: Handles both `.dx` extension files AND files named exactly `dx` (no extension)
-- **Syntax Highlighting**: Full TextMate grammar for DX files
-- **Auto-Save Compatible**: Grace period prevents saving incomplete code during typing
 - **Real-time Validation**: Immediate syntax error feedback with actionable hints
+- **Auto-Save Compatible**: Saves work seamlessly with VS Code's auto-save
 
-## How It Works
+## 🎯 How It Works
 
 When you open a `.dx` file or a file named exactly `dx`:
 1. The extension reads the LLM format from disk
@@ -23,64 +25,145 @@ When you open a `.dx` file or a file named exactly `dx`:
 5. On save, transforms back to LLM format and generates cache files
 
 This gives you the best of both worlds:
-- **Humans**: Beautiful, readable vertical key-value format
+- **Humans**: Beautiful, readable vertical key-value format with syntax highlighting
 - **LLMs**: Token-efficient sigil-based format (4.8× better than JSON)
+- **Compilers**: Binary machine format for fast parsing
 - **Git**: Compact diffs, efficient storage
 
 ### Format Example
 
-**LLM format (on disk):**
+**LLM format (on disk - `dx` file):**
 ```dx
 #c:nm|dx;v|0.0.1;tt|Enhanced Developing Experience
 #:js|javascript/typescript|bun|tsc|vite|bun|react
-#f(nm|repo|container)
-forge|https://dx.vercel.app/essensefromexistence/dx|none
+#f(repo|cont|pl|tk|it)
+https://dx.vercel.app/essensefromexistence/dx|none|none|none|*cli,docs,examples
 ```
 
 **Human Format V3 (in editor):**
 ```
-name                 = dx
-version              = 0.0.1
-title                = "Enhanced Developing Experience"
+name                = dx
+version             = 0.0.1
+title               = "Enhanced Developing Experience"
 
-[stack]              = Lang | Runtime | Compiler | Bundler | PM | Framework
-js                   = javascript/typescript | bun | tsc | vite | bun | react
+[stack]
+js                  = javascript/typescript | bun | tsc | vite | bun | react
 
-[forge]              = Name | Repository | Container
-forge                = https://dx.vercel.app/essensefromexistence/dx | none
+[forge]
+repository          = https://dx.vercel.app/essensefromexistence/dx
+container           = none
 ```
 
-## Human Format V3 Features
+## 🎨 Syntax Highlighting
+
+The extension provides rich syntax highlighting:
+- **Keys** (red/orange): Property names like `name`, `version`, `path`
+- **Values** (green): String values, identifiers
+- **Strings** (green): Quoted strings with escape sequences
+- **Numbers** (cyan): Version numbers, integers, floats
+- **Section Headers** (purple): `[stack]`, `[forge]`, `[i18n.locales]`
+- **Operators** (white): `=`, `|` separators
+- **Paths** (blue): `@/path/to/file`, URLs
+- **Booleans** (orange): `true`, `false`
+- **Null values** (gray): `none`, `null`, `-`, `all`
+
+## 📁 Cache Files
+
+On save, the extension generates cache files in `.dx/cache/`:
+
+```
+project/
+├── .dx/
+│   └── cache/
+│       ├── dx.human      # Human V3 format (text)
+│       └── dx.machine    # Binary format (for compilers)
+├── dx                    # LLM format (source)
+└── src/
+    └── config.dx
+```
+
+### Machine Format (Binary)
+
+The `.machine` file uses a compact binary format optimized for:
+- Fast parsing by compilers and programming languages
+- Minimal file size
+- Direct memory mapping
+
+Binary structure:
+- Magic bytes: `DXM\x01` (4 bytes)
+- Version: 1 byte
+- Flags: 1 byte
+- Section count: 2 bytes (u16 LE)
+- Sections with typed values
+
+## 🔧 Commands
+
+| Command | Description |
+|---------|-------------|
+| `DX: Refresh from Disk` | Reload file from disk |
+| `DX: Force Save` | Save without validation checks |
+| `DX: Show Dense View` | Preview the LLM format in a read-only view |
+
+## ⚙️ Configuration
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `dx.validateBeforeSave` | `true` | Validate syntax before saving |
+| `dx.autoSaveGracePeriod` | `2000` | Grace period (ms) after last keystroke |
+| `dx.indentSize` | `2` | Indent size (2 or 4 spaces) |
+
+## 📊 Status Bar
+
+The extension shows validation status in the status bar:
+- ✓ Green checkmark: File is valid and saveable
+- ⚠ Warning: File has syntax errors (click to see details)
+
+## 📋 Human Format V3 Features
 
 ### No [config] Header
 Config values appear at the top without section header:
 ```
-name                 = dx
-version              = 0.0.1
+name                = dx
+version             = 0.0.1
 ```
 
 ### Aligned Equals Signs
 Keys are padded to 20 characters for visual alignment:
 ```
-name                 = dx
-version              = 0.0.1
-title                = "Enhanced Developing Experience"
+name                = dx
+version             = 0.0.1
+title               = "Enhanced Developing Experience"
 ```
 
 ### Pipe Array Separator
 Arrays use ` | ` instead of commas:
 ```
-workspace            = frontend/www | frontend/mobile | backend/api
+workspace           = @/www | @/backend
+editors             = neovim | zed | vscode | cursor
 ```
 
-### Section Headers with Schema
-Data sections show schema in the header:
+### Nested Sections
+Support for nested sections like i18n:
 ```
-[stack]              = Lang | Runtime | Compiler
-javascript           = js | bun | tsc
+[i18n.locales]
+path                = @/locales
+default             = en-US
+
+[i18n.ttses]
+path                = @/media/sounds
+default             = en-US
 ```
 
-## Multi-Format Input Support
+### Stack Section with Aligned Columns
+Reference definitions with aligned pipe separators:
+```
+[stack]
+js                  = javascript/typescript | bun    | tsc     | vite  | bun   | react
+python              = py                    | python | cpython | -     | uv    | django
+rust                = rs                    | rust   | native  | rustc | cargo | actix-web
+```
+
+## 🔄 Multi-Format Input Support
 
 The extension automatically converts these formats to DX:
 
@@ -91,62 +174,21 @@ The extension automatically converts these formats to DX:
 | TOML | `[section]` + `key = value` | `[project]\nname = "project"` |
 | CSV | Comma-separated rows | `id,name\n1,Alpha` |
 
-## Cache Files
+## 📦 Installation
 
-On save, the extension generates cache files in `.dx/cache/`:
+### From VSIX
+```bash
+# Build the extension
+cd crates/vscode-dx-serializer
+npm install
+npm run compile
+npx vsce package --allow-missing-repository
 
+# Install in Kiro
+kiro --install-extension vscode-dx-serializer-0.1.0.vsix
 ```
-project/
-├── .dx/
-│   └── cache/
-│       ├── config.human    # Human V3 format
-│       └── config.machine  # JSON format
-├── config.dx               # LLM format (source)
-└── src/
-    └── app.dx
-```
 
-Cache files preserve subdirectory structure:
-- `src/app.dx` → `.dx/cache/src/app.human` and `.dx/cache/src/app.machine`
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `DX: Refresh from Disk` | Reload file from disk (also in editor title bar) |
-| `DX: Force Save` | Save without validation checks |
-| `DX: Show Dense View` | Preview the dense format in a read-only view |
-
-## Configuration
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `dx.validateBeforeSave` | `true` | Validate syntax before saving |
-| `dx.autoSaveGracePeriod` | `2000` | Grace period (ms) after last keystroke |
-| `dx.indentSize` | `2` | Indent size (2 or 4 spaces) |
-
-## Status Bar
-
-The extension shows validation status in the status bar:
-- ✓ Green checkmark: File is valid and saveable
-- ⚠ Warning: File has syntax errors (click to see details)
-
-## File Type Filtering
-
-The extension processes:
-- ✓ `config.dx` - Processed (`.dx` extension)
-- ✓ `my-app.dx` - Processed (`.dx` extension)
-- ✓ `dx` - Processed (file named exactly "dx")
-- ✗ `config.dx.json` - Not processed (compound extension)
-- ✗ `mydx` - Not processed (not exactly "dx")
-
-## Requirements
-
-- VS Code 1.85.0 or higher
-- Kiro IDE (recommended)
-
-## Development
-
+### Development
 ```bash
 # Install dependencies
 npm install
@@ -158,11 +200,10 @@ npm run compile
 node out/humanFormatterV3.test.js
 node out/humanParserV3.test.js
 node out/formatDetector.test.js
-node out/converters/converters.test.js
 node out/dxCore.test.js
 ```
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 src/
@@ -172,9 +213,9 @@ src/
 ├── dxLensFileSystem.ts   # Virtual file system provider
 ├── humanFormatterV3.ts   # Human Format V3 formatter
 ├── humanParserV3.ts      # Human Format V3 parser
+├── machineFormat.ts      # Binary machine format serializer
 ├── formatDetector.ts     # Multi-format detection
 ├── cacheManager.ts       # Cache file management
-├── machineFormat.ts      # Machine format serialization
 ├── converters/           # Format converters
 │   ├── jsonConverter.ts
 │   ├── yamlConverter.ts
@@ -184,12 +225,11 @@ src/
 └── utils.ts              # Helper functions
 ```
 
-## Related Documentation
+## 📚 Related Documentation
 
-See the project repository for complete documentation:
-- `docs/HUMAN.md` - Complete Human Format V3 specification
-- `crates/serializer/README.md` - DX Serializer library documentation
+- `crates/serializer/README.md` - DX Serializer Rust library
+- `crates/serializer/docs/SYNTAX.md` - Complete DX syntax specification
 
-## License
+## 📄 License
 
 MIT

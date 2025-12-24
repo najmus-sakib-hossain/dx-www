@@ -2,8 +2,8 @@
  * Cache Manager for DX Serializer VS Code Extension
  * 
  * Manages cache files in .dx/cache directory:
- * - Human format cache: {filename}.human
- * - Machine format cache: {filename}.machine
+ * - Human format cache: {filename}.human (text, Human V3 format)
+ * - Machine format cache: {filename}.machine (binary, optimized for compilers)
  * 
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5
  */
@@ -12,6 +12,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { DxDocument } from './llmParser';
 import { formatDocumentV3 } from './humanFormatterV3';
+import { serializeToBinary } from './machineFormat';
 
 // ============================================================================
 // Types
@@ -135,7 +136,7 @@ export async function writeHumanCache(
 }
 
 /**
- * Write machine format cache file
+ * Write machine format cache file (binary)
  * Requirement: 4.3
  */
 export async function writeMachineCache(
@@ -146,29 +147,16 @@ export async function writeMachineCache(
 ): Promise<string> {
     const { machinePath } = getCachePaths(filePath, workspaceRoot, config);
 
-    // For now, use JSON as machine format (binary format in Task 6)
-    const machineContent = JSON.stringify({
-        context: Object.fromEntries(document.context),
-        refs: Object.fromEntries(document.refs),
-        sections: Object.fromEntries(
-            Array.from(document.sections.entries()).map(([id, section]) => [
-                id,
-                {
-                    id: section.id,
-                    schema: section.schema,
-                    rows: section.rows,
-                },
-            ])
-        ),
-    });
+    // Serialize to binary format (optimized for compilers)
+    const binaryContent = serializeToBinary(document);
 
     // Ensure directory exists
     const dirName = path.dirname(machinePath);
     await ensureCacheDir(workspaceRoot, path.relative(getCacheDir(workspaceRoot, config), dirName), config);
 
-    // Write file
+    // Write binary file
     const uri = vscode.Uri.file(machinePath);
-    await vscode.workspace.fs.writeFile(uri, Buffer.from(machineContent, 'utf-8'));
+    await vscode.workspace.fs.writeFile(uri, binaryContent);
 
     return machinePath;
 }
