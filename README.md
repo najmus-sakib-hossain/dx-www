@@ -1176,4 +1176,5 @@ numpy               = https://python/numpy | latest
 actix_web           = https://cargo/axtix-web   | latest
 rust_crypto         = https://cargo/rust-crypto | latest
 ```
-Like the vscode extension for vscode code editors like cursor, kiro and other please create extension for Neovim extension, zed extension
+Like the vscode extension for vscode that we created at crates/vscode-dx-serializer for vscode editors like cursor, kiro and other please so please create extension for Neovim, zed too!
+
