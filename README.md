@@ -1099,3 +1099,7 @@ Numbers: Light yellow
 Booleans/null: Blue (#569CD6)
 Section headers: Light blue (#9CDCFE)
 Comments: comment like muted
+
+Keys/property names: #f05b8d
+Strings/values: Green (#58c760)
+Keywords: yellow

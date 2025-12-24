@@ -82,67 +82,67 @@
           {
             "scope": "support.type.property-name.dx",
             "settings": {
-              "foreground": "#ff0313"
+              "foreground": "#62a6ff"
             }
           },
           {
             "scope": "string.quoted.double.dx",
             "settings": {
-              "foreground": "#B5CEA8"
+              "foreground": "#58c760"
             }
           },
           {
             "scope": "string.unquoted.dx",
             "settings": {
-              "foreground": "#B5CEA8"
+              "foreground": "#58c760"
             }
           },
           {
             "scope": "string.other.link.dx",
             "settings": {
-              "foreground": "#B5CEA8"
+              "foreground": "#58c760"
             }
           },
           {
             "scope": "markup.underline.link.dx",
             "settings": {
-              "foreground": "#B5CEA8"
+              "foreground": "#58c760"
             }
           },
           {
             "scope": "constant.numeric.dx",
             "settings": {
-              "foreground": "#FDD663"
+              "foreground": "#62a6ff"
             }
           },
           {
             "scope": "constant.numeric.version.dx",
             "settings": {
-              "foreground": "#FDD663"
+              "foreground": "#62a6ff"
             }
           },
           {
             "scope": "constant.language.boolean.dx",
             "settings": {
-              "foreground": "#569CD6"
+              "foreground": "#62a6ff"
             }
           },
           {
             "scope": "constant.language.null.dx",
             "settings": {
-              "foreground": "#569CD6"
+              "foreground": "#62a6ff"
             }
           },
           {
             "scope": "entity.name.tag.dx",
             "settings": {
-              "foreground": "#9CDCFE"
+              "foreground": "#f05b8d"
             }
           },
           {
             "scope": "comment.line.double-slash.dx",
             "settings": {
-              "foreground": "#6A6A6A",
+              "foreground": "#a1a1a1",
               "fontStyle": "italic"
             }
           }
