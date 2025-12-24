@@ -350,6 +350,11 @@ impl BufferAPI {
     }
 
     /// Allocate unsafe buffer (uninitialized)
+    ///
+    /// # Safety
+    /// This creates an uninitialized buffer, matching Node.js Buffer.allocUnsafe behavior.
+    /// The caller is responsible for initializing the buffer before reading from it.
+    #[allow(clippy::uninit_vec)]
     pub fn alloc_unsafe(&self, size: usize) -> Buffer {
         let mut data = Vec::with_capacity(size);
         unsafe {

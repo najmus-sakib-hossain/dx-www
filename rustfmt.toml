@@ -9,7 +9,7 @@ tab_spaces = 4
 hard_tabs = false
 
 # Edition
-edition = "2021"
+edition = "2024"
 
 # Use
 use_small_heuristics = "Default"

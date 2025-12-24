@@ -1,0 +1,18 @@
+project:DX Runtime
+version:0.1.0
+status:+
+team>alice|bob|charlie|diana|evan
+tasks=id%i name%s hrs%f urg%b who%s
+1 Parser 12.5 + alice
+2 Encoder 8.0 + bob
+3 Docs 6.5 - charlie
+4 Tests 15.0 + diana
+5 Bench 4.0 - evan
+_ Perf 10.0 + alice
+_ Audit 20.0 + bob
+metrics=name%s val%i unit%s
+LOC 50000 lines
+Funcs 2500 count
+Cover 95 pct
+Perf 820 pct
+Comp 75 pct

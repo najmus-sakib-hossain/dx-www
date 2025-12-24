@@ -261,21 +261,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
-name = "dx-serializer"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "bytes",
- "memchr",
- "rustc-hash",
- "serde",
- "serde_json",
- "serde_yaml",
- "thiserror",
- "toml",
-]
-
-[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -734,6 +719,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "serializer"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "bytes",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
 name = "serializer-benchmark"
 version = "0.1.0"
 dependencies = [
@@ -742,12 +742,12 @@ dependencies = [
  "capnp",
  "capnpc",
  "criterion",
- "dx-serializer",
  "flatbuffers",
  "prost",
  "rkyv",
  "serde",
  "serde_json",
+ "serializer",
 ]
 
 [[package]]

@@ -1,0 +1,689 @@
+/**
+ * DxCore - WASM wrapper with TypeScript fallback
+ * 
+ * Provides transformation between dense (disk) and human (editor) formats
+ * with validation support. Uses WASM for performance with a TypeScript
+ * fallback for reliability.
+ * 
+ * The dense format is the LLM format with sigils (#c, #:, #<letter>).
+ * The human format is the beautiful TOML-like display with Unicode tables.
+ * 
+ * Requirements: 1.1-1.9, 2.1-2.7, 3.1-3.5, 5.1-5.4, 8.1-8.4
+ */
+
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import { parseLlm, DxDocument, DxValue, DxSection } from './llmParser';
+import { formatDocument } from './humanFormatter';
+import { parseHuman, serializeToLlm } from './humanParser';
+import { formatDocumentV3, HumanFormatV3Config, DEFAULT_CONFIG } from './humanFormatterV3';
+import { parseHumanV3, serializeToLlmV3 } from './humanParserV3';
+
+/**
+ * Result of a transformation operation
+ */
+export interface TransformResult {
+    success: boolean;
+    content: string;
+    error?: string;
+}
+
+/**
+ * Result of a validation operation
+ */
+export interface ValidationResult {
+    success: boolean;
+    error?: string;
+    line?: number;
+    column?: number;
+    hint?: string;
+}
+
+/**
+ * DxCore interface for transformation operations
+ */
+export interface DxCore {
+    /** Transform dense format to human-readable format */
+    toHuman(dense: string): TransformResult;
+
+    /** Transform human-readable format to dense format */
+    toDense(human: string): TransformResult;
+
+    /** Validate content syntax */
+    validate(content: string): ValidationResult;
+
+    /** Check if content is complete enough to save */
+    isSaveable(content: string): boolean;
+
+    /** Whether this is using WASM or fallback */
+    readonly isWasm: boolean;
+}
+
+/**
+ * WASM module interface (matches wasm-bindgen output)
+ */
+interface WasmModule {
+    DxSerializer: new () => WasmSerializer;
+}
+
+interface WasmSerializer {
+    toHuman(dense: string): WasmTransformResult;
+    toDense(human: string): WasmTransformResult;
+    validate(content: string): WasmValidationResult;
+    isSaveable(content: string): boolean;
+}
+
+
+interface WasmTransformResult {
+    success: boolean;
+    content: string;
+    error?: string;
+}
+
+interface WasmValidationResult {
+    success: boolean;
+    error?: string;
+    line?: number;
+    column?: number;
+    hint?: string;
+}
+
+/**
+ * WASM-based DxCore implementation
+ */
+class WasmDxCore implements DxCore {
+    private serializer: WasmSerializer;
+    readonly isWasm = true;
+
+    constructor(serializer: WasmSerializer) {
+        this.serializer = serializer;
+    }
+
+    toHuman(dense: string): TransformResult {
+        const result = this.serializer.toHuman(dense);
+        return {
+            success: result.success,
+            content: result.content,
+            error: result.error,
+        };
+    }
+
+    toDense(human: string): TransformResult {
+        const result = this.serializer.toDense(human);
+        return {
+            success: result.success,
+            content: result.content,
+            error: result.error,
+        };
+    }
+
+    validate(content: string): ValidationResult {
+        const result = this.serializer.validate(content);
+        return {
+            success: result.success,
+            error: result.error,
+            line: result.line,
+            column: result.column,
+            hint: result.hint,
+        };
+    }
+
+    isSaveable(content: string): boolean {
+        return this.serializer.isSaveable(content);
+    }
+}
+
+// ============================================================================
+// TypeScript Fallback Implementation
+// ============================================================================
+
+/**
+ * Apply smart quoting to a string value
+ * 
+ * - If string contains apostrophe ('), wrap in double quotes
+ * - If string contains both ' and ", use double quotes with escaped "
+ */
+export function smartQuote(value: string): string {
+    const hasSingle = value.includes("'");
+    const hasDouble = value.includes('"');
+
+    if (!hasSingle && !hasDouble) {
+        // No quotes needed for simple strings without spaces/special chars
+        if (!/[ #|^:]/.test(value)) {
+            return value;
+        }
+        // Default to double quotes
+        return `"${value}"`;
+    }
+
+    if (hasSingle && !hasDouble) {
+        // Contains apostrophe - use double quotes
+        return `"${value}"`;
+    }
+
+    if (hasDouble && !hasSingle) {
+        // Contains double quotes - use single quotes
+        return `'${value}'`;
+    }
+
+    // Contains both - use double quotes with escaped double quotes
+    const escaped = value.replace(/"/g, '\\"');
+    return `"${escaped}"`;
+}
+
+
+/**
+ * Format DX content to human-readable format (TypeScript fallback)
+ * 
+ * Transforms LLM format like:
+ *   #c:nm|Test;ct|42
+ *   #d(id|nm|en)
+ *   1|Alpha|+
+ *   2|Beta|-
+ * 
+ * To Human V3 format like:
+ *   name                 = Test
+ *   count                = 42
+ *   
+ *   [d]                  = Id | Name | Enabled
+ *   1                    = Alpha | true
+ *   2                    = Beta | false
+ * 
+ * Requirements: 1.1-1.9, 2.1-2.7
+ */
+export function formatDx(dense: string, indentSize: number = 2, keyPadding: number = 20): string {
+    if (!dense.trim()) {
+        return '';
+    }
+
+    // Parse the LLM format
+    const parseResult = parseLlm(dense);
+
+    if (!parseResult.success || !parseResult.document) {
+        // If parsing fails, return the original content
+        // This allows graceful degradation for non-LLM format content
+        return dense;
+    }
+
+    // Format to Human V3 format with config
+    const config: HumanFormatV3Config = {
+        ...DEFAULT_CONFIG,
+        keyPadding,
+    };
+    return formatDocumentV3(parseResult.document, config);
+}
+
+/**
+ * Format a value for human-readable output (legacy helper)
+ */
+function formatValueLegacy(value: string): string {
+    // Handle special values
+    if (value === '1' || value === 'true') return 'true';
+    if (value === '0' || value === 'false') return 'false';
+    if (value === 'null' || value === '') return 'null';
+
+    // Check if value needs quoting
+    if (/[ #|^:\n\t]/.test(value) || value.includes("'") || value.includes('"')) {
+        return smartQuote(value);
+    }
+
+    return value;
+}
+
+
+/**
+ * Minify DX content to dense format (TypeScript fallback)
+ * 
+ * Transforms Human V3 format like:
+ *   name                 = Test
+ *   count                = 42
+ *   
+ *   [d]                  = Id | Name | Enabled
+ *   1                    = Alpha | true
+ *   2                    = Beta | false
+ * 
+ * To LLM format like:
+ *   #c:nm|Test;ct|42
+ *   #d(id|nm|en)
+ *   1|Alpha|+
+ *   2|Beta|-
+ * 
+ * Requirements: 3.1-3.5
+ */
+export function minifyDx(human: string): string {
+    if (!human.trim()) {
+        return '';
+    }
+
+    // Check if content is already in LLM format (starts with sigil)
+    const trimmed = human.trim();
+    if (trimmed.startsWith('#')) {
+        // Already in LLM format - return as-is
+        return human;
+    }
+
+    // Try parsing as Human V3 format first
+    const parseResultV3 = parseHumanV3(human);
+
+    if (parseResultV3.success && parseResultV3.document) {
+        // Check if the parsed document has any content
+        // (empty document means parsing failed silently)
+        const doc = parseResultV3.document;
+        if (doc.context.size > 0 || doc.refs.size > 0 || doc.sections.size > 0) {
+            // Serialize to LLM format using V3 serializer
+            return serializeToLlmV3(parseResultV3.document);
+        }
+    }
+
+    // Fall back to old human format parser
+    const parseResult = parseHuman(human);
+
+    if (!parseResult.success || !parseResult.document) {
+        // If parsing fails, return the original content
+        return human;
+    }
+
+    // Serialize to LLM format
+    return serializeToLlm(parseResult.document);
+}
+
+/**
+ * Parse a value from human format to dense format (legacy helper)
+ */
+function parseValueLegacy(value: string): string {
+    // Handle quoted strings
+    if ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))) {
+        return value.slice(1, -1);
+    }
+
+    // Handle booleans
+    if (value === 'true') return '1';
+    if (value === 'false') return '0';
+    if (value === 'null') return '';
+
+    return value;
+}
+
+
+/**
+ * Validate DX content syntax (TypeScript fallback)
+ * 
+ * Validates both LLM format and human format:
+ * - LLM format: sigil syntax, reference definitions, schema/row consistency
+ * - Human format: brackets, strings, general syntax
+ * 
+ * Requirements: 8.1-8.4
+ */
+export function validateDx(content: string): ValidationResult {
+    if (!content.trim()) {
+        return { success: true };
+    }
+
+    // Detect format type
+    const isLlmFormat = content.trim().startsWith('#');
+
+    if (isLlmFormat) {
+        return validateLlmFormat(content);
+    } else {
+        return validateHumanFormat(content);
+    }
+}
+
+/**
+ * Validate LLM format content
+ * 
+ * Checks for:
+ * - Valid sigil syntax (#c:, #:, #<letter>)
+ * - Reference definitions
+ * - Schema/row consistency
+ * 
+ * Requirements: 8.1-8.4
+ */
+function validateLlmFormat(content: string): ValidationResult {
+    const lines = content.split('\n');
+    const definedRefs = new Set<string>();
+    const usedRefs = new Set<string>();
+    let currentSchema: string[] = [];
+    let currentSectionId = '';
+    let lineNum = 0;
+
+    for (const line of lines) {
+        lineNum++;
+        const trimmed = line.trim();
+
+        // Skip empty lines and comments
+        if (!trimmed || trimmed.startsWith('//')) {
+            continue;
+        }
+
+        // Context section: #c:...
+        if (trimmed.startsWith('#c:')) {
+            const content = trimmed.substring(3);
+            // Validate context format
+            if (content && !content.includes('|')) {
+                return {
+                    success: false,
+                    error: `Invalid context format: missing pipe separator`,
+                    line: lineNum,
+                    column: 4,
+                    hint: 'Context format should be #c:key|value;key|value',
+                };
+            }
+            // Check for reference usage in context
+            const refMatches = content.match(/\^([a-zA-Z0-9_]+)/g);
+            if (refMatches) {
+                for (const ref of refMatches) {
+                    usedRefs.add(ref.substring(1));
+                }
+            }
+            currentSchema = [];
+            continue;
+        }
+
+        // Reference definition: #:...
+        if (trimmed.startsWith('#:')) {
+            const content = trimmed.substring(2);
+            const pipeIdx = content.indexOf('|');
+            if (pipeIdx === -1) {
+                return {
+                    success: false,
+                    error: `Invalid reference definition: missing pipe separator`,
+                    line: lineNum,
+                    column: 3,
+                    hint: 'Reference format should be #:key|value',
+                };
+            }
+            const refKey = content.substring(0, pipeIdx).trim();
+            if (!refKey) {
+                return {
+                    success: false,
+                    error: `Invalid reference definition: empty key`,
+                    line: lineNum,
+                    column: 3,
+                    hint: 'Reference key cannot be empty',
+                };
+            }
+            definedRefs.add(refKey);
+            currentSchema = [];
+            continue;
+        }
+
+        // Data section header: #<letter>(schema)
+        if (trimmed.startsWith('#') && trimmed.includes('(')) {
+            const match = trimmed.match(/^#([a-zA-Z])\(([^)]*)\)$/);
+            if (!match) {
+                return {
+                    success: false,
+                    error: `Invalid section header: ${trimmed}`,
+                    line: lineNum,
+                    column: 1,
+                    hint: 'Section headers should be in format #<letter>(col1|col2|col3)',
+                };
+            }
+            currentSectionId = match[1];
+            currentSchema = match[2].split('|').map(col => col.trim()).filter(col => col);
+            if (currentSchema.length === 0) {
+                return {
+                    success: false,
+                    error: `Empty schema in section header`,
+                    line: lineNum,
+                    column: 3,
+                    hint: 'Schema must have at least one column',
+                };
+            }
+            continue;
+        }
+
+        // Unknown sigil
+        if (trimmed.startsWith('#')) {
+            const sigil = trimmed.substring(0, 2);
+            return {
+                success: false,
+                error: `Unknown sigil '${sigil}'`,
+                line: lineNum,
+                column: 1,
+                hint: 'Valid sigils are #c: (context), #: (reference), #<letter>( (data section)',
+            };
+        }
+
+        // Data row (if we have a schema)
+        if (currentSchema.length > 0) {
+            const values = trimmed.split('|');
+            if (values.length !== currentSchema.length) {
+                return {
+                    success: false,
+                    error: `Row has ${values.length} columns, expected ${currentSchema.length}`,
+                    line: lineNum,
+                    column: 1,
+                    hint: `Schema for section '${currentSectionId}' has columns: ${currentSchema.join(', ')}`,
+                };
+            }
+            // Check for reference usage in row
+            for (const value of values) {
+                if (value.trim().startsWith('^')) {
+                    usedRefs.add(value.trim().substring(1));
+                }
+            }
+        }
+    }
+
+    // Check for undefined references (warning, not error)
+    // We don't fail on undefined refs as they may be intentional
+
+    return { success: true };
+}
+
+/**
+ * Validate human format content
+ * 
+ * Checks for:
+ * - Unclosed brackets
+ * - Unclosed strings
+ * - Mismatched brackets
+ */
+function validateHumanFormat(content: string): ValidationResult {
+    const bracketStack: Array<{ char: string; line: number; column: number }> = [];
+    let inString = false;
+    let stringChar = '"';
+    let stringStart: { line: number; column: number } | null = null;
+
+    const lines = content.split('\n');
+
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+        const line = lines[lineIdx];
+        const lineNum = lineIdx + 1;
+        let col = 0;
+
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            col = i + 1;
+
+            // Handle escape sequences in strings
+            if (inString && ch === '\\' && i + 1 < line.length) {
+                i++; // Skip escaped character
+                continue;
+            }
+
+            // Handle string boundaries
+            if (!inString && (ch === '"' || ch === "'")) {
+                inString = true;
+                stringChar = ch;
+                stringStart = { line: lineNum, column: col };
+                continue;
+            }
+
+            if (inString && ch === stringChar) {
+                inString = false;
+                stringStart = null;
+                continue;
+            }
+
+            // Skip bracket checking inside strings
+            if (inString) {
+                continue;
+            }
+
+            // Track brackets
+            if (ch === '{' || ch === '[' || ch === '(') {
+                bracketStack.push({ char: ch, line: lineNum, column: col });
+            } else if (ch === '}' || ch === ']' || ch === ')') {
+                const expected = ch === '}' ? '{' : ch === ']' ? '[' : '(';
+
+                if (bracketStack.length === 0) {
+                    return {
+                        success: false,
+                        error: `Unexpected closing bracket '${ch}'`,
+                        line: lineNum,
+                        column: col,
+                        hint: `No matching opening bracket for '${ch}'`,
+                    };
+                }
+
+                const open = bracketStack.pop()!;
+                if (open.char !== expected) {
+                    const expectedCloseForOpen = open.char === '{' ? '}' : open.char === '[' ? ']' : ')';
+                    return {
+                        success: false,
+                        error: `Mismatched bracket: expected '${expectedCloseForOpen}' but found '${ch}'`,
+                        line: lineNum,
+                        column: col,
+                        hint: `Opening '${open.char}' at line ${open.line}, column ${open.column} expects '${expectedCloseForOpen}'`,
+                    };
+                }
+            }
+        }
+    }
+
+    // Check for unclosed strings
+    if (inString && stringStart) {
+        return {
+            success: false,
+            error: `Unclosed string starting with '${stringChar}'`,
+            line: stringStart.line,
+            column: stringStart.column,
+            hint: `Add a closing '${stringChar}' to complete the string`,
+        };
+    }
+
+    // Check for unclosed brackets
+    if (bracketStack.length > 0) {
+        const open = bracketStack[bracketStack.length - 1];
+        const expectedClose = open.char === '{' ? '}' : open.char === '[' ? ']' : ')';
+        return {
+            success: false,
+            error: `Unclosed bracket '${open.char}'`,
+            line: open.line,
+            column: open.column,
+            hint: `Add a closing '${expectedClose}' to match the opening '${open.char}'`,
+        };
+    }
+
+    return { success: true };
+}
+
+
+/**
+ * TypeScript fallback DxCore implementation
+ */
+class FallbackDxCore implements DxCore {
+    readonly isWasm = false;
+    private indentSize: number;
+    private keyPadding: number;
+
+    constructor(indentSize: number = 2, keyPadding: number = 20) {
+        this.indentSize = indentSize;
+        this.keyPadding = keyPadding;
+    }
+
+    toHuman(dense: string): TransformResult {
+        try {
+            const content = formatDx(dense, this.indentSize, this.keyPadding);
+            return { success: true, content };
+        } catch (error) {
+            return {
+                success: false,
+                content: '',
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
+    }
+
+    toDense(human: string): TransformResult {
+        try {
+            const content = minifyDx(human);
+            return { success: true, content };
+        } catch (error) {
+            return {
+                success: false,
+                content: '',
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
+    }
+
+    validate(content: string): ValidationResult {
+        return validateDx(content);
+    }
+
+    isSaveable(content: string): boolean {
+        return this.validate(content).success;
+    }
+}
+
+// ============================================================================
+// DxCore Loader
+// ============================================================================
+
+let cachedCore: DxCore | null = null;
+
+/**
+ * Load the DxCore, using TypeScript implementation
+ * 
+ * Note: WASM is disabled to use the updated TypeScript formatter (V3 format)
+ * 
+ * @param extensionPath - Path to the extension directory
+ * @param indentSize - Indent size for formatting (default: 2)
+ * @param keyPadding - Minimum key padding width (default: 20)
+ * @returns DxCore instance
+ */
+export async function loadDxCore(
+    extensionPath: string,
+    indentSize: number = 2,
+    keyPadding: number = 20
+): Promise<DxCore> {
+    // Return cached instance if available
+    if (cachedCore) {
+        return cachedCore;
+    }
+
+    // Use TypeScript implementation (WASM disabled for V3 format)
+    cachedCore = new FallbackDxCore(indentSize, keyPadding);
+    console.log('DX Serializer: Using TypeScript core (V3 format)');
+    return cachedCore;
+}
+
+/**
+ * Get the cached DxCore instance, or create a fallback if not loaded
+ */
+export function getDxCore(indentSize: number = 2, keyPadding: number = 20): DxCore {
+    if (!cachedCore) {
+        cachedCore = new FallbackDxCore(indentSize, keyPadding);
+    }
+    return cachedCore;
+}
+
+/**
+ * Clear the cached DxCore instance (for testing)
+ */
+export function clearDxCoreCache(): void {
+    cachedCore = null;
+}
+
+/**
+ * Create a fallback DxCore instance directly (for testing)
+ */
+export function createFallbackCore(indentSize: number = 2, keyPadding: number = 20): DxCore {
+    return new FallbackDxCore(indentSize, keyPadding);
+}

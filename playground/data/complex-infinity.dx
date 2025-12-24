@@ -1,0 +1,9 @@
+.=p:s v:s r:s
+DX|0.1.0|338B
+u.n:$al:Alice^e:$al@dx.dev^r:admin^a+
+t=i s p0 d+
+auth 5 1 +
+api 8 2 +
+ui 3 3 +
+m>8H|8I|8J
+s.r:1500^t:3^u:1

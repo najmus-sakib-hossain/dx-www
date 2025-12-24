@@ -1,70 +1,99 @@
 [workspace]
 resolver = "2"
 members = [
-    # Core runtime crates
-    "crates/core",
-    "crates/dom",
-    "crates/morph",
-    "crates/sched",
+    # =========================================================================
+    # DX TOOLS (no dx- prefix)
+    # =========================================================================
+    "crates/style",
+    "crates/forge",
+    "crates/media",
+    "crates/icon",
+    "crates/font",
+    "crates/generator",
+    "crates/workspace",
+    "crates/driven",
+    "crates/debug",
+    "crates/error",
+    "crates/stack",
+    "crates/i18n",
+    "crates/serializer",
     
-    # Binary protocol
-    "crates/binary",
-    "crates/packet",
-    
-    # DX Serializer (ultra-efficient format)
-    "crates/dx-serializer",
-    
-    # Client runtimes (WASM)
-    "crates/dx-client",
-    "crates/client-tiny",
-    
-    # Developer tools
-    "crates/dx-www",
+    # =========================================================================
+    # DX CLI (main entry points)
+    # =========================================================================
+    "crates/dx",
     "crates/dx-cli",
-    "crates/dx-forge",
     
-    # Server-side (optional)
-    "crates/dx-server",
-    "crates/cache",
-    
-    # Style system
-    "crates/dx-style",
-    "crates/dx-icon",
-    "crates/dx-media",
-    "crates/dx-font",
-    
-    # NEW: Phase 1 - Data Layer
-    "crates/dx-form",
-    "crates/dx-query",
-    "crates/dx-db",
-    
-    # NEW: Phase 2 - Logic Layer
-    "crates/dx-state",
-    "crates/dx-auth",
-    
-    # NEW: Phase 3 - Resilience Layer
-    "crates/dx-sync",
-    "crates/dx-offline",
-    "crates/dx-error",
-    "crates/dx-guard",
-    "crates/dx-interaction",
-    
-    # NEW: Phase 4 - Polish Layer
-    "crates/dx-fallback",
-    "crates/dx-a11y",
-    "crates/dx-print",
-    "crates/dx-rtl",
-    "crates/dx-debug",
-    
-    # NEW: Internationalization (i18n) - Translation & TTS
-    "crates/dx-i18n",
-    
-    # NEW: JavaScript/TypeScript Runtime (10x faster than Bun)
+    # =========================================================================
+    # DX STACK - JavaScript/TypeScript (dx-js- prefix)
+    # =========================================================================
     "crates/dx-js-runtime",
+    "crates/dx-js-monorepo",
     
-    # Examples & Playground
+    # =========================================================================
+    # DX WWW - Web Framework (dx-www- prefix)
+    # =========================================================================
+    # Core Runtime
+    "crates/dx-www-core",
+    "crates/dx-www-dom",
+    "crates/dx-www-morph",
+    "crates/dx-www-sched",
+    
+    # Binary Protocol
+    "crates/dx-www-binary",
+    "crates/dx-www-packet",
+    
+    # Client Runtimes (WASM)
+    "crates/dx-www-client",
+    "crates/dx-www-client-tiny",
+    
+    # Server & Cache
+    "crates/dx-www-server",
+    "crates/dx-www-cache",
+    
+    # Data Layer
+    "crates/dx-www-form",
+    "crates/dx-www-query",
+    "crates/dx-www-db",
+    
+    # Logic Layer
+    "crates/dx-www-state",
+    "crates/dx-www-auth",
+    
+    # Resilience Layer
+    "crates/dx-www-sync",
+    "crates/dx-www-offline",
+    "crates/dx-www-guard",
+    "crates/dx-www-interaction",
+    
+    # Polish Layer
+    "crates/dx-www-fallback",
+    "crates/dx-www-a11y",
+    "crates/dx-www-print",
+    "crates/dx-www-rtl",
+    
+    # Compiler (transpiler-to-binary pipeline)
+    "crates/dx-www",
+    
+    # Binary Dawn - Cross-platform I/O reactor
+    "crates/dx-reactor",
+    "crates/dx-db-teleport",
+    
+    # =========================================================================
+    # EXAMPLES
+    # =========================================================================
     "examples/hello-world",
-    "playground",
+]
+
+# Exclude nested workspaces (they manage their own internal crates)
+exclude = [
+    "crates/dx-js-bundler",         # Has 10 internal crates
+    "crates/dx-js-test-runner",     # Has own workspace
+    "crates/dx-js-package-manager", # Has 12 internal crates
+    "crates/dx-js-compatibility",   # Has 12 internal sub-crates
+    "crates/check",                 # Has own workspace with submodules
+    "playground",                   # Experiments
+    "benchmarks",                   # Performance tests
 ]
 
 [workspace.package]
@@ -96,73 +125,98 @@ web-sys = { version = "0.3", features = [
 
 # Zero-Copy Serialization
 bincode = "2.0.0-rc.3"
-bytemuck = { version = "1.14", features = ["derive"] }
+bytemuck = { version = "1.21", features = ["derive"] }
 
 # Memory Management
-bumpalo = "3.14"
-once_cell = "1.19"
+bumpalo = "3.16"
+once_cell = "1.20"
 
 # Error Handling
 console_error_panic_hook = "0.1"
 
-# NEW: Ecosystem crate dependencies
+# Ecosystem crate dependencies (latest versions)
 regex-automata = "0.4"
-bitflags = "2.4"
+bitflags = "2.6"
 reqwest = { version = "0.12", default-features = false }
 gloo-net = "0.6"
-dashmap = "6.0"
+dashmap = "6.1"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
-sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-rustls"], default-features = false }
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-rustls"], default-features = false }
 tokio-postgres = "0.7"
-deadpool-postgres = "0.12"
-zerocopy = { version = "0.7", features = ["derive"] }
+deadpool-postgres = "0.14"
+zerocopy = { version = "0.8", features = ["derive"] }
 ed25519-dalek = { version = "2.1", features = ["rand_core"] }
 argon2 = "0.5"
 webauthn-rs = "0.5"
 indexed_db_futures = "0.5"
 lz4_flex = "0.11"
-tokio-tungstenite = "0.21"
+tokio-tungstenite = "0.24"
 flume = "0.11"
-yrs = "0.18"
+yrs = "0.21"
 maud = "0.26"
-oxc_parser = "0.22"
-miette = "7.0"
-lightningcss = "1.0.0-alpha.68"
+oxc_parser = "0.39"
+miette = "7.4"
+lightningcss = "1.0.0-alpha.71"
 unic-langid = "0.9"
 base64 = "0.22"
 atomic = "0.6"
 parking_lot = "0.12"
-bytes = "1.5"
+bytes = "1.9"
 chrono = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+anyhow = "1.0"
 
 # Internal Workspace Crates
-# Internal Workspace Crates
-dx-core = { path = "crates/core" }
-dx-dom = { path = "crates/dom" }
-dx-morph = { path = "crates/morph" }
-dx-sched = { path = "crates/sched" }
+# =========================================================================
+# DX TOOLS
+# =========================================================================
+style = { path = "crates/style" }
+forge = { path = "crates/forge" }
+media = { path = "crates/media" }
+icon = { path = "crates/icon" }
+font = { path = "crates/font" }
+generator = { path = "crates/generator" }
+workspace = { path = "crates/workspace" }
+driven = { path = "crates/driven" }
+debug = { path = "crates/debug" }
+error = { path = "crates/error" }
+stack = { path = "crates/stack" }
+i18n = { path = "crates/i18n" }
+serializer = { path = "crates/serializer" }
+
+# =========================================================================
+# DX WWW
+# =========================================================================
+dx-www-core = { path = "crates/dx-www-core" }
+dx-www-dom = { path = "crates/dx-www-dom" }
+dx-www-morph = { path = "crates/dx-www-morph" }
+dx-www-sched = { path = "crates/dx-www-sched" }
 dx-www = { path = "crates/dx-www" }
-dx-binary = { path = "crates/binary" }
-dx-packet = { path = "crates/packet" }
-dx-client = { path = "crates/dx-client" }
+dx-www-binary = { path = "crates/dx-www-binary" }
+dx-www-packet = { path = "crates/dx-www-packet" }
+dx-www-client = { path = "crates/dx-www-client" }
+dx-www-client-tiny = { path = "crates/dx-www-client-tiny" }
+dx-www-server = { path = "crates/dx-www-server" }
+dx-www-cache = { path = "crates/dx-www-cache" }
+dx-www-form = { path = "crates/dx-www-form" }
+dx-www-query = { path = "crates/dx-www-query" }
+dx-www-db = { path = "crates/dx-www-db" }
+dx-www-state = { path = "crates/dx-www-state" }
+dx-www-auth = { path = "crates/dx-www-auth" }
+dx-www-sync = { path = "crates/dx-www-sync" }
+dx-www-offline = { path = "crates/dx-www-offline" }
+dx-www-guard = { path = "crates/dx-www-guard" }
+dx-www-interaction = { path = "crates/dx-www-interaction" }
+dx-www-fallback = { path = "crates/dx-www-fallback" }
+dx-www-a11y = { path = "crates/dx-www-a11y" }
+dx-www-print = { path = "crates/dx-www-print" }
+dx-www-rtl = { path = "crates/dx-www-rtl" }
 
-# NEW: Internal ecosystem crates
-dx-form = { path = "crates/dx-form" }
-dx-query = { path = "crates/dx-query" }
-dx-db = { path = "crates/dx-db" }
-dx-state = { path = "crates/dx-state" }
-dx-auth = { path = "crates/dx-auth" }
-dx-sync = { path = "crates/dx-sync" }
-dx-offline = { path = "crates/dx-offline" }
-dx-error = { path = "crates/dx-error" }
-dx-guard = { path = "crates/dx-guard" }
-dx-interaction = { path = "crates/dx-interaction" }
-dx-fallback = { path = "crates/dx-fallback" }
-dx-a11y = { path = "crates/dx-a11y" }
-dx-print = { path = "crates/dx-print" }
-dx-rtl = { path = "crates/dx-rtl" }
-dx-debug = { path = "crates/dx-debug" }
-dx-i18n = { path = "crates/dx-i18n" }
+# Binary Dawn
+dx-reactor = { path = "crates/dx-reactor" }
+dx-db-teleport = { path = "crates/dx-db-teleport" }
 
 
 # ============================================================================

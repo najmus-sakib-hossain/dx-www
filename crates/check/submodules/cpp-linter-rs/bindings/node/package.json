@@ -1,0 +1,54 @@
+{
+  "name": "@cpp-linter/cpp-linter",
+  "version": "2.0.0-rc12",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "binaryName": "cpp-linter",
+    "targets": [
+      "x86_64-pc-windows-msvc",
+      "x86_64-apple-darwin",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl",
+      "aarch64-unknown-linux-gnu",
+      "i686-pc-windows-msvc",
+      "armv7-unknown-linux-gnueabihf",
+      "aarch64-apple-darwin",
+      "x86_64-unknown-freebsd",
+      "aarch64-unknown-linux-musl",
+      "aarch64-pc-windows-msvc"
+    ]
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@napi-rs/cli": "3.4.1",
+    "ava": "^6.4.1",
+    "oxlint": "^1.24.0"
+  },
+  "ava": {
+    "timeout": "3m"
+  },
+  "engines": {
+    "node": ">= 10.16.0 < 11 || >= 11.8.0 < 12 || >= 12.0.0"
+  },
+  "bin": "cli.js",
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "prepublishOnly": "napi prepublish --no-gh-release",
+    "lint": "oxlint",
+    "test": "ava"
+  },
+  "packageManager": "yarn@4.9.2",
+  "description": "Node.js binding for the cpp-linter Rust source.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cpp-linter/cpp-linter-rs.git"
+  },
+  "author": "Brendan Doherty",
+  "bugs": {
+    "url": "https://github.com/cpp-linter/cpp-linter-rs/issues"
+  },
+  "homepage": "https://github.com/cpp-linter/cpp-linter-rs#readme"
+}

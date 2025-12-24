@@ -1,0 +1,218 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "DX Config",
+  "scopeName": "source.dx",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#table-row" },
+    { "include": "#array-line" },
+    { "include": "#indented-key-value" },
+    { "include": "#dotted-key-value" },
+    { "include": "#simple-key-value" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comment": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.dx",
+          "match": "^\\s*#.*$"
+        },
+        {
+          "name": "comment.line.double-slash.dx",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "table-row": {
+      "patterns": [
+        {
+          "comment": "Table header row (capitalized words)",
+          "name": "entity.name.class.dx",
+          "match": "^[A-Z][a-zA-Z0-9_]*(?=\\s{2,})"
+        },
+        {
+          "comment": "Table data values",
+          "name": "string.unquoted.table-cell.dx",
+          "match": "(?<=\\s{2,})[a-zA-Z0-9_\\-./]+(?=\\s{2,}|$)"
+        }
+      ]
+    },
+    "array-line": {
+      "patterns": [
+        {
+          "comment": "Array with arrow: key > items (root level)",
+          "match": "^([a-zA-Z_][a-zA-Z0-9_.]*)\\s*(>)\\s*(.*)$",
+          "captures": {
+            "1": { "name": "entity.name.function.dx" },
+            "2": { "name": "keyword.operator.arrow.dx" },
+            "3": { "patterns": [{ "include": "#array-items" }] }
+          }
+        },
+        {
+          "comment": "Array with arrow: key > items (indented)",
+          "match": "^(\\s+)([a-zA-Z_][a-zA-Z0-9_.]*)\\s*(>)\\s*(.*)$",
+          "captures": {
+            "2": { "name": "entity.name.function.child.dx" },
+            "3": { "name": "keyword.operator.arrow.dx" },
+            "4": { "patterns": [{ "include": "#array-items" }] }
+          }
+        }
+      ]
+    },
+    "array-items": {
+      "patterns": [
+        {
+          "name": "keyword.operator.pipe.dx",
+          "match": "\\|"
+        },
+        {
+          "name": "string.unquoted.array-item.dx",
+          "match": "[a-zA-Z0-9_\\-./]+"
+        }
+      ]
+    },
+    "indented-key-value": {
+      "patterns": [
+        {
+          "comment": "Indented key:value (child properties with 3+ spaces)",
+          "match": "^(\\s{3,})([a-zA-Z_][a-zA-Z0-9_./\\-]*)\\s*(:)\\s*(.*)$",
+          "captures": {
+            "2": { "name": "support.type.property-name.dx" },
+            "3": { "name": "punctuation.separator.key-value.dx" },
+            "4": { "patterns": [{ "include": "#values" }] }
+          }
+        }
+      ]
+    },
+    "dotted-key-value": {
+      "patterns": [
+        {
+          "comment": "Dotted key:value like forge.repository",
+          "match": "^([a-zA-Z_][a-zA-Z0-9_]*)(\\.)(\\w+)\\s*(:)\\s*(.*)$",
+          "captures": {
+            "1": { "name": "entity.name.namespace.dx" },
+            "2": { "name": "punctuation.accessor.dx" },
+            "3": { "name": "variable.other.property.dx" },
+            "4": { "name": "punctuation.separator.key-value.dx" },
+            "5": { "patterns": [{ "include": "#values" }] }
+          }
+        }
+      ]
+    },
+    "simple-key-value": {
+      "patterns": [
+        {
+          "comment": "Simple key:value at root level",
+          "match": "^([a-zA-Z_][a-zA-Z0-9_]*)\\s*(:)\\s*(.*)$",
+          "captures": {
+            "1": { "name": "variable.other.readwrite.dx" },
+            "2": { "name": "punctuation.separator.key-value.dx" },
+            "3": { "patterns": [{ "include": "#values" }] }
+          }
+        }
+      ]
+    },
+    "values": {
+      "patterns": [
+        {
+          "comment": "URL values",
+          "name": "markup.underline.link.dx",
+          "match": "https?://[^\\s]+"
+        },
+        {
+          "comment": "Path values @/...",
+          "name": "string.interpolated.dx",
+          "match": "@/[a-zA-Z0-9_/\\-.*]+"
+        },
+        {
+          "comment": "Glob patterns with *",
+          "name": "string.regexp.dx",
+          "match": "\\*+"
+        },
+        {
+          "comment": "Quoted strings",
+          "name": "string.quoted.double.dx",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "name": "constant.character.escape.dx", "match": "\\\\." }
+          ]
+        },
+        {
+          "comment": "Version numbers x.x.x",
+          "name": "constant.numeric.version.dx",
+          "match": "\\d+\\.\\d+\\.\\d+"
+        },
+        {
+          "comment": "Numbers",
+          "name": "constant.numeric.dx",
+          "match": "-?\\d+(\\.\\d+)?"
+        },
+        {
+          "comment": "Boolean true",
+          "name": "constant.language.boolean.true.dx",
+          "match": "\\b(true|yes)\\b"
+        },
+        {
+          "comment": "Boolean false",
+          "name": "constant.language.boolean.false.dx",
+          "match": "\\b(false|no)\\b"
+        },
+        {
+          "comment": "Null/none",
+          "name": "constant.language.null.dx",
+          "match": "\\b(null|none)\\b"
+        },
+        {
+          "comment": "Special 'all' keyword",
+          "name": "keyword.other.all.dx",
+          "match": "\\ball\\b"
+        },
+        {
+          "comment": "Package/scope reference @package",
+          "name": "entity.name.tag.dx",
+          "match": "@[a-zA-Z0-9_\\-/]+"
+        },
+        {
+          "comment": "Dash value (placeholder)",
+          "name": "constant.language.placeholder.dx",
+          "match": "^-$"
+        },
+        {
+          "comment": "Simple string value",
+          "name": "string.unquoted.dx",
+          "match": "[a-zA-Z0-9_\\-./]+"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.control.caret.dx",
+          "match": "\\^"
+        },
+        {
+          "name": "keyword.operator.arrow.dx",
+          "match": ">"
+        },
+        {
+          "name": "keyword.operator.pipe.dx",
+          "match": "\\|"
+        },
+        {
+          "name": "keyword.operator.at.dx",
+          "match": "@"
+        },
+        {
+          "name": "keyword.operator.hash.dx",
+          "match": "#"
+        },
+        {
+          "name": "punctuation.separator.key-value.dx",
+          "match": ":"
+        }
+      ]
+    }
+  }
+}

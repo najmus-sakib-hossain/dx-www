@@ -17,9 +17,45 @@ pub mod dev_server;
 pub mod linker;
 pub mod loader;
 pub mod packer;
+pub mod parser;
 pub mod pwa;
 pub mod rpc;
+pub mod schema_parser;
 pub mod splitter;
+
+// Binary Dawn Features - Core binary structures
+pub mod reactivity;
+pub mod animation;
+pub mod handlers;
+pub mod resumability;
+pub mod server_component;
+pub mod streaming;
+pub mod islands;
+pub mod control;
+pub mod suspense;
+pub mod teleport;
+pub mod keepalive;
+pub mod router;
+pub mod transitions;
+pub mod forms;
+pub mod optimistic;
+pub mod liveview;
+pub mod content;
+pub mod di;
+pub mod guards;
+pub mod jobs;
+pub mod cron;
+
+// Binary Dawn Features - Progressive Enhancement and Code Splitting
+pub mod progressive;
+pub mod code_splitting;
+
+// Binary Dawn Features - Type Safety and Admin
+pub mod types;
+pub mod admin;
+
+// OXC-based parser (optional - requires oxc feature)
+#[cfg(feature = "oxc")]
 pub mod swc_parser;
 
 // Ecosystem integrations

@@ -1,0 +1,200 @@
+{
+  "name": "dx-serializer",
+  "displayName": "DX Serializer",
+  "description": "World-record serialization format: Beautiful for Humans, Token-efficient for LLMs, Blazing binary for Machines.",
+  "version": "1.0.0",
+  "publisher": "dx-www",
+  "icon": "media/logo.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dx-www/dx"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters",
+    "Other"
+  ],
+  "keywords": [
+    "dx",
+    "serializer",
+    "config",
+    "llm",
+    "binary"
+  ],
+  "activationEvents": [
+    "onLanguage:dx"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "dx",
+        "aliases": ["DX Config", "dx"],
+        "filenames": ["dx", "dx.human"],
+        "extensions": [".human"],
+        "icon": {
+          "light": "./media/file-extension-dark.png",
+          "dark": "./media/file-extension-dark.png"
+        },
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "dx",
+        "scopeName": "source.dx",
+        "path": "./syntaxes/dx.tmLanguage.json"
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "dx-icons",
+        "label": "DX Icons",
+        "path": "./icons/dx-icon-theme.json"
+      }
+    ],
+    "configurationDefaults": {
+      "workbench.editor.customLabels": {
+        "patterns": {
+          "**/.dx/cache/dx.human": "${dirname}/../../dx"
+        }
+      },
+      "files.exclude": {
+        "**/.dx": true
+      }
+    },
+    "configuration": {
+      "title": "DX Hologram",
+      "properties": {
+        "dx.hologram.autoInflate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically show beautiful human format when opening dx files"
+        },
+        "dx.hologram.indentSize": {
+          "type": "number",
+          "default": 4,
+          "description": "Number of spaces for indentation in pretty mode"
+        },
+        "dx.hologram.useUnicode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use Unicode symbols (✓/✗) for booleans"
+        },
+        "dx.hologram.useBoxDrawing": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use box-drawing characters for tables"
+        },
+        "dx.forge.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start Forge daemon when opening workspace"
+        },
+        "dx.forge.autoBuild": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically build binary (.dxs) on save"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "dx.formatPretty",
+        "title": "DX: Format as Human-Readable (Pretty)",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "dx.formatDense",
+        "title": "DX: Format as LLM-Optimized (Dense)",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "dx.openHologram",
+        "title": "DX: Open as Human-Readable View",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "dx.showLLMFormat",
+        "title": "DX: Show LLM-Dense Format",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "dx.buildBinary",
+        "title": "DX: Build Binary (.dxs)",
+        "icon": "$(package)"
+      },
+      {
+        "command": "dx.startForge",
+        "title": "DX: Start Forge Daemon",
+        "icon": "$(flame)"
+      },
+      {
+        "command": "dx.stopForge",
+        "title": "DX: Stop Forge Daemon",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "dx.convertFromJson",
+        "title": "DX: Convert JSON to DX",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "dx.normalizeFormat",
+        "title": "DX: Normalize Format",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "dx.convertAllFiles",
+        "title": "DX: Convert All DX Files & Build Binaries",
+        "icon": "$(files)"
+      },
+      {
+        "command": "dx.convertCurrentFile",
+        "title": "DX: Convert Current File & Build Binary",
+        "icon": "$(file-binary)"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "dx.openHologram",
+          "when": "resourceFilename == dx",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "dx.showLLMFormat",
+          "when": "resourceFilename == dx",
+          "group": "navigation"
+        },
+        {
+          "command": "dx.buildBinary",
+          "when": "resourceFilename == dx",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.x",
+    "@typescript-eslint/parser": "^6.x",
+    "eslint": "^8.x",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "dependencies": {}
+}

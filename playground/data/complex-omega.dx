@@ -1,0 +1,8 @@
+p:DX^v:0.1.0^r:338B
+u.n:Alice^e:alice@dx.dev^r:admin^a+
+t=i%i n%s s%s p%i d+
+1 auth login 5 +
+2 api fetch 8 +
+3 ui render 3 +
+m>2023|2024|2025
+s.r:1500^t:3^u:1

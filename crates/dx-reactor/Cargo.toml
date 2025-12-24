@@ -1,0 +1,57 @@
+[package]
+name = "dx-reactor"
+version = "0.1.0"
+edition = "2021"
+authors = ["dx-www Runtime Team"]
+license = "MIT OR Apache-2.0"
+description = "Binary Dawn - Cross-platform I/O reactor with thread-per-core architecture"
+repository = "https://github.com/dx-sh/dx-www-runtime"
+keywords = ["reactor", "io_uring", "kqueue", "iocp", "async"]
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+# Core
+bitflags = "2.6"
+num_cpus = "1.16"
+parking_lot = "0.12"
+crossbeam-deque = "0.8"
+
+# Async
+futures = "0.3"
+
+# Error handling
+thiserror = "2.0"
+
+# Logging
+tracing = "0.1"
+
+# Property testing
+proptest = { version = "1.4", optional = true }
+
+# Platform-specific dependencies
+[target.'cfg(target_os = "linux")'.dependencies]
+io-uring = { version = "0.6", optional = true }
+libc = "0.2"
+
+[target.'cfg(any(target_os = "macos", target_os = "freebsd", target_os = "openbsd"))'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.52", features = [
+    "Win32_Foundation",
+    "Win32_System_IO",
+    "Win32_Networking_WinSock",
+    "Win32_System_Threading",
+    "Win32_Storage_FileSystem",
+] }
+
+[features]
+default = ["auto"]
+auto = []
+io_uring = ["io-uring"]
+testing = ["proptest"]
+
+[dev-dependencies]
+proptest = "1.4"

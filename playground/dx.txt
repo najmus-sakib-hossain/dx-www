@@ -1,0 +1,138 @@
+name                : dx-ts
+version             : 0.0.1
+title               : Enhanced Developing Experience
+description         : Orchestrate don't just own your code
+author              : essensefromexistence
+license             : MIT OR Apache-2.0
+
+// stack=Language Runtime Compiler Bundler PackageManager Framework
+// javascript/typescript  bun      tsc       dx-js     dx-pkg   react
+// python                 cpython  -         -         uv       django
+// rust                   native   rustc     -         cargo    axum
+
+forge.repository    : https://dx.vercel.app/essensefromexistence/dx
+^container          : docker
+^registry           : ghcr.io/essensefromexistence/dx
+^ci                 : github-actions
+^cd                 : vercel
+
+forge.cache         : .dx/cache
+^strategy           : content-hash
+^r2_bucket          : dx-cache
+^max_size           : 10GB
+^warm_start         : ✓
+
+// forge_items         > cli | docs | examples | packages | scripts | style | tests
+// forge_tasks         > build | test | lint | format | check | deploy | bench
+
+runtime.engine      : dx-js-runtime
+^target             : es2024
+^modules            : esm
+^sourcemap          : ✓
+^minify             : ✓
+
+bundler.engine      : dx-js-bundler
+^entry              : src/main.tsx
+^outdir             : dist
+^splitting          : ✓
+^treeshake          : ✓
+^cache_dir          : .dx/bundler
+
+package.engine      : dx-pkg
+^lockfile           : dx.lock
+^cache_dir          : .dx/node_modules
+^registry           : https://registry.npmjs.org
+^binary_cache       : ✓
+^dedup              : ✓
+
+test.engine         : dx-test
+^pattern            : →*/*.{test,spec}.{ts,tsx,js,jsx}
+^coverage           : ✓
+^parallel           : ✓
+^cache_dir          : .dx/test
+
+style.path          : @/style
+^engine             : dx-style
+^cache_dir          : .dx/style
+// style_engine        > atomic | enhanced | logical
+// style_themes        > dx | vercel | claude | github
+
+icon.path           : @/components/icons
+^pack               : lucide-react
+^variant            : default
+^cache_dir          : .dx/icon
+
+font.path           : @/font
+^default            : Inter
+^primary            : Manrope
+^secondary          : Roboto Mono
+^cache_dir          : .dx/font
+^subsetting         : ✓
+^preload            : ✓
+
+media.images_path   : @/public/images/*
+^optimize           : ✓
+^webp               : ✓
+^avif               : ✓
+media.videos_path   : @/public/videos/*
+^transcode          : ✓
+^formats            : mp4 | webm
+media.sounds_path   : @/public/sounds/*
+media.assets_path   : @/public/assets/*
+media_cache         : .dx/media
+
+i18n.locales.path   : @/locales
+^default            : en-US
+^fallback           : en
+^cache_dir          : .dx/i18n
+// i18n_locales_dev    > en-US
+// i18n_locales_prod   > en-US | es-ES | fr-FR | de-DE | ja-JP | zh-CN | bn-BD
+i18n.tts.path       : ./ttses
+^default            : en-US
+// i18n_tts_voices     > en-US | bn-BD
+
+ui.path             : @/components/ui
+^design_system      : dx-design
+^animations         : ✓
+^cache_dir          : .dx/ui
+// ui_components       > button | card | modal | navbar | footer | input | select | table | dialog | tooltip
+
+serializer.format   : dx-infinity
+^human_format       : dx-human
+^llm_format         : dx-hyper
+^binary_format      : dx-apex
+^cache_dir          : .dx/serializer
+
+generator.templates : @/templates
+^output             : src/generated
+^watch              : ✓
+^cache_dir          : .dx/generator
+
+driven.spec_dir     : specs
+^output             : src
+^model              : claude-opus-4
+^cache_dir          : .dx/driven
+
+www.protocol        : htip-v1
+^runtime            : dx-www-client
+^ssr                : dx-www-server
+^cache_dir          : .dx/www
+// www.components      > core | dom | morph | sched | state | sync | offline | auth | query | form | guard | a11y
+
+// workspace_packages  > frontend/www | frontend/mobile | backend/api | packages/shared
+workspace.cache     : .dx/workspace
+
+// workspace.editors_supported   > vscode | cursor | windsurf | vim | neovim | zed
+// workspace.editors_recommended > vscode | cursor
+// workspace.editors_extensions  > dx.dx-vscode | esbenp.prettier-vscode | bradlc.vscode-tailwindcss
+
+// workspace_cloud     > gitpod | github-codespace | replit | firebase-studio | stackblitz
+
+deploy.provider     : vercel
+^region             : auto
+^edge               : ✓
+
+security.signing    : ed25519
+^audit              : ✓
+^xss_protection     : compile-time
+^csp                : strict

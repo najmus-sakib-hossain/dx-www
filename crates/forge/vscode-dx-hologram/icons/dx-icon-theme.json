@@ -1,0 +1,19 @@
+{
+  "hidesExplorerArrows": false,
+  "iconDefinitions": {
+    "_dx_file": {
+      "iconPath": "../media/file-extension-dark.png"
+    }
+  },
+  "file": "_dx_file",
+  "fileExtensions": {
+    "dx": "_dx_file",
+    "dxs": "_dx_file"
+  },
+  "fileNames": {
+    "dx": "_dx_file"
+  },
+  "languageIds": {
+    "dx": "_dx_file"
+  }
+}

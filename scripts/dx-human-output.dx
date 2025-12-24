@@ -1,0 +1,236 @@
+name        : dx-ts
+version     : 0.0.1
+title       : Enhanced Developing Experience
+description : "Orchestrate don't just own your code"
+author      : essensefromexistence
+license     : MIT OR Apache-2.0
+python      : cpython  -         -         uv       django
+rust        : native   rustc     -         cargo    axum
+media_cache : .dx/media
+
+▼ forge
+    repository : https://dx.vercel.app/essensefromexistence/dx
+    container  : docker
+    registry   : ghcr.io/essensefromexistence/dx
+    ci         : github-actions
+    cd         : vercel
+    cache      : .dx/cache
+    strategy   : content-hash
+    r2_bucket  : dx-cache
+    max_size   : 10GB
+    warm_start : true
+
+▼ runtime
+    engine    : dx-js-runtime
+    target    : es2024
+    modules   : esm
+    sourcemap : true
+    minify    : true
+
+▼ bundler
+    engine    : dx-js-bundler
+    entry     : src/main.tsx
+    outdir    : dist
+    splitting : true
+    treeshake : true
+    cache_dir : .dx/bundler
+
+▼ package
+    engine       : dx-pkg
+    lockfile     : dx.lock
+    cache_dir    : .dx/node_modules
+    registry     : https://registry.npmjs.org
+    binary_cache : true
+    dedup        : true
+
+▼ test
+    engine    : dx-test
+    pattern   : **/*.{test,spec}.{ts,tsx,js,jsx}
+    coverage  : true
+    parallel  : true
+    cache_dir : .dx/test
+
+▼ style
+    path      : @/style
+    engine    : dx-style
+    cache_dir : .dx/style
+
+▼ icon
+    path      : @/components/icons
+    pack      : lucide-react
+    variant   : default
+    cache_dir : .dx/icon
+
+▼ font
+    path       : @/font
+    default    : Inter
+    primary    : Manrope
+    secondary  : Roboto Mono
+    cache_dir  : .dx/font
+    subsetting : true
+    preload    : true
+
+▼ media
+    images_path : @/public/images/*
+    optimize    : true
+    webp        : true
+    avif        : true
+    videos_path : @/public/videos/*
+    transcode   : true
+    formats     : mp4 | webm
+    sounds_path : @/public/sounds/*
+    assets_path : @/public/assets/*
+
+▼ i18n
+    locales.path : @/locales
+    default      : en-US
+    fallback     : en
+    cache_dir    : .dx/i18n
+    tts.path     : ./ttses
+    default      : en-US
+
+▼ ui
+    path          : @/components/ui
+    design_system : dx-design
+    animations    : true
+    cache_dir     : .dx/ui
+
+▼ serializer
+    format        : dx-infinity
+    human_format  : dx-human
+    llm_format    : dx-hyper
+    binary_format : dx-apex
+    cache_dir     : .dx/serializer
+
+▼ generator
+    templates : @/templates
+    output    : src/generated
+    watch     : true
+    cache_dir : .dx/generator
+
+▼ driven
+    spec_dir  : specs
+    output    : src
+    model     : claude-opus-4
+    cache_dir : .dx/driven
+
+▼ www
+    protocol  : htip-v1
+    runtime   : dx-www-client
+    ssr       : dx-www-server
+    cache_dir : .dx/www
+
+▼ workspace
+    cache : .dx/workspace
+
+▼ deploy
+    provider : vercel
+    region   : auto
+    edge     : true
+
+▼ security
+    signing        : ed25519
+    audit          : true
+    xss_protection : compile-time
+    csp            : strict
+
+▼ forge_items (7 items)
+    • cli
+    • docs
+    • examples
+    • packages
+    • scripts
+    • style
+    • tests
+
+▼ forge_tasks (7 items)
+    • build
+    • test
+    • lint
+    • format
+    • check
+    • deploy
+    • bench
+
+▼ style_engine (3 items)
+    • atomic
+    • enhanced
+    • logical
+
+▼ style_themes (4 items)
+    • dx
+    • vercel
+    • claude
+    • github
+
+▼ i18n_locales_dev (1 items)
+    • en-US
+
+▼ i18n_locales_prod (7 items)
+    • en-US
+    • es-ES
+    • fr-FR
+    • de-DE
+    • ja-JP
+    • zh-CN
+    • bn-BD
+
+▼ i18n_tts_voices (2 items)
+    • en-US
+    • bn-BD
+
+▼ ui_components (10 items)
+    • button
+    • card
+    • modal
+    • navbar
+    • footer
+    • input
+    • select
+    • table
+    • dialog
+    • tooltip
+
+▼ www.components (12 items)
+    • core
+    • dom
+    • morph
+    • sched
+    • state
+    • sync
+    • offline
+    • auth
+    • query
+    • form
+    • guard
+    • a11y
+
+▼ workspace_packages (4 items)
+    • frontend/www
+    • frontend/mobile
+    • backend/api
+    • packages/shared
+
+▼ workspace.editors_supported (6 items)
+    • vscode
+    • cursor
+    • windsurf
+    • vim
+    • neovim
+    • zed
+
+▼ workspace.editors_recommended (2 items)
+    • vscode
+    • cursor
+
+▼ workspace.editors_extensions (3 items)
+    • dx.dx-vscode
+    • esbenp.prettier-vscode
+    • bradlc.vscode-tailwindcss
+
+▼ workspace_cloud (5 items)
+    • gitpod
+    • github-codespace
+    • replit
+    • firebase-studio
+    • stackblitz

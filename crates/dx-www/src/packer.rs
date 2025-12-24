@@ -20,7 +20,7 @@ use std::path::Path;
 use crate::splitter::Template;
 
 // Re-export shared types
-pub use dx_packet::{CapabilitiesManifest, DxbArtifact};
+pub use dx_www_packet::{CapabilitiesManifest, DxbArtifact};
 
 /// Magic bytes for .dxb format
 const MAGIC_BYTES: &[u8] = b"DX";

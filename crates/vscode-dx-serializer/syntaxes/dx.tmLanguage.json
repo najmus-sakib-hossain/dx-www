@@ -1,0 +1,185 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "DX",
+  "scopeName": "source.dx",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#section-headers"
+    },
+    {
+      "include": "#key-value-line"
+    },
+    {
+      "include": "#llm-format"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.dx",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "section-headers": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.dx",
+          "match": "^\\[[a-zA-Z0-9_.]+\\]"
+        }
+      ]
+    },
+    "key-value-line": {
+      "patterns": [
+        {
+          "match": "^([a-zA-Z_][a-zA-Z0-9_-]*)\\s*(=)\\s*(.*)$",
+          "captures": {
+            "1": {
+              "name": "support.type.property-name.dx"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value.dx"
+            },
+            "3": {
+              "patterns": [
+                {
+                  "include": "#value-content"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "value-content": {
+      "patterns": [
+        {
+          "include": "#strings"
+        },
+        {
+          "include": "#urls"
+        },
+        {
+          "include": "#paths"
+        },
+        {
+          "include": "#versions"
+        },
+        {
+          "include": "#numbers"
+        },
+        {
+          "include": "#booleans"
+        },
+        {
+          "include": "#null-values"
+        },
+        {
+          "include": "#pipe-separator"
+        },
+        {
+          "include": "#plain-values"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.dx",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.dx",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "urls": {
+      "patterns": [
+        {
+          "name": "markup.underline.link.dx",
+          "match": "https?://[^\\s|]+"
+        }
+      ]
+    },
+    "paths": {
+      "patterns": [
+        {
+          "name": "string.other.link.dx",
+          "match": "@/[a-zA-Z0-9_/.-]+"
+        }
+      ]
+    },
+    "versions": {
+      "patterns": [
+        {
+          "name": "constant.numeric.version.dx",
+          "match": "[0-9]+\\.[0-9]+\\.[0-9]+"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.dx",
+          "match": "\\b[0-9]+\\.?[0-9]*\\b"
+        }
+      ]
+    },
+    "booleans": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.dx",
+          "match": "\\b(true|false|True|False|TRUE|FALSE|yes|no|Yes|No|YES|NO)\\b"
+        }
+      ]
+    },
+    "null-values": {
+      "patterns": [
+        {
+          "name": "constant.language.null.dx",
+          "match": "\\b(null|none|None|NONE|all|All|ALL)\\b|(?<=\\s)-(?=\\s|$)"
+        }
+      ]
+    },
+    "pipe-separator": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.pipe.dx",
+          "match": "\\|"
+        }
+      ]
+    },
+    "plain-values": {
+      "patterns": [
+        {
+          "name": "string.unquoted.dx",
+          "match": "[a-zA-Z][a-zA-Z0-9_-]*"
+        }
+      ]
+    },
+    "llm-format": {
+      "patterns": [
+        {
+          "name": "keyword.control.context.dx",
+          "match": "^#c:.*$"
+        },
+        {
+          "name": "keyword.control.reference.dx",
+          "match": "^#:.*$"
+        },
+        {
+          "name": "keyword.control.section.dx",
+          "match": "^#[a-zA-Z]\\([^)]+\\)$"
+        }
+      ]
+    }
+  }
+}

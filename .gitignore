@@ -3,6 +3,9 @@
 **/*.rs.bk
 *.pdb
 
+# DX Cache Layer (Human-Pretty files)
+**/.dx/
+
 # WASM Build Outputs
 examples/**/pkg/
 pkg/

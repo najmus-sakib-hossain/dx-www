@@ -1,0 +1,80 @@
+name                = dx
+version             = 0.0.1
+title               = "Enhanced Developing Experience"
+description         = "Orchestrate don't just own your code"
+author              = essensefromexistence
+workspace           = @/www | @/backend
+editors             = neovim | zed | vscode | cursor | antigravity | replit | firebase-studio
+
+[forge]
+repository          = https://dx.vercel.app/essensefromexistence/dx
+container           = none
+pipeline            = none
+tasks               = none
+items               = cli | docs | examples | packages | scripts | style | tests
+
+[stack]
+js                  = javascript/typescript | bun    | tsc     | vite  | bun   | react    
+python              = py                    | python | cpython | python| uv    | django   
+rust                = rs                    | rust   | native  | rustc | cargo | actix-web
+
+[style]
+path                = @/style
+themes              = dx
+
+[ui]
+path                = @/components/ui
+components          = button | card | modal | navbar | footer | all
+
+[media]
+images              = @/media/images
+videos              = @/media/videos
+sounds              = @/media/sounds
+assets              = @/media/assets
+
+[icon]
+path                = @/icons
+pack                = Lucide | Hugeicons | all
+variant             = default
+
+[font]
+path                = @/fonts
+default             = Inter | "Jetbrain Mono" | all
+
+[i18n.locales]
+path                = @/locales
+default             = en-US
+dev                 = en-US
+prod                = all
+
+[i18n.ttses]
+path                = @/media/sounds
+default             = en-US
+dev                 = en-US | bn-BD
+prod                = all
+
+[driven]
+path                = @/driven
+
+[generator]
+path                = @/generator
+
+[scripts]
+status              = dx forge status
+build               = dx workspace build
+
+[dependencies]
+dx-package-1        = 0.0.1
+dx-package-2        = 0.0.1
+
+[js.dependencies]
+react               = 19.0.1
+next                = 16.0.1
+
+[python.dependencies]
+django              = latest
+numpy               = latest
+
+[rust.dependencies]
+actix-web           = latest
+rust-crypto         = latest

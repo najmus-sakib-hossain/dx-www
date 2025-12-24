@@ -10,6 +10,11 @@ license = "MIT OR Apache-2.0"
 name = "dx_compiler"
 path = "src/lib.rs"
 
+[features]
+default = []
+oxc = ["oxc_parser", "oxc_allocator", "oxc_ast", "oxc_span"]
+db-teleport = ["dx-db-teleport"]
+
 [dependencies]
 # CLI & Terminal
 clap = { version = "4.5", features = ["derive", "cargo"] }
@@ -18,6 +23,12 @@ indicatif = "0.17"  # Loading bars
 
 # Parsing (The Heavy Lifting)
 regex = "1.10"
+
+# OXC Parser (optional - fastest JS/TS parser)
+oxc_parser = { version = "0.49", optional = true }
+oxc_allocator = { version = "0.49", optional = true }
+oxc_ast = { version = "0.49", optional = true }
+oxc_span = { version = "0.49", optional = true }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -47,17 +58,22 @@ blake3 = "1.5"
 chrono = "0.4"
 
 # Internal
-dx-packet = { path = "../packet", features = ["std"] }
+dx-www-packet = { path = "../dx-www-packet", features = ["std"] }
+
+# Binary Dawn - Cross-platform I/O reactor
+dx-reactor = { path = "../dx-reactor" }
+dx-db-teleport = { path = "../dx-db-teleport", optional = true }
 
 # Ecosystem crates (compile-time features)
-dx-form = { path = "../dx-form" }
-dx-query = { path = "../dx-query" }
-dx-db = { path = "../dx-db" }
-dx-state = { path = "../dx-state" }
-dx-a11y = { path = "../dx-a11y" }
-dx-print = { path = "../dx-print" }
-dx-rtl = { path = "../dx-rtl"}
+dx-www-form = { path = "../dx-www-form" }
+dx-www-query = { path = "../dx-www-query" }
+dx-www-db = { path = "../dx-www-db" }
+dx-www-state = { path = "../dx-www-state" }
+dx-www-a11y = { path = "../dx-www-a11y" }
+dx-www-print = { path = "../dx-www-print" }
+dx-www-rtl = { path = "../dx-www-rtl"}
 
 
 [dev-dependencies]
-# tempfile = "3.8"
+tempfile = "3.8"
+proptest = "1.4"

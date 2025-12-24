@@ -84,7 +84,3 @@ harness = false
 [[bin]]
 name = "dx-js"
 path = "src/bin/main.rs"
-
-[[bin]]
-name = "runtime_bench"
-path = "benches/runtime_bench.rs"

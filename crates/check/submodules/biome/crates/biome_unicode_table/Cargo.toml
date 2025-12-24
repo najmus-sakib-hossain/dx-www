@@ -1,0 +1,19 @@
+[package]
+authors.workspace    = true
+categories.workspace = true
+description          = "Unicode table for JavaScript IDs"
+edition.workspace    = true
+homepage.workspace   = true
+keywords.workspace   = true
+license.workspace    = true
+name                 = "biome_unicode_table"
+publish              = true
+repository.workspace = true
+version              = "0.5.7"
+
+[dependencies]
+
+[dev-dependencies]
+
+[lints]
+workspace = true

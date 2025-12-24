@@ -10,10 +10,11 @@
 //!
 //! **NO VDOM. NO DIFFING. NO JSON. PURE BINARY PROTOCOL.**
 
-use dx_morph::{ComponentState, CounterState};
+use dx_www_morph::{ComponentState, CounterState};
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 
+#[cfg(target_arch = "wasm32")]
 pub mod htip_demo;
 
 // ============================================================================
@@ -80,7 +81,7 @@ impl App {
 
             // In production, this would call dx-morph's patcher
             // For now, manually queue update
-            dx_dom::queue_update_text(1, 0, 0); // Mock text update
+            dx_www_dom::queue_update_text(1, 0, 0); // Mock text update
 
             // Update the actual DOM element directly (temporary until binding map is wired)
             if let Some(window) = web_sys::window() {
@@ -126,7 +127,7 @@ pub fn handle_increment() {
         app.increment();
         app.render();
     });
-    dx_dom::flush_queue();
+    dx_www_dom::flush_queue();
 }
 
 #[wasm_bindgen]
@@ -135,7 +136,7 @@ pub fn handle_decrement() {
         app.decrement();
         app.render();
     });
-    dx_dom::flush_queue();
+    dx_www_dom::flush_queue();
 }
 
 // ============================================================================
@@ -153,7 +154,7 @@ pub fn init_app() {
 
     // 1. Register templates
     let template_binary = build_template_binary();
-    dx_dom::register_templates(&template_binary);
+    dx_www_dom::register_templates(&template_binary);
     log("✓ Templates registered");
 
     // 2. Initialize app state
@@ -163,8 +164,8 @@ pub fn init_app() {
     log("✓ App state initialized");
 
     // 3. Clone template to DOM
-    dx_dom::queue_clone(1, 0); // Clone template #1, parent=0 (fragment)
-    dx_dom::flush_to_element("#app");
+    dx_www_dom::queue_clone(1, 0); // Clone template #1, parent=0 (fragment)
+    dx_www_dom::flush_to_element("#app");
     log("✓ Initial render complete");
 
     // 4. Wire up event listeners (in JS)
@@ -188,16 +189,16 @@ pub fn demo_scheduler() {
         log("  → Idle priority task executed");
     }) as Box<dyn FnMut()>);
 
-    dx_sched::schedule_immediate(immediate_callback.as_ref().unchecked_ref());
-    dx_sched::schedule_normal(normal_callback.as_ref().unchecked_ref());
-    dx_sched::schedule_idle(idle_callback.as_ref().unchecked_ref());
+    dx_www_sched::schedule_immediate(immediate_callback.as_ref().unchecked_ref());
+    dx_www_sched::schedule_normal(normal_callback.as_ref().unchecked_ref());
+    dx_www_sched::schedule_idle(idle_callback.as_ref().unchecked_ref());
 
     immediate_callback.forget();
     normal_callback.forget();
     idle_callback.forget();
 
     // Start the scheduler
-    dx_sched::start_scheduler();
+    dx_www_sched::start_scheduler();
 
     log("Scheduler started. Check console for task execution logs.");
 }
@@ -206,7 +207,8 @@ pub fn demo_scheduler() {
 // UTILITIES
 // ============================================================================
 
-fn log(msg: &str) {
+#[allow(dead_code)]
+fn log(_msg: &str) {
     #[cfg(target_arch = "wasm32")]
-    web_sys::console::log_1(&msg.into());
+    web_sys::console::log_1(&_msg.into());
 }

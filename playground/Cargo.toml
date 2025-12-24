@@ -27,5 +27,9 @@ path = "benchmarks/omega-comparison.rs"
 name = "infinity-comparison"
 path = "benchmarks/infinity-comparison.rs"
 
+[[bin]]
+name = "dx-format-test"
+path = "src/dx_format_test.rs"
+
 [dependencies]
-dx-serializer = { path = "../crates/dx-serializer" }
+serializer = { path = "../crates/serializer" }
