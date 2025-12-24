@@ -566,8 +566,9 @@ function registerFormattingProvider(
         )
     );
 
-    // Register willSaveTextDocument handler for auto-save support
-    // This triggers formatting before ANY save, including auto-save (afterDelay)
+    // NOTE: willSaveTextDocument handler DISABLED - parser needs fixing
+    // The formatting was causing corruption due to parser bugs
+    /*
     context.subscriptions.push(
         vscode.workspace.onWillSaveTextDocument((event) => {
             // Only format .dx files
@@ -591,6 +592,7 @@ function registerFormattingProvider(
             );
         })
     );
+    */
 
     // Register the "DX: Format Document" command
     context.subscriptions.push(

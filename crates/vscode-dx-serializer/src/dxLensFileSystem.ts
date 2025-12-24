@@ -13,6 +13,8 @@ import * as fs from 'fs';
 import { DxCore } from './dxCore';
 import { DxDocumentManager } from './dxDocumentManager';
 import { getDiskUri, DX_LENS_SCHEME, isExactlyDxFile } from './utils';
+import { parseHumanV3 } from './humanParserV3';
+import { formatDocumentV3, DEFAULT_CONFIG } from './humanFormatterV3';
 
 /**
  * File type enumeration for VS Code
@@ -165,6 +167,7 @@ export class DxLensFileSystem implements vscode.FileSystemProvider {
      * Transform to dense and write to disk
      * 
      * This is called when saving a .dx file in the editor.
+     * NOTE: Format-on-save DISABLED - parser needs fixing first.
      */
     async writeFile(
         uri: vscode.Uri,
@@ -196,6 +199,7 @@ export class DxLensFileSystem implements vscode.FileSystemProvider {
         }
 
         // Save through document manager (handles validation and transformation)
+        // NOTE: Format-on-save disabled - use "DX: Format Document" command instead
         const saved = await this.documentManager.saveDocument(uri, content);
 
         if (!saved) {
