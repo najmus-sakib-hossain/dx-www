@@ -17,6 +17,8 @@ import * as fs from 'fs';
 import { parseLlm, DxDocument, DxValue, DxSection } from './llmParser';
 import { formatDocument } from './humanFormatter';
 import { parseHuman, serializeToLlm } from './humanParser';
+import { formatDocumentV3 } from './humanFormatterV3';
+import { parseHumanV3, serializeToLlmV3 } from './humanParserV3';
 
 /**
  * Result of a transformation operation
@@ -180,19 +182,13 @@ export function smartQuote(value: string): string {
  *   1|Alpha|+
  *   2|Beta|-
  * 
- * To human-readable format like:
- *   [config]
- *       name  = Test
- *       count = 42
+ * To Human V3 format like:
+ *   name                 = Test
+ *   count                = 42
  *   
- *   [d]
- *       # Schema: id | name | enabled
- *       ┌────┬───────┬─────────┐
- *       │ Id │ Name  │ Enabled │
- *       ├────┼───────┼─────────┤
- *       │  1 │ Alpha │    ✓    │
- *       │  2 │ Beta  │    ✗    │
- *       └────┴───────┴─────────┘
+ *   [d]                  = Id | Name | Enabled
+ *   1                    = Alpha | true
+ *   2                    = Beta | false
  * 
  * Requirements: 1.1-1.9, 2.1-2.7
  */
@@ -210,8 +206,8 @@ export function formatDx(dense: string, indentSize: number = 2): string {
         return dense;
     }
 
-    // Format to human-readable format
-    return formatDocument(parseResult.document);
+    // Format to Human V3 format
+    return formatDocumentV3(parseResult.document);
 }
 
 /**
@@ -235,19 +231,13 @@ function formatValueLegacy(value: string): string {
 /**
  * Minify DX content to dense format (TypeScript fallback)
  * 
- * Transforms human-readable format like:
- *   [config]
- *       name  = Test
- *       count = 42
+ * Transforms Human V3 format like:
+ *   name                 = Test
+ *   count                = 42
  *   
- *   [d]
- *       # Schema: id | name | enabled
- *       ┌────┬───────┬─────────┐
- *       │ Id │ Name  │ Enabled │
- *       ├────┼───────┼─────────┤
- *       │  1 │ Alpha │    ✓    │
- *       │  2 │ Beta  │    ✗    │
- *       └────┴───────┴─────────┘
+ *   [d]                  = Id | Name | Enabled
+ *   1                    = Alpha | true
+ *   2                    = Beta | false
  * 
  * To LLM format like:
  *   #c:nm|Test;ct|42
@@ -262,7 +252,15 @@ export function minifyDx(human: string): string {
         return '';
     }
 
-    // Parse the human format
+    // Try parsing as Human V3 format first
+    const parseResultV3 = parseHumanV3(human);
+
+    if (parseResultV3.success && parseResultV3.document) {
+        // Serialize to LLM format using V3 serializer
+        return serializeToLlmV3(parseResultV3.document);
+    }
+
+    // Fall back to old human format parser
     const parseResult = parseHuman(human);
 
     if (!parseResult.success || !parseResult.document) {
@@ -625,7 +623,7 @@ let cachedCore: DxCore | null = null;
 /**
  * Load the DxCore, using TypeScript implementation
  * 
- * Note: WASM is disabled to use the updated TypeScript formatter
+ * Note: WASM is disabled to use the updated TypeScript formatter (V3 format)
  * 
  * @param extensionPath - Path to the extension directory
  * @param indentSize - Indent size for formatting (default: 2)
@@ -640,9 +638,9 @@ export async function loadDxCore(
         return cachedCore;
     }
 
-    // Use TypeScript implementation (WASM disabled for V2 format)
+    // Use TypeScript implementation (WASM disabled for V3 format)
     cachedCore = new FallbackDxCore(indentSize);
-    console.log('DX Serializer: Using TypeScript core (V2 format)');
+    console.log('DX Serializer: Using TypeScript core (V3 format)');
     return cachedCore;
 }
 
