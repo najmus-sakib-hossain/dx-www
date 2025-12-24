@@ -1090,3 +1090,12 @@ Welcome to the future. Welcome to **Dx.**
 
 **Star this repo if Dx excites you! ⭐**  
 **Follow our progress as we march toward the January 1, 2026 launch.**
+
+
+Please use these colors as I mentioned:
+Keys: Light red
+Values: Light yellow
+Numbers: Light green (#B5CEA8)
+Booleans/null: Blue (#569CD6)
+Section headers: Light blue (#9CDCFE)
+Comments: comment like muted
