@@ -19,7 +19,8 @@ import { DxLensFileSystem } from './dxLensFileSystem';
 import { DX_LENS_SCHEME, isExactlyDxFile, getLensUri } from './utils';
 import { detectFormat, isSourceFormat, DetectedFormat } from './formatDetector';
 import { convertJsonToDocument, convertYamlToDocument, convertTomlToDocument, convertCsvToDocument } from './converters';
-import { serializeToLlmV3 } from './humanParserV3';
+import { serializeToLlmV3, parseHumanV3 } from './humanParserV3';
+import { formatDocumentV3, DEFAULT_CONFIG } from './humanFormatterV3';
 
 /**
  * Extension context holding all components
@@ -93,6 +94,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         // 11. Set up active editor change listener for status bar
         setupActiveEditorListener(context, documentManager, statusBarItem);
+
+        // 12. Register DocumentFormattingEditProvider for safe format-on-save
+        registerFormattingProvider(context, dxCore);
 
         console.log('DX Serializer: Extension activated successfully (V3 format)');
 
@@ -471,4 +475,105 @@ function updateStatusBar(
     }
 
     statusBarItem.show();
+}
+
+/**
+ * Register DocumentFormattingEditProvider for safe format-on-save
+ * 
+ * This is the proper VS Code way to handle formatting:
+ * 1. Parse the human content
+ * 2. Convert to LLM format (normalizes the data)
+ * 3. Convert back to human format (applies proper alignment)
+ * 4. Return TextEdit array for VS Code to apply safely
+ */
+function registerFormattingProvider(
+    context: vscode.ExtensionContext,
+    dxCore: DxCore
+): void {
+    // Create the formatting provider
+    const formattingProvider: vscode.DocumentFormattingEditProvider = {
+        provideDocumentFormattingEdits(
+            document: vscode.TextDocument,
+            _options: vscode.FormattingOptions,
+            _token: vscode.CancellationToken
+        ): vscode.TextEdit[] | null {
+            try {
+                const content = document.getText();
+
+                // Skip empty documents
+                if (!content.trim()) {
+                    return null;
+                }
+
+                // Parse the human format content
+                const parseResult = parseHumanV3(content);
+                if (!parseResult.success || !parseResult.document) {
+                    console.log('DX Format: Parse failed, skipping format');
+                    return null;
+                }
+
+                // Get config from settings
+                const config = vscode.workspace.getConfiguration('dx');
+                const keyPadding = config.get<number>('keyPadding', 20);
+
+                // Format the document with proper alignment
+                const formattedContent = formatDocumentV3(parseResult.document, {
+                    ...DEFAULT_CONFIG,
+                    keyPadding,
+                });
+
+                // Skip if content is unchanged
+                if (formattedContent === content) {
+                    return null;
+                }
+
+                // Return a single edit that replaces the entire document
+                const fullRange = new vscode.Range(
+                    document.positionAt(0),
+                    document.positionAt(content.length)
+                );
+
+                return [vscode.TextEdit.replace(fullRange, formattedContent)];
+            } catch (error) {
+                console.error('DX Format: Error during formatting:', error);
+                return null;
+            }
+        }
+    };
+
+    // Register for both dxlens scheme and file scheme
+    context.subscriptions.push(
+        vscode.languages.registerDocumentFormattingEditProvider(
+            { scheme: DX_LENS_SCHEME, language: 'dx' },
+            formattingProvider
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.languages.registerDocumentFormattingEditProvider(
+            { scheme: 'file', language: 'dx' },
+            formattingProvider
+        )
+    );
+
+    // Register the "DX: Format Document" command
+    context.subscriptions.push(
+        vscode.commands.registerCommand('dx.formatDocument', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                vscode.window.showWarningMessage('DX: No active editor');
+                return;
+            }
+
+            if (!isExactlyDxFile(editor.document.uri)) {
+                vscode.window.showWarningMessage('DX: Not a .dx file');
+                return;
+            }
+
+            // Use VS Code's built-in format command which will use our provider
+            await vscode.commands.executeCommand('editor.action.formatDocument');
+        })
+    );
+
+    console.log('DX Serializer: Formatting provider registered');
 }

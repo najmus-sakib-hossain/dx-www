@@ -69,6 +69,10 @@
       {
         "command": "dx.showDenseView",
         "title": "DX: Show Dense View"
+      },
+      {
+        "command": "dx.formatDocument",
+        "title": "DX: Format Document"
       }
     ],
     "menus": {
@@ -81,6 +85,9 @@
       ]
     },
     "configurationDefaults": {
+      "[dx]": {
+        "editor.formatOnSave": true
+      },
       "editor.tokenColorCustomizations": {
         "textMateRules": [
           {
