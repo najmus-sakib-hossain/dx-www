@@ -82,7 +82,7 @@
           {
             "scope": "support.type.property-name.dx",
             "settings": {
-              "foreground": "#62a6ff"
+              "foreground": "#f05b8d"
             }
           },
           {
@@ -136,7 +136,7 @@
           {
             "scope": "entity.name.tag.dx",
             "settings": {
-              "foreground": "#f05b8d"
+              "foreground": "#62a6ff"
             }
           },
           {
