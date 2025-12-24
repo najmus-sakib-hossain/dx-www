@@ -1,54 +1,16 @@
-name                = dx
-version             = 0.0.1
-title               = "Enhanced Developing Experience"
-description         = "Orchestrate don't just own your code"
-author              = essensefromexistence
-workspace           = @/www | @/backend
-editors             = neovim | zed | vscode | cursor | antigravity | replit | firebase-studio
-
-[stack]
-js                  = javascript/typescript | bun       | tsc       | vite    | bun   | react
-python              = py                    | python    | cpython   | -       | uv    | django
-rust                = rs                    | rust      | native    | rustc   | cargo | actix-web
-
-[forge]
-repository          = https://dx.vercel.app/essensefromexistence/dx
-container           = none
-pipeline            = none
-tasks               = none
-items               = cli | docs | examples | packages | scripts | style | tests
-
-[style]
-path                = @/style
-themes              = dx
-
-[ui]
-path                = @/components/ui
-components          = button | card | modal | navbar | footer | all
-
-[media]
-images              = @/media/images
-videos              = @/media/videos
-sounds              = @/media/sounds
-assets              = @/media/assets
-
-[i18n.locales]
-path                = @/locales
-default             = en-US
-dev                 = en-US
-prod                = all
-
-[i18n.ttses]
-path                = @/media/sounds
-default             = en-US
-dev                 = en-US | bn-BD
-prod                = all
-
-[icon]
-path                = @/icons
-pack                = Lucide | Hugeicons | all
-variant             = default
-
-[font]
-path                = @/fonts
-default             = Inter | Jetbrain Mono | all
+#c:nm|dx;v|0.0.1;tt|Enhanced Developing Experience;ds|Orchestrate don't just own your code;au|essensefromexistence;ws|*@/www,@/backend;ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio
+#:js|javascript/typescript|bun|tsc|vite|bun|react;python|py|python|cpython|-|uv|django;rust|rs|rust|native|rustc|cargo|actix-web
+#f(nm|repo|cont|pl|tk|it)
+forge|https://dx.vercel.app/essensefromexistence/dx|none|none|none|*cli,docs,examples,packages,scripts,style,tests
+#y(pt|th)
+@/style|dx
+#u(pt|cp)
+@/components/ui|*button,card,modal,navbar,footer,all
+#m(img|vid|snd|ast)
+@/media/images|@/media/videos|@/media/sounds|@/media/assets
+#i(locales_pt|locales_df|locales_dv|locales_pd|ttses_pt|ttses_df|ttses_dv|ttses_pd)
+@/locales|en-US|en-US|all|@/media/sounds|en-US|*en-US,bn-BD|all
+#o(pt|pk|vr)
+@/icons|*Lucide,Hugeicons,all|default
+#t(pt|df)
+@/fonts|*Inter,Jetbrain Mono,all
