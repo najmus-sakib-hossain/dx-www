@@ -4,7 +4,12 @@
  * Provides seamless editing of .dx files by displaying human-readable format
  * in the editor while storing dense, token-efficient format on disk.
  * 
- * Requirements: 1.1, 6.1
+ * Features:
+ * - Human Format V3: Clean vertical key-value layout
+ * - Multi-format input: Auto-convert JSON, YAML, TOML, CSV to DX
+ * - Cache generation: .dx/cache/{filename}.human and .machine files
+ * 
+ * Requirements: 1.1-1.7, 3.2-3.4, 6.1
  */
 
 import * as vscode from 'vscode';
@@ -12,6 +17,9 @@ import { loadDxCore, DxCore } from './dxCore';
 import { DxDocumentManager, DocumentManagerConfig } from './dxDocumentManager';
 import { DxLensFileSystem } from './dxLensFileSystem';
 import { DX_LENS_SCHEME, isExactlyDxFile, getLensUri } from './utils';
+import { detectFormat, isSourceFormat, DetectedFormat } from './formatDetector';
+import { convertJsonToDocument, convertYamlToDocument, convertTomlToDocument, convertCsvToDocument } from './converters';
+import { serializeToLlmV3 } from './humanParserV3';
 
 /**
  * Extension context holding all components
@@ -78,7 +86,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         registerCommands(context, documentManager, statusBarItem);
 
         // 9. Set up auto-redirect from file:// to dxlens:// for .dx files
-        setupAutoRedirect(context);
+        setupAutoRedirect(context, dxCore);
 
         // 10. Set up configuration change listener
         setupConfigurationListener(context, documentManager);
@@ -86,7 +94,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         // 11. Set up active editor change listener for status bar
         setupActiveEditorListener(context, documentManager, statusBarItem);
 
-        console.log('DX Serializer: Extension activated successfully');
+        console.log('DX Serializer: Extension activated successfully (V3 format)');
 
     } catch (error) {
         console.error('DX Serializer: Activation failed:', error);
@@ -245,11 +253,16 @@ function registerCommands(
 
 /**
  * Set up auto-redirect from file:// to dxlens:// for .dx files
+ * Also handles format detection and conversion for non-LLM formats
  * 
- * When a user opens a .dx file directly (file://), we redirect to the
- * dxlens:// scheme so our FileSystemProvider handles the transformation.
+ * When a user opens a .dx file directly (file://), we:
+ * 1. Detect the format (JSON, YAML, TOML, CSV, LLM, Human V3)
+ * 2. Convert non-LLM formats to LLM format
+ * 3. Redirect to dxlens:// scheme for human display
+ * 
+ * Requirements: 1.1-1.7, 3.2-3.4
  */
-function setupAutoRedirect(context: vscode.ExtensionContext): void {
+function setupAutoRedirect(context: vscode.ExtensionContext, dxCore: DxCore): void {
     // Listen for document opens
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(async (document) => {
@@ -260,6 +273,15 @@ function setupAutoRedirect(context: vscode.ExtensionContext): void {
 
             if (!isExactlyDxFile(document.uri)) {
                 return;
+            }
+
+            // Detect format and convert if needed
+            const content = document.getText();
+            const detection = detectFormat(content);
+
+            if (isSourceFormat(detection.format)) {
+                // Convert source format to LLM format
+                await convertAndSaveFile(document.uri, content, detection.format, dxCore);
             }
 
             // Close the file:// document and open with dxlens://
@@ -286,6 +308,56 @@ function setupAutoRedirect(context: vscode.ExtensionContext): void {
             }, 50);
         })
     );
+}
+
+/**
+ * Convert a source format file to LLM format and save
+ * Requirements: 1.1-1.4
+ */
+async function convertAndSaveFile(
+    uri: vscode.Uri,
+    content: string,
+    format: DetectedFormat,
+    _dxCore: DxCore
+): Promise<void> {
+    try {
+        let conversionResult;
+
+        switch (format) {
+            case 'json':
+                conversionResult = convertJsonToDocument(content);
+                break;
+            case 'yaml':
+                conversionResult = convertYamlToDocument(content);
+                break;
+            case 'toml':
+                conversionResult = convertTomlToDocument(content);
+                break;
+            case 'csv':
+                conversionResult = convertCsvToDocument(content);
+                break;
+            default:
+                return;
+        }
+
+        if (!conversionResult.success || !conversionResult.document) {
+            console.warn(`DX Serializer: Failed to convert ${format}: ${conversionResult.error}`);
+            return;
+        }
+
+        // Serialize to LLM format
+        const llmContent = serializeToLlmV3(conversionResult.document);
+
+        // Write back to file
+        const fs = await import('fs');
+        await fs.promises.writeFile(uri.fsPath, llmContent, 'utf-8');
+
+        vscode.window.showInformationMessage(
+            `DX: Converted ${format.toUpperCase()} to LLM format`
+        );
+    } catch (error) {
+        console.error(`DX Serializer: Conversion failed:`, error);
+    }
 }
 
 /**

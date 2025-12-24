@@ -7,14 +7,17 @@
  * - Save coordination with validation gating and grace period
  * - External file change detection
  * - Diagnostic updates for validation errors
+ * - Cache file generation (.dx/cache/{filename}.human and .machine)
  * 
- * Requirements: 3.1-3.5, 4.1, 4.6, 6.1-6.5
+ * Requirements: 3.1-3.5, 4.1-4.5, 6.1-6.5
  */
 
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { DxCore, ValidationResult } from './dxCore';
 import { getDiskUri, getDocumentKey, DX_LENS_SCHEME } from './utils';
+import { writeCache, deleteCache } from './cacheManager';
+import { parseLlm } from './llmParser';
 
 /**
  * State for a single document
@@ -235,6 +238,9 @@ export class DxDocumentManager implements vscode.Disposable {
             state.diskDense = denseResult.content;
             state.lastValidDense = denseResult.content;
 
+            // Generate cache files (Requirements: 4.1-4.3)
+            await this.generateCacheFiles(diskUri.fsPath, denseResult.content);
+
             return true;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -244,6 +250,24 @@ export class DxDocumentManager implements vscode.Disposable {
             state.isSaving = false;
             // Remove from writing set after a short delay to handle file watcher events
             setTimeout(() => this.writingFiles.delete(key), 100);
+        }
+    }
+
+    /**
+     * Generate cache files for a saved document
+     * Requirements: 4.1, 4.2, 4.3
+     */
+    private async generateCacheFiles(filePath: string, llmContent: string): Promise<void> {
+        try {
+            const parseResult = parseLlm(llmContent);
+            if (parseResult.success && parseResult.document) {
+                const cacheResult = await writeCache(filePath, parseResult.document);
+                if (!cacheResult.success) {
+                    console.warn(`DX: Cache generation failed: ${cacheResult.error}`);
+                }
+            }
+        } catch (error) {
+            console.warn(`DX: Cache generation error: ${error}`);
         }
     }
 
@@ -377,6 +401,12 @@ export class DxDocumentManager implements vscode.Disposable {
 
         // Clear diagnostics
         this.diagnosticCollection.delete(uri);
+
+        // Delete cache files (Requirement: 4.5)
+        const diskUri = getDiskUri(uri);
+        deleteCache(diskUri.fsPath).catch(error => {
+            console.warn(`DX: Failed to delete cache: ${error}`);
+        });
     }
 
     /**
