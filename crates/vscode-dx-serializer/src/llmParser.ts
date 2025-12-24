@@ -297,9 +297,15 @@ export function parseLlm(input: string): ParseResult {
         // Reference definition: #:...
         if (trimmed.startsWith('#:')) {
             const content = trimmed.substring(2);
-            const ref = parseRefDefinition(content);
-            if (ref) {
-                doc.refs.set(ref[0], ref[1]);
+            // Handle multiple references separated by semicolon
+            const refParts = content.split(';');
+            for (const refPart of refParts) {
+                const trimmedRef = refPart.trim();
+                if (!trimmedRef) continue;
+                const ref = parseRefDefinition(trimmedRef);
+                if (ref) {
+                    doc.refs.set(ref[0], ref[1]);
+                }
             }
             currentSection = null;
             continue;

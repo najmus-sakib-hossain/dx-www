@@ -4,10 +4,10 @@
  * Converts DxDocument to clean vertical key-value format with:
  * - Config values without [config] section header
  * - Data sections with [section] headers
- * - Key padding to 20 characters (or longest key + 1)
+ * - Key padding to 20 characters for alignment
  * - Pipe (|) as array separator
  * - Quoted strings with spaces
- * - Vertical key-value layout for data sections
+ * - Stack section with table-like aligned columns
  * 
  * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7
  */
@@ -31,7 +31,7 @@ export const DEFAULT_CONFIG: HumanFormatV3Config = {
 };
 
 // ============================================================================
-// Abbreviation Dictionary (reused from humanFormatter.ts)
+// Abbreviation Dictionary
 // ============================================================================
 
 export const ABBREVIATIONS: Record<string, string> = {
@@ -54,6 +54,7 @@ export const ABBREVIATIONS: Record<string, string> = {
     'repo': 'repository',
     'cont': 'container',
     'ci': 'ci_cd',
+    'ci_cd': 'pipeline',
     'pl': 'pipeline',
     'tk': 'tasks',
     'it': 'items',
@@ -142,11 +143,11 @@ export function compressSectionName(name: string): string {
 
 /**
  * Format a value for V3 output
- * Uses | as array separator and quotes strings with spaces or that look like numbers
+ * Uses | as array separator and quotes strings with spaces
  */
 export function formatValueV3(value: DxValue, config: HumanFormatV3Config = DEFAULT_CONFIG): string {
     switch (value.type) {
-        case 'string':
+        case 'string': {
             const str = String(value.value);
             // Quote strings containing spaces
             if (config.quoteStringsWithSpaces && str.includes(' ')) {
@@ -161,15 +162,41 @@ export function formatValueV3(value: DxValue, config: HumanFormatV3Config = DEFA
                 return `"${str}"`;
             }
             return str;
+        }
         case 'number':
             return String(value.value);
         case 'bool':
             return value.value ? 'true' : 'false';
         case 'null':
             return '-';
-        case 'array':
+        case 'array': {
             const items = value.value as DxValue[];
             return items.map(v => formatValueV3(v, config)).join(config.arraySeparator);
+        }
+        case 'ref':
+            return `^${value.refKey || value.value}`;
+        default:
+            return String(value.value);
+    }
+}
+
+/**
+ * Format a simple value without quoting (for table cells)
+ */
+export function formatSimpleValue(value: DxValue): string {
+    switch (value.type) {
+        case 'string':
+            return String(value.value);
+        case 'number':
+            return String(value.value);
+        case 'bool':
+            return value.value ? 'true' : 'false';
+        case 'null':
+            return '-';
+        case 'array': {
+            const items = value.value as DxValue[];
+            return items.map(v => formatSimpleValue(v)).join(' | ');
+        }
         case 'ref':
             return `^${value.refKey || value.value}`;
         default:
@@ -183,7 +210,6 @@ export function formatValueV3(value: DxValue, config: HumanFormatV3Config = DEFA
 
 /**
  * Format config section as vertical key-value pairs without section header
- * Requirements: 2.1, 2.3, 2.4, 2.7
  */
 export function formatConfigSectionV3(
     context: Map<string, DxValue>,
@@ -219,72 +245,12 @@ export function formatConfigSectionV3(
 }
 
 // ============================================================================
-// Data Section Formatting (Vertical Key-Value)
+// Stack Section Formatting (Table-like with aligned columns)
 // ============================================================================
 
 /**
- * Format a data section as vertical key-value pairs
- * Requirements: 2.2, 2.3, 2.4, 2.5, 2.6, 2.7
- */
-export function formatDataSectionV3(
-    section: DxSection,
-    config: HumanFormatV3Config = DEFAULT_CONFIG
-): string {
-    const lines: string[] = [];
-    const fullSectionName = expandSectionName(section.id);
-
-    // Check if section has multiple rows (needs schema header)
-    const hasMultipleRows = section.rows.length > 1;
-    const expandedSchema = section.schema.map(col => expandKey(col));
-
-    if (hasMultipleRows && section.schema.length > 0) {
-        // Multi-row section: [section] = Col1 | Col2 | Col3
-        const schemaStr = expandedSchema.map(col =>
-            col.charAt(0).toUpperCase() + col.slice(1)
-        ).join(config.arraySeparator);
-        lines.push(`[${fullSectionName}]${' '.repeat(Math.max(1, config.keyPadding - fullSectionName.length - 2))}= ${schemaStr}`);
-
-        // Each row as: rowName = val1 | val2 | val3
-        for (const row of section.rows) {
-            // First column is typically the row identifier/name
-            const rowName = row.length > 0 ? formatValueV3(row[0], { ...config, quoteStringsWithSpaces: false }) : '';
-            const rowValues = row.slice(1).map(v => formatValueV3(v, config));
-            const padding = ' '.repeat(Math.max(1, config.keyPadding - rowName.length));
-            lines.push(`${rowName}${padding}= ${rowValues.join(config.arraySeparator)}`);
-        }
-    } else if (section.rows.length === 1) {
-        // Single row section: vertical key-value pairs
-        lines.push(`[${fullSectionName}]`);
-        const row = section.rows[0];
-
-        // Calculate padding for this section
-        const maxKeyLen = Math.max(
-            config.keyPadding,
-            ...expandedSchema.map(k => k.length + 1)
-        );
-
-        for (let i = 0; i < expandedSchema.length && i < row.length; i++) {
-            const key = expandedSchema[i];
-            const value = row[i];
-            const padding = ' '.repeat(maxKeyLen - key.length);
-            const formattedValue = formatValueV3(value, config);
-            lines.push(`${key}${padding}= ${formattedValue}`);
-        }
-    } else {
-        // Empty section
-        lines.push(`[${fullSectionName}]`);
-    }
-
-    return lines.join('\n');
-}
-
-// ============================================================================
-// Reference Section Formatting
-// ============================================================================
-
-/**
- * Format reference definitions as a special [stack] section
- * This handles the #: reference definitions in LLM format
+ * Format reference definitions as a [stack] section with aligned columns
+ * No schema header, just rows with pipe-separated values
  */
 export function formatReferenceSectionV3(
     refs: Map<string, string>,
@@ -295,16 +261,222 @@ export function formatReferenceSectionV3(
     }
 
     const lines: string[] = [];
+    lines.push('[stack]');
 
-    // Parse reference values (they contain pipe-separated data)
-    // Format: key|lang|runtime|compiler|bundler|pm|framework
-    const schemaLabels = ['Lang', 'Runtime', 'Compiler', 'Bundler', 'PM', 'Framework'];
-    lines.push(`[stack]${' '.repeat(Math.max(1, config.keyPadding - 7))}= ${schemaLabels.join(config.arraySeparator)}`);
+    // Parse all reference values to find column widths
+    const rows: Array<{ key: string; values: string[] }> = [];
+    let maxCols = 0;
 
     for (const [key, value] of refs) {
-        const parts = value.split('|');
-        const padding = ' '.repeat(Math.max(1, config.keyPadding - key.length));
-        lines.push(`${key}${padding}= ${parts.join(config.arraySeparator)}`);
+        const values = value.split('|');
+        rows.push({ key, values });
+        maxCols = Math.max(maxCols, values.length);
+    }
+
+    // Calculate column widths
+    const colWidths: number[] = new Array(maxCols).fill(0);
+    let maxKeyLen = config.keyPadding;
+
+    for (const row of rows) {
+        maxKeyLen = Math.max(maxKeyLen, row.key.length + 1);
+        for (let i = 0; i < row.values.length; i++) {
+            colWidths[i] = Math.max(colWidths[i], row.values[i].length);
+        }
+    }
+
+    // Format each row with aligned columns
+    for (const row of rows) {
+        const keyPadding = ' '.repeat(maxKeyLen - row.key.length);
+        const formattedValues = row.values.map((val, i) => {
+            const padding = ' '.repeat(colWidths[i] - val.length);
+            return val + padding;
+        });
+        lines.push(`${row.key}${keyPadding}= ${formattedValues.join(' | ')}`);
+    }
+
+    return lines.join('\n');
+}
+
+// ============================================================================
+// Data Section Formatting
+// ============================================================================
+
+/**
+ * Format a data section based on its structure
+ * - Single row: vertical key-value pairs (skip 'name' field if it matches section name)
+ * - Multiple rows: NOT USED (we use vertical format for all)
+ */
+export function formatDataSectionV3(
+    section: DxSection,
+    config: HumanFormatV3Config = DEFAULT_CONFIG
+): string {
+    const lines: string[] = [];
+    const fullSectionName = expandSectionName(section.id);
+    const expandedSchema = section.schema.map(col => expandKey(col));
+
+    // Check for special sections that need sub-sections (like i18n)
+    if (section.id === 'i' && section.rows.length === 1) {
+        return formatI18nSection(section, config);
+    }
+
+    // Check for media section (special handling)
+    if (section.id === 'm' && section.rows.length === 1) {
+        return formatMediaSection(section, config);
+    }
+
+    // Single row section: vertical key-value pairs
+    if (section.rows.length === 1) {
+        lines.push(`[${fullSectionName}]`);
+        const row = section.rows[0];
+
+        // Filter out 'name' field if it matches section name or is redundant
+        const filteredEntries: Array<{ key: string; value: DxValue }> = [];
+        for (let i = 0; i < expandedSchema.length && i < row.length; i++) {
+            const key = expandedSchema[i];
+            const value = row[i];
+
+            // Skip 'name' field if it's redundant (matches section name or is just the section id)
+            if (key === 'name') {
+                const strVal = value.type === 'string' ? String(value.value) : '';
+                if (strVal === fullSectionName || strVal === section.id) {
+                    continue;
+                }
+            }
+
+            filteredEntries.push({ key, value });
+        }
+
+        // Calculate padding for this section
+        const maxKeyLen = Math.max(
+            config.keyPadding,
+            ...filteredEntries.map(e => e.key.length + 1)
+        );
+
+        for (const entry of filteredEntries) {
+            const padding = ' '.repeat(maxKeyLen - entry.key.length);
+            const formattedValue = formatValueV3(entry.value, config);
+            lines.push(`${entry.key}${padding}= ${formattedValue}`);
+        }
+    } else if (section.rows.length > 1) {
+        // Multiple rows: still use vertical format but with row names
+        lines.push(`[${fullSectionName}]`);
+
+        for (const row of section.rows) {
+            // First column is typically the row identifier/name
+            if (row.length > 0) {
+                const rowName = formatSimpleValue(row[0]);
+                const rowValues = row.slice(1).map(v => formatValueV3(v, config));
+                const padding = ' '.repeat(Math.max(1, config.keyPadding - rowName.length));
+                lines.push(`${rowName}${padding}= ${rowValues.join(config.arraySeparator)}`);
+            }
+        }
+    } else {
+        // Empty section
+        lines.push(`[${fullSectionName}]`);
+    }
+
+    return lines.join('\n');
+}
+
+/**
+ * Format i18n section with sub-sections for locales and ttses
+ */
+function formatI18nSection(
+    section: DxSection,
+    config: HumanFormatV3Config = DEFAULT_CONFIG
+): string {
+    const lines: string[] = [];
+    const row = section.rows[0];
+    const schema = section.schema;
+
+    // Group fields into locales and ttses
+    const localesFields: Array<{ key: string; value: DxValue }> = [];
+    const ttsesFields: Array<{ key: string; value: DxValue }> = [];
+
+    for (let i = 0; i < schema.length && i < row.length; i++) {
+        const key = schema[i];
+        const value = row[i];
+
+        if (key.startsWith('locales_')) {
+            const shortKey = key.replace('locales_', '');
+            localesFields.push({ key: shortKey, value });
+        } else if (key.startsWith('ttses_')) {
+            const shortKey = key.replace('ttses_', '');
+            ttsesFields.push({ key: shortKey, value });
+        }
+    }
+
+    // Format [i18n.locales] section
+    if (localesFields.length > 0) {
+        lines.push('[i18n.locales]');
+        const maxKeyLen = Math.max(config.keyPadding, ...localesFields.map(f => f.key.length + 1));
+        for (const field of localesFields) {
+            const padding = ' '.repeat(maxKeyLen - field.key.length);
+            const formattedValue = formatValueV3(field.value, config);
+            lines.push(`${field.key}${padding}= ${formattedValue}`);
+        }
+    }
+
+    // Format [i18n.ttses] section
+    if (ttsesFields.length > 0) {
+        lines.push('');
+        lines.push('[i18n.ttses]');
+        const maxKeyLen = Math.max(config.keyPadding, ...ttsesFields.map(f => f.key.length + 1));
+        for (const field of ttsesFields) {
+            const padding = ' '.repeat(maxKeyLen - field.key.length);
+            const formattedValue = formatValueV3(field.value, config);
+            lines.push(`${field.key}${padding}= ${formattedValue}`);
+        }
+    }
+
+    return lines.join('\n');
+}
+
+/**
+ * Format media section with simplified paths
+ */
+function formatMediaSection(
+    section: DxSection,
+    config: HumanFormatV3Config = DEFAULT_CONFIG
+): string {
+    const lines: string[] = [];
+    const row = section.rows[0];
+    const schema = section.schema;
+
+    lines.push('[media]');
+
+    // Map schema to simplified keys
+    const keyMap: Record<string, string> = {
+        'images_path': 'images',
+        'images': 'images',
+        'videos_path': 'videos',
+        'videos': 'videos',
+        'sounds_path': 'sounds',
+        'sounds': 'sounds',
+        'assets_path': 'assets',
+        'assets': 'assets',
+    };
+
+    // Group path and content together
+    const mediaGroups: Map<string, DxValue> = new Map();
+
+    for (let i = 0; i < schema.length && i < row.length; i++) {
+        const key = schema[i];
+        const value = row[i];
+
+        // Use path values, skip content arrays (they're usually wildcards)
+        if (key.endsWith('_path')) {
+            const shortKey = keyMap[key] || key;
+            mediaGroups.set(shortKey, value);
+        }
+    }
+
+    const maxKeyLen = Math.max(config.keyPadding, ...Array.from(mediaGroups.keys()).map(k => k.length + 1));
+
+    for (const [key, value] of mediaGroups) {
+        const padding = ' '.repeat(maxKeyLen - key.length);
+        const formattedValue = formatValueV3(value, config);
+        lines.push(`${key}${padding}= ${formattedValue}`);
     }
 
     return lines.join('\n');
@@ -316,7 +488,6 @@ export function formatReferenceSectionV3(
 
 /**
  * Format a complete DxDocument to Human Format V3
- * Requirements: 2.1-2.7
  */
 export function formatDocumentV3(
     doc: DxDocument,
@@ -336,12 +507,63 @@ export function formatDocumentV3(
     }
 
     // Data sections
-    for (const [, section] of doc.sections) {
+    for (const [sectionId, section] of doc.sections) {
+        // Skip 'k' (stack) section if we already have refs (to avoid duplicate [stack])
+        if (sectionId === 'k' && doc.refs.size > 0) {
+            // Rename to [stack.config] or skip if redundant
+            const renamedSection = { ...section, id: 'k' };
+            sections.push('');
+            sections.push(formatDataSectionAsConfig(renamedSection, config));
+            continue;
+        }
+
         sections.push('');
         sections.push(formatDataSectionV3(section, config));
     }
 
     return sections.join('\n');
+}
+
+/**
+ * Format a data section as config-style (for stack.config etc.)
+ */
+function formatDataSectionAsConfig(
+    section: DxSection,
+    config: HumanFormatV3Config = DEFAULT_CONFIG
+): string {
+    const lines: string[] = [];
+    const expandedSchema = section.schema.map(col => expandKey(col));
+
+    // Use a different name to avoid conflict with [stack] refs section
+    lines.push('[stack.config]');
+
+    if (section.rows.length === 1) {
+        const row = section.rows[0];
+
+        // Filter out 'name' field
+        const filteredEntries: Array<{ key: string; value: DxValue }> = [];
+        for (let i = 0; i < expandedSchema.length && i < row.length; i++) {
+            const key = expandedSchema[i];
+            const value = row[i];
+
+            if (key === 'name') continue;
+
+            filteredEntries.push({ key, value });
+        }
+
+        const maxKeyLen = Math.max(
+            config.keyPadding,
+            ...filteredEntries.map(e => e.key.length + 1)
+        );
+
+        for (const entry of filteredEntries) {
+            const padding = ' '.repeat(maxKeyLen - entry.key.length);
+            const formattedValue = formatValueV3(entry.value, config);
+            lines.push(`${entry.key}${padding}= ${formattedValue}`);
+        }
+    }
+
+    return lines.join('\n');
 }
 
 // ============================================================================
@@ -366,7 +588,6 @@ export function checkKeyAlignment(output: string): boolean {
     if (lines.length === 0) return true;
 
     const positions = lines.map(line => line.indexOf('='));
-    const firstPos = positions[0];
 
     // All = signs should be at the same position (within the same section)
     // For now, just check they're all positive
