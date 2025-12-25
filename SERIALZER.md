@@ -1,0 +1,3 @@
+Please make sure the the quantum extanglement state of human, llm and machine version of dx serializer and make sure that the llm version is really token efficient at least 3x more than toon and machine version is really performance efficient than rkyv and human version is really user friendly than toon?
+
+And at crates/serializer folder - make sure to use io_uring on Linux, kqueue on macOS, IOCP on Windows at "serializer" crates for max performance and please pointout all mistakes of serializer crates and fix all of the bottlenecks and others so that its works on everywhere and battle test for all edge cases - And in the end make professional!!!
