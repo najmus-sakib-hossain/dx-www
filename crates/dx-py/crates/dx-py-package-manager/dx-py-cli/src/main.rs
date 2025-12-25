@@ -2,12 +2,13 @@
 //!
 //! A high-performance Python package manager that is 5-50x faster than uv.
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use clap_complete::Shell;
 
 mod commands;
 
 use commands::{
-    add, build, init, install, lock, publish, python, remove, run, sync, tool,
+    add, build, completions, init, install, lock, publish, python, remove, run, sync, tool,
 };
 
 /// Ultra-fast Python package manager
@@ -15,7 +16,7 @@ use commands::{
 #[command(name = "dx-py")]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
     command: Commands,
 }
@@ -127,6 +128,13 @@ enum Commands {
         #[arg(default_value = "dist/*")]
         files: String,
     },
+
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for
+        #[arg(value_enum)]
+        shell: Shell,
+    },
 }
 
 #[derive(Subcommand)]
@@ -201,6 +209,7 @@ fn main() {
         Commands::Publish { repository, token, files } => {
             publish::run(repository.as_deref(), token.as_deref(), &files)
         }
+        Commands::Completions { shell } => completions::run(shell),
     };
 
     if let Err(e) = result {

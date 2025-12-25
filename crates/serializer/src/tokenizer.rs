@@ -219,8 +219,22 @@ impl<'a> Tokenizer<'a> {
                 self.pos += 1;
             }
         } else {
-            // Read until delimiter
-            self.read_until_any(b"|\n#");
+            // Read until delimiter or boolean marker
+            // Stop at + or - (boolean markers) when preceded by whitespace
+            while let Some(b) = self.peek() {
+                if b == b'|' || b == b'\n' || b == b'#' {
+                    break;
+                }
+                // Check for boolean markers preceded by whitespace
+                // Only stop if we've read at least one character and the previous char is whitespace
+                if (b == b'+' || b == b'-') && self.pos > start {
+                    let prev = self.input[self.pos - 1];
+                    if prev.is_ascii_whitespace() {
+                        break;
+                    }
+                }
+                self.pos += 1;
+            }
         }
 
         // Trim trailing whitespace

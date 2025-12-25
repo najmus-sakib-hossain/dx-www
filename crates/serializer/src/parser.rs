@@ -96,7 +96,7 @@ impl<'a> Parser<'a> {
         // Consume $
         self.tokenizer.next_token()?;
         
-        // Get alias name
+        // Get alias name (may include dots like c.task)
         let alias_token = self.tokenizer.next_token()?;
         if !matches!(alias_token, Token::Ident(_)) {
             // Reset and return false
@@ -120,8 +120,8 @@ impl<'a> Parser<'a> {
         // Consume $
         self.tokenizer.next_token()?;
         
-        // Get alias name
-        let alias = match self.tokenizer.next_token()? {
+        // Get the full identifier (may include dots like c.task)
+        let full_ident = match self.tokenizer.next_token()? {
             Token::Ident(bytes) => std::str::from_utf8(bytes)?.to_string(),
             _ => {
                 return Err(DxError::InvalidSyntax {
@@ -131,29 +131,24 @@ impl<'a> Parser<'a> {
             }
         };
         
+        // Split on first dot to get alias and suffix
+        let (alias, suffix) = if let Some(dot_pos) = full_ident.find('.') {
+            (&full_ident[..dot_pos], Some(&full_ident[dot_pos..]))
+        } else {
+            (full_ident.as_str(), None)
+        };
+        
         // Resolve alias
-        let resolved = self.aliases.get(&alias).cloned().ok_or_else(|| {
-            DxError::UnknownAlias(alias.clone())
+        let resolved = self.aliases.get(alias).cloned().ok_or_else(|| {
+            DxError::UnknownAlias(alias.to_string())
         })?;
         
-        let mut key = resolved;
-        
-        // Check for dot notation (e.g., $c.task)
-        while matches!(self.tokenizer.peek_token()?, Token::Dot) {
-            self.tokenizer.next_token()?; // consume .
-            match self.tokenizer.next_token()? {
-                Token::Ident(bytes) => {
-                    key.push('.');
-                    key.push_str(std::str::from_utf8(bytes)?);
-                }
-                _ => {
-                    return Err(DxError::InvalidSyntax {
-                        pos: self.tokenizer.pos(),
-                        msg: "Expected identifier after .".to_string(),
-                    })
-                }
-            }
-        }
+        // Build full key
+        let key = if let Some(suffix) = suffix {
+            format!("{}{}", resolved, suffix)
+        } else {
+            resolved
+        };
         
         // Read operator
         self.tokenizer.skip_whitespace();
@@ -383,7 +378,14 @@ impl<'a> Parser<'a> {
 
             // Check if this line is still part of the table
             let token = self.tokenizer.peek_token()?;
-            if matches!(token, Token::Newline | Token::Eof) {
+            
+            // End of file - we're done
+            if matches!(token, Token::Eof) {
+                break;
+            }
+            
+            // Skip empty lines
+            if matches!(token, Token::Newline) {
                 self.tokenizer.next_token()?;
                 continue;
             }
@@ -393,8 +395,7 @@ impl<'a> Parser<'a> {
                 let saved_pos = self.tokenizer.pos();
                 self.tokenizer.next_token()?; // consume ident
                 let next = self.tokenizer.peek_token()?;
-                self.tokenizer = Tokenizer::new(self.tokenizer.input);
-                self.tokenizer.advance(saved_pos);
+                self.tokenizer.reset_to(saved_pos);
 
                 if matches!(
                     next,

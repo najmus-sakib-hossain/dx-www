@@ -89,3 +89,16 @@ crates/*/target/
 tmp/
 temp/
 error.log
+
+*/*/*/*/*/target/
+*/*/*/*/target/
+*/*/*/target/
+*/*/target/
+*/target/
+
+# Rust
+**/*.rs.bk
+*.pdb
+
+# DX Cache Layer (Human-Pretty files)
+**/.dx/

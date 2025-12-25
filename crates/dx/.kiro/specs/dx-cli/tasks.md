@@ -333,107 +333,107 @@ This implementation plan follows the 6-day timeline from the master plan, buildi
     - **Property 12: Shell Config Path Mapping**
     - **Validates: Requirements 8.6**
 
-- [ ] 21. Implement Command History
-  - [ ] 21.1 Define CommandHistory and HistoryEntry structs
+- [-] 21. Implement Command History
+  - [x] 21.1 Define CommandHistory and HistoryEntry structs
     - Add all required fields to HistoryEntry
     - Implement Serialize/Deserialize
     - _Requirements: 9.1, 9.2_
 
-  - [ ] 21.2 Implement history persistence
+  - [x] 21.2 Implement history persistence
     - Implement load() from binary cache
     - Implement save() to binary cache
     - _Requirements: 9.1_
 
-  - [ ] 21.3 Implement history operations
+  - [x] 21.3 Implement history operations
     - Implement add() with max entries enforcement
     - Implement recent() iterator
     - Implement search() with query matching
     - _Requirements: 9.3, 9.4_
 
-  - [ ] 21.4 Implement stats()
+  - [x] 21.4 Implement stats()
     - Calculate total, successful, failed counts
     - Calculate average duration
     - Calculate top commands by frequency
     - _Requirements: 9.5_
 
-  - [ ] 21.5 Write property test for history serialization
+  - [x] 21.5 Write property test for history serialization
     - **Property 13: History Serialization Round-Trip**
     - **Validates: Requirements 9.1**
 
-  - [ ] 21.6 Write property test for max entries
+  - [x] 21.6 Write property test for max entries
     - **Property 14: History Max Entries Enforcement**
     - **Validates: Requirements 9.3**
 
-  - [ ] 21.7 Write property test for search
+  - [x] 21.7 Write property test for search
     - **Property 15: History Search Functionality**
     - **Validates: Requirements 9.4**
 
-  - [ ] 21.8 Write property test for statistics
+  - [x] 21.8 Write property test for statistics
     - **Property 16: History Statistics Accuracy**
     - **Validates: Requirements 9.5**
 
-- [ ] 22. Implement Signal Handling
+- [x] 22. Implement Signal Handling
   - Implement setup_signal_handlers()
   - Handle SIGINT/SIGTERM on Unix
   - Handle Ctrl+C on Windows
   - _Requirements: 11.5_
 
-- [ ] 23. Checkpoint - Ensure shell integration works
+- [x] 23. Checkpoint - Ensure shell integration works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 24. Implement Tool Command Stubs
-  - [ ] 24.1 Implement style command handler
+- [x] 24. Implement Tool Command Stubs
+  - [x] 24.1 Implement style command handler
     - Handle build, analyze, stats subcommands
     - _Requirements: 5.2_
 
-  - [ ] 24.2 Implement media command handler
+  - [x] 24.2 Implement media command handler
     - _Requirements: 5.2_
 
-  - [ ] 24.3 Implement font command handler
+  - [x] 24.3 Implement font command handler
     - _Requirements: 5.2_
 
-  - [ ] 24.4 Implement icon command handler
+  - [x] 24.4 Implement icon command handler
     - _Requirements: 5.2_
 
-  - [ ] 24.5 Implement forge command handler
+  - [x] 24.5 Implement forge command handler
     - Handle status, list, install, update, check, build, graph, analyze subcommands
     - _Requirements: 5.2_
 
-  - [ ] 24.6 Implement serializer command handler
+  - [x] 24.6 Implement serializer command handler
     - _Requirements: 5.2_
 
-  - [ ] 24.7 Implement stack command handler
+  - [x] 24.7 Implement stack command handler
     - _Requirements: 5.2_
 
-  - [ ] 24.8 Implement driven command handler
+  - [x] 24.8 Implement driven command handler
     - _Requirements: 5.2_
 
-  - [ ] 24.9 Implement generator command handler
+  - [x] 24.9 Implement generator command handler
     - _Requirements: 5.2_
 
-  - [ ] 24.10 Implement workspace command handler
+  - [x] 24.10 Implement workspace command handler
     - _Requirements: 5.2_
 
-- [ ] 25. Implement Project Command Stubs
-  - [ ] 25.1 Implement init command handler
+- [-] 25. Implement Project Command Stubs
+  - [x] 25.1 Implement init command handler
     - _Requirements: 5.1_
 
-  - [ ] 25.2 Implement dev command handler
+  - [x] 25.2 Implement dev command handler
     - _Requirements: 5.1_
 
-  - [ ] 25.3 Implement build command handler
+  - [x] 25.3 Implement build command handler
     - _Requirements: 5.1_
 
-  - [ ] 25.4 Implement run command handler
+  - [x] 25.4 Implement run command handler
     - _Requirements: 5.1_
 
-  - [ ] 25.5 Implement test command handler
+  - [x] 25.5 Implement test command handler
     - _Requirements: 5.1_
 
-  - [ ] 25.6 Implement deploy command handler
+  - [x] 25.6 Implement deploy command handler
     - _Requirements: 5.1_
 
-- [ ] 26. Final Checkpoint - Full integration test
+- [x] 26. Final Checkpoint - Full integration test
   - Ensure all tests pass, ask the user if questions arise.
   - Run `dx --help` and verify output
   - Run `dx self info` and verify output

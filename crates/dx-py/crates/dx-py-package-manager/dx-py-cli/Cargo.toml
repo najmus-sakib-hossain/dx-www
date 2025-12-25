@@ -15,6 +15,7 @@ dx-py-package-manager = { path = "../dx-py-package-manager" }
 dx-py-project-manager = { path = "../dx-py-project-manager" }
 dx-py-compat = { path = "../dx-py-compat" }
 clap = { version = "4.4", features = ["derive"] }
+clap_complete = "4.4"
 thiserror.workspace = true
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
@@ -22,3 +23,9 @@ dirs = "5.0"
 
 [dev-dependencies]
 tempfile = "3.10"
+criterion = { version = "0.5", features = ["html_reports"] }
+blake3 = "1.5"
+
+[[bench]]
+name = "benchmarks"
+harness = false
