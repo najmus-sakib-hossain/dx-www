@@ -249,8 +249,8 @@ impl PyPiClient {
     }
 }
 
-/// Parsed dependency specification
-#[derive(Debug, Clone)]
+/// Parsed dependency specification (PEP 508)
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DependencySpec {
     /// Package name
     pub name: String,
@@ -260,6 +260,34 @@ pub struct DependencySpec {
     pub extras: Vec<String>,
     /// Environment markers (e.g., "python_version >= '3.8'")
     pub markers: Option<String>,
+    /// URL dependency (package @ url)
+    pub url: Option<String>,
+    /// Path dependency (package @ file://path)
+    pub path: Option<String>,
+}
+
+impl std::fmt::Display for DependencySpec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)?;
+
+        if !self.extras.is_empty() {
+            write!(f, "[{}]", self.extras.join(","))?;
+        }
+
+        if let Some(ref url) = self.url {
+            write!(f, " @ {}", url)?;
+        } else if let Some(ref path) = self.path {
+            write!(f, " @ file://{}", path)?;
+        } else if let Some(ref constraint) = self.version_constraint {
+            write!(f, "{}", constraint)?;
+        }
+
+        if let Some(ref markers) = self.markers {
+            write!(f, "; {}", markers)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl DependencySpec {
@@ -267,8 +295,9 @@ impl DependencySpec {
     pub fn parse(spec: &str) -> Result<Self> {
         let spec = spec.trim();
 
-        // Simple parser for common cases
-        // Full PEP 508 parsing would be more complex
+        if spec.is_empty() {
+            return Err(Error::InvalidPackageName("Empty dependency spec".to_string()));
+        }
 
         // Check for markers (after ';')
         let (spec_part, markers) = if let Some(idx) = spec.find(';') {
@@ -277,34 +306,55 @@ impl DependencySpec {
             (spec, None)
         };
 
+        // Check for URL dependency (@ url)
+        let (name_extras_version, url, path) = if let Some(at_idx) = spec_part.find(" @ ") {
+            let url_part = spec_part[at_idx + 3..].trim();
+            let name_part = spec_part[..at_idx].trim();
+
+            if url_part.starts_with("file://") {
+                // Path dependency
+                let path_str = url_part.strip_prefix("file://").unwrap_or(url_part);
+                (name_part.to_string(), None, Some(path_str.to_string()))
+            } else {
+                // URL dependency
+                (name_part.to_string(), Some(url_part.to_string()), None)
+            }
+        } else {
+            (spec_part.to_string(), None, None)
+        };
+
         // Check for extras (in brackets)
-        let (name_and_version, extras) = if let Some(start) = spec_part.find('[') {
-            if let Some(end) = spec_part.find(']') {
-                let extras_str = &spec_part[start + 1..end];
+        let (name_and_version, extras) = if let Some(start) = name_extras_version.find('[') {
+            if let Some(end) = name_extras_version.find(']') {
+                let extras_str = &name_extras_version[start + 1..end];
                 let extras: Vec<String> = extras_str
                     .split(',')
                     .map(|s| s.trim().to_string())
                     .filter(|s| !s.is_empty())
                     .collect();
                 // Combine name part with version part (after ']')
-                let name_part = &spec_part[..start];
-                let version_part = &spec_part[end + 1..];
+                let name_part = &name_extras_version[..start];
+                let version_part = &name_extras_version[end + 1..];
                 (format!("{}{}", name_part, version_part), extras)
             } else {
-                (spec_part.to_string(), Vec::new())
+                (name_extras_version, Vec::new())
             }
         } else {
-            (spec_part.to_string(), Vec::new())
+            (name_extras_version, Vec::new())
         };
 
-        // Check for version constraint
-        let (name, version_constraint) = if let Some(idx) = name_and_version.find(|c: char| {
-            c == '>' || c == '<' || c == '=' || c == '!' || c == '~'
-        }) {
-            (
-                name_and_version[..idx].trim().to_string(),
-                Some(name_and_version[idx..].trim().to_string()),
-            )
+        // Check for version constraint (only if no URL/path)
+        let (name, version_constraint) = if url.is_none() && path.is_none() {
+            if let Some(idx) = name_and_version.find(|c: char| {
+                c == '>' || c == '<' || c == '=' || c == '!' || c == '~'
+            }) {
+                (
+                    name_and_version[..idx].trim().to_string(),
+                    Some(name_and_version[idx..].trim().to_string()),
+                )
+            } else {
+                (name_and_version.trim().to_string(), None)
+            }
         } else {
             (name_and_version.trim().to_string(), None)
         };
@@ -315,12 +365,37 @@ impl DependencySpec {
             ));
         }
 
+        // Normalize package name (PEP 503)
+        let normalized_name = name.to_lowercase().replace(['-', '.'], "_");
+
         Ok(Self {
-            name,
+            name: normalized_name,
             version_constraint,
             extras,
             markers,
+            url,
+            path,
         })
+    }
+
+    /// Check if this is a URL dependency
+    pub fn is_url_dependency(&self) -> bool {
+        self.url.is_some()
+    }
+
+    /// Check if this is a path dependency
+    pub fn is_path_dependency(&self) -> bool {
+        self.path.is_some()
+    }
+
+    /// Check if this has version constraints
+    pub fn has_version_constraint(&self) -> bool {
+        self.version_constraint.is_some()
+    }
+
+    /// Get the normalized package name
+    pub fn normalized_name(&self) -> &str {
+        &self.name
     }
 }
 

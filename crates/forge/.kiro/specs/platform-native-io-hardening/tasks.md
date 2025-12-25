@@ -82,47 +82,47 @@ This implementation plan transforms the design into actionable coding tasks. The
 - [x] 7. Checkpoint - Ensure platform I/O layer compiles on all platforms
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Integrate platform I/O into storage layer
-  - [ ] 8.1 Update `src/storage/blob.rs` to use `PlatformIO`
+- [x] 8. Integrate platform I/O into storage layer
+  - [x] 8.1 Update `src/storage/blob.rs` to use `PlatformIO`
     - Replace `tokio::fs` calls with `PlatformIO` trait methods
     - Add memory-mapped I/O for large blobs (>1MB)
     - Add parallel compression for files >100KB
     - _Requirements: 3.1, 3.2, 3.4_
 
-  - [ ] 8.2 Add blob integrity verification
+  - [x] 8.2 Add blob integrity verification
     - Verify SHA-256 checksum on blob read
     - Return descriptive error on integrity failure
     - _Requirements: 3.5, 3.6_
 
-  - [ ] 8.3 Write property test for blob integrity round-trip
+  - [x] 8.3 Write property test for blob integrity round-trip
     - **Property 8: Blob Integrity Round-Trip**
     - **Validates: Requirements 3.5**
 
-  - [ ] 8.4 Write property test for concurrent storage operations
+  - [x] 8.4 Write property test for concurrent storage operations
     - **Property 7: Concurrent Storage Operations**
     - **Validates: Requirements 3.3**
 
-- [ ] 9. Integrate platform I/O into watcher
-  - [ ] 9.1 Update `src/watcher.rs` to use platform-native watching
+- [x] 9. Integrate platform I/O into watcher
+  - [x] 9.1 Update `src/watcher.rs` to use platform-native watching
     - Replace notify-based watching with `PlatformIO::watch()`
     - Maintain fallback to notify when native watching unavailable
     - _Requirements: 2.1, 2.2, 2.3_
 
-  - [ ] 9.2 Implement enhanced debouncing and deduplication
+  - [x] 9.2 Implement enhanced debouncing and deduplication
     - Add configurable debounce window
     - Implement event deduplication within window
     - Handle directory deletion gracefully
     - _Requirements: 2.5, 2.6, 2.7_
 
-  - [ ] 9.3 Write property test for event debouncing
+  - [x] 9.3 Write property test for event debouncing
     - **Property 6: Event Debouncing and Deduplication**
     - **Validates: Requirements 2.5, 2.6**
 
-  - [ ] 9.4 Write property test for watcher scalability
+  - [x] 9.4 Write property test for watcher scalability
     - **Property 5: Watcher Scalability**
     - **Validates: Requirements 2.4**
 
-- [ ] 10. Checkpoint - Ensure storage and watcher integration works
+- [x] 10. Checkpoint - Ensure storage and watcher integration works
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Implement resource manager

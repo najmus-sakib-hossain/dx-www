@@ -2,122 +2,105 @@
 
 ## Overview
 
-This design document specifies the hardening improvements for the DX CLI to transform it from a functional prototype into a professional, battle-tested CLI tool. The improvements are organized into cross-cutting concerns that enhance existing modules with robustness, reliability, and graceful error handling.
+This design document describes the architecture and implementation approach for hardening the DX CLI from a functional prototype into a production-ready, battle-tested tool. The hardening focuses on twelve key areas: error handling with retry logic, cross-platform path handling, network resilience, configuration validation, self-update security, shell integration, command history, input validation, resource management, logging/diagnostics, graceful degradation, and concurrent operation safety.
 
-The design follows a layered approach where hardening components wrap or enhance existing functionality without requiring major architectural changes.
+The implementation enhances existing modules (`error.rs`, `paths.rs`, `history.rs`, `dx_config.rs`) and introduces new components (`input.rs` validator, `network.rs` client, `resource.rs` manager, `crash.rs` reporter, `lock.rs` file locking, `logger.rs` structured logging).
 
 ## Architecture
 
 ```mermaid
 graph TB
-    subgraph "Application Layer"
-        CLI[CLI Parser]
-        Commands[Command Handlers]
+    subgraph "Entry Point"
+        Main[main.rs]
+        CLI[cli.rs]
     end
-    
-    subgraph "Hardening Layer"
-        ErrorHandler[Enhanced Error Handler]
-        InputValidator[Input Validator]
-        CrashReporter[Crash Reporter]
-        ResourceManager[Resource Manager]
-    end
-    
-    subgraph "Core Layer"
-        Config[Config Loader]
-        History[History Manager]
-        Update[Update System]
-        Shell[Shell Integration]
-    end
-    
-    subgraph "Infrastructure Layer"
-        NetworkClient[Resilient Network Client]
-        FileLock[File Lock Manager]
-        PathResolver[Path Resolver]
-        Theme[Theme System]
-    end
-    
-    subgraph "Platform Layer"
-        Reactor[I/O Reactor]
-        Logger[Structured Logger]
-    end
-    
-    CLI --> ErrorHandler
-    Commands --> InputValidator
-    Commands --> ResourceManager
-    
-    ErrorHandler --> Config
-    ErrorHandler --> History
-    ErrorHandler --> Update
-    
-    Config --> FileLock
-    History --> FileLock
-    Update --> NetworkClient
-    
-    NetworkClient --> Reactor
-    FileLock --> Reactor
 
+    subgraph "Core Hardening Components"
+        EH[Error Handler<br/>with Retry Logic]
+        IV[Input Validator]
+        PR[Path Resolver]
+        FL[File Lock Manager]
+        NC[Network Client]
+        RM[Resource Manager]
+        CR[Crash Reporter]
+        SL[Structured Logger]
+    end
+
+    subgraph "Enhanced Existing Components"
+        CL[Config Loader]
+        US[Update System]
+        SI[Shell Integration]
+        HM[History Manager]
+        TH[Theme]
+    end
+
+    Main --> CLI
+    CLI --> EH
+    CLI --> IV
+    CLI --> SL
+    CLI --> CR
+    
+    EH --> NC
+    NC --> PR
+    CL --> FL
+    CL --> PR
+    HM --> FL
+    US --> NC
+    US --> FL
+    SI --> PR
+    
+    RM --> FL
+    CR --> SL
+    TH --> SL
 ```
 
 ## Components and Interfaces
 
 ### 1. Enhanced Error Handler (`src/utils/error.rs`)
 
-```rust
-/// Enhanced error with retry support and detailed context
-#[derive(Debug)]
-pub struct EnhancedError {
-    pub error: DxError,
-    pub context: ErrorContext,
-    pub retry_count: u32,
-    pub max_retries: u32,
-}
+Extends the existing `DxError` enum with retry logic and comprehensive error context.
 
-#[derive(Debug, Clone)]
+```rust
+/// Error context for enhanced reporting
 pub struct ErrorContext {
     pub operation: String,
-    pub file_path: Option<PathBuf>,
-    pub line_number: Option<usize>,
-    pub column: Option<usize>,
-    pub snippet: Option<String>,
-    pub retry_delays: Vec<Duration>,
+    pub details: Option<String>,
+    pub path: Option<PathBuf>,
+}
+
+/// Enhanced error with retry information
+pub struct EnhancedError {
+    pub error: DxError,
+    pub retry_count: u32,
+    pub max_retries: u32,
+    pub context: ErrorContext,
 }
 
 impl EnhancedError {
-    /// Get a user-friendly error message with full context
+    /// Display user-friendly message with full context
     pub fn display_message(&self) -> String;
     
-    /// Get actionable hint for resolving the error
-    pub fn hint(&self) -> Option<String>;
+    /// Check if operation should be retried
+    pub fn should_retry(&self) -> bool;
     
-    /// Check if error should be retried
-    pub fn should_retry(&self) -> bool {
-        self.error.is_retryable() && self.retry_count < self.max_retries
-    }
-    
-    /// Get the next retry delay using exponential backoff
-    pub fn next_retry_delay(&self) -> Duration {
-        Duration::from_secs(1 << self.retry_count) // 1s, 2s, 4s
-    }
+    /// Calculate next retry delay (exponential backoff)
+    pub fn next_retry_delay(&self) -> Duration;
 }
 
-/// Retry wrapper with exponential backoff
+/// Async retry wrapper with exponential backoff
 pub async fn with_retry<T, F, Fut>(
-    operation: &str,
+    operation_name: &str,
     max_retries: u32,
-    f: F,
-) -> Result<T, EnhancedError>
-where
-    F: Fn() -> Fut,
-    Fut: Future<Output = Result<T, DxError>>;
+    operation: F,
+) -> Result<T, EnhancedError>;
 ```
 
 ### 2. Input Validator (`src/utils/input.rs`)
 
-```rust
-/// Input validation and sanitization
-pub struct InputValidator;
+New module for comprehensive input validation and sanitization.
 
-#[derive(Debug, Clone)]
+```rust
+/// Validation error with context
 pub struct ValidationError {
     pub field: String,
     pub value: String,
@@ -125,38 +108,88 @@ pub struct ValidationError {
     pub suggestion: Option<String>,
 }
 
+/// Security warning for path traversal
+pub struct SecurityWarning {
+    pub path: PathBuf,
+    pub reason: String,
+}
+
+pub struct InputValidator;
+
 impl InputValidator {
     /// Validate port number (1-65535)
-    pub fn validate_port(port: u16) -> Result<u16, ValidationError>;
+    pub fn validate_port(port: u32) -> Result<u16, ValidationError>;
     
-    /// Validate semantic version string (X.Y.Z)
+    /// Validate semver version string
     pub fn validate_version(version: &str) -> Result<(u32, u32, u32), ValidationError>;
     
-    /// Sanitize string for shell usage - escape metacharacters
+    /// Sanitize input for shell execution
     pub fn sanitize_for_shell(input: &str) -> String;
     
-    /// Check for path traversal attempts (../ or symlinks outside project)
+    /// Check for path traversal attacks
     pub fn check_path_traversal(path: &Path, project_root: &Path) -> Result<(), SecurityWarning>;
-    
-    /// Validate and sanitize environment variable value
-    pub fn validate_env_var(name: &str, value: &str) -> Result<String, ValidationError>;
 }
-
-/// Shell metacharacters that must be escaped
-const SHELL_METACHARACTERS: &[char] = &[';', '|', '&', '$', '`', '(', ')', '{', '}', '[', ']', '<', '>', '!', '*', '?', '~', '#', '"', '\'', '\\', '\n'];
 ```
 
-### 3. Resilient Network Client (`src/utils/network.rs`)
+### 3. Path Resolver (`src/utils/paths.rs`)
+
+Enhanced with Unicode support, shell escaping, and project boundary checking.
 
 ```rust
-/// Resilient HTTP client with retry and proxy support
-pub struct NetworkClient {
-    timeout: Duration,
-    max_retries: u32,
-    proxy_config: ProxyConfig,
+/// Resolve path with home expansion and separator normalization
+pub fn resolve_path(path: &str) -> PathBuf;
+
+/// Resolve symlinks up to MAX_SYMLINK_DEPTH (40) levels
+pub fn resolve_symlinks(path: &Path) -> Result<PathBuf, DxError>;
+
+/// Handle Windows long paths (>260 chars)
+pub fn handle_long_path(path: &Path) -> PathBuf;
+
+/// Check if path is within project directory
+pub fn is_within_project(path: &Path, project_root: &Path) -> Result<bool, DxError>;
+
+/// Escape path for shell execution
+pub fn escape_for_shell(path: &Path) -> String;
+
+/// Get fallback directory when home is not writable
+pub fn fallback_dir() -> PathBuf;
+```
+
+### 4. File Lock Manager (`src/utils/lock.rs`)
+
+New module for cross-platform file locking.
+
+```rust
+pub enum LockType {
+    Shared,
+    Exclusive,
 }
 
-#[derive(Debug, Clone, Default)]
+pub struct FileLock {
+    path: PathBuf,
+    handle: File,
+    lock_type: LockType,
+}
+
+impl FileLock {
+    /// Acquire lock with timeout (blocking)
+    pub fn acquire(path: &Path, lock_type: LockType, timeout: Duration) -> Result<Self, DxError>;
+    
+    /// Try to acquire lock (non-blocking)
+    pub fn try_acquire(path: &Path, lock_type: LockType) -> Result<Option<Self>, DxError>;
+}
+
+impl Drop for FileLock {
+    /// Automatically release lock
+    fn drop(&mut self);
+}
+```
+
+### 5. Network Client (`src/utils/network.rs`)
+
+New module for resilient HTTP operations with proxy support.
+
+```rust
 pub struct ProxyConfig {
     pub http_proxy: Option<String>,
     pub https_proxy: Option<String>,
@@ -164,143 +197,68 @@ pub struct ProxyConfig {
 }
 
 impl ProxyConfig {
-    /// Load proxy configuration from environment variables
-    pub fn from_env() -> Self {
-        Self {
-            http_proxy: std::env::var("HTTP_PROXY").ok()
-                .or_else(|| std::env::var("http_proxy").ok()),
-            https_proxy: std::env::var("HTTPS_PROXY").ok()
-                .or_else(|| std::env::var("https_proxy").ok()),
-            no_proxy: std::env::var("NO_PROXY")
-                .or_else(|_| std::env::var("no_proxy"))
-                .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
-                .unwrap_or_default(),
-        }
-    }
-    
-    /// Check if proxy should be used for a given URL
-    pub fn should_proxy(&self, url: &str) -> bool;
+    /// Parse proxy configuration from environment
+    pub fn from_env() -> Self;
+}
+
+pub struct NetworkClient {
+    client: reqwest::Client,
+    proxy_config: ProxyConfig,
 }
 
 impl NetworkClient {
-    /// Create client respecting environment proxy settings
-    pub fn from_env() -> Self;
-    
-    /// GET with automatic retry and exponential backoff
+    /// GET request with automatic retry
     pub async fn get(&self, url: &str) -> Result<Response, EnhancedError>;
     
-    /// Download with resume support for large files (>1MB)
-    pub async fn download_resumable(
-        &self,
-        url: &str,
-        dest: &Path,
-        progress: impl Fn(u64, u64),
-    ) -> Result<(), EnhancedError>;
+    /// Download with resume support for files >1MB
+    pub async fn download_resumable(&self, url: &str, dest: &Path) -> Result<(), EnhancedError>;
     
-    /// Check if we're in offline mode (no network available)
-    pub fn is_offline(&self) -> bool;
+    /// Check if network is available
+    pub fn is_offline() -> bool;
 }
 ```
 
-### 4. File Lock Manager (`src/utils/lock.rs`)
+### 6. Resource Manager (`src/utils/resource.rs`)
+
+New module for system resource management.
 
 ```rust
-/// Cross-platform file locking for concurrent access
-pub struct FileLock {
-    path: PathBuf,
-    lock_file: std::fs::File,
-    lock_type: LockType,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum LockType {
-    Shared,    // Multiple readers
-    Exclusive, // Single writer
-}
-
-impl FileLock {
-    /// Acquire lock with blocking wait and timeout
-    pub fn acquire(path: &Path, lock_type: LockType, timeout: Duration) -> Result<Self, DxError>;
-    
-    /// Try to acquire lock without blocking
-    pub fn try_acquire(path: &Path, lock_type: LockType) -> Result<Option<Self>, DxError>;
-    
-    /// Release lock explicitly (also called on drop)
-    pub fn release(self) -> Result<(), DxError>;
-    
-    /// Get the lock file path (.lock suffix)
-    fn lock_path(path: &Path) -> PathBuf {
-        path.with_extension(format!("{}.lock", 
-            path.extension().map(|e| e.to_string_lossy()).unwrap_or_default()))
-    }
-}
-
-impl Drop for FileLock {
-    fn drop(&mut self) {
-        // Ensure lock is released even on panic
-        let _ = self.release_internal();
-    }
-}
-```
-
-### 5. Resource Manager (`src/utils/resources.rs`)
-
-```rust
-/// Manages system resources and cleanup
 pub struct ResourceManager {
     temp_files: Arc<Mutex<Vec<PathBuf>>>,
     child_processes: Arc<Mutex<Vec<Child>>>,
-    max_concurrent_processes: usize,
     process_semaphore: Arc<Semaphore>,
 }
 
 impl ResourceManager {
-    /// Create with default limits (4 concurrent processes)
-    pub fn new() -> Self;
+    /// Create with process limit (default: 4)
+    pub fn new(max_processes: usize) -> Self;
     
-    /// Create with custom limits
-    pub fn with_limits(max_processes: usize) -> Self;
-    
-    /// Register temp file for cleanup on exit/panic
+    /// Register temp file for cleanup
     pub fn register_temp_file(&self, path: PathBuf);
     
-    /// Create a temp file that's automatically registered
+    /// Create and register temp file
     pub fn create_temp_file(&self, prefix: &str) -> Result<PathBuf, DxError>;
     
     /// Spawn process with limit enforcement
-    pub async fn spawn_limited(&self, cmd: &str, args: &[&str]) -> Result<Child, DxError>;
-    
-    /// Clean up all registered resources
-    pub fn cleanup(&self);
+    pub async fn spawn_limited(&self, cmd: &mut Command) -> Result<Child, DxError>;
     
     /// Check available disk space
-    pub fn check_disk_space(&self, path: &Path, required: u64) -> Result<(), DxError>;
+    pub fn check_disk_space(path: &Path) -> Result<u64, DxError>;
     
-    /// Terminate all child processes gracefully
-    pub async fn terminate_children(&self, timeout: Duration);
-}
-
-impl Drop for ResourceManager {
-    fn drop(&mut self) {
-        self.cleanup();
-    }
-}
-
-/// Global resource manager instance
-static RESOURCE_MANAGER: OnceCell<ResourceManager> = OnceCell::new();
-
-pub fn resource_manager() -> &'static ResourceManager {
-    RESOURCE_MANAGER.get_or_init(ResourceManager::new)
+    /// Clean up all resources
+    pub fn cleanup(&self);
+    
+    /// Terminate children gracefully (SIGTERM, then SIGKILL after 5s)
+    pub async fn terminate_children(&self);
 }
 ```
 
-### 6. Crash Reporter (`src/utils/crash.rs`)
+### 7. Crash Reporter (`src/utils/crash.rs`)
+
+New module for panic handling and crash reports.
 
 ```rust
-/// Panic handler and crash report generator
-pub struct CrashReporter;
-
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 pub struct CrashReport {
     pub id: String,
     pub timestamp: DateTime<Utc>,
@@ -310,120 +268,124 @@ pub struct CrashReport {
     pub panic_message: String,
     pub panic_location: Option<String>,
     pub backtrace: String,
-    pub command_line: Vec<String>,
-    pub environment: HashMap<String, String>,
     pub recent_commands: Vec<String>,
+    pub system_info: SystemInfo,
 }
 
+pub struct CrashReporter;
+
 impl CrashReporter {
-    /// Install panic hook - call once at startup
-    pub fn install();
+    /// Install panic hook
+    pub fn install(resource_manager: Arc<ResourceManager>);
     
     /// Generate crash report from panic info
     fn generate_report(panic_info: &PanicInfo) -> CrashReport;
     
-    /// Save crash report to ~/.dx/crash-reports/
-    fn save_report(report: &CrashReport) -> Result<PathBuf, std::io::Error>;
+    /// Save report to ~/.dx/crash-reports/
+    fn save_report(report: &CrashReport) -> Result<PathBuf, DxError>;
     
     /// Display user-friendly crash message
     fn display_crash_message(report_path: &Path);
 }
 ```
 
-### 7. Enhanced Path Resolver (`src/utils/paths.rs`)
+### 8. Structured Logger (`src/ui/logger.rs`)
+
+Enhanced logging with verbose/quiet/debug modes and CI support.
 
 ```rust
-/// Enhanced path resolution with Unicode and security support
-pub struct PathResolver {
-    home_dir: PathBuf,
-    project_root: Option<PathBuf>,
-}
-
-impl PathResolver {
-    /// Create resolver with detected home directory
-    pub fn new() -> Self;
-    
-    /// Create resolver with specific project root
-    pub fn with_project_root(project_root: PathBuf) -> Self;
-    
-    /// Resolve path with full normalization
-    /// - Expands ~ to home directory
-    /// - Normalizes separators to platform-native
-    /// - Handles Unicode characters correctly
-    /// - Adds \\?\ prefix for long Windows paths (>260 chars)
-    pub fn resolve(&self, path: &str) -> Result<PathBuf, DxError>;
-    
-    /// Resolve symlinks with depth limit (max 40)
-    pub fn resolve_symlinks(&self, path: &Path) -> Result<PathBuf, DxError>;
-    
-    /// Check if path is within project directory (handles symlinks)
-    pub fn is_within_project(&self, path: &Path) -> Result<bool, DxError>;
-    
-    /// Escape path for shell usage
-    pub fn escape_for_shell(&self, path: &Path) -> String;
-    
-    /// Get fallback directory when home is not writable
-    pub fn fallback_dir() -> PathBuf {
-        std::env::current_dir()
-            .unwrap_or_else(|_| PathBuf::from("."))
-            .join(".dx")
-    }
-}
-```
-
-### 8. Structured Logger (`src/utils/logger.rs`)
-
-```rust
-/// Structured logging with rotation and CI support
-pub struct StructuredLogger {
-    level: LogLevel,
-    output: LogOutput,
-    ci_mode: bool,
-    log_file: Option<PathBuf>,
-}
-
-#[derive(Debug, Clone, Copy)]
 pub enum LogLevel {
-    Error,
-    Warn,
-    Info,
     Debug,
-    Trace,
+    Info,
+    Warn,
+    Error,
 }
 
-#[derive(Debug, Clone)]
-pub enum LogOutput {
-    Stderr,
-    File(PathBuf),
-    Both(PathBuf),
+pub struct StructuredLogger {
+    verbose: bool,
+    quiet: bool,
+    debug: bool,
+    ci_mode: bool,
+    file_output: Option<File>,
 }
 
 impl StructuredLogger {
-    /// Create logger based on flags and environment
-    pub fn new(verbose: bool, quiet: bool, debug: bool) -> Self;
+    /// Log with timing information (verbose mode)
+    pub fn log_timed(&self, level: LogLevel, message: &str, duration: Duration);
     
-    /// Log with timing information
-    pub fn log_timed(&self, level: LogLevel, operation: &str, duration: Duration, message: &str);
+    /// Log structured JSON (CI mode)
+    pub fn log_json(&self, level: LogLevel, data: &impl Serialize);
     
-    /// Log in CI-friendly JSON format
-    pub fn log_ci(&self, level: LogLevel, message: &str, context: &HashMap<String, String>);
+    /// Rotate log file if >10MB
+    fn rotate_if_needed(&mut self) -> Result<(), DxError>;
+}
+```
+
+### 9. Enhanced Config Loader (`src/config/dx_config.rs`)
+
+Extended with validation, merging, and atomic saves.
+
+```rust
+impl DxConfig {
+    /// Load with field validation
+    pub fn load_validated(path: &Path) -> Result<Self, DxError>;
     
-    /// Rotate log file if it exceeds 10MB
-    pub fn rotate_if_needed(&self) -> Result<(), DxError>;
+    /// Load and merge global + local configs
+    pub fn load_merged() -> Result<Self, DxError>;
     
-    /// Get log directory (~/.dx/logs/)
-    pub fn log_dir() -> PathBuf;
+    /// Save atomically with backup
+    pub fn save_atomic(&self, path: &Path) -> Result<(), DxError>;
+    
+    /// Detect unknown fields and warn
+    fn check_unknown_fields(content: &str) -> Vec<String>;
+}
+```
+
+### 10. Event Debouncer (`src/utils/debounce.rs`)
+
+New module for coalescing rapid events.
+
+```rust
+pub struct Debouncer<T> {
+    window: Duration,
+    pending: Arc<Mutex<HashMap<String, T>>>,
+}
+
+impl<T: Clone> Debouncer<T> {
+    /// Create with debounce window (default: 100ms)
+    pub fn new(window: Duration) -> Self;
+    
+    /// Add event, returns true if new event (not coalesced)
+    pub fn add(&self, key: &str, event: T) -> bool;
+    
+    /// Flush all pending events
+    pub fn flush(&self) -> Vec<T>;
 }
 ```
 
 ## Data Models
 
-### Enhanced History Entry
+### Error Classification
 
 ```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
+impl DxError {
+    /// Retryable errors: Network, Timeout, Tls
+    /// Non-retryable: all others
+    pub fn is_retryable(&self) -> bool {
+        matches!(self, 
+            DxError::Network { .. } | 
+            DxError::Timeout { .. } | 
+            DxError::Tls { .. }
+        )
+    }
+}
+```
+
+### History Entry (Enhanced)
+
+```rust
+#[derive(Serialize, Deserialize)]
 pub struct HistoryEntry {
-    pub id: String,
     pub command: String,
     pub arguments: Vec<String>,
     pub exit_code: i32,
@@ -436,41 +398,25 @@ pub struct HistoryEntry {
 ### Crash Report
 
 ```rust
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct CrashReport {
-    pub id: String,
+    pub id: String,           // UUID
     pub timestamp: DateTime<Utc>,
-    pub version: String,
-    pub os: String,
-    pub arch: String,
+    pub version: String,      // CLI version
+    pub os: String,           // e.g., "linux", "windows", "macos"
+    pub arch: String,         // e.g., "x86_64", "aarch64"
     pub panic_message: String,
     pub panic_location: Option<String>,
     pub backtrace: String,
-    pub command_line: Vec<String>,
-    pub environment: HashMap<String, String>,
     pub recent_commands: Vec<String>,
-}
-```
-
-### Validation Error
-
-```rust
-#[derive(Debug, Clone)]
-pub struct ValidationError {
-    pub field: String,
-    pub value: String,
-    pub expected: String,
-    pub suggestion: Option<String>,
+    pub system_info: SystemInfo,
 }
 
-impl std::fmt::Display for ValidationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Invalid {}: '{}' (expected {})", self.field, self.value, self.expected)?;
-        if let Some(ref suggestion) = self.suggestion {
-            write!(f, "\n  hint: {}", suggestion)?;
-        }
-        Ok(())
-    }
+#[derive(Serialize)]
+pub struct SystemInfo {
+    pub memory_total: u64,
+    pub memory_available: u64,
+    pub cpu_count: usize,
 }
 ```
 
@@ -478,300 +424,342 @@ impl std::fmt::Display for ValidationError {
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
+
 ### Property 1: Retry with Exponential Backoff
 
-*For any* network operation that fails with a retryable error (Network, Timeout, TLS), the retry mechanism SHALL attempt up to 3 retries with delays following the pattern 2^n seconds (1s, 2s, 4s).
+*For any* retry count n (0 ≤ n < max_retries), the delay before the next retry SHALL be exactly 2^n seconds (base 1 second). Delays SHALL strictly increase with each retry attempt.
 
 **Validates: Requirements 1.1, 3.1**
 
 ### Property 2: Error Retryability Classification
 
-*For any* DxError, is_retryable() SHALL return true only for Network, Timeout, and TLS error types, and false for all other error types.
+*For any* `DxError` of type `Network`, `Timeout`, or `Tls`, `is_retryable()` SHALL return `true`. *For all* other error types, `is_retryable()` SHALL return `false`.
 
 **Validates: Requirements 1.7**
 
 ### Property 3: Error Hints Completeness
 
-*For any* DxError that has a defined hint (ConfigNotFound, PermissionDenied, ToolNotInstalled, TLS, DNS errors), the hint() method SHALL return a non-empty string with actionable guidance.
+*For any* `DxError` of type `PermissionDenied`, `Tls`, `Network` (with DNS-related message), or `ToolNotInstalled`, the `hint()` method SHALL return `Some(hint)` where `hint` is a non-empty string containing actionable guidance.
 
 **Validates: Requirements 1.3, 3.4, 3.6, 11.5**
 
 ### Property 4: Config Error Location Reporting
 
-*For any* malformed configuration file, the ConfigInvalid error SHALL include the file path, a line number greater than 0, and a non-empty error message.
+*For any* malformed TOML configuration file, the resulting `ConfigInvalid` error SHALL contain a positive line number and a non-empty error message describing the syntax issue.
 
 **Validates: Requirements 1.4**
 
 ### Property 5: Path Separator Normalization
 
-*For any* path string containing mixed separators (/ and \), resolve_path() SHALL produce a PathBuf containing only the platform-native separator (\ on Windows, / on Unix).
+*For any* path string containing mixed separators (both `/` and `\`), `resolve_path()` SHALL produce a `PathBuf` containing only the platform-native separator (backslash on Windows, forward slash on Unix).
 
 **Validates: Requirements 2.1**
 
 ### Property 6: Home Directory Expansion
 
-*For any* path string starting with "~/", resolve_path() SHALL replace the prefix with the user's home directory, and the result SHALL NOT contain the "~" character.
+*For any* path string starting with `~/`, `resolve_path()` SHALL replace the `~` prefix with the user's home directory. The resulting path SHALL NOT contain the `~` character.
 
 **Validates: Requirements 2.2**
 
 ### Property 7: Long Path Prefix on Windows
 
-*For any* Windows path exceeding 260 characters that doesn't already have the \\?\ prefix, handle_long_path() SHALL add the prefix.
+*For any* Windows path exceeding 200 characters that does not already start with `\\?\`, `handle_long_path()` SHALL prepend the `\\?\` prefix. Paths already prefixed or under 200 characters SHALL remain unchanged.
 
 **Validates: Requirements 2.3**
 
 ### Property 8: Symlink Resolution Depth Limit
 
-*For any* path with more than 40 levels of symlinks, resolve_symlinks() SHALL return a SymlinkLoop error.
+*For any* path requiring more than 40 levels of symlink resolution, `resolve_symlinks()` SHALL return a `SymlinkLoop` error. *For any* path requiring 40 or fewer levels, it SHALL successfully resolve to the final target.
 
 **Validates: Requirements 2.4**
 
 ### Property 9: Unicode Path Handling
 
-*For any* path string containing Unicode characters (including emoji, CJK, RTL scripts), resolve_path() SHALL produce a valid PathBuf that preserves all characters.
+*For any* path string containing Unicode characters (emoji, CJK, RTL scripts, combining characters), `resolve_path()` SHALL preserve all Unicode characters in the resulting `PathBuf`.
 
 **Validates: Requirements 2.5**
 
 ### Property 10: Proxy Configuration from Environment
 
-*For any* environment where HTTP_PROXY or HTTPS_PROXY is set, ProxyConfig::from_env() SHALL capture those values, and should_proxy() SHALL return true for matching URLs.
+*For any* combination of `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` environment variables, `ProxyConfig::from_env()` SHALL correctly parse and store all values. Empty or unset variables SHALL result in `None` for the corresponding field.
 
 **Validates: Requirements 3.5**
 
 ### Property 11: Config Field Validation
 
-*For any* configuration with invalid field types (e.g., string where number expected), the Config_Loader SHALL return a ConfigInvalid error with the field name.
+*For any* configuration with a field value outside its valid range (e.g., port > 65535, negative quality), `load_validated()` SHALL return a `ConfigInvalid` error identifying the invalid field.
 
 **Validates: Requirements 4.1**
 
 ### Property 12: Unknown Config Fields Warning
 
-*For any* configuration file containing unknown fields, the Config_Loader SHALL successfully load the known fields and the unknown field names SHALL be available for warning.
+*For any* configuration containing fields not defined in the schema, `load_validated()` SHALL successfully load the configuration AND return a list of unknown field names for warning purposes.
 
 **Validates: Requirements 4.3**
 
 ### Property 13: Config Merge Precedence
 
-*For any* field defined in both local and global config files, the merged config SHALL use the local value.
+*For any* field defined in both global (`~/.dx/config.toml`) and local (`dx.toml`) configurations, the merged result SHALL contain the local value. Fields only in global SHALL be preserved.
 
 **Validates: Requirements 4.5**
 
 ### Property 14: Config Backup on Save
 
-*For any* config save operation where the file already exists, a backup file with .bak extension SHALL be created containing the previous content.
+*For any* existing configuration file, calling `save_atomic()` SHALL create a `.bak` backup file containing the previous content before writing the new content.
 
 **Validates: Requirements 4.7**
 
 ### Property 15: Signature Verification Gates Updates
 
-*For any* update with an invalid or missing Ed25519 signature, the Update_System SHALL return a SignatureInvalid error and NOT apply the update.
+*For any* update payload, if the Ed25519 signature verification fails, the update SHALL be aborted and a `SignatureInvalid` error SHALL be returned. Valid signatures SHALL allow the update to proceed.
 
 **Validates: Requirements 5.1, 5.2**
 
 ### Property 16: Delta Patch Preference
 
-*For any* UpdateInfo where delta_url is Some, preferred_url() SHALL return the delta URL, and preferred_size() SHALL return the delta size.
+*For any* update where both delta patch and full download are available, the update system SHALL choose the delta patch. When only full download is available, it SHALL use that.
 
 **Validates: Requirements 5.5**
 
 ### Property 17: Update Version Display
 
-*For any* UpdateInfo, version_display() SHALL contain both current_version and new_version strings.
+*For any* available update, the display output SHALL contain both the current version and the new version, plus a non-empty release notes summary if available.
 
 **Validates: Requirements 5.8**
 
 ### Property 18: Shell Integration Duplicate Detection
 
-*For any* shell config file containing the integration marker, is_installed() SHALL return true.
+*For any* shell configuration file already containing DX integration markers, `install()` without `--force` SHALL return a `ShellIntegrationExists` error.
 
 **Validates: Requirements 6.3**
 
 ### Property 19: Shell Integration Idempotence
 
-*For any* shell type, installing integration twice with --force SHALL result in exactly one copy of the integration marker in the config file.
+*For any* shell configuration, calling `install(force=true)` multiple times SHALL result in exactly one copy of the DX integration block, with no duplicates.
 
 **Validates: Requirements 6.7**
 
 ### Property 20: Completion Script Validity
 
-*For any* supported shell type, the generated completion script SHALL contain shell-appropriate syntax (e.g., "complete" for bash, "compdef" for zsh).
+*For any* supported shell type (Bash, Zsh, Fish, PowerShell, Nushell), the generated completion script SHALL be syntactically valid for that shell.
 
 **Validates: Requirements 6.6**
 
 ### Property 21: History Search Case Insensitivity
 
-*For any* search query, the History_Manager SHALL return all entries where the command, arguments, or working directory contain the query string (case-insensitive).
+*For any* search query and history entry, if the entry's command, arguments, or working directory contains the query (case-insensitive), the entry SHALL be included in search results.
 
 **Validates: Requirements 7.3**
 
 ### Property 22: History FIFO Eviction
 
-*For any* history with max_entries = N, after adding M entries where M > N, the history SHALL contain exactly N entries, and those entries SHALL be the M - N + 1 through M most recently added.
+*For any* history with `n` entries where `n > max_entries`, after adding a new entry, the oldest `n - max_entries + 1` entries SHALL be removed, preserving the most recent entries.
 
 **Validates: Requirements 7.4**
 
 ### Property 23: History Statistics Accuracy
 
-*For any* history, stats().total SHALL equal stats().successful + stats().failed, and the sum of top_commands counts SHALL NOT exceed total.
+*For any* history, `stats().total` SHALL equal `stats().successful + stats().failed`, and these counts SHALL match the actual entry counts.
 
 **Validates: Requirements 7.6**
 
 ### Property 24: History Entry Completeness
 
-*For any* HistoryEntry, all fields (command, arguments, exit_code, duration_ms, timestamp, working_dir) SHALL be present and the command SHALL be non-empty.
+*For any* `HistoryEntry`, all fields (command, arguments, exit_code, duration_ms, timestamp, working_dir) SHALL be present and non-default after construction.
 
 **Validates: Requirements 7.7**
 
 ### Property 25: Port Validation Range
 
-*For any* port number outside the range 1-65535, validate_port() SHALL return a ValidationError.
+*For any* integer `n`, `validate_port(n)` SHALL return `Ok` if and only if `1 ≤ n ≤ 65535`. All other values SHALL return a `ValidationError`.
 
 **Validates: Requirements 8.4**
 
 ### Property 26: Version Validation Format
 
-*For any* version string not matching the pattern X.Y.Z (where X, Y, Z are non-negative integers), validate_version() SHALL return a ValidationError mentioning the expected format.
+*For any* string matching the pattern `X.Y.Z` where X, Y, Z are non-negative integers, `validate_version()` SHALL return `Ok((X, Y, Z))`. Non-matching strings SHALL return a `ValidationError`.
 
 **Validates: Requirements 8.5**
 
 ### Property 27: Shell Metacharacter Escaping
 
-*For any* string containing shell metacharacters (; | & $ ` etc.), sanitize_for_shell() SHALL escape all metacharacters such that the result is safe for shell execution.
+*For any* input string containing shell metacharacters (`;`, `|`, `&`, `$`, `` ` ``, etc.), `sanitize_for_shell()` SHALL escape all metacharacters such that the result is safe for shell execution.
 
 **Validates: Requirements 8.3**
 
 ### Property 28: Path Traversal Detection
 
-*For any* path containing ".." that resolves outside the project directory, check_path_traversal() SHALL return a SecurityWarning.
+*For any* path that, when resolved, falls outside the project root directory, `check_path_traversal()` SHALL return a `SecurityWarning`. Paths within the project SHALL return `Ok`.
 
 **Validates: Requirements 8.2**
 
 ### Property 29: Process Limit Enforcement
 
-*For any* sequence of spawn_limited() calls exceeding max_concurrent_processes, the excess calls SHALL block until a slot becomes available.
+*For any* `ResourceManager` with `max_processes = N`, at most `N` child processes SHALL be running concurrently. Additional spawn requests SHALL block until a slot is available.
 
 **Validates: Requirements 9.1**
 
 ### Property 30: Event Debouncing
 
-*For any* sequence of file change events within 100ms, the watcher SHALL coalesce them into a single event.
+*For any* sequence of events with the same key arriving within the debounce window (100ms), only the last event SHALL be emitted. Events outside the window SHALL be emitted separately.
 
 **Validates: Requirements 9.2, 12.6**
 
 ### Property 31: Verbose Output Contains Timing
 
-*For any* operation logged with --verbose flag, the output SHALL contain timing information (duration in ms or similar).
+*For any* log message in verbose mode (`--verbose` or `DX_DEBUG=1`), the output SHALL include timing information (duration in milliseconds or seconds).
 
 **Validates: Requirements 10.1, 10.6**
 
 ### Property 32: Quiet Mode Suppresses Non-Errors
 
-*For any* CLI invocation with --quiet flag, the output SHALL contain only error messages (no info, success, or warning messages).
+*For any* log message with level `Info`, `Debug`, or `Warn` in quiet mode (`--quiet`), the message SHALL NOT be written to stderr. Only `Error` level messages SHALL be output.
 
 **Validates: Requirements 10.2**
 
 ### Property 33: CI Mode JSON Output
 
-*For any* CLI invocation with CI=true environment variable, log output SHALL be valid JSON with level, message, and timestamp fields.
+*For any* log message when `CI` environment variable is set, the output SHALL be valid JSON containing at minimum `level`, `message`, and `timestamp` fields.
 
 **Validates: Requirements 10.4**
 
 ### Property 34: Color-Disabled Output Purity
 
-*For any* output when colors are disabled (NO_COLOR set or non-TTY), the Theme SHALL NOT include any ANSI escape sequences.
+*For any* output when `NO_COLOR` is set or stdout is not a TTY, the output SHALL NOT contain ANSI escape codes (sequences starting with `\x1b[`).
 
 **Validates: Requirements 11.2**
 
 ### Property 35: Container Detection
 
-*For any* environment with /.dockerenv file or "docker"/"kubepods" in /proc/1/cgroup, is_container() SHALL return true.
+*For any* environment where `/.dockerenv` exists OR `/proc/1/cgroup` contains "docker" or "kubepods" OR `KUBERNETES_SERVICE_HOST` is set, `is_container()` SHALL return `true`.
 
 **Validates: Requirements 11.6**
 
 ### Property 36: Terminal Width Fallback
 
-*For any* environment where terminal width cannot be detected, terminal_width() SHALL return 80.
+*For any* environment where terminal width cannot be detected, `terminal_width()` SHALL return 80 (the default fallback value).
 
 **Validates: Requirements 11.7**
 
 ### Property 37: File Lock Blocking vs Non-Blocking
 
-*For any* file, try_acquire() SHALL return immediately (either Some(lock) or None), while acquire() with timeout SHALL block up to the timeout duration.
+*For any* file, `try_acquire()` SHALL return immediately with `None` if the lock is held by another process. `acquire()` with timeout SHALL block until the lock is available or timeout expires.
 
 **Validates: Requirements 12.7**
 
 ### Property 38: Cache Invalidation on Source Change
 
-*For any* cached config where the source file modification time is newer than the cache, loading SHALL reload from source and update the cache.
+*For any* cached configuration, if the source file's modification time is newer than the cache's recorded mtime, the cache SHALL be invalidated and the configuration SHALL be reloaded from source.
 
 **Validates: Requirements 12.5**
 
 ## Error Handling
 
-### Error Categories and Retry Behavior
+### Error Classification Strategy
 
-| Error Type | Retryable | Max Retries | Backoff Pattern |
-|------------|-----------|-------------|-----------------|
-| Network | Yes | 3 | Exponential (1s, 2s, 4s) |
-| Timeout | Yes | 3 | Exponential (1s, 2s, 4s) |
-| TLS | Yes | 2 | Linear (1s, 1s) |
-| DNS | Yes | 2 | Linear (1s, 1s) |
-| Permission | No | 0 | N/A |
-| Config | No | 0 | N/A |
-| Signature | No | 0 | N/A |
-| Validation | No | 0 | N/A |
+Errors are classified into two categories for retry logic:
 
-### Panic Handling Strategy
+| Category | Error Types | Behavior |
+|----------|-------------|----------|
+| Retryable | `Network`, `Timeout`, `Tls` | Retry up to 3 times with exponential backoff |
+| Non-retryable | All others | Fail immediately with helpful hint |
 
-1. Install custom panic hook at startup via `CrashReporter::install()`
-2. On panic:
-   - Generate crash report with system info, backtrace, recent commands
-   - Save report to `~/.dx/crash-reports/crash-{timestamp}.json`
-   - Clean up resources via ResourceManager
-   - Display user-friendly message with report location
-   - Exit with code 101
+### Exponential Backoff Schedule
 
-### Signal Handling Strategy
+| Attempt | Delay |
+|---------|-------|
+| 1st retry | 1 second |
+| 2nd retry | 2 seconds |
+| 3rd retry | 4 seconds |
 
-1. Register handlers for SIGINT, SIGTERM (Unix) and Ctrl+C (Windows)
-2. On signal:
-   - Set global shutdown flag
-   - Terminate child processes gracefully (SIGTERM, wait 5s, SIGKILL)
-   - Clean up temporary files
-   - Release file locks
-   - Exit with code 130 (128 + SIGINT)
+### Error Context Chain
+
+All errors include:
+1. Operation name (what was being attempted)
+2. Error type and message
+3. Retry count (if applicable)
+4. Context-specific hint for resolution
+5. File path (if applicable)
 
 ## Testing Strategy
 
-### Unit Tests
+### Dual Testing Approach
 
-- Test each validator function with valid and invalid inputs
-- Test error message formatting and hint generation
-- Test path normalization on each platform
-- Test config parsing with various malformed inputs
-- Test shell metacharacter escaping
+The implementation uses both unit tests and property-based tests:
 
-### Property-Based Tests
+- **Unit tests**: Verify specific examples, edge cases, and error conditions
+- **Property tests**: Verify universal properties across all valid inputs using `proptest`
 
-Using `proptest` with minimum 100 iterations per property:
+### Property-Based Testing Configuration
 
-1. **Retry behavior**: Simulate failures, verify retry count and timing
-2. **Path normalization**: Generate paths with random characters, verify valid output
-3. **Config validation**: Generate configs with random invalid fields, verify error details
-4. **History operations**: Generate random command sequences, verify invariants
-5. **Input validation**: Generate random inputs, verify validation results
-6. **Shell escaping**: Generate strings with metacharacters, verify safe output
+- Library: `proptest` crate
+- Minimum iterations: 100 per property test
+- Each test is tagged with: `Feature: dx-cli-hardening, Property N: {property_text}`
+- Each property references the requirements it validates
 
-### Integration Tests
+### Test Organization
 
-- Test retry behavior with mock HTTP server
-- Test file locking with concurrent processes
-- Test crash report generation with induced panics
-- Test shell integration install/uninstall cycle
-- Test signal handling with child processes
+```
+src/
+├── utils/
+│   ├── error.rs          # Properties 1-3
+│   ├── input.rs          # Properties 25-28
+│   ├── paths.rs          # Properties 5-9
+│   ├── lock.rs           # Property 37
+│   ├── network.rs        # Property 10
+│   ├── resource.rs       # Properties 29-30
+│   ├── crash.rs          # (integration tests)
+│   └── history.rs        # Properties 21-24
+├── config/
+│   └── dx_config.rs      # Properties 4, 11-14, 38
+├── ui/
+│   ├── logger.rs         # Properties 31-33
+│   └── theme.rs          # Properties 34-36
+└── commands/
+    └── shell.rs          # Properties 18-20
+```
 
-### Platform-Specific Tests
+### Example Property Test
 
-- Windows: Long path handling, IOCP fallback, PowerShell completions
-- macOS: kqueue reactor, Zsh completions, Homebrew paths
-- Linux: io_uring fallback, Bash completions, container detection
+```rust
+// Feature: dx-cli-hardening, Property 1: Retry with Exponential Backoff
+// **Validates: Requirements 1.1, 3.1**
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    #[test]
+    fn prop_retry_exponential_backoff(retry_count in 0u32..10) {
+        let ctx = ErrorContext::new("test");
+        let err = EnhancedError::with_retries(
+            DxError::network("error"), 
+            ctx, 
+            retry_count, 
+            10
+        );
+        
+        let delay = err.next_retry_delay();
+        let expected_ms = 1000u64 * (1u64 << retry_count);
+        
+        prop_assert_eq!(delay.as_millis() as u64, expected_ms);
+    }
+}
+```
+
+## Platform-Specific Considerations
+
+### Windows
+- Use `\\?\` prefix for paths > 200 characters
+- Use `LockFile`/`UnlockFile` for file locking
+- Handle backslash path separators
+- No SIGTERM/SIGKILL; use `TerminateProcess`
+
+### Unix (Linux/macOS)
+- Use `flock` for file locking
+- Handle forward slash path separators
+- Use SIGTERM followed by SIGKILL for process termination
+- Set file permissions with mode 0644/0755
+
+### Cross-Platform
+- Use `cfg` attributes for conditional compilation
+- Abstract platform differences behind common interfaces
+- Test on all platforms in CI

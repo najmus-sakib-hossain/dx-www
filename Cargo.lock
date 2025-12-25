@@ -3047,6 +3047,7 @@ dependencies = [
  "hex",
  "hmac",
  "ignore",
+ "io-uring 0.7.11",
  "jwalk",
  "log",
  "lz4",

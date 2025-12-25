@@ -6,13 +6,13 @@ This implementation plan transforms dx-py from a functional prototype into a bat
 
 ## Tasks
 
-- [ ] 1. Implement PEP 440 Version Parser (dx-py-core)
-  - [ ] 1.1 Create Pep440Version struct with all components
+- [x] 1. Implement PEP 440 Version Parser (dx-py-core)
+  - [x] 1.1 Create Pep440Version struct with all components
     - Epoch, release segments, pre/post/dev, local
     - Implement Display trait for formatting
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 1.2 Implement PEP 440 parsing with regex
+  - [x] 1.2 Implement PEP 440 parsing with regex
     - Parse epoch (N!)
     - Parse release segments (N.N.N...)
     - Parse pre-release (aN, bN, rcN, alphaN, betaN)
@@ -21,7 +21,7 @@ This implementation plan transforms dx-py from a functional prototype into a bat
     - Parse local version (+local)
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 1.3 Implement PEP 440 version ordering
+  - [x] 1.3 Implement PEP 440 version ordering
     - Epoch comparison (higher epoch wins)
     - Release segment comparison
     - Pre-release ordering (dev < alpha < beta < rc < release)
@@ -29,22 +29,22 @@ This implementation plan transforms dx-py from a functional prototype into a bat
     - Local version comparison
     - _Requirements: 2.6_
 
-  - [ ]* 1.4 Write property test for version round-trip
+  - [x]* 1.4 Write property test for version round-trip
     - **Property 1: PEP 440 Version Round-Trip**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.7**
 
-  - [ ]* 1.5 Write property test for version ordering
+  - [x]* 1.5 Write property test for version ordering
     - **Property 2: PEP 440 Version Ordering**
     - **Validates: Requirements 2.6**
 
-- [ ] 2. Implement Environment Marker Evaluator (dx-py-compat)
-  - [ ] 2.1 Create MarkerEnvironment struct
+- [x] 2. Implement Environment Marker Evaluator (dx-py-compat)
+  - [x] 2.1 Create MarkerEnvironment struct
     - Detect python_version, sys_platform, platform_system
     - Detect platform_machine, implementation_name
     - Create current() constructor
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-  - [ ] 2.2 Implement marker expression parser
+  - [x] 2.2 Implement marker expression parser
     - Parse comparison operators (==, !=, <, >, <=, >=, ~=, ===)
     - Parse variable names (python_version, sys_platform, etc.)
     - Parse string literals
@@ -52,53 +52,53 @@ This implementation plan transforms dx-py from a functional prototype into a bat
     - Parse parentheses for grouping
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-  - [ ] 2.3 Implement marker evaluation
+  - [x] 2.3 Implement marker evaluation
     - Evaluate comparisons against environment
     - Evaluate extra markers
     - Evaluate boolean expressions
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
 
-  - [ ]* 2.4 Write property test for marker evaluation
+  - [x]* 2.4 Write property test for marker evaluation
     - **Property 4: Marker Evaluation Consistency**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6**
 
-- [ ] 3. Checkpoint - Core parsing complete
+- [x] 3. Checkpoint - Core parsing complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement Wheel Tag Parser and Selector (dx-py-core)
-  - [ ] 4.1 Create WheelTag struct and parser
+- [x] 4. Implement Wheel Tag Parser and Selector (dx-py-core)
+  - [x] 4.1 Create WheelTag struct and parser
     - Parse wheel filename format: {name}-{version}(-{build})?-{python}-{abi}-{platform}.whl
     - Handle multiple tags (e.g., py2.py3-none-any)
     - _Requirements: 4.4_
 
-  - [ ] 4.2 Create PlatformEnvironment detection
+  - [x] 4.2 Create PlatformEnvironment detection
     - Detect OS (Windows, macOS, Linux)
     - Detect architecture (x86_64, aarch64, arm64)
     - Detect Python implementation and version
     - Detect manylinux compatibility
     - _Requirements: 4.1, 4.2, 4.3_
 
-  - [ ] 4.3 Implement wheel compatibility checking
+  - [x] 4.3 Implement wheel compatibility checking
     - Check Python version compatibility
     - Check ABI compatibility
     - Check platform compatibility
     - _Requirements: 4.4_
 
-  - [ ] 4.4 Implement wheel selection priority
+  - [x] 4.4 Implement wheel selection priority
     - Score wheels by specificity
     - Prefer platform-specific over universal
     - Prefer newer manylinux over older
     - _Requirements: 4.5, 4.6_
 
-  - [ ]* 4.5 Write property test for wheel tag parsing
+  - [x]* 4.5 Write property test for wheel tag parsing
     - **Property 5: Wheel Tag Parsing**
     - **Validates: Requirements 4.4**
 
-  - [ ]* 4.6 Write property test for wheel selection priority
+  - [x]* 4.6 Write property test for wheel selection priority
     - **Property 6: Wheel Selection Priority**
     - **Validates: Requirements 4.5, 4.6**
 
-- [ ] 5. Implement Enhanced PEP 508 Parser (dx-py-package-manager)
+- [-] 5. Implement Enhanced PEP 508 Parser (dx-py-package-manager)
   - [ ] 5.1 Enhance DependencySpec parser
     - Parse URL dependencies (package @ url)
     - Parse path dependencies (package @ file://path)

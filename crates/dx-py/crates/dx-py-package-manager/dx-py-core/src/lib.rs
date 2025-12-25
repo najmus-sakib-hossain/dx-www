@@ -5,7 +5,9 @@
 
 pub mod error;
 pub mod headers;
+pub mod pep440;
 pub mod version;
+pub mod wheel;
 
 /// Magic number for DX Python Package format
 pub const DPP_MAGIC: &[u8; 4] = b"DPP\x01";
@@ -36,4 +38,6 @@ pub const MAX_VERSION_LENGTH: usize = 24;
 
 pub use error::{Error, Result};
 pub use headers::{fnv1a_hash, DplEntry, DplHeader, DppHeader, DppMetadata, SourceType};
+pub use pep440::{ParseError as Pep440ParseError, Pep440Version, PreRelease};
 pub use version::{compare_versions, compare_versions_scalar, PackedVersion};
+pub use wheel::{Arch, ManylinuxVersion, Os, PlatformEnvironment, PythonImpl, WheelTag};

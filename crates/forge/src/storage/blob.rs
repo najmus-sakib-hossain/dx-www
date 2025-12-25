@@ -3,11 +3,29 @@
 /// This module provides efficient binary blob storage using FlatBuffers for serialization.
 /// All file content and metadata are stored as binary blobs in R2, making it faster and
 /// more cost-effective than traditional Git storage.
-use anyhow::{Context, Result};
+///
+/// Features:
+/// - Platform-native I/O for optimal performance
+/// - Memory-mapped I/O for large blobs (>1MB)
+/// - Parallel compression for files >100KB
+/// - SHA-256 integrity verification
+use anyhow::{Context, Result, anyhow};
+use memmap2::Mmap;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::fs::File;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use tokio::fs;
+
+use crate::platform_io::{create_platform_io, PlatformIO};
+
+/// Threshold for using memory-mapped I/O (1MB)
+const MMAP_THRESHOLD: u64 = 1024 * 1024;
+
+/// Threshold for using parallel compression (100KB)
+const PARALLEL_COMPRESSION_THRESHOLD: usize = 100 * 1024;
 
 /// Blob metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,9 +60,23 @@ pub struct Blob {
 }
 
 impl Blob {
-    /// Create a new blob from file content
+    /// Create a new blob from file content using platform-native I/O
     pub async fn from_file(path: &Path) -> Result<Self> {
-        let content = fs::read(path).await.context("Failed to read file")?;
+        Self::from_file_with_io(path, create_platform_io()).await
+    }
+
+    /// Create a new blob from file content using specified I/O backend
+    pub async fn from_file_with_io(path: &Path, io: Arc<dyn PlatformIO>) -> Result<Self> {
+        let metadata = std::fs::metadata(path)
+            .with_context(|| format!("Failed to get metadata for: {}", path.display()))?;
+        let file_size = metadata.len();
+
+        // Use memory-mapped I/O for large files
+        let content = if file_size > MMAP_THRESHOLD {
+            Self::read_with_mmap(path)?
+        } else {
+            io.read_all(path).await?
+        };
 
         let hash = compute_hash(&content);
         let size = content.len() as u64;
@@ -61,6 +93,21 @@ impl Blob {
         };
 
         Ok(Self { metadata, content })
+    }
+
+    /// Read file using memory-mapped I/O for large files
+    fn read_with_mmap(path: &Path) -> Result<Vec<u8>> {
+        let file = File::open(path)
+            .with_context(|| format!("Failed to open file for mmap: {}", path.display()))?;
+
+        // Safety: We're only reading the file, and the file won't be modified
+        // while we're reading it (single-threaded access pattern)
+        let mmap = unsafe {
+            Mmap::map(&file)
+                .with_context(|| format!("Failed to mmap file: {}", path.display()))?
+        };
+
+        Ok(mmap.to_vec())
     }
 
     /// Create blob from raw content
@@ -120,12 +167,18 @@ impl Blob {
     }
 
     /// Compress blob content using LZ4
+    /// Uses parallel compression for files >100KB
     pub fn compress(&mut self) -> Result<()> {
         if self.metadata.compression.is_some() {
             return Ok(()); // Already compressed
         }
 
-        let compressed = lz4::block::compress(&self.content, None, false)?;
+        let compressed = if self.content.len() > PARALLEL_COMPRESSION_THRESHOLD {
+            // Use parallel compression for large files
+            self.compress_parallel()?
+        } else {
+            lz4::block::compress(&self.content, None, false)?
+        };
 
         // Only use compression if it actually reduces size
         if compressed.len() < self.content.len() {
@@ -139,17 +192,68 @@ impl Blob {
         Ok(())
     }
 
+    /// Compress content in parallel chunks
+    fn compress_parallel(&self) -> Result<Vec<u8>> {
+        const CHUNK_SIZE: usize = 64 * 1024; // 64KB chunks
+
+        let chunks: Vec<&[u8]> = self.content.chunks(CHUNK_SIZE).collect();
+
+        // Compress chunks in parallel
+        let compressed_chunks: Vec<Vec<u8>> = chunks
+            .par_iter()
+            .map(|chunk| lz4::block::compress(chunk, None, false))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        // Combine compressed chunks with length prefixes
+        let total_size: usize = compressed_chunks.iter().map(|c| 4 + c.len()).sum();
+        let mut result = Vec::with_capacity(total_size + 4);
+
+        // Write number of chunks
+        result.extend_from_slice(&(compressed_chunks.len() as u32).to_le_bytes());
+
+        // Write each chunk with its length
+        for chunk in compressed_chunks {
+            result.extend_from_slice(&(chunk.len() as u32).to_le_bytes());
+            result.extend_from_slice(&chunk);
+        }
+
+        Ok(result)
+    }
+
     /// Decompress blob content
     pub fn decompress(&mut self) -> Result<()> {
         if self.metadata.compression.is_none() {
             return Ok(()); // Not compressed
         }
 
-        // Use the recorded original size when available to avoid
-        // decompression errors due to missing size hints.
-        let original_size = self.metadata.original_size.unwrap_or(self.metadata.size) as i32;
+        // Check if this is parallel-compressed data
+        let decompressed = if self.content.len() >= 4 {
+            let num_chunks = u32::from_le_bytes([
+                self.content[0],
+                self.content[1],
+                self.content[2],
+                self.content[3],
+            ]) as usize;
 
-        let decompressed = lz4::block::decompress(&self.content, Some(original_size))?;
+            // Heuristic: if num_chunks is reasonable, try parallel decompression
+            if num_chunks > 0 && num_chunks < 10000 {
+                match self.decompress_parallel() {
+                    Ok(data) => data,
+                    Err(_) => {
+                        // Fall back to regular decompression
+                        let original_size = self.metadata.original_size.unwrap_or(self.metadata.size) as i32;
+                        lz4::block::decompress(&self.content, Some(original_size))?
+                    }
+                }
+            } else {
+                let original_size = self.metadata.original_size.unwrap_or(self.metadata.size) as i32;
+                lz4::block::decompress(&self.content, Some(original_size))?
+            }
+        } else {
+            let original_size = self.metadata.original_size.unwrap_or(self.metadata.size) as i32;
+            lz4::block::decompress(&self.content, Some(original_size))?
+        };
+
         self.content = decompressed;
         self.metadata.compression = None;
         self.metadata.original_size = None;
@@ -158,14 +262,90 @@ impl Blob {
         Ok(())
     }
 
+    /// Decompress parallel-compressed content
+    fn decompress_parallel(&self) -> Result<Vec<u8>> {
+        if self.content.len() < 4 {
+            anyhow::bail!("Invalid parallel compressed data");
+        }
+
+        let num_chunks = u32::from_le_bytes([
+            self.content[0],
+            self.content[1],
+            self.content[2],
+            self.content[3],
+        ]) as usize;
+
+        let mut offset = 4;
+        let mut chunks = Vec::with_capacity(num_chunks);
+
+        for _ in 0..num_chunks {
+            if offset + 4 > self.content.len() {
+                anyhow::bail!("Invalid parallel compressed data: truncated");
+            }
+
+            let chunk_len = u32::from_le_bytes([
+                self.content[offset],
+                self.content[offset + 1],
+                self.content[offset + 2],
+                self.content[offset + 3],
+            ]) as usize;
+            offset += 4;
+
+            if offset + chunk_len > self.content.len() {
+                anyhow::bail!("Invalid parallel compressed data: chunk truncated");
+            }
+
+            chunks.push(&self.content[offset..offset + chunk_len]);
+            offset += chunk_len;
+        }
+
+        // Decompress chunks in parallel
+        let decompressed_chunks: Vec<Vec<u8>> = chunks
+            .par_iter()
+            .map(|chunk| {
+                // Use a reasonable max size for each chunk
+                lz4::block::decompress(chunk, Some(128 * 1024))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        // Combine decompressed chunks
+        let total_size: usize = decompressed_chunks.iter().map(|c| c.len()).sum();
+        let mut result = Vec::with_capacity(total_size);
+        for chunk in decompressed_chunks {
+            result.extend_from_slice(&chunk);
+        }
+
+        Ok(result)
+    }
+
     /// Get blob hash (content-addressable)
     pub fn hash(&self) -> &str {
         &self.metadata.hash
     }
+
+    /// Verify blob integrity by checking SHA-256 hash
+    pub fn verify_integrity(&self) -> Result<bool> {
+        let computed_hash = compute_hash(&self.content);
+        Ok(computed_hash == self.metadata.hash)
+    }
+
+    /// Verify integrity and return error with details if failed
+    pub fn verify_integrity_strict(&self) -> Result<()> {
+        let computed_hash = compute_hash(&self.content);
+        if computed_hash != self.metadata.hash {
+            return Err(anyhow!(
+                "Blob integrity verification failed for '{}': expected hash '{}', got '{}'",
+                self.metadata.path,
+                self.metadata.hash,
+                computed_hash
+            ));
+        }
+        Ok(())
+    }
 }
 
 /// Compute SHA-256 hash of content
-fn compute_hash(content: &[u8]) -> String {
+pub fn compute_hash(content: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(content);
     format!("{:x}", hasher.finalize())
@@ -205,21 +385,27 @@ fn detect_mime_type_from_path(path: &str) -> String {
     }
 }
 
-/// Blob repository for local caching
+/// Blob repository for local caching with platform-native I/O
 pub struct BlobRepository {
     cache_dir: PathBuf,
+    io: Arc<dyn PlatformIO>,
 }
 
 impl BlobRepository {
-    /// Create new blob repository
+    /// Create new blob repository with default platform I/O
     pub fn new(forge_dir: &Path) -> Result<Self> {
+        Self::with_io(forge_dir, create_platform_io())
+    }
+
+    /// Create new blob repository with specified I/O backend
+    pub fn with_io(forge_dir: &Path, io: Arc<dyn PlatformIO>) -> Result<Self> {
         let cache_dir = forge_dir.join("blobs");
         std::fs::create_dir_all(&cache_dir)?;
 
-        Ok(Self { cache_dir })
+        Ok(Self { cache_dir, io })
     }
 
-    /// Store blob locally
+    /// Store blob locally using platform-native I/O
     pub async fn store_local(&self, blob: &Blob) -> Result<()> {
         let hash = blob.hash();
         let blob_path = self.get_blob_path(hash);
@@ -230,15 +416,30 @@ impl BlobRepository {
         }
 
         let binary = blob.to_binary()?;
-        fs::write(&blob_path, binary).await?;
+        self.io.write_all(&blob_path, &binary).await?;
 
         Ok(())
     }
 
-    /// Load blob from local cache
+    /// Load blob from local cache using platform-native I/O
     pub async fn load_local(&self, hash: &str) -> Result<Blob> {
         let blob_path = self.get_blob_path(hash);
-        let binary = fs::read(&blob_path).await.context("Blob not found in cache")?;
+        let binary = self.io.read_all(&blob_path).await
+            .context("Blob not found in cache")?;
+
+        let blob = Blob::from_binary(&binary)?;
+
+        // Verify integrity on read
+        blob.verify_integrity_strict()?;
+
+        Ok(blob)
+    }
+
+    /// Load blob without integrity verification (for performance-critical paths)
+    pub async fn load_local_unchecked(&self, hash: &str) -> Result<Blob> {
+        let blob_path = self.get_blob_path(hash);
+        let binary = self.io.read_all(&blob_path).await
+            .context("Blob not found in cache")?;
 
         Blob::from_binary(&binary)
     }
@@ -251,9 +452,14 @@ impl BlobRepository {
     /// Get blob storage path (content-addressable)
     fn get_blob_path(&self, hash: &str) -> PathBuf {
         // Store blobs like Git: .dx/forge/blobs/ab/cdef1234...
-        let prefix = &hash[..2];
-        let suffix = &hash[2..];
+        let prefix = &hash[..2.min(hash.len())];
+        let suffix = if hash.len() > 2 { &hash[2..] } else { "" };
         self.cache_dir.join(prefix).join(suffix)
+    }
+
+    /// Get the I/O backend name
+    pub fn backend_name(&self) -> &'static str {
+        self.io.backend_name()
     }
 }
 
@@ -289,5 +495,234 @@ mod tests {
         blob.decompress().unwrap();
         assert_eq!(blob.content, content);
         assert_eq!(blob.metadata.compression, None);
+    }
+
+    #[tokio::test]
+    async fn test_blob_integrity_verification() {
+        let content = b"Test content for integrity check".to_vec();
+        let blob = Blob::from_content("test.txt", content.clone());
+
+        // Verify integrity passes for valid blob
+        assert!(blob.verify_integrity().unwrap());
+        assert!(blob.verify_integrity_strict().is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_blob_integrity_failure() {
+        let content = b"Test content".to_vec();
+        let mut blob = Blob::from_content("test.txt", content);
+
+        // Corrupt the content
+        blob.content = b"Corrupted content".to_vec();
+
+        // Verify integrity fails
+        assert!(!blob.verify_integrity().unwrap());
+        assert!(blob.verify_integrity_strict().is_err());
+    }
+
+    #[test]
+    fn test_compute_hash() {
+        let content = b"Hello, world!";
+        let hash = compute_hash(content);
+        // SHA-256 of "Hello, world!" is known
+        assert_eq!(hash.len(), 64); // SHA-256 produces 64 hex chars
+    }
+}
+
+/// Property-based tests for blob storage
+#[cfg(test)]
+mod property_tests {
+    use super::*;
+    use proptest::prelude::*;
+    use tempfile::TempDir;
+
+    // Strategy for generating arbitrary blob content
+    fn arbitrary_content() -> impl Strategy<Value = Vec<u8>> {
+        prop::collection::vec(any::<u8>(), 0..10000)
+    }
+
+    // Strategy for generating valid file paths
+    fn arbitrary_filename() -> impl Strategy<Value = String> {
+        "[a-zA-Z][a-zA-Z0-9_]{0,20}\\.(txt|rs|json|md)"
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        /// Property 8: Blob Integrity Round-Trip
+        /// For any content, creating a blob, serializing, deserializing,
+        /// and verifying integrity should always succeed.
+        #[test]
+        fn prop_blob_integrity_roundtrip(content in arbitrary_content(), filename in arbitrary_filename()) {
+            let blob = Blob::from_content(&filename, content.clone());
+
+            // Verify hash is computed correctly
+            let expected_hash = compute_hash(&content);
+            prop_assert_eq!(&blob.metadata.hash, &expected_hash);
+
+            // Serialize and deserialize
+            let binary = blob.to_binary().unwrap();
+            let restored = Blob::from_binary(&binary).unwrap();
+
+            // Verify integrity after round-trip
+            prop_assert!(restored.verify_integrity().unwrap());
+            prop_assert!(restored.verify_integrity_strict().is_ok());
+
+            // Verify content is preserved
+            prop_assert_eq!(restored.content, content);
+            prop_assert_eq!(restored.metadata.hash, expected_hash);
+        }
+
+        /// Property: Compression round-trip preserves content
+        #[test]
+        fn prop_compression_roundtrip(content in arbitrary_content()) {
+            if content.is_empty() {
+                return Ok(());
+            }
+
+            let mut blob = Blob::from_content("test.txt", content.clone());
+            let original_hash = blob.metadata.hash.clone();
+
+            // Compress
+            blob.compress().unwrap();
+
+            // Decompress
+            blob.decompress().unwrap();
+
+            // Content should be preserved
+            prop_assert_eq!(&blob.content, &content);
+
+            // Hash should match original after decompression
+            let new_hash = compute_hash(&blob.content);
+            prop_assert_eq!(new_hash, original_hash);
+        }
+
+        /// Property: Corrupted content fails integrity check
+        #[test]
+        fn prop_corruption_detected(content in arbitrary_content(), corruption_byte in any::<u8>()) {
+            if content.is_empty() {
+                return Ok(());
+            }
+
+            let mut blob = Blob::from_content("test.txt", content.clone());
+
+            // Corrupt a byte in the content
+            let idx = blob.content.len() / 2;
+            if blob.content[idx] != corruption_byte {
+                blob.content[idx] = corruption_byte;
+
+                // Integrity check should fail
+                prop_assert!(!blob.verify_integrity().unwrap());
+                prop_assert!(blob.verify_integrity_strict().is_err());
+            }
+        }
+    }
+
+    /// Property 7: Concurrent Storage Operations
+    /// Multiple concurrent reads and writes should not corrupt data.
+    #[tokio::test]
+    async fn prop_concurrent_storage_operations() {
+        use std::sync::Arc;
+        use tokio::sync::Barrier;
+
+        let temp_dir = TempDir::new().unwrap();
+        let repo = Arc::new(BlobRepository::new(temp_dir.path()).unwrap());
+
+        // Create test blobs
+        let num_blobs = 20;
+        let mut blobs = Vec::new();
+        for i in 0..num_blobs {
+            let content = format!("Test content for blob {}", i).into_bytes();
+            let blob = Blob::from_content(&format!("test_{}.txt", i), content);
+            blobs.push(blob);
+        }
+
+        // Store all blobs first
+        for blob in &blobs {
+            repo.store_local(blob).await.unwrap();
+        }
+
+        // Concurrent reads - all tasks start at the same time
+        let barrier = Arc::new(Barrier::new(num_blobs));
+        let mut handles = Vec::new();
+
+        for blob in &blobs {
+            let repo = Arc::clone(&repo);
+            let hash = blob.hash().to_string();
+            let expected_content = blob.content.clone();
+            let barrier = Arc::clone(&barrier);
+
+            handles.push(tokio::spawn(async move {
+                barrier.wait().await;
+
+                // Read blob and verify
+                let loaded = repo.load_local(&hash).await.unwrap();
+                assert_eq!(loaded.content, expected_content);
+                assert!(loaded.verify_integrity().unwrap());
+            }));
+        }
+
+        // Wait for all reads to complete
+        for handle in handles {
+            handle.await.unwrap();
+        }
+
+        // Concurrent writes with different content
+        let barrier = Arc::new(Barrier::new(num_blobs));
+        let mut handles = Vec::new();
+
+        for i in 0..num_blobs {
+            let repo = Arc::clone(&repo);
+            let barrier = Arc::clone(&barrier);
+
+            handles.push(tokio::spawn(async move {
+                barrier.wait().await;
+
+                let content = format!("Updated content for blob {}", i).into_bytes();
+                let blob = Blob::from_content(&format!("updated_{}.txt", i), content);
+                repo.store_local(&blob).await.unwrap();
+
+                // Verify we can read it back
+                let loaded = repo.load_local(blob.hash()).await.unwrap();
+                assert!(loaded.verify_integrity().unwrap());
+            }));
+        }
+
+        for handle in handles {
+            handle.await.unwrap();
+        }
+    }
+
+    /// Test that load_local verifies integrity and rejects corrupted blobs
+    #[tokio::test]
+    async fn test_load_local_integrity_verification() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo = BlobRepository::new(temp_dir.path()).unwrap();
+
+        // Create and store a blob
+        let content = b"Test content for integrity".to_vec();
+        let blob = Blob::from_content("test.txt", content);
+        let hash = blob.hash().to_string();
+
+        repo.store_local(&blob).await.unwrap();
+
+        // Load should succeed with valid blob
+        let loaded = repo.load_local(&hash).await;
+        assert!(loaded.is_ok());
+
+        // Now corrupt the stored blob directly
+        let blob_path = temp_dir.path().join("blobs").join(&hash[..2]).join(&hash[2..]);
+        let mut binary = tokio::fs::read(&blob_path).await.unwrap();
+
+        // Corrupt the content portion (after metadata)
+        if binary.len() > 100 {
+            let idx = binary.len() - 10;
+            binary[idx] ^= 0xFF;
+            tokio::fs::write(&blob_path, &binary).await.unwrap();
+
+            // Load should now fail due to integrity check
+            let result = repo.load_local(&hash).await;
+            assert!(result.is_err());
+        }
     }
 }

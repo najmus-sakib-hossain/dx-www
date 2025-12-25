@@ -5,6 +5,9 @@
 //! - Mixed path separator handling
 //! - Windows long path support
 //! - Symlink resolution with depth limit
+//! - Unicode path support (emoji, CJK, RTL scripts)
+//! - Project boundary checking
+//! - Shell escaping for paths
 
 use std::path::{Path, PathBuf};
 
@@ -38,7 +41,7 @@ pub fn find_project_root() -> Option<PathBuf> {
 pub fn dx_home() -> PathBuf {
     home::home_dir()
         .map(|h| h.join(".dx"))
-        .unwrap_or_else(|| PathBuf::from(".dx"))
+        .unwrap_or_else(|| fallback_dir())
 }
 
 /// Get the cache directory
@@ -53,12 +56,48 @@ pub fn bin_dir() -> PathBuf {
     dx_home().join("bin")
 }
 
+/// Get a fallback directory when home is not available or not writable
+///
+/// Requirement 11.3: Fallback for non-writable home
+pub fn fallback_dir() -> PathBuf {
+    // Try current directory first
+    if let Ok(current) = std::env::current_dir() {
+        let fallback = current.join(".dx");
+        // Check if we can write to current directory
+        if is_dir_writable(&current) {
+            return fallback;
+        }
+    }
+    
+    // Try temp directory as last resort
+    std::env::temp_dir().join(".dx")
+}
+
+/// Check if a directory is writable
+fn is_dir_writable(path: &Path) -> bool {
+    if !path.exists() {
+        return false;
+    }
+    
+    // Try to create a temp file to test writability
+    let test_file = path.join(format!(".dx_write_test_{}", std::process::id()));
+    match std::fs::write(&test_file, b"test") {
+        Ok(_) => {
+            let _ = std::fs::remove_file(&test_file);
+            true
+        }
+        Err(_) => false,
+    }
+}
+
 /// Resolve a path string, handling:
 /// - Home directory expansion (~)
 /// - Mixed path separators (/ and \)
+/// - Unicode characters (emoji, CJK, RTL scripts)
 ///
-/// Requirement 11.1: Handle mixed path separators
-/// Requirement 11.2: Expand ~ to home directory
+/// Requirement 2.1: Handle mixed path separators
+/// Requirement 2.2: Expand ~ to home directory
+/// Requirement 2.5: Handle Unicode paths
 pub fn resolve_path(path: &str) -> PathBuf {
     // Handle empty path
     if path.is_empty() {
@@ -83,6 +122,7 @@ pub fn resolve_path(path: &str) -> PathBuf {
     // Normalize path separators
     // On Windows, convert forward slashes to backslashes
     // On Unix, convert backslashes to forward slashes
+    // Unicode characters are preserved as-is
     #[cfg(windows)]
     {
         let normalized = expanded.to_string_lossy().replace('/', "\\");
@@ -98,7 +138,7 @@ pub fn resolve_path(path: &str) -> PathBuf {
 
 /// Resolve symlinks up to MAX_SYMLINK_DEPTH levels
 ///
-/// Requirement 11.4: Follow symlinks up to 40 levels
+/// Requirement 2.4: Follow symlinks up to 40 levels
 pub fn resolve_symlinks(path: &Path) -> Result<PathBuf, DxError> {
     let mut current = path.to_path_buf();
     let mut depth = 0;
@@ -135,7 +175,7 @@ pub fn resolve_symlinks(path: &Path) -> Result<PathBuf, DxError> {
 
 /// Handle Windows long paths by adding \\?\ prefix
 ///
-/// Requirement 11.3: Add \\?\ prefix for paths > 200 chars on Windows
+/// Requirement 2.3: Add \\?\ prefix for paths > 200 chars on Windows
 #[allow(dead_code)]
 pub fn handle_long_path(path: &Path) -> PathBuf {
     #[cfg(windows)]
@@ -151,6 +191,79 @@ pub fn handle_long_path(path: &Path) -> PathBuf {
     #[cfg(not(windows))]
     {
         path.to_path_buf()
+    }
+}
+
+/// Check if a path is within the project directory
+///
+/// Requirement 2.7: Project boundary checking
+pub fn is_within_project(path: &Path, project_root: &Path) -> Result<bool, DxError> {
+    // Resolve symlinks for both paths
+    let resolved_path = if path.exists() {
+        resolve_symlinks(path).unwrap_or_else(|_| path.to_path_buf())
+    } else {
+        path.to_path_buf()
+    };
+
+    let resolved_root = if project_root.exists() {
+        resolve_symlinks(project_root).unwrap_or_else(|_| project_root.to_path_buf())
+    } else {
+        project_root.to_path_buf()
+    };
+
+    // Canonicalize for accurate comparison
+    let canonical_path = if resolved_path.is_absolute() {
+        resolved_path.canonicalize().unwrap_or(resolved_path)
+    } else {
+        resolved_root.join(&resolved_path).canonicalize().unwrap_or(resolved_root.join(&resolved_path))
+    };
+
+    let canonical_root = resolved_root.canonicalize().unwrap_or(resolved_root);
+
+    Ok(canonical_path.starts_with(&canonical_root))
+}
+
+/// Escape a path for safe shell execution
+///
+/// Requirement 2.6: Shell escaping for paths
+pub fn escape_for_shell(path: &Path) -> String {
+    let path_str = path.to_string_lossy();
+    
+    // Characters that need escaping in shell
+    let needs_escaping = |c: char| {
+        matches!(c, ' ' | '\t' | '\n' | '\'' | '"' | '\\' | '$' | '`' | '!' | 
+                    '&' | '|' | ';' | '(' | ')' | '[' | ']' | '{' | '}' |
+                    '<' | '>' | '*' | '?' | '#' | '~' | '^')
+    };
+
+    // Check if escaping is needed
+    if !path_str.chars().any(needs_escaping) {
+        return path_str.into_owned();
+    }
+
+    // Use single quotes for most cases (safest)
+    // If the path contains single quotes, use double quotes with escaping
+    if !path_str.contains('\'') {
+        format!("'{}'", path_str)
+    } else if !path_str.contains('"') {
+        // Escape $ ` \ " in double quotes
+        let escaped: String = path_str.chars().map(|c| {
+            match c {
+                '$' | '`' | '\\' | '"' => format!("\\{}", c),
+                _ => c.to_string(),
+            }
+        }).collect();
+        format!("\"{}\"", escaped)
+    } else {
+        // Both quote types present, escape everything
+        let escaped: String = path_str.chars().map(|c| {
+            if needs_escaping(c) {
+                format!("\\{}", c)
+            } else {
+                c.to_string()
+            }
+        }).collect();
+        escaped
     }
 }
 
