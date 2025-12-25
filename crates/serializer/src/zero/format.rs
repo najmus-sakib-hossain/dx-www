@@ -49,20 +49,17 @@ pub fn parse_auto(bytes: &[u8]) -> Result<DxValue, String> {
 
 /// Configuration for format selection
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum FormatMode {
     /// Always use DX-Zero binary
     Zero,
     /// Always use DX-Infinity text
     Infinity,
     /// Auto-detect based on input
+    #[default]
     Auto,
 }
 
-impl Default for FormatMode {
-    fn default() -> Self {
-        Self::Auto
-    }
-}
 
 impl FormatMode {
     /// Parse from string

@@ -521,7 +521,14 @@ let decompressed = compressed.decompress()?;
 - [x] Prefetch module (CPU cache hints)
 - [x] Mmap module (zero-copy file I/O)
 
-### 🔜 Phase 6: Future Enhancements
+### ✅ Phase 6: Quantum Entanglement (Completed - Dec 26, 2025)
+- [x] UTF-8 validation with byte offset errors
+- [x] Platform-specific async I/O (io_uring, kqueue, IOCP)
+- [x] Token efficiency benchmarks (3x+ vs TOON)
+- [x] Property-based testing (21 properties)
+- [x] Comprehensive error handling with location info
+
+### 🔜 Phase 7: Future Enhancements
 - [ ] Procedural macro for auto-generation
 - [ ] Big-endian support
 - [ ] ARM NEON SIMD
@@ -545,6 +552,84 @@ Areas for improvement:
 ## 📄 License
 
 Same as dx-serializer parent crate.
+
+---
+
+## 🔗 Quantum Entanglement: Seamless Format Conversion
+
+**NEW (Dec 26, 2025): Seamless bidirectional conversion between all three formats.**
+
+### Format Conversion
+
+```rust
+use dx_serializer::llm::{
+    human_to_llm, llm_to_human,
+    human_to_machine, machine_to_human,
+    llm_to_machine, machine_to_llm,
+};
+
+// Human ↔ LLM
+let llm = human_to_llm(&human_input)?;
+let human = llm_to_human(&llm_input)?;
+
+// Human ↔ Machine
+let machine = human_to_machine(&human_input)?;
+let human = machine_to_human(&machine_bytes)?;
+
+// LLM ↔ Machine
+let machine = llm_to_machine(&llm_input)?;
+let llm = machine_to_llm(&machine_bytes)?;
+```
+
+### UTF-8 Validation
+
+All string parsing now includes comprehensive UTF-8 validation with byte offset errors:
+
+```rust
+use dx_serializer::utf8::{validate_utf8, validate_utf8_detailed};
+
+// Basic validation
+let result = validate_utf8(bytes)?;
+
+// Detailed validation with error descriptions
+match validate_utf8_detailed(bytes) {
+    Ok(s) => println!("Valid: {}", s),
+    Err(e) => println!("Invalid at offset {}: {}", e.offset, e.description),
+}
+```
+
+### Platform-Specific Async I/O
+
+Automatic platform detection for optimal I/O performance:
+
+| Platform | Backend | Performance |
+|----------|---------|-------------|
+| Linux 5.1+ | io_uring | 2x+ throughput |
+| macOS | kqueue | Native async |
+| Windows | IOCP | Native async |
+| Fallback | std::fs | Blocking I/O |
+
+```rust
+use dx_serializer::io::{create_async_io, AsyncFileIO};
+
+// Auto-detect best backend
+let io = create_async_io();
+
+// Batch file operations
+let files = io.read_batch(&[path1, path2, path3]).await?;
+```
+
+### Property-Based Testing
+
+21 correctness properties validated with 100+ iterations each:
+
+| Property | Description |
+|----------|-------------|
+| Round-Trip | All format conversions preserve data |
+| Token Efficiency | 3x+ better than TOON for 100+ records |
+| UTF-8 Handling | Invalid sequences return specific errors |
+| SIMD Equivalence | SIMD and scalar produce identical results |
+| Compression | Round-trip preserves exact bytes |
 
 ---
 

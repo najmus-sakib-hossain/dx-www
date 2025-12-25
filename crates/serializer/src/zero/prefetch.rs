@@ -10,9 +10,11 @@ pub const CACHE_LINE_SIZE: usize = 64;
 
 /// Prefetch hints for different access patterns
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum PrefetchHint {
     /// Temporal data - keep in all cache levels (T0)
     /// Use for data that will be accessed multiple times
+    #[default]
     Temporal,
     /// Non-temporal data - bypass cache (NTA)
     /// Use for streaming data accessed only once
@@ -22,11 +24,6 @@ pub enum PrefetchHint {
     Exclusive,
 }
 
-impl Default for PrefetchHint {
-    fn default() -> Self {
-        Self::Temporal
-    }
-}
 
 /// Prefetch a memory location into CPU cache
 ///
@@ -73,7 +70,7 @@ pub unsafe fn prefetch_lines(ptr: *const u8, lines: usize, hint: PrefetchHint) {
 /// Prefetch a range of bytes
 #[inline]
 pub unsafe fn prefetch_range(ptr: *const u8, size: usize, hint: PrefetchHint) {
-    let lines = (size + CACHE_LINE_SIZE - 1) / CACHE_LINE_SIZE;
+    let lines = size.div_ceil(CACHE_LINE_SIZE);
     prefetch_lines(ptr, lines, hint);
 }
 
@@ -236,7 +233,7 @@ pub mod records {
         if offset < data.len() {
             unsafe {
                 // Prefetch the record (may span multiple cache lines)
-                let lines = (record_size + CACHE_LINE_SIZE - 1) / CACHE_LINE_SIZE;
+                let lines = record_size.div_ceil(CACHE_LINE_SIZE);
                 let ptr = data.as_ptr().add(offset);
                 prefetch_lines(ptr, lines, PrefetchHint::Temporal);
             }

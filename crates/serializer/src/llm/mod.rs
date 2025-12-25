@@ -28,6 +28,8 @@ mod convert_props;
 mod human_props;
 #[cfg(test)]
 mod llm_props;
+#[cfg(test)]
+mod token_efficiency_props;
 
 // Re-export main types
 pub use abbrev::AbbrevDict;

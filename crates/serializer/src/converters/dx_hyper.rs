@@ -234,12 +234,10 @@ impl DxHyperEncoder {
                 if self.use_compression && s.len() > 10 {
                     let idx = self.dict.add(s);
                     write!(self.output, "*{}", encode_base62(idx as u64)).unwrap();
+                } else if needs_quotes(s) {
+                    write!(self.output, "\"{}\"", escape_string(s)).unwrap();
                 } else {
-                    if needs_quotes(s) {
-                        write!(self.output, "\"{}\"", escape_string(s)).unwrap();
-                    } else {
-                        write!(self.output, "{}", s).unwrap();
-                    }
+                    write!(self.output, "{}", s).unwrap();
                 }
             }
             DxValue::Int(n) => {

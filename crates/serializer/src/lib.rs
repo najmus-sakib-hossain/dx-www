@@ -47,6 +47,9 @@ pub mod parser;
 pub mod schema;
 pub mod tokenizer;
 pub mod types;
+pub mod utf8;
+#[cfg(test)]
+mod utf8_props;
 pub mod wasm;
 pub mod zero;
 
@@ -65,6 +68,7 @@ pub use optimizer::{optimize_key, optimize_path};
 pub use parser::{parse, parse_stream, Parser};
 pub use schema::{Schema, TypeHint};
 pub use types::{DxArray, DxObject, DxValue};
+pub use utf8::{validate_utf8, validate_utf8_detailed, validate_utf8_owned, validate_string_input, Utf8ValidationError};
 
 // Re-export LLM/Human format types at crate root for convenience
 pub use llm::{

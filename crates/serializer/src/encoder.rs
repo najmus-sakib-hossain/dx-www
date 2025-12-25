@@ -94,7 +94,7 @@ impl Encoder {
 
         // Second pass: write aliases
         for (alias, full_key) in &self.aliases {
-            write!(writer, "${}={}\n", alias, full_key)?;
+            writeln!(writer, "${}={}", alias, full_key)?;
         }
 
         // Third pass: write values

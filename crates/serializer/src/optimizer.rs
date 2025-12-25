@@ -113,7 +113,7 @@ pub fn optimize_key(key: &str) -> String {
 
 /// Optimize a nested key path (e.g., "media.images.path" -> "m.img.p")
 pub fn optimize_path(path: &str) -> String {
-    path.split('.').map(|key| optimize_key(key)).collect::<Vec<_>>().join(".")
+    path.split('.').map(optimize_key).collect::<Vec<_>>().join(".")
 }
 
 /// Determine if values should be inlined with ^ operator

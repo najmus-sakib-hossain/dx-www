@@ -40,6 +40,12 @@ pub struct DxUltraEncoder {
     output: String,
 }
 
+impl Default for DxUltraEncoder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DxUltraEncoder {
     pub fn new() -> Self {
         Self {

@@ -4,6 +4,7 @@
 //! Operates directly on byte slices without allocations.
 
 use crate::error::{DxError, Result};
+use crate::utf8::validate_string_input;
 use memchr::memchr;
 
 /// Token types in DX format
@@ -212,7 +213,7 @@ impl<'a> Tokenizer<'a> {
             }
         } else {
             // Read until delimiter
-            self.read_until_any(&[b'|', b'\n', b'#']);
+            self.read_until_any(b"|\n#");
         }
 
         // Trim trailing whitespace
@@ -222,6 +223,21 @@ impl<'a> Tokenizer<'a> {
         }
 
         &self.input[start..end]
+    }
+
+    /// Read string value with UTF-8 validation
+    /// Returns an error if the string contains invalid UTF-8
+    pub fn read_string_validated(&mut self, next_is_number: bool) -> Result<&'a str> {
+        let start = self.pos;
+        let bytes = self.read_string_vacuum(next_is_number);
+        validate_string_input(bytes, start)
+    }
+
+    /// Read identifier with UTF-8 validation
+    pub fn read_ident_validated(&mut self) -> Result<&'a str> {
+        let start = self.pos;
+        let bytes = self.read_ident();
+        validate_string_input(bytes, start)
     }
 
     /// Get next token

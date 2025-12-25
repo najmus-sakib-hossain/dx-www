@@ -18,6 +18,12 @@ pub struct QuantumLayout<T, const FIXED_SIZE: usize, const SLOT_COUNT: usize> {
     _marker: PhantomData<T>,
 }
 
+impl<T, const FIXED_SIZE: usize, const SLOT_COUNT: usize> Default for QuantumLayout<T, FIXED_SIZE, SLOT_COUNT> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T, const FIXED_SIZE: usize, const SLOT_COUNT: usize> QuantumLayout<T, FIXED_SIZE, SLOT_COUNT> {
     /// Header size (magic + version + flags)
     pub const HEADER_SIZE: usize = 4;

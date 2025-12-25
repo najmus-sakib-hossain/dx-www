@@ -6,102 +6,102 @@ This implementation plan builds DX-Py, a high-performance Python package manager
 
 ## Tasks
 
-- [ ] 1. Set up project structure and core crate
+- [x] 1. Set up project structure and core crate
   - Create `crates/dx-py-package-manager/` directory structure
   - Create `dx-py-core` crate with Cargo.toml
   - Define magic numbers, protocol version, and security limits
   - Set up error types with thiserror
   - _Requirements: 1.1, 2.1_
 
-- [ ] 2. Implement DPP binary format (dx-py-core)
-  - [ ] 2.1 Define DppHeader struct with #[repr(C, packed)]
+- [x] 2. Implement DPP binary format (dx-py-core)
+  - [x] 2.1 Define DppHeader struct with #[repr(C, packed)]
     - 64-byte fixed header with magic, version, flags
     - Section offsets: metadata, files, bytecode, native, deps
     - Size fields and BLAKE3 hash
     - _Requirements: 1.1, 1.5_
 
-  - [ ] 2.2 Define DppMetadata struct for package metadata
+  - [x] 2.2 Define DppMetadata struct for package metadata
     - Name, version, python_requires fields
     - Variable-length string handling
     - _Requirements: 1.3, 1.4_
 
-  - [ ] 2.3 Write property test for DPP format structure validity
+  - [x] 2.3 Write property test for DPP format structure validity
     - **Property 1: DPP Format Structure Validity**
     - **Validates: Requirements 1.1, 1.3, 1.4, 1.5**
 
-- [ ] 3. Implement DPL binary format (dx-py-core)
-  - [ ] 3.1 Define DplHeader struct with #[repr(C, packed)]
+- [x] 3. Implement DPL binary format (dx-py-core)
+  - [x] 3.1 Define DplHeader struct with #[repr(C, packed)]
     - Hash table offset and size for O(1) lookup
     - Package count, Python version, platform metadata
     - Content hash for integrity
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.2 Define DplEntry struct (fixed 128 bytes)
+  - [x] 3.2 Define DplEntry struct (fixed 128 bytes)
     - Name hash, name, version, source type
     - Source integrity hash
     - _Requirements: 2.3_
 
-  - [ ] 3.3 Write property test for DPL format structure validity
+  - [x] 3.3 Write property test for DPL format structure validity
     - **Property 3: DPL Format Structure Validity**
     - **Validates: Requirements 2.1, 2.3, 2.4**
 
-- [ ] 4. Implement version types and SIMD comparison (dx-py-core)
-  - [ ] 4.1 Define PackedVersion struct for SIMD operations
+- [-] 4. Implement version types and SIMD comparison (dx-py-core)
+  - [x] 4.1 Define PackedVersion struct for SIMD operations
     - Major, minor, patch as u32 fields
     - Implement Ord, PartialOrd traits
     - _Requirements: 4.1_
 
-  - [ ] 4.2 Implement SIMD version comparison (AVX2)
+  - [x] 4.2 Implement SIMD version comparison (AVX2)
     - compare_versions_simd function with target_feature
     - Process 8 versions in parallel
     - _Requirements: 4.1_
 
-  - [ ] 4.3 Implement scalar fallback for non-AVX2 systems
+  - [x] 4.3 Implement scalar fallback for non-AVX2 systems
     - compare_versions_scalar function
     - Same logic, sequential processing
     - _Requirements: 4.2_
 
-  - [ ] 4.4 Write property test for SIMD/scalar equivalence
+  - [x] 4.4 Write property test for SIMD/scalar equivalence
     - **Property 5: SIMD/Scalar Version Resolution Equivalence**
     - **Validates: Requirements 4.5, 4.6**
 
-- [ ] 5. Checkpoint - Core types complete
+- [x] 5. Checkpoint - Core types complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Implement DPP package reader (dx-py-package-manager)
-  - [ ] 6.1 Create dx-py-package-manager crate structure
+- [x] 6. Implement DPP package reader (dx-py-package-manager)
+  - [x] 6.1 Create dx-py-package-manager crate structure
     - Set up Cargo.toml with dependencies on dx-py-core
     - Create module structure: formats, resolver, installer, cache
     - _Requirements: 1.1_
 
-  - [ ] 6.2 Implement DppPackage struct with memory mapping
+  - [x] 6.2 Implement DppPackage struct with memory mapping
     - Open file with memmap2
     - Verify magic number and integrity
     - Zero-copy header access via bytemuck
     - _Requirements: 1.2, 1.6_
 
-  - [ ] 6.3 Implement metadata and section accessors
+  - [x] 6.3 Implement metadata and section accessors
     - O(1) metadata access via pointer cast
     - Bytecode section accessor
     - Dependency graph accessor
     - _Requirements: 1.3, 1.4, 1.6_
 
-- [ ] 7. Implement DPL lock file operations (dx-py-package-manager)
-  - [ ] 7.1 Implement DplLockFile struct with memory mapping
+- [-] 7. Implement DPL lock file operations (dx-py-package-manager)
+  - [x] 7.1 Implement DplLockFile struct with memory mapping
     - Open and verify lock file
     - Build hash table index on load
     - _Requirements: 2.2, 2.6_
 
-  - [ ] 7.2 Implement O(1) package lookup
+  - [x] 7.2 Implement O(1) package lookup
     - FNV-1a hash function
     - Hash table lookup with collision handling
     - _Requirements: 2.1_
 
-  - [ ] 7.3 Write property test for hash table lookup correctness
+  - [-] 7.3 Write property test for hash table lookup correctness
     - **Property 6: Hash Table O(1) Lookup Correctness**
     - **Validates: Requirements 2.1**
 
-  - [ ] 7.4 Implement DplBuilder for lock file creation
+  - [x] 7.4 Implement DplBuilder for lock file creation
     - Add packages with name, version, hash
     - Build hash table and serialize to binary
     - _Requirements: 2.7_

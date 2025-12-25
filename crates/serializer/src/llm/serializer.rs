@@ -52,9 +52,7 @@ impl LlmSerializer {
         // Merge auto-refs with existing refs
         let mut all_refs = doc.refs.clone();
         for (key, value) in auto_refs {
-            if !all_refs.contains_key(&key) {
-                all_refs.insert(key, value);
-            }
+            all_refs.entry(key).or_insert(value);
         }
 
         // Serialize context section

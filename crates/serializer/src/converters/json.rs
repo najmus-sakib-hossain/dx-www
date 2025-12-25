@@ -109,7 +109,7 @@ fn convert_object(
     // Output arrays with pipe separator
     for (key, arr) in arrays {
         let key_opt = optimize_key(&key);
-        let items: Vec<String> = arr.iter().map(|v| value_to_string(v)).collect();
+        let items: Vec<String> = arr.iter().map(value_to_string).collect();
 
         let prefix_opt = if prefix.is_empty() { "" } else { prefix };
         if !prefix_opt.is_empty() {

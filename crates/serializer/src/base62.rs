@@ -43,7 +43,7 @@ pub fn decode_base62(s: &str) -> Result<u64> {
         result = result
             .checked_mul(62)
             .and_then(|r| r.checked_add(digit))
-            .ok_or_else(|| DxError::IntegerOverflow)?;
+            .ok_or(DxError::IntegerOverflow)?;
     }
 
     Ok(result)

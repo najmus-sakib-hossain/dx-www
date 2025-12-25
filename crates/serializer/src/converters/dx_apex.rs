@@ -11,6 +11,12 @@ pub struct DxApexEncoder {
     last_number: i64, // For delta encoding
 }
 
+impl Default for DxApexEncoder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DxApexEncoder {
     pub fn new() -> Self {
         Self {
@@ -136,7 +142,7 @@ impl DxApexEncoder {
                 let delta = n - self.last_number;
                 self.last_number = *n;
 
-                if delta >= -127 && delta <= 127 {
+                if (-127..=127).contains(&delta) {
                     self.output.push(0x05); // Small delta
                     self.output.push((delta as i8) as u8);
                 } else {
@@ -316,7 +322,7 @@ pub fn apex_to_text(binary: &[u8]) -> String {
 
     output.push_str(&format!("DX-Apex v{}\n", binary[2]));
     output.push_str(&format!("Binary size: {} bytes\n", binary.len()));
-    output.push_str(&format!("Compression: EXTREME (5× better than TOON)\n"));
+    output.push_str(&"Compression: EXTREME (5× better than TOON)\n".to_string());
 
     output
 }
@@ -334,7 +340,7 @@ pub fn apex_text_equivalent(binary: &[u8]) -> String {
 
     // Show size and compression ratio
     output.push_str(&format!("{}", binary.len()));
-    output.push_str("b"); // bytes marker
+    output.push('b'); // bytes marker
 
     output
 }

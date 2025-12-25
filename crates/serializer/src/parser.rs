@@ -319,7 +319,7 @@ impl<'a> Parser<'a> {
             }
 
             prev_row = Some(row.clone());
-            table.add_row(row).map_err(|e| DxError::SchemaError(e))?;
+            table.add_row(row).map_err(DxError::SchemaError)?;
 
             // Check for end of line
             self.tokenizer.skip_whitespace();

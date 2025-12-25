@@ -54,6 +54,9 @@ pub enum ParseError {
 
     #[error("No active section for data row")]
     NoActiveSection,
+
+    #[error("Invalid UTF-8 at byte offset {offset}")]
+    Utf8Error { offset: usize },
 }
 
 /// Parse LLM-optimized format into DxDocument
@@ -77,6 +80,14 @@ impl LlmParser {
         Ok(doc)
     }
 
+    /// Parse LLM format from bytes with UTF-8 validation
+    pub fn parse_bytes(input: &[u8]) -> Result<DxDocument, ParseError> {
+        let input_str = std::str::from_utf8(input).map_err(|e| ParseError::Utf8Error {
+            offset: e.valid_up_to(),
+        })?;
+        Self::parse(input_str)
+    }
+
 
     /// Parse a single line
     fn parse_line(
@@ -89,15 +100,13 @@ impl LlmParser {
             return Ok(());
         }
 
-        if line.starts_with("#c:") {
+        if let Some(content) = line.strip_prefix("#c:") {
             // Context section: #c:key|val;key|val
-            let content = &line[3..];
             let context = Self::parse_context(content)?;
             doc.context = context;
             *current_section = None;
-        } else if line.starts_with("#:") {
+        } else if let Some(content) = line.strip_prefix("#:") {
             // Reference definition: #:key|value
-            let content = &line[2..];
             let (key, value) = Self::parse_reference(content)?;
             doc.refs.insert(key, value);
         } else if line.starts_with('#') && line.len() >= 2 {
@@ -493,5 +502,24 @@ mod tests {
         
         let section = doc.sections.get(&'d').unwrap();
         assert_eq!(section.rows.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_bytes_valid_utf8() {
+        let input = b"#c:nm|Test";
+        let doc = LlmParser::parse_bytes(input).unwrap();
+        assert_eq!(doc.context.get("nm").unwrap().as_str(), Some("Test"));
+    }
+
+    #[test]
+    fn test_parse_bytes_invalid_utf8() {
+        // Invalid UTF-8 sequence at position 5
+        let input = &[0x23, 0x63, 0x3a, 0x6e, 0x6d, 0xFF, 0x7c, 0x54]; // "#c:nm" + invalid + "|T"
+        let err = LlmParser::parse_bytes(input).unwrap_err();
+        if let ParseError::Utf8Error { offset } = err {
+            assert_eq!(offset, 5);
+        } else {
+            panic!("Expected Utf8Error, got {:?}", err);
+        }
     }
 }

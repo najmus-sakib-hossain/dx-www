@@ -9,8 +9,10 @@ use super::types::{DxZeroError, Result};
 
 /// Compression level for LZ4
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum CompressionLevel {
     /// Fastest compression, larger output (default)
+    #[default]
     Fast,
     /// Balanced compression and speed
     Default,
@@ -18,11 +20,6 @@ pub enum CompressionLevel {
     High,
 }
 
-impl Default for CompressionLevel {
-    fn default() -> Self {
-        Self::Fast
-    }
-}
 
 /// Compressed DX-Zero buffer
 ///

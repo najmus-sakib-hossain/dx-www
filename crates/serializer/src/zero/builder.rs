@@ -166,7 +166,7 @@ impl<'a> DxZeroBuilder<'a> {
         let bytes = unsafe {
             std::slice::from_raw_parts(
                 values.as_ptr() as *const u8,
-                values.len() * std::mem::size_of::<T>(),
+                std::mem::size_of_val(values),
             )
         };
         self.write_bytes(slot_offset, bytes);

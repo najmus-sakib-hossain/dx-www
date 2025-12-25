@@ -1,0 +1,17 @@
+[package]
+name = "dx-py-package-manager"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "High-performance Python package manager"
+
+[dependencies]
+dx-py-core = { path = "../dx-py-core" }
+thiserror.workspace = true
+bytemuck.workspace = true
+blake3.workspace = true
+memmap2.workspace = true
+tempfile = "3.10"
+
+[dev-dependencies]
+proptest.workspace = true

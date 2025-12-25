@@ -34,8 +34,10 @@ use std::collections::HashMap;
 
 /// Table style for human format output
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum TableStyle {
     /// Unicode box-drawing: ┌─┬─┐ │ ├─┼─┤ └─┴─┘
+    #[default]
     Unicode,
     /// ASCII: +-+-+ | +-+-+ +-+-+
     Ascii,
@@ -45,11 +47,6 @@ pub enum TableStyle {
     Minimal,
 }
 
-impl Default for TableStyle {
-    fn default() -> Self {
-        TableStyle::Unicode
-    }
-}
 
 /// Configuration for human format output
 #[derive(Debug, Clone)]

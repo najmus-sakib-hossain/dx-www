@@ -11,6 +11,7 @@ use clap::Parser;
 mod cli;
 mod commands;
 mod config;
+pub mod io;
 pub mod prompts;
 mod templates;
 mod ui;

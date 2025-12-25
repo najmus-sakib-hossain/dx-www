@@ -102,8 +102,8 @@ impl Deflater {
                 }
                 PrettyElement::Field { key, value } => {
                     // Check if this is an array marked with @ARRAY@
-                    if value.starts_with("@ARRAY@") {
-                        let items_str = &value[7..];  // Skip @ARRAY@
+                    if let Some(items_str) = value.strip_prefix("@ARRAY@") {
+                        // Skip @ARRAY@
                         let compressed_key = self.compress_full_key(&key);
                         writeln!(output, "{}>{}", compressed_key, items_str).unwrap();
                     } else {
@@ -513,11 +513,10 @@ impl Deflater {
         }
 
         // String with spaces or special chars - quote it
-        if v.contains(' ') || v.contains('#') || v.contains('|') || v.contains('^') {
-            if !v.starts_with('"') && !v.starts_with('\'') {
+        if (v.contains(' ') || v.contains('#') || v.contains('|') || v.contains('^'))
+            && !v.starts_with('"') && !v.starts_with('\'') {
                 return format!("\"{}\"", v);
             }
-        }
 
         v.to_string()
     }
