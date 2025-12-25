@@ -73,6 +73,7 @@ winapi = { version = "0.3", features = ["processthreadsapi"] }
 assert_cmd = "2.0"
 predicates = "3.1"
 tempfile = "3.12"
+proptest = "1.4"
 
 [features]
 default = []

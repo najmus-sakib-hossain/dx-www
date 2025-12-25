@@ -32,11 +32,11 @@ This implementation plan follows the 6-day timeline from the master plan, buildi
     - Wrap Tokio async operations in Reactor trait
     - _Requirements: 1.4_
 
-  - [ ] 2.5 Implement create_reactor() factory function
+  - [x] 2.5 Implement create_reactor() factory function
     - Use cfg attributes to select platform-appropriate reactor
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - [ ] 2.6 Write property test for file I/O round-trip
+  - [-] 2.6 Write property test for file I/O round-trip
     - **Property 1: File I/O Round-Trip**
     - **Validates: Requirements 1.6**
 

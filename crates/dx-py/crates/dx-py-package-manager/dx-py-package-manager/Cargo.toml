@@ -12,6 +12,7 @@ bytemuck.workspace = true
 blake3.workspace = true
 memmap2.workspace = true
 tempfile = "3.10"
+zip = "0.6"
 
 [dev-dependencies]
 proptest.workspace = true

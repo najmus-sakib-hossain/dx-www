@@ -2098,6 +2098,7 @@ dependencies = [
  "open",
  "owo-colors",
  "predicates",
+ "proptest",
  "serde",
  "serde_json",
  "stack",

@@ -86,7 +86,7 @@ This implementation plan builds DX-Py, a high-performance Python package manager
     - Dependency graph accessor
     - _Requirements: 1.3, 1.4, 1.6_
 
-- [-] 7. Implement DPL lock file operations (dx-py-package-manager)
+- [x] 7. Implement DPL lock file operations (dx-py-package-manager)
   - [x] 7.1 Implement DplLockFile struct with memory mapping
     - Open and verify lock file
     - Build hash table index on load
@@ -97,7 +97,7 @@ This implementation plan builds DX-Py, a high-performance Python package manager
     - Hash table lookup with collision handling
     - _Requirements: 2.1_
 
-  - [-] 7.3 Write property test for hash table lookup correctness
+  - [x] 7.3 Write property test for hash table lookup correctness
     - **Property 6: Hash Table O(1) Lookup Correctness**
     - **Validates: Requirements 2.1**
 
@@ -106,16 +106,16 @@ This implementation plan builds DX-Py, a high-performance Python package manager
     - Build hash table and serialize to binary
     - _Requirements: 2.7_
 
-  - [ ] 7.5 Write property test for DPL round-trip
+  - [x] 7.5 Write property test for DPL round-trip
     - **Property 4: DPL Round-Trip Consistency**
     - **Validates: Requirements 2.8**
 
-- [ ] 8. Checkpoint - Binary formats complete
+- [x] 8. Checkpoint - Binary formats complete
   - Ensure all tests pass, ask the user if questions arise.
 
 
-- [ ] 9. Implement wheel to DPP converter
-  - [ ] 9.1 Implement wheel file parser
+- [-] 9. Implement wheel to DPP converter
+  - [-] 9.1 Implement wheel file parser
     - Parse ZIP structure
     - Extract METADATA, RECORD files
     - Parse WHEEL file for platform info

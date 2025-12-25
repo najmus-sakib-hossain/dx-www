@@ -115,3 +115,79 @@ pub trait Reactor: Send + Sync + 'static {
     /// The HTTP response
     fn http_post<'a>(&'a self, url: &'a str, body: &'a [u8]) -> BoxFuture<'a, io::Result<Response>>;
 }
+
+
+#[cfg(test)]
+mod tests {
+    use proptest::prelude::*;
+    use tempfile::tempdir;
+
+    // Feature: dx-cli, Property 1: File I/O Round-Trip
+    // Validates: Requirements 1.6
+    //
+    // For any byte sequence written to a file via the Reactor,
+    // reading that file should return the exact same byte sequence.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_file_io_round_trip(data in proptest::collection::vec(any::<u8>(), 0..10000)) {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async {
+                let reactor = crate::io::create_reactor();
+                let temp_dir = tempdir().unwrap();
+                let test_file = temp_dir.path().join("test_file.bin");
+
+                // Write data
+                reactor.write_file(&test_file, &data).await.unwrap();
+
+                // Read data back
+                let read_data = reactor.read_file(&test_file).await.unwrap();
+
+                // Verify round-trip
+                prop_assert_eq!(data, read_data);
+                Ok(())
+            })?;
+        }
+    }
+
+    #[tokio::test]
+    async fn test_file_io_basic() {
+        let reactor = crate::io::create_reactor();
+        let temp_dir = tempdir().unwrap();
+        let test_file = temp_dir.path().join("basic_test.txt");
+
+        let data = b"Hello, DX CLI!";
+        reactor.write_file(&test_file, data).await.unwrap();
+
+        let read_data = reactor.read_file(&test_file).await.unwrap();
+        assert_eq!(data.to_vec(), read_data);
+    }
+
+    #[tokio::test]
+    async fn test_file_io_empty() {
+        let reactor = crate::io::create_reactor();
+        let temp_dir = tempdir().unwrap();
+        let test_file = temp_dir.path().join("empty_test.txt");
+
+        let data: &[u8] = b"";
+        reactor.write_file(&test_file, data).await.unwrap();
+
+        let read_data = reactor.read_file(&test_file).await.unwrap();
+        assert_eq!(data.to_vec(), read_data);
+    }
+
+    #[tokio::test]
+    async fn test_file_io_binary() {
+        let reactor = crate::io::create_reactor();
+        let temp_dir = tempdir().unwrap();
+        let test_file = temp_dir.path().join("binary_test.bin");
+
+        // Binary data with all byte values
+        let data: Vec<u8> = (0..=255).collect();
+        reactor.write_file(&test_file, &data).await.unwrap();
+
+        let read_data = reactor.read_file(&test_file).await.unwrap();
+        assert_eq!(data, read_data);
+    }
+}
