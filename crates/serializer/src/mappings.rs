@@ -23,7 +23,7 @@
 ///
 /// # Example
 /// ```rust
-/// use dx_serializer::Mappings;
+/// use serializer::Mappings;
 ///
 /// let mappings = Mappings::get();
 ///
@@ -135,13 +135,13 @@ impl Mappings {
     ///
     /// # Examples
     /// ```rust
-    /// # use dx_serializer::Mappings;
+    /// # use serializer::Mappings;
     /// let m = Mappings::get();
     ///
-    /// // Popular keys: expand
+    /// // Popular keys: expand (using default mappings)
     /// assert_eq!(m.expand_key("n"), "name");
     /// assert_eq!(m.expand_key("v"), "version");
-    /// assert_eq!(m.expand_key("dep"), "dependencies");
+    /// assert_eq!(m.expand_key("d"), "description");
     ///
     /// // Custom keys: preserve
     /// assert_eq!(m.expand_key("myCustomKey"), "myCustomKey");
@@ -168,13 +168,13 @@ impl Mappings {
     ///
     /// # Examples
     /// ```rust
-    /// # use dx_serializer::Mappings;
+    /// # use serializer::Mappings;
     /// let m = Mappings::get();
     ///
-    /// // Popular keys: abbreviate
+    /// // Popular keys: abbreviate (using default mappings)
     /// assert_eq!(m.compress_key("name"), "n");
     /// assert_eq!(m.compress_key("version"), "v");
-    /// assert_eq!(m.compress_key("dependencies"), "dep");
+    /// assert_eq!(m.compress_key("description"), "d");
     ///
     /// // Custom keys: preserve
     /// assert_eq!(m.compress_key("myCustomKey"), "myCustomKey");

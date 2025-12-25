@@ -125,6 +125,9 @@ pub mod sovereign;
 // Forge Daemon - Binary Dawn Edition (v2.0.0)
 pub mod daemon;
 
+// Platform-native I/O abstraction layer
+pub mod platform_io;
+
 // ========================================================================
 // Primary Public API - Forge Unified Interface
 // ========================================================================
@@ -200,6 +203,15 @@ pub use daemon::{
     LspBridge, LspMessage, LspNotification,
     DaemonStateManager, ToolState as DaemonToolState, ProjectState,
     WorkerPool, WorkerTask, TaskPriority,
+};
+
+// ========================================================================
+// Platform-native I/O exports
+// ========================================================================
+
+pub use platform_io::{
+    create_platform_io, EventStream, FallbackBackend, FileEvent, FileEventKind,
+    IoBackend, Platform, PlatformIO, PlatformInfo, WriteOp,
 };
 
 // ========================================================================

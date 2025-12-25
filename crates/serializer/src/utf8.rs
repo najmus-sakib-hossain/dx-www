@@ -13,7 +13,7 @@ use crate::error::{DxError, Result};
 /// # Examples
 ///
 /// ```
-/// use dx_serializer::utf8::validate_utf8;
+/// use serializer::utf8::validate_utf8;
 ///
 /// // Valid UTF-8
 /// let valid = b"Hello, World!";

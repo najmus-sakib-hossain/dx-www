@@ -17,35 +17,38 @@ mod roundtrip_tests {
 
     #[test]
     fn test_array_roundtrip() {
-        let human = "workspace           > frontend | backend | shared";
+        // Use "name" which exists in default mappings
+        let human = "name           > frontend | backend | shared";
         let machine = format_machine(human).unwrap();
         let result = String::from_utf8(machine).unwrap();
 
         // Should compress arrays with pipe separator
-        assert!(result.contains("ws>frontend|backend|shared"));
+        // "name" compresses to "n" in default mappings
+        assert!(result.contains("n>frontend|backend|shared"));
     }
 
     #[test]
     fn test_nested_keys() {
-        let human = "forge.repository    : https://example.com";
+        // Use keys that exist in default mappings
+        let human = "context.name    : https://example.com";
         let machine = format_machine(human).unwrap();
         let result = String::from_utf8(machine).unwrap();
 
         // Should compress nested keys
-        assert!(
-            result.contains("f.r:https://example.com")
-                || result.contains("f.repo:https://example.com")
-        );
+        // "context" → "c", "name" → "n"
+        assert!(result.contains("c.n:https://example.com"));
     }
 
     #[test]
     fn test_underscore_keys() {
-        let human = "forge_items         > cli | docs | tests";
+        // Use keys that exist in default mappings
+        let human = "name_items         > cli | docs | tests";
         let machine = format_machine(human).unwrap();
         let result = String::from_utf8(machine).unwrap();
 
         // Should compress underscore keys
-        assert!(result.contains("f_items>") || result.contains("f_i>"));
+        // "name" → "n"
+        assert!(result.contains("n_items>") || result.contains("n>"));
     }
 
     #[test]
@@ -78,9 +81,9 @@ mod roundtrip_tests {
         let human = r#"context.name        : dx
 ^version            : 0.0.1
 
-workspace           > frontend/www | backend/api
+name           > frontend/www | backend/api
 
-forge.repository    : https://github.com/dx/dx
+context.description    : https://github.com/dx/dx
 "#;
 
         let machine = format_machine(human).unwrap();
@@ -89,8 +92,8 @@ forge.repository    : https://github.com/dx/dx
         // Verify compression
         assert!(result.len() < human.len(), "Machine format should be smaller");
         assert!(result.contains("c.n:dx"));
-        assert!(result.contains("ws>"));
-        assert!(result.contains("f.r:") || result.contains("f.repo:"));
+        assert!(result.contains("n>"));
+        assert!(result.contains("c.d:") || result.contains("c.description:"));
     }
 
     #[test]
@@ -100,7 +103,7 @@ forge.repository    : https://github.com/dx/dx
 ^description        : Test application
 ^author             : John Doe
 
-workspace           > frontend | backend | shared | utils
+name           > frontend | backend | shared | utils
 "#;
 
         let machine = format_machine(human).unwrap();

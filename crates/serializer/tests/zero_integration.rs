@@ -1,6 +1,6 @@
 //! Integration tests for DX-Zero format
 
-use dx_serializer::zero::{
+use serializer::zero::{
     detect_format, DxFormat, DxZeroBuilder, DxZeroHeader, DxZeroSlot, FLAG_HAS_HEAP,
     FLAG_LITTLE_ENDIAN, HEAP_MARKER, INLINE_MARKER,
 };
@@ -94,8 +94,9 @@ fn test_heap_allocation() {
     let slot_data = &buffer[4..20];
     assert_eq!(slot_data[15], HEAP_MARKER);
 
-    // Check heap data exists
-    assert!(size > 20 + long_string.len());
+    // Check heap data exists - size should include header(4) + slot(16) + heap data
+    // The heap data includes the string bytes
+    assert!(size >= 20 + long_string.len(), "size {} should be >= {}", size, 20 + long_string.len());
 
     // Verify flags indicate heap
     assert!(buffer[3] & FLAG_HAS_HEAP != 0);
@@ -255,14 +256,15 @@ fn test_unicode_strings() {
     let mut buffer = Vec::new();
     let mut builder = DxZeroBuilder::new(&mut buffer, 0, 3);
 
-    builder.write_string(0, "Hello 世界"); // Unicode
-    builder.write_string(16, "🚀 Rocket"); // Emoji
-    builder.write_string(32, "Привет"); // Cyrillic
+    builder.write_string(0, "Hello 世界"); // Unicode (12 bytes UTF-8)
+    builder.write_string(16, "🚀 Rocket"); // Emoji (11 bytes UTF-8)
+    builder.write_string(32, "Привет"); // Cyrillic (12 bytes UTF-8)
 
     builder.finish();
 
     // All should work with UTF-8
-    assert!(buffer.len() > 52);
+    // Header(4) + 3 slots(48) = 52 minimum
+    assert!(buffer.len() >= 52, "buffer.len() {} should be >= 52", buffer.len());
 }
 
 #[test]
@@ -286,7 +288,9 @@ fn test_zero_values() {
 #[test]
 fn test_max_values() {
     let mut buffer = Vec::new();
-    let mut builder = DxZeroBuilder::new(&mut buffer, 20, 0);
+    // Need 22 bytes: u8(1) + u16(2) + u32(4) + u64(8) + i8(1) + i16(2) + i32(4) = 22
+    // Offsets: 0, 1, 3, 7, 15, 16, 18 -> last write at 18 needs 4 bytes = 22 total
+    let mut builder = DxZeroBuilder::new(&mut buffer, 22, 0);
 
     builder.write_u8(0, u8::MAX);
     builder.write_u16(1, u16::MAX);

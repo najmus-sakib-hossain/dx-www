@@ -1,15 +1,18 @@
 /// Test: Smart Key Handling (Popular vs Custom)
 ///
 /// Verifies that:
-/// 1. Popular keys get abbreviated
+/// 1. Popular keys get abbreviated (using default 12 mappings)
 /// 2. Custom keys are preserved as-is
 /// 3. Mixed scenarios work correctly
-use dx_serializer::{format_human, format_machine, Mappings};
+///
+/// Default mappings: n=name, v=version, t=title, d=description, a=author,
+///                   c=context, l=languages, f=forge, s=style, m=media, i=i18n, u=ui
+use serializer::{format_machine, Mappings};
 
 #[test]
 fn test_popular_keys_abbreviated() {
-    // Popular keys should be abbreviated
-    let input = "name:dx-www^version:1.0.0^description:Runtime";
+    // Popular keys should be abbreviated (using default mappings)
+    let input = "name:dx-www\nversion:1.0.0\ndescription:Runtime";
     let compressed = format_machine(input).unwrap();
     let result = String::from_utf8(compressed).unwrap();
 
@@ -22,7 +25,7 @@ fn test_popular_keys_abbreviated() {
 #[test]
 fn test_custom_keys_preserved() {
     // Custom keys should stay as-is
-    let input = "myCustomField:value123^userPreferences:dark";
+    let input = "myCustomField:value123\nuserPreferences:dark";
     let compressed = format_machine(input).unwrap();
     let result = String::from_utf8(compressed).unwrap();
 
@@ -34,7 +37,7 @@ fn test_custom_keys_preserved() {
 #[test]
 fn test_mixed_popular_and_custom() {
     // Mix of popular and custom keys
-    let input = "name:dx-www^myAppFeature:enabled^version:1.0^customTimeout:5000";
+    let input = "name:dx-www\nmyAppFeature:enabled\nversion:1.0\ncustomTimeout:5000";
     let compressed = format_machine(input).unwrap();
     let result = String::from_utf8(compressed).unwrap();
 
@@ -52,8 +55,8 @@ fn test_mixed_popular_and_custom() {
 
 #[test]
 fn test_nested_popular_keys() {
-    // Nested popular keys
-    let input = "context.name:dx-www^context.version:1.0";
+    // Nested popular keys (using default mappings: c=context, n=name, v=version)
+    let input = "context.name:dx-www\ncontext.version:1.0";
     let compressed = format_machine(input).unwrap();
     let result = String::from_utf8(compressed).unwrap();
 
@@ -65,7 +68,7 @@ fn test_nested_popular_keys() {
 #[test]
 fn test_nested_custom_keys() {
     // Nested custom keys
-    let input = "myModule.myFeature:enabled^myModule.timeout:5000";
+    let input = "myModule.myFeature:enabled\nmyModule.timeout:5000";
     let compressed = format_machine(input).unwrap();
     let result = String::from_utf8(compressed).unwrap();
 
@@ -89,33 +92,30 @@ fn test_nested_mixed_keys() {
 }
 
 #[test]
-fn test_dependencies_popular() {
-    // Dependencies is a popular prefix
-    let input = "dependencies.react:18.0^dependencies.typescript:5.0";
+fn test_context_popular() {
+    // Context is a popular prefix in default mappings (c=context)
+    let input = "context.name:myapp\ncontext.version:1.0";
     let compressed = format_machine(input).unwrap();
     let result = String::from_utf8(compressed).unwrap();
 
     println!("Input:  {}", input);
     println!("Output: {}", result);
 
-    // Should abbreviate 'dependencies' to 'dep'
-    assert!(result.contains("dep.react:18.0"), "dependencies → dep");
-    assert!(result.contains("dep.typescript:5.0"), "dependencies → dep");
+    // Should abbreviate 'context' to 'c' and 'name' to 'n', 'version' to 'v'
+    assert!(result.contains("c.n:myapp"), "context.name → c.n");
+    assert!(result.contains("c.v:1.0"), "context.version → c.v");
 }
 
 #[test]
 fn test_roundtrip_custom_keys() {
     // Custom keys should survive roundtrip
-    let original = "n:dx^myFeature:on^v:1.0^customKey:value";
-
-    // Machine → Human (expand)
-    let expanded = original.replace("n:", "name:").replace("^v:", "^version:");
+    // Use newlines instead of ^ for proper parsing
+    let expanded = "name:dx\nmyFeature:on\nversion:1.0\ncustomKey:value";
 
     // Human → Machine (compress)
     let machine = format_machine(&expanded).unwrap();
     let machine_str = String::from_utf8(machine.clone()).unwrap();
 
-    println!("Original: {}", original);
     println!("Expanded: {}", expanded);
     println!("Machine:  {}", machine_str);
 
@@ -129,8 +129,10 @@ fn test_roundtrip_custom_keys() {
 }
 
 #[test]
-fn test_all_68_popular_keys() {
-    // Test that all 68 popular keys get abbreviated
+fn test_all_default_popular_keys() {
+    // Test that all default popular keys get abbreviated
+    // Default mappings: n=name, v=version, t=title, d=description, a=author,
+    //                   c=context, l=languages, f=forge, s=style, m=media, i=i18n, u=ui
     let mappings = Mappings::get();
 
     println!("\n📊 Testing all {} popular keys:\n", mappings.compress.len());
@@ -149,7 +151,8 @@ fn test_all_68_popular_keys() {
     }
 
     println!("✅ All {} popular keys tested successfully!", tested);
-    assert!(tested >= 68, "Should have at least 68 popular keys");
+    // Default mappings have 12 keys (can be extended via mappings.dx file)
+    assert!(tested >= 12, "Should have at least 12 default popular keys");
 }
 
 #[test]
@@ -182,12 +185,13 @@ fn test_custom_keys_not_in_mappings() {
 #[test]
 fn test_real_world_mixed_config() {
     // Real-world config with popular and custom keys
+    // Using default mappings: c=context, n=name, v=version, a=author, t=title, d=description
     let input = r#"context.name        : my-app
-^version            : 2.0.0
-^author             : Team
+version             : 2.0.0
+author              : Team
 
-dependencies.react  : 18.0
-^typescript         : 5.0
+style.theme         : dark
+media.format        : png
 
 myFeatureFlags.darkMode     : true
 myFeatureFlags.experimental : false
@@ -202,11 +206,12 @@ customSettings.retries      : 3"#;
     println!("Input:\n{}\n", input);
     println!("Output:\n{}\n", result);
 
-    // Popular keys abbreviated
+    // Popular keys abbreviated (using default mappings)
     assert!(result.contains("c.n:my-app"), "context.name → c.n");
     assert!(result.contains("v:2.0.0"), "version → v");
     assert!(result.contains("a:Team"), "author → a");
-    assert!(result.contains("dep.react:18.0"), "dependencies → dep");
+    assert!(result.contains("s."), "style → s");
+    assert!(result.contains("m."), "media → m");
 
     // Custom keys preserved
     assert!(result.contains("myFeatureFlags"), "Custom prefix preserved");

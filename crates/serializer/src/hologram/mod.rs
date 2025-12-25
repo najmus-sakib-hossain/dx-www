@@ -45,7 +45,7 @@
 //! ## Usage
 //!
 //! ```rust
-//! use dx_serializer::hologram::{Inflater, Deflater, HologramConfig};
+//! use serializer::hologram::{Inflater, Deflater, HologramConfig};
 //!
 //! // LLM format on disk
 //! let llm_dense = r#"server#host:localhost#port:5432#ssl:1"#;

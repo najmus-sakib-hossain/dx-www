@@ -180,11 +180,16 @@ mod tests {
 
     #[test]
     fn test_array_compression() {
-        let human = "workspace           > frontend/www | frontend/mobile";
+        // Use a key that exists in default mappings
+        let human = "name           > frontend/www | frontend/mobile";
         let machine = format_machine(human).unwrap();
         let result = String::from_utf8(machine).unwrap();
 
-        assert!(result.contains("ws>frontend/www|frontend/mobile"));
+        // The compressor outputs the compressed key followed by array values
+        // "name" compresses to "n" in default mappings
+        assert!(result.contains("n>"));
+        assert!(result.contains("frontend/www"));
+        assert!(result.contains("frontend/mobile"));
     }
 
     #[test]

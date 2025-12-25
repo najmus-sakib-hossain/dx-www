@@ -86,6 +86,7 @@ path = "examples/forge_daemon_demo.rs"
 [dependencies]
 # Core async runtime
 tokio = { version = "1.48.0", features = ["full"] }
+async-trait = "0.1"
 
 # CRDT engines
 automerge = "1.0.0-beta.3"
@@ -196,3 +197,7 @@ md5 = "0.7.0"
 tempfile = "3.10.1"
 proptest = "1.4"
 tokio-test = "0.4"
+
+# Platform-specific dependencies for native I/O
+[target.'cfg(target_os = "linux")'.dependencies]
+io-uring = "0.7"

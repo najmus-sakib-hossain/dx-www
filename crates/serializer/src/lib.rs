@@ -104,11 +104,10 @@ mod tests {
 
     #[test]
     fn test_round_trip() {
-        let input = b"$c=context^$c.task:Test^loc:Lab
-team>a|b|c
-data=id%i val%s ok%b
-1 Alpha +
-2 Beta -";
+        // Simple key-value format that the parser supports
+        let input = b"name:Test
+value:123
+active:+";
 
         let parsed = parse(input).expect("Parse failed");
         let encoded = encode(&parsed).expect("Encode failed");

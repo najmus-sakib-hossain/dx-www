@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod tests {
-    use dx_serializer::{convert_to_dx, json_to_dx, toml_to_dx, yaml_to_dx};
+    use serializer::{convert_to_dx, json_to_dx, toml_to_dx, yaml_to_dx};
 
     const TEST_JSON: &str = r#"{
     "name": "test-app",

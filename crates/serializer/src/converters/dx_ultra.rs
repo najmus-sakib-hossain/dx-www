@@ -10,7 +10,7 @@
 /// - No quoted strings unless required
 ///
 /// Format Example:
-/// ```
+/// ```text
 /// context→task:Our favorite hikes together|location:Boulder|season:spring_2025
 /// friends•3→ana|luis|sam
 /// hikes•3•id|name|distanceKm|elevationGain|companion|wasSunny
@@ -20,7 +20,7 @@
 /// ```
 ///
 /// vs TOON:
-/// ```
+/// ```text
 /// context:
 ///   task: Our favorite hikes together
 ///   location: Boulder
@@ -529,8 +529,9 @@ mod tests {
         let encoded = encode_ultra(&value);
         println!("Encoded: {}", encoded);
 
-        // Should be ultra-compact
-        assert!(encoded.contains("name"));
+        // Should be ultra-compact and contain the data
+        // The format uses → for inline objects, so check for key content
+        assert!(encoded.contains("Alice"));
         assert!(encoded.len() < 50);
     }
 
