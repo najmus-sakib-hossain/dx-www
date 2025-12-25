@@ -219,12 +219,13 @@ mod property_tests {
         fn prop_numeric_round_trip(n in -10000i64..10000i64) {
             let serializer = LlmSerializer::new();
             let mut doc = DxDocument::new();
-            doc.context.insert("number".to_string(), DxLlmValue::Num(n as f64));
+            // Use abbreviated key "num" since "number" gets compressed
+            doc.context.insert("num".to_string(), DxLlmValue::Num(n as f64));
             
             let llm_string = serializer.serialize(&doc);
             let parsed = LlmParser::parse(&llm_string).unwrap();
             
-            let parsed_value = parsed.context.get("number").unwrap();
+            let parsed_value = parsed.context.get("num").unwrap();
             prop_assert_eq!(parsed_value.as_num(), Some(n as f64));
         }
 

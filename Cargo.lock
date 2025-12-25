@@ -4814,6 +4814,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "lz4_flex"
+version = "0.11.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08ab2867e3eeeca90e844d1940eab391c9dc5228783db2ed999acbc0a9ed375a"
+dependencies = [
+ "twox-hash",
+]
+
+[[package]]
 name = "lzma-rs"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7586,15 +7595,19 @@ dependencies = [
  "bytes",
  "console_error_panic_hook",
  "criterion",
+ "io-uring 0.7.11",
+ "lz4_flex",
  "memchr",
  "proptest",
  "rustc-hash 1.1.0",
  "serde",
  "serde_json",
  "serde_yaml",
+ "tempfile",
  "thiserror 2.0.17",
  "toml 0.8.23",
  "wasm-bindgen",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -9170,6 +9183,12 @@ dependencies = [
  "memchr",
  "unchecked-index",
 ]
+
+[[package]]
+name = "twox-hash"
+version = "2.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ea3136b675547379c4bd395ca6b938e5ad3c3d20fad76e7fe85f9e0d011419c"
 
 [[package]]
 name = "typenum"

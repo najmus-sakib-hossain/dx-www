@@ -25,11 +25,19 @@
 #![allow(dead_code)]
 
 pub mod base62;
+#[cfg(test)]
+mod base62_props;
 pub mod binary_output;
+
+// Platform-specific async I/O
+#[cfg(feature = "async-io")]
+pub mod io;
 pub mod compress;
 pub mod converters;
 pub mod encoder;
 pub mod error;
+#[cfg(test)]
+mod error_props;
 pub mod formatter;
 pub mod hologram;
 pub mod llm;
