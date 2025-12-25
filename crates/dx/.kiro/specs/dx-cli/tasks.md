@@ -12,7 +12,7 @@ This implementation plan follows the 6-day timeline from the master plan, buildi
   - Set up Cargo.toml with platform-specific dependencies
   - _Requirements: 1.5_
 
-- [-] 2. Implement Platform-Native I/O Layer
+- [x] 2. Implement Platform-Native I/O Layer
   - [x] 2.1 Implement IoUringReactor for Linux
     - Create io_uring ring with submission queue polling
     - Implement read_file and write_file using io_uring opcodes
@@ -36,11 +36,11 @@ This implementation plan follows the 6-day timeline from the master plan, buildi
     - Use cfg attributes to select platform-appropriate reactor
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - [-] 2.6 Write property test for file I/O round-trip
+  - [x] 2.6 Write property test for file I/O round-trip
     - **Property 1: File I/O Round-Trip**
     - **Validates: Requirements 1.6**
 
-- [ ] 3. Checkpoint - Ensure I/O layer compiles on all platforms
+- [-] 3. Checkpoint - Ensure I/O layer compiles on all platforms
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 4. Implement UI Theme System
