@@ -49,8 +49,6 @@ pub fn setup_default_handlers() -> Result<(), ctrlc::Error> {
 
 #[cfg(unix)]
 mod unix {
-    use super::*;
-
     /// Check if running on Unix
     pub fn is_unix() -> bool {
         true
@@ -68,8 +66,6 @@ mod unix {
 
 #[cfg(windows)]
 mod windows {
-    use super::*;
-
     /// Check if running on Windows
     pub fn is_windows() -> bool {
         true

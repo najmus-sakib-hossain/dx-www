@@ -157,7 +157,7 @@ impl DeltaPatcher {
         &self,
         patch_url: &str,
         signature_url: &str,
-        expected_hash: &str,
+        _expected_hash: &str,
     ) -> Result<PatchResult, DxError> {
         // In a real implementation, this would:
         // 1. Download the patch file

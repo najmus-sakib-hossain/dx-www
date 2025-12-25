@@ -5,10 +5,14 @@
 A modern, high-performance command-line interface that provides unified control over the entire DX development platform. Built with Rust for maximum performance and a clean, Vercel-inspired user experience.
 
 ```
-  ▲  DX v0.1.0
+  ◆  DX v0.1.0
 
   Build faster. Ship smaller. Zero compromise.
 ```
+
+<p align="center">
+  <img src="media/file-extension-dark.png" alt="DX Logo" width="120" />
+</p>
 
 ## Overview
 
@@ -448,6 +452,13 @@ quality = 85
 - **indicatif** (0.17) — Progress bars and spinners
 - **dialoguer** (0.11) — Interactive prompts
 - **owo-colors** (4.0) — Terminal colors
+
+DX CLI features a professional, Vercel-inspired design system with:
+- Consistent icon set (✓ success, ✗ error, → info, ⚠ warning)
+- Modern branding with DX logo mark
+- Clean 2-space indentation throughout
+- Muted colors with bright accents
+- Graceful degradation when colors are disabled
 
 ### File System
 

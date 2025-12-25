@@ -2,6 +2,7 @@
 //!
 //! Provides styled progress bars with Vercel-inspired design.
 
+use crate::ui::theme::icons;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 
@@ -82,14 +83,14 @@ impl Progress {
     /// Finish the progress bar with a success message
     pub fn finish_success(self, message: impl Into<String>) {
         self.pb.finish_and_clear();
-        eprintln!("  {} {}", "✓".green().bold(), message.into().white());
+        eprintln!("  {} {}", icons::SUCCESS.green().bold(), message.into().white());
     }
 
     /// Finish the progress bar with an error
     #[allow(dead_code)]
     pub fn finish_error(self, message: impl Into<String>) {
         self.pb.finish_and_clear();
-        eprintln!("  {} {}", "✗".red().bold(), message.into().red());
+        eprintln!("  {} {}", icons::ERROR.red().bold(), message.into().red());
     }
 
     /// Get the inner progress bar for advanced usage

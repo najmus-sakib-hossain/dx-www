@@ -2,6 +2,7 @@
 //!
 //! Provides animated spinners for async operations with Vercel-style output.
 
+use crate::ui::theme::icons;
 use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 use std::time::Duration;
@@ -82,7 +83,7 @@ impl Spinner {
     /// Requirement 3.2: Clear and display success message with ✓
     pub fn finish_success(self, message: impl Into<String>) {
         self.pb.finish_and_clear();
-        eprintln!("  {} {}", "✓".green().bold(), message.into().white());
+        eprintln!("  {} {}", icons::SUCCESS.green().bold(), message.into().white());
     }
 
     /// Mark spinner as successful (alias)
@@ -95,7 +96,7 @@ impl Spinner {
     /// Requirement 3.3: Clear and display error message with ✗
     pub fn finish_error(self, message: impl Into<String>) {
         self.pb.finish_and_clear();
-        eprintln!("  {} {}", "✗".red().bold(), message.into().red());
+        eprintln!("  {} {}", icons::ERROR.red().bold(), message.into().red());
     }
 
     /// Mark spinner as failed (alias)
@@ -108,7 +109,7 @@ impl Spinner {
     /// Requirement 3.5: Display yellow warning symbol
     pub fn finish_warn(self, message: impl Into<String>) {
         self.pb.finish_and_clear();
-        eprintln!("  {} {}", "⚠".yellow().bold(), message.into().yellow());
+        eprintln!("  {} {}", icons::WARNING.yellow().bold(), message.into().yellow());
     }
 
     /// Mark spinner as warning (alias)
@@ -134,32 +135,32 @@ impl Spinner {
 
     /// Format a success message and return as string
     pub fn format_success(message: &str) -> String {
-        format!("  {} {}", "✓".green().bold(), message.white())
+        format!("  {} {}", icons::SUCCESS.green().bold(), message.white())
     }
 
     /// Format an error message and return as string
     pub fn format_error(message: &str) -> String {
-        format!("  {} {}", "✗".red().bold(), message.red())
+        format!("  {} {}", icons::ERROR.red().bold(), message.red())
     }
 
     /// Format a warning message and return as string
     pub fn format_warn(message: &str) -> String {
-        format!("  {} {}", "⚠".yellow().bold(), message.yellow())
+        format!("  {} {}", icons::WARNING.yellow().bold(), message.yellow())
     }
 
     /// Format a success message without colors
     pub fn format_success_plain(message: &str) -> String {
-        format!("  ✓ {}", message)
+        format!("  {} {}", icons::SUCCESS, message)
     }
 
     /// Format an error message without colors
     pub fn format_error_plain(message: &str) -> String {
-        format!("  ✗ {}", message)
+        format!("  {} {}", icons::ERROR, message)
     }
 
     /// Format a warning message without colors
     pub fn format_warn_plain(message: &str) -> String {
-        format!("  ⚠ {}", message)
+        format!("  {} {}", icons::WARNING, message)
     }
 }
 

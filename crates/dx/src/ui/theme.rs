@@ -1,10 +1,78 @@
 //! Theme definitions for consistent CLI styling
 //!
 //! Provides a Vercel-inspired color scheme with graceful degradation
-//! when colors are not supported.
+//! when colors are not supported. Features a professional icon system
+//! and modern terminal aesthetics.
 
 use console::{Style, Term};
 use owo_colors::OwoColorize;
+
+/// Professional icon set for CLI output
+/// Inspired by Vercel's clean, minimal design language
+pub mod icons {
+    /// Success indicator - clean checkmark
+    pub const SUCCESS: &str = "✓";
+    /// Error indicator - bold X
+    pub const ERROR: &str = "✗";
+    /// Warning indicator - attention triangle
+    pub const WARNING: &str = "⚠";
+    /// Info/arrow indicator - right arrow
+    pub const ARROW: &str = "→";
+    /// Bullet point
+    pub const BULLET: &str = "●";
+    /// Empty bullet (cancelled/pending)
+    pub const BULLET_EMPTY: &str = "○";
+    /// Vertical line for sections
+    pub const VERTICAL: &str = "│";
+    /// Horizontal line for dividers
+    pub const HORIZONTAL: &str = "─";
+    /// Corner for tree structures
+    pub const CORNER: &str = "└";
+    /// Tee for tree structures
+    pub const TEE: &str = "├";
+    /// Plus for additions
+    pub const PLUS: &str = "+";
+    /// Minus for removals
+    pub const MINUS: &str = "-";
+    /// Star for highlights
+    pub const STAR: &str = "★";
+    /// Lightning for fast/performance
+    pub const LIGHTNING: &str = "⚡";
+    /// Package/box icon
+    pub const PACKAGE: &str = "◆";
+    /// Gear for settings/config
+    pub const GEAR: &str = "⚙";
+    /// Clock for timing
+    pub const CLOCK: &str = "◷";
+    /// Play for running
+    pub const PLAY: &str = "▶";
+    /// Stop for stopped
+    pub const STOP: &str = "■";
+    /// Refresh/sync
+    pub const REFRESH: &str = "↻";
+    /// Download
+    pub const DOWNLOAD: &str = "↓";
+    /// Upload
+    pub const UPLOAD: &str = "↑";
+    /// Lock for security
+    pub const LOCK: &str = "⊙";
+    /// Unlock
+    pub const UNLOCK: &str = "○";
+    /// Debug/inspect
+    pub const DEBUG: &str = "◉";
+    /// Test/check
+    pub const TEST: &str = "◈";
+    /// Build/construct
+    pub const BUILD: &str = "▣";
+    /// Deploy/ship
+    pub const DEPLOY: &str = "▲";
+    /// Link
+    pub const LINK: &str = "⟶";
+    /// Folder
+    pub const FOLDER: &str = "▸";
+    /// File
+    pub const FILE: &str = "◻";
+}
 
 /// Color mode for terminal output
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,6 +92,12 @@ impl Default for ColorMode {
 }
 
 /// The DX CLI theme with Vercel-inspired styling
+///
+/// Design principles:
+/// - Clean, minimal aesthetic
+/// - Consistent spacing (2-space indent)
+/// - Muted colors with bright accents
+/// - Professional iconography
 #[allow(dead_code)]
 pub struct Theme {
     term: Term,
@@ -83,17 +157,52 @@ impl Theme {
 
     /// Print the DX logo with version
     /// Requirement 2.3: Display DX logo with version information
+    ///
+    /// Uses Vercel-inspired minimal design with the DX brand mark
     pub fn print_logo(&self) {
+        let version = env!("CARGO_PKG_VERSION");
+        eprintln!();
+        if self.colors_enabled {
+            // Vercel-style minimal logo: triangle symbol like Vercel uses ▲
+            // Using ◆ (black diamond) as DX brand mark - clean and professional
+            eprintln!(
+                "  {}  {} {}",
+                "◆".cyan().bold(),
+                "DX".white().bold(),
+                format!("v{version}").bright_black()
+            );
+        } else {
+            eprintln!("  ◆  DX v{}", version);
+        }
+        eprintln!();
+    }
+
+    /// Print a compact logo for inline use
+    pub fn print_logo_inline(&self) {
+        if self.colors_enabled {
+            eprint!("{} {}", "◆".cyan().bold(), "DX".white().bold());
+        } else {
+            eprint!("◆ DX");
+        }
+    }
+
+    /// Print a branded banner for major operations
+    pub fn print_banner(&self, title: &str) {
         let version = env!("CARGO_PKG_VERSION");
         eprintln!();
         if self.colors_enabled {
             eprintln!(
                 "  {}  {}",
-                "▲".cyan().bold(),
-                format!("DX v{version}").bright_white().bold()
+                "◆".cyan().bold(),
+                title.white().bold()
+            );
+            eprintln!(
+                "     {}",
+                format!("v{version}").bright_black()
             );
         } else {
-            eprintln!("  ▲  DX v{version}");
+            eprintln!("  ◆  {}", title);
+            eprintln!("     v{}", version);
         }
         eprintln!();
     }
@@ -107,9 +216,9 @@ impl Theme {
     /// Requirement 2.4: Prefix success messages with ✓
     pub fn success(&self, message: &str) {
         if self.colors_enabled {
-            eprintln!("  {} {}", "✓".green().bold(), message.white());
+            eprintln!("  {} {}", icons::SUCCESS.green().bold(), message.white());
         } else {
-            eprintln!("  ✓ {}", message);
+            eprintln!("  {} {}", icons::SUCCESS, message);
         }
     }
 
@@ -123,9 +232,9 @@ impl Theme {
     /// Requirement 2.5: Prefix error messages with ✗
     pub fn error(&self, message: &str) {
         if self.colors_enabled {
-            eprintln!("  {} {}", "✗".red().bold(), message.red());
+            eprintln!("  {} {}", icons::ERROR.red().bold(), message.red());
         } else {
-            eprintln!("  ✗ {}", message);
+            eprintln!("  {} {}", icons::ERROR, message);
         }
     }
 
@@ -139,9 +248,9 @@ impl Theme {
     /// Requirement 2.6: Prefix info messages with →
     pub fn info(&self, message: &str) {
         if self.colors_enabled {
-            eprintln!("  {} {}", "→".cyan(), message.white());
+            eprintln!("  {} {}", icons::ARROW.cyan(), message.white());
         } else {
-            eprintln!("  → {}", message);
+            eprintln!("  {} {}", icons::ARROW, message);
         }
     }
 
@@ -149,9 +258,9 @@ impl Theme {
     /// Requirement 2.7: Prefix warning messages with ⚠
     pub fn warn(&self, message: &str) {
         if self.colors_enabled {
-            eprintln!("  {} {}", "⚠".yellow().bold(), message.yellow());
+            eprintln!("  {} {}", icons::WARNING.yellow().bold(), message.yellow());
         } else {
-            eprintln!("  ⚠ {}", message);
+            eprintln!("  {} {}", icons::WARNING, message);
         }
     }
 
@@ -168,11 +277,11 @@ impl Theme {
             eprintln!(
                 "  {} {} {}",
                 step_info.bright_black(),
-                "→".cyan(),
+                icons::ARROW.cyan(),
                 message.white()
             );
         } else {
-            eprintln!("  {} → {}", step_info, message);
+            eprintln!("  {} {} {}", step_info, icons::ARROW, message);
         }
     }
 
@@ -196,11 +305,11 @@ impl Theme {
         if self.colors_enabled {
             eprintln!(
                 "  {} Run {} to get started",
-                "→".cyan(),
+                icons::ARROW.cyan(),
                 format!("`{cmd}`").cyan().bold()
             );
         } else {
-            eprintln!("  → Run `{}` to get started", cmd);
+            eprintln!("  {} Run `{}` to get started", icons::ARROW, cmd);
         }
     }
 
@@ -214,11 +323,11 @@ impl Theme {
         if self.colors_enabled {
             eprintln!(
                 "  {} {}",
-                "│".bright_black(),
+                icons::VERTICAL.bright_black(),
                 title.bright_white().bold()
             );
         } else {
-            eprintln!("  │ {}", title);
+            eprintln!("  {} {}", icons::VERTICAL, title);
         }
     }
 
@@ -227,12 +336,12 @@ impl Theme {
         if self.colors_enabled {
             eprintln!(
                 "  {} {}: {}",
-                "│".bright_black(),
+                icons::VERTICAL.bright_black(),
                 label.bright_black(),
                 value.white()
             );
         } else {
-            eprintln!("  │ {}: {}", label, value);
+            eprintln!("  {} {}: {}", icons::VERTICAL, label, value);
         }
     }
 
@@ -241,21 +350,21 @@ impl Theme {
         if self.colors_enabled {
             eprintln!(
                 "  {} {}: {}",
-                "│".bright_black(),
+                icons::VERTICAL.bright_black(),
                 label.bright_black(),
                 url.cyan().underline()
             );
         } else {
-            eprintln!("  │ {}: {}", label, url);
+            eprintln!("  {} {}: {}", icons::VERTICAL, label, url);
         }
     }
 
     /// Print a divider line
     pub fn print_divider(&self) {
         if self.colors_enabled {
-            eprintln!("  {}", "─".repeat(48).bright_black());
+            eprintln!("  {}", icons::HORIZONTAL.repeat(48).bright_black());
         } else {
-            eprintln!("  {}", "─".repeat(48));
+            eprintln!("  {}", icons::HORIZONTAL.repeat(48));
         }
     }
 
@@ -263,9 +372,9 @@ impl Theme {
     #[allow(dead_code)]
     pub fn print_empty(&self) {
         if self.colors_enabled {
-            eprintln!("  {}", "│".bright_black());
+            eprintln!("  {}", icons::VERTICAL.bright_black());
         } else {
-            eprintln!("  │");
+            eprintln!("  {}", icons::VERTICAL);
         }
     }
 
@@ -275,19 +384,19 @@ impl Theme {
         if self.colors_enabled {
             eprintln!(
                 "  {} Ready in {}",
-                "✓".green().bold(),
+                icons::SUCCESS.green().bold(),
                 format!("{time_ms}ms").cyan().bold()
             );
             eprintln!();
             eprintln!(
                 "  {} Local:   {}",
-                "→".cyan(),
+                icons::ARROW.cyan(),
                 url.cyan().bold().underline()
             );
         } else {
-            eprintln!("  ✓ Ready in {}ms", time_ms);
+            eprintln!("  {} Ready in {}ms", icons::SUCCESS, time_ms);
             eprintln!();
-            eprintln!("  → Local:   {}", url);
+            eprintln!("  {} Local:   {}", icons::ARROW, url);
         }
         eprintln!();
     }
@@ -296,9 +405,9 @@ impl Theme {
     pub fn print_cancelled(&self) {
         eprintln!();
         if self.colors_enabled {
-            eprintln!("  {} Cancelled", "○".bright_black());
+            eprintln!("  {} Cancelled", icons::BULLET_EMPTY.bright_black());
         } else {
-            eprintln!("  ○ Cancelled");
+            eprintln!("  {} Cancelled", icons::BULLET_EMPTY);
         }
         eprintln!();
     }
@@ -309,16 +418,18 @@ impl Theme {
         self.print_divider();
         if self.colors_enabled {
             eprintln!(
-                "  {} Built in {} │ {} │ {} files",
-                "✓".green().bold(),
+                "  {} Built in {} {} {} {} {} files",
+                icons::SUCCESS.green().bold(),
                 format!("{duration_ms}ms").cyan().bold(),
+                icons::VERTICAL.bright_black(),
                 bundle_size.magenta().bold(),
+                icons::VERTICAL.bright_black(),
                 files.to_string().white().bold()
             );
         } else {
             eprintln!(
-                "  ✓ Built in {}ms │ {} │ {} files",
-                duration_ms, bundle_size, files
+                "  {} Built in {}ms {} {} {} {} files",
+                icons::SUCCESS, duration_ms, icons::VERTICAL, bundle_size, icons::VERTICAL, files
             );
         }
         self.print_divider();
@@ -352,20 +463,20 @@ impl Theme {
             eprintln!(
                 "  {} {} {} passed {} {} failed {} {} skipped {} in {}",
                 status,
-                "│".bright_black(),
+                icons::VERTICAL.bright_black(),
                 passed.to_string().green().bold(),
-                "│".bright_black(),
+                icons::VERTICAL.bright_black(),
                 failed_str,
-                "│".bright_black(),
+                icons::VERTICAL.bright_black(),
                 skipped.to_string().bright_black(),
-                "│".bright_black(),
+                icons::VERTICAL.bright_black(),
                 format!("{duration_ms}ms").cyan()
             );
         } else {
             let status = if failed == 0 { "PASS" } else { "FAIL" };
             eprintln!(
-                "  {} │ {} passed │ {} failed │ {} skipped │ in {}ms",
-                status, passed, failed, skipped, duration_ms
+                "  {} {} {} passed {} {} failed {} {} skipped {} in {}ms",
+                status, icons::VERTICAL, passed, icons::VERTICAL, failed, icons::VERTICAL, skipped, icons::VERTICAL, duration_ms
             );
         }
 
@@ -390,36 +501,36 @@ impl Theme {
     /// Format a success message and return as string
     pub fn format_success(&self, message: &str) -> String {
         if self.colors_enabled {
-            format!("  {} {}", "✓".green().bold(), message.white())
+            format!("  {} {}", icons::SUCCESS.green().bold(), message.white())
         } else {
-            format!("  ✓ {}", message)
+            format!("  {} {}", icons::SUCCESS, message)
         }
     }
 
     /// Format an error message and return as string
     pub fn format_error(&self, message: &str) -> String {
         if self.colors_enabled {
-            format!("  {} {}", "✗".red().bold(), message.red())
+            format!("  {} {}", icons::ERROR.red().bold(), message.red())
         } else {
-            format!("  ✗ {}", message)
+            format!("  {} {}", icons::ERROR, message)
         }
     }
 
     /// Format an info message and return as string
     pub fn format_info(&self, message: &str) -> String {
         if self.colors_enabled {
-            format!("  {} {}", "→".cyan(), message.white())
+            format!("  {} {}", icons::ARROW.cyan(), message.white())
         } else {
-            format!("  → {}", message)
+            format!("  {} {}", icons::ARROW, message)
         }
     }
 
     /// Format a warning message and return as string
     pub fn format_warn(&self, message: &str) -> String {
         if self.colors_enabled {
-            format!("  {} {}", "⚠".yellow().bold(), message.yellow())
+            format!("  {} {}", icons::WARNING.yellow().bold(), message.yellow())
         } else {
-            format!("  ⚠ {}", message)
+            format!("  {} {}", icons::WARNING, message)
         }
     }
 
@@ -430,25 +541,33 @@ impl Theme {
             format!(
                 "  {} {} {}",
                 step_info.bright_black(),
-                "→".cyan(),
+                icons::ARROW.cyan(),
                 message.white()
             )
         } else {
-            format!("  {} → {}", step_info, message)
+            format!("  {} {} {}", step_info, icons::ARROW, message)
         }
     }
 }
 
-/// ASCII art logo for splash screens (kept minimal)
+/// ASCII art logo for splash screens - Modern DX branding
 #[allow(dead_code)]
 pub const LOGO_SMALL: &str = r"
-   ██████╗ ██╗  ██╗
-   ██╔══██╗╚██╗██╔╝
-   ██║  ██║ ╚███╔╝ 
-   ██║  ██║ ██╔██╗ 
-   ██████╔╝██╔╝ ██╗
-   ╚═════╝ ╚═╝  ╚═╝
+    ◆  DX
+    Binary-First Development
 ";
+
+/// Compact logo for inline use
+#[allow(dead_code)]
+pub const LOGO_INLINE: &str = "◆ DX";
+
+/// Logo with tagline
+#[allow(dead_code)]
+pub const LOGO_TAGLINE: &str = "◆ DX — Binary-First Development";
+
+/// Minimal logo mark (diamond symbol)
+#[allow(dead_code)]
+pub const LOGO_MARK: &str = "◆";
 
 #[cfg(test)]
 mod tests {

@@ -1,5 +1,6 @@
 //! Table formatting for CLI output
 
+use crate::ui::theme::icons;
 use owo_colors::OwoColorize;
 
 /// A simple table formatter for CLI output
@@ -69,7 +70,7 @@ pub fn print_kv_list(items: &[(&str, &str)]) {
     for (key, value) in items {
         eprintln!(
             "  {} {:width$}  {}",
-            "│".bright_black(),
+            icons::VERTICAL.bright_black(),
             format!("{key}:").bright_black(),
             value.white(),
             width = max_key_len + 1
@@ -82,13 +83,15 @@ pub fn print_file_tree(files: &[(&str, &str)]) {
     eprintln!();
     for (i, (path, info)) in files.iter().enumerate() {
         let prefix = if i == files.len() - 1 {
-            "└──"
+            icons::CORNER
         } else {
-            "├──"
+            icons::TEE
         };
         eprintln!(
-            "  {} {} {}",
+            "  {}{}{} {} {}",
             prefix.bright_black(),
+            icons::HORIZONTAL.bright_black(),
+            icons::HORIZONTAL.bright_black(),
             path.white(),
             format!("({info})").bright_black()
         );

@@ -8,6 +8,7 @@
 //! - Requirement 10.6: Debug mode with timing
 //! - Requirement 10.7: Log rotation
 
+use crate::ui::theme::icons;
 use chrono::{DateTime, Utc};
 use owo_colors::OwoColorize;
 use serde::Serialize;
@@ -211,10 +212,10 @@ impl StructuredLogger {
                 eprintln!("  {} {}{}", "debug".bright_black(), message.bright_black(), timing.bright_black());
             }
             LogLevel::Info => {
-                eprintln!("  {} {}{}", "→".cyan(), message.white(), timing.bright_black());
+                eprintln!("  {} {}{}", icons::ARROW.cyan(), message.white(), timing.bright_black());
             }
             LogLevel::Warn => {
-                eprintln!("  {} {}{}", "⚠".yellow().bold(), message.yellow(), timing.bright_black());
+                eprintln!("  {} {}{}", icons::WARNING.yellow().bold(), message.yellow(), timing.bright_black());
             }
             LogLevel::Error => {
                 eprintln!();
@@ -359,19 +360,19 @@ impl Logger {
 /// Log an info message
 #[allow(dead_code)]
 pub fn info(message: &str) {
-    eprintln!("  {} {}", "→".cyan(), message.white());
+    eprintln!("  {} {}", icons::ARROW.cyan(), message.white());
 }
 
 /// Log a success message
 #[allow(dead_code)]
 pub fn success(message: &str) {
-    eprintln!("  {} {}", "✓".green().bold(), message.white());
+    eprintln!("  {} {}", icons::SUCCESS.green().bold(), message.white());
 }
 
 /// Log a warning message
 #[allow(dead_code)]
 pub fn warn(message: &str) {
-    eprintln!("  {} {}", "⚠".yellow().bold(), message.yellow());
+    eprintln!("  {} {}", icons::WARNING.yellow().bold(), message.yellow());
 }
 
 /// Log an error message
@@ -395,7 +396,7 @@ pub fn step(number: usize, message: &str) {
 /// Log a list item
 #[allow(dead_code)]
 pub fn list_item(message: &str) {
-    eprintln!("  {} {}", "•".bright_black(), message.white());
+    eprintln!("  {} {}", icons::BULLET.bright_black(), message.white());
 }
 
 /// Log a code block / command
