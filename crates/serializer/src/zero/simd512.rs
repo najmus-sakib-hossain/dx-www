@@ -206,6 +206,67 @@ pub mod portable {
     }
 }
 
+/// Runtime SIMD capability detection
+pub mod runtime {
+    use std::sync::OnceLock;
+
+    /// SIMD capability level detected at runtime
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum SimdLevel {
+        /// AVX-512F available
+        Avx512,
+        /// AVX2 available
+        Avx2,
+        /// SSE4.2 available
+        Sse42,
+        /// No SIMD, use scalar
+        Scalar,
+    }
+
+    /// Cached SIMD level detection
+    static SIMD_LEVEL: OnceLock<SimdLevel> = OnceLock::new();
+
+    /// Detect the best available SIMD level at runtime
+    #[cfg(target_arch = "x86_64")]
+    pub fn detect_simd_level() -> SimdLevel {
+        *SIMD_LEVEL.get_or_init(|| {
+            if is_x86_feature_detected!("avx512f") {
+                SimdLevel::Avx512
+            } else if is_x86_feature_detected!("avx2") {
+                SimdLevel::Avx2
+            } else if is_x86_feature_detected!("sse4.2") {
+                SimdLevel::Sse42
+            } else {
+                SimdLevel::Scalar
+            }
+        })
+    }
+
+    /// Detect SIMD level (non-x86 always returns Scalar)
+    #[cfg(not(target_arch = "x86_64"))]
+    pub fn detect_simd_level() -> SimdLevel {
+        SimdLevel::Scalar
+    }
+
+    /// Check if AVX-512 is available
+    #[inline]
+    pub fn has_avx512() -> bool {
+        detect_simd_level() == SimdLevel::Avx512
+    }
+
+    /// Check if AVX2 is available
+    #[inline]
+    pub fn has_avx2() -> bool {
+        matches!(detect_simd_level(), SimdLevel::Avx512 | SimdLevel::Avx2)
+    }
+
+    /// Check if SSE4.2 is available
+    #[inline]
+    pub fn has_sse42() -> bool {
+        detect_simd_level() != SimdLevel::Scalar
+    }
+}
+
 /// Auto-dispatch to best available SIMD
 pub mod dispatch {
     /// Sum u64s with best available SIMD
@@ -225,6 +286,35 @@ pub mod dispatch {
             all(target_arch = "x86_64", target_feature = "avx512f"),
             all(target_arch = "x86_64", target_feature = "avx2")
         )))]
+        {
+            super::portable::sum_u64s(data)
+        }
+    }
+
+    /// Sum u64s with runtime SIMD detection
+    /// This version checks CPU capabilities at runtime instead of compile time
+    #[inline]
+    pub fn sum_u64s_runtime(data: &[u64]) -> u64 {
+        #[cfg(target_arch = "x86_64")]
+        {
+            use super::runtime::SimdLevel;
+            match super::runtime::detect_simd_level() {
+                SimdLevel::Avx512 => {
+                    #[cfg(target_feature = "avx512f")]
+                    { unsafe { super::avx512::sum_u64s(data) } }
+                    #[cfg(not(target_feature = "avx512f"))]
+                    { super::portable::sum_u64s(data) }
+                }
+                SimdLevel::Avx2 => {
+                    #[cfg(target_feature = "avx2")]
+                    { unsafe { super::avx2_fallback::sum_u64s(data) } }
+                    #[cfg(not(target_feature = "avx2"))]
+                    { super::portable::sum_u64s(data) }
+                }
+                _ => super::portable::sum_u64s(data),
+            }
+        }
+        #[cfg(not(target_arch = "x86_64"))]
         {
             super::portable::sum_u64s(data)
         }
@@ -461,5 +551,28 @@ mod tests {
 
         assert_eq!(batch::find_by_u64(&data, 0, 16, 5, 300), Some(2));
         assert_eq!(batch::find_by_u64(&data, 0, 16, 5, 999), None);
+    }
+
+    #[test]
+    fn test_runtime_simd_detection() {
+        // Just verify detection doesn't panic
+        let level = runtime::detect_simd_level();
+        println!("Detected SIMD level: {:?}", level);
+        
+        // Verify consistency
+        assert_eq!(runtime::detect_simd_level(), level);
+    }
+
+    #[test]
+    fn test_runtime_dispatch_equivalence() {
+        let data: Vec<u64> = (1..=100).collect();
+        
+        let compile_time_sum = dispatch::sum_u64s(&data);
+        let runtime_sum = dispatch::sum_u64s_runtime(&data);
+        let portable_sum = portable::sum_u64s(&data);
+        
+        // All methods should produce the same result
+        assert_eq!(compile_time_sum, portable_sum);
+        assert_eq!(runtime_sum, portable_sum);
     }
 }

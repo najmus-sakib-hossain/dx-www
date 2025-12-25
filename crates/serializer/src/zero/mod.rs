@@ -47,6 +47,10 @@ pub mod prefetch;
 pub mod quantum;
 pub mod simd512;
 
+// Property tests
+#[cfg(test)]
+mod machine_props;
+
 // Core exports
 pub use builder::DxZeroBuilder;
 pub use deserialize::from_bytes;
@@ -65,6 +69,7 @@ pub use inline::{DxInlineBytes, DxInlineString, MAX_INLINE_BYTES, MAX_INLINE_STR
 pub use mmap::{DxMmap, DxMmapBatch};
 pub use prefetch::{prefetch, prefetch_lines, prefetch_range, PrefetchHint, PrefetchProcessor};
 pub use quantum::{QuantumLayout, QuantumReader, QuantumType, QuantumWriter};
+pub use simd512::runtime::{detect_simd_level, has_avx2, has_avx512, has_sse42, SimdLevel};
 
 /// DX-Zero magic bytes: 0x5A 0x44 ("ZD" little-endian)
 pub const MAGIC: [u8; 2] = [0x5A, 0x44];

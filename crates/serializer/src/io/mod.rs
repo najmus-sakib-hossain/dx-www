@@ -30,6 +30,10 @@ pub mod iocp;
 
 pub mod blocking;
 
+// Property tests
+#[cfg(test)]
+mod io_props;
+
 /// Unified async file I/O trait
 ///
 /// Provides a platform-agnostic interface for file operations.

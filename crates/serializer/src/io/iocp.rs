@@ -6,29 +6,36 @@
 
 use std::io;
 use std::path::Path;
+use std::ptr;
 
 use super::AsyncFileIO;
 
 #[cfg(all(target_os = "windows", feature = "async-io"))]
 use windows_sys::Win32::{
     Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE},
-    Storage::FileSystem::{
-        CreateFileW, ReadFile, WriteFile, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
-        FILE_FLAG_OVERLAPPED, FILE_SHARE_READ, GENERIC_READ, GENERIC_WRITE, OPEN_EXISTING,
-    },
-    System::IO::{CreateIoCompletionPort, GetQueuedCompletionStatus, OVERLAPPED},
+    System::IO::CreateIoCompletionPort,
 };
 
 /// IOCP-based async I/O implementation for Windows
 ///
 /// Uses I/O Completion Ports for high-performance file operations.
 /// IOCP provides excellent scalability for concurrent I/O operations.
+/// 
+/// Note: The current implementation uses blocking I/O as a fallback.
+/// A full async implementation would use overlapped I/O with IOCP.
 pub struct IocpIO {
     #[cfg(all(target_os = "windows", feature = "async-io"))]
     completion_port: HANDLE,
     #[cfg(not(all(target_os = "windows", feature = "async-io")))]
     _phantom: std::marker::PhantomData<()>,
 }
+
+// Safety: The completion_port HANDLE is thread-safe when used correctly
+// with IOCP operations. We only use it for creating the port and closing it.
+#[cfg(all(target_os = "windows", feature = "async-io"))]
+unsafe impl Send for IocpIO {}
+#[cfg(all(target_os = "windows", feature = "async-io"))]
+unsafe impl Sync for IocpIO {}
 
 impl IocpIO {
     /// Create a new IOCP I/O instance
@@ -39,8 +46,13 @@ impl IocpIO {
     #[cfg(all(target_os = "windows", feature = "async-io"))]
     pub fn new() -> io::Result<Self> {
         unsafe {
-            let completion_port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
-            if completion_port == 0 {
+            let completion_port = CreateIoCompletionPort(
+                INVALID_HANDLE_VALUE, 
+                ptr::null_mut(), 
+                0, 
+                0
+            );
+            if completion_port.is_null() {
                 return Err(io::Error::last_os_error());
             }
             Ok(Self { completion_port })
@@ -72,7 +84,7 @@ impl IocpIO {
 impl Drop for IocpIO {
     fn drop(&mut self) {
         unsafe {
-            if self.completion_port != 0 {
+            if !self.completion_port.is_null() {
                 CloseHandle(self.completion_port);
             }
         }
