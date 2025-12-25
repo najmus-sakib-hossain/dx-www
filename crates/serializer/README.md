@@ -476,6 +476,79 @@ let decompressed = compressed.decompress()?;
 
 ---
 
+## 🛡️ Security & Robustness (Battle Hardening)
+
+**December 26, 2025: Comprehensive security hardening completed.**
+
+### Resource Limits
+
+The serializer enforces strict limits to prevent denial-of-service attacks:
+
+| Limit | Value | Purpose |
+|-------|-------|---------|
+| `MAX_INPUT_SIZE` | 100 MB | Prevents memory exhaustion |
+| `MAX_RECURSION_DEPTH` | 1000 levels | Prevents stack overflow |
+| `MAX_TABLE_ROWS` | 10 million | Prevents memory exhaustion |
+
+### Defensive Error Types
+
+New error types provide clear, actionable feedback:
+
+```rust
+// Input too large
+DxError::InputTooLarge { size: 150_000_000, max: 104_857_600 }
+// "Input too large: 150000000 bytes exceeds maximum of 104857600 bytes"
+
+// Recursion limit
+DxError::RecursionLimitExceeded { depth: 1001, max: 1000 }
+// "Recursion limit exceeded: depth 1001 exceeds maximum of 1000"
+
+// Table too large
+DxError::TableTooLarge { rows: 15_000_000, max: 10_000_000 }
+// "Table too large: 15000000 rows exceeds maximum of 10000000 rows"
+```
+
+### Property-Based Testing
+
+38 correctness properties validated with proptest (100+ iterations each):
+
+| Category | Properties | Coverage |
+|----------|------------|----------|
+| Parser | 4 | Null bytes, UTF-8, error positions, valid input |
+| Tokenizer | 4 | Integer overflow, invalid floats, EOF, control chars |
+| Round-Trip | 4 | DxValue, Human format, LLM format, Binary format |
+| Binary Format | 6 | Header validation, heap bounds, header roundtrip |
+| Memory Safety | 2 | Alias loops, decompression size verification |
+| Error Quality | 3 | Type mismatch details, schema errors, valid tables |
+| Thread Safety | 2 | Mappings singleton, parser isolation |
+| Compression | 6 | Round-trip, error handling, ratio accuracy, levels |
+| Pretty Printer | 2 | Special character escaping, string preservation |
+
+### Input Validation
+
+All inputs are validated before processing:
+
+1. **Size check** - Rejects inputs > 100 MB immediately
+2. **UTF-8 validation** - Returns byte offset of invalid sequences
+3. **Recursion tracking** - Monitors nesting depth during parsing
+4. **Table row counting** - Enforces row limits during table parsing
+
+### Binary Format Security
+
+- **Magic byte validation** - Rejects non-DX binary data
+- **Version checking** - Rejects incompatible versions
+- **Reserved flag detection** - Rejects potentially future-incompatible data
+- **Heap bounds checking** - Validates all heap references before access
+
+### Thread Safety Guarantees
+
+- `Mappings` singleton is thread-safe for concurrent reads
+- `Parser` instances have no shared mutable state
+- `DxMmap` supports concurrent reads from memory-mapped files
+- No data races in multi-threaded parsing
+
+---
+
 ## 🚧 Limitations
 
 1. **Little-endian only** (v1 restriction)
@@ -525,10 +598,17 @@ let decompressed = compressed.decompress()?;
 - [x] UTF-8 validation with byte offset errors
 - [x] Platform-specific async I/O (io_uring, kqueue, IOCP)
 - [x] Token efficiency benchmarks (3x+ vs TOON)
-- [x] Property-based testing (21 properties)
+- [x] Property-based testing (38 properties)
 - [x] Comprehensive error handling with location info
 
-### 🔜 Phase 7: Future Enhancements
+### ✅ Phase 7: Battle Hardening (Completed - Dec 26, 2025)
+- [x] Input size validation (100 MB limit)
+- [x] Recursion depth protection (1000 levels max)
+- [x] Table row limits (10 million rows max)
+- [x] 38 property-based tests with proptest
+- [x] Defensive error types with detailed context
+
+### 🔜 Phase 8: Future Enhancements
 - [ ] Procedural macro for auto-generation
 - [ ] Big-endian support
 - [ ] ARM NEON SIMD
@@ -621,7 +701,7 @@ let files = io.read_batch(&[path1, path2, path3]).await?;
 
 ### Property-Based Testing
 
-21 correctness properties validated with 100+ iterations each:
+38 correctness properties validated with 100+ iterations each:
 
 | Property | Description |
 |----------|-------------|
@@ -630,6 +710,8 @@ let files = io.read_batch(&[path1, path2, path3]).await?;
 | UTF-8 Handling | Invalid sequences return specific errors |
 | SIMD Equivalence | SIMD and scalar produce identical results |
 | Compression | Round-trip preserves exact bytes |
+| Input Validation | Size, recursion, and table limits enforced |
+| Thread Safety | Concurrent access without data races |
 
 ---
 
@@ -733,4 +815,11 @@ See **[Extension README](../vscode-dx-serializer/README.md)** for full documenta
 - ✅ **Keyboard-only** - No ALT codes needed
 - ✅ **100% lossless** - Perfect round-trip
 
-**The future is here. Binary for machines. Text for everyone else.**
+### Security & Robustness (Battle Hardened)
+- ✅ **100 MB input limit** - Prevents memory exhaustion
+- ✅ **1000 level recursion limit** - Prevents stack overflow
+- ✅ **10M row table limit** - Prevents DoS attacks
+- ✅ **38 property tests** - Comprehensive correctness validation
+- ✅ **Thread-safe** - Safe for concurrent use
+
+**The future is here. Binary for machines. Text for everyone else. Secure for all.**

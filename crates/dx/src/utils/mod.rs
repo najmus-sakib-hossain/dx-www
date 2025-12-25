@@ -1,6 +1,7 @@
 //! Utility modules
 
 pub mod crash;
+pub mod debounce;
 pub mod error;
 pub mod history;
 pub mod input;

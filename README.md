@@ -101,7 +101,7 @@
 - **Quantum Entanglement (NEW!):** Seamless format conversion between Human, LLM, and Machine formats
 - **UTF-8 Validation:** Comprehensive validation with byte offset errors
 - **Platform I/O:** Async I/O with io_uring (Linux), kqueue (macOS), IOCP (Windows)
-- **Property Testing:** 21 correctness properties validated with 100+ iterations
+- **Property Testing:** 38 correctness properties validated with 100+ iterations
 - **See:** [DX ∞ SINGULARITY](docs/DX_SERIALIZER_VS_FLATBUFFERS_PROTOBUF.md)
 
 ### dx-js-bundler: **3.8x Faster Than Bun** ✅ PRODUCTION READY
@@ -198,11 +198,16 @@
 
 ## Latest Updates (Dec 26, 2025)
 
+**✅ BATTLE HARDENING: SERIALIZER SECURITY COMPLETE**
+- **Input Validation:** 100 MB size limit, 1000 level recursion limit, 10M row table limit
+- **Defensive Errors:** New error types (InputTooLarge, RecursionLimitExceeded, TableTooLarge)
+- **Property Testing:** 38 correctness properties (up from 21) covering security, thread safety, compression
+- **See:** [Serializer README](crates/serializer/README.md) | [Battle Hardening Spec](.kiro/specs/serializer-battle-hardening/tasks.md)
+
 **✅ QUANTUM ENTANGLEMENT: SERIALIZER PHASE 6 COMPLETE**
 - **UTF-8 Validation:** Comprehensive validation with byte offset errors for all string parsing
 - **Platform-Specific I/O:** Async file operations with io_uring (Linux), kqueue (macOS), IOCP (Windows)
 - **Token Efficiency:** 3x+ better than TOON for datasets with 100+ records
-- **Property Testing:** 21 correctness properties validated (round-trip, compression, SIMD equivalence)
 - **Clippy Fixes:** Reduced warnings from 63 to 39 with automated fixes
 - **See:** [Serializer README](crates/serializer/README.md) | [Quantum Entanglement Spec](.kiro/specs/dx-serializer-quantum-entanglement/tasks.md)
 

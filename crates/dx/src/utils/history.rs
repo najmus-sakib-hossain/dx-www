@@ -6,8 +6,12 @@
 //! - Requirement 9.3: Limit history to configurable max entries (default 1000)
 //! - Requirement 9.4: Provide search functionality
 //! - Requirement 9.5: Provide statistics on command usage
+//! - Requirement 7.1: Use atomic writes to prevent corruption
+//! - Requirement 7.2: Detect and recover from corrupted history
+//! - Requirement 7.5: Use file locking for concurrent access
 
 use crate::utils::error::DxError;
+use crate::utils::lock::{FileLock, LockType};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -99,9 +103,10 @@ impl CommandHistory {
         Some(home::home_dir()?.join(".dx").join("history.json"))
     }
 
-    /// Load history with corruption recovery
+    /// Load history with corruption recovery and file locking
     ///
     /// Requirement 7.2: Detect unparseable history, backup corrupted file and start fresh
+    /// Requirement 7.5: Use file locking for concurrent access
     pub fn load() -> Result<Self, DxError> {
         let path = Self::history_path().ok_or_else(|| DxError::Io {
             message: "Could not determine home directory".into(),
@@ -109,6 +114,10 @@ impl CommandHistory {
         if !path.exists() {
             return Ok(Self::new());
         }
+
+        // Acquire shared lock for reading
+        let _lock = FileLock::acquire(&path, LockType::Shared, Duration::from_secs(5))?;
+
         let content = std::fs::read_to_string(&path).map_err(|e| DxError::Io {
             message: format!("Failed to read history: {}", e),
         })?;
@@ -117,7 +126,10 @@ impl CommandHistory {
         match serde_json::from_str(&content) {
             Ok(history) => Ok(history),
             Err(e) => {
-                // History is corrupted - backup and start fresh
+                // History is corrupted - need exclusive lock to backup
+                drop(_lock);
+                let _exclusive_lock = FileLock::acquire(&path, LockType::Exclusive, Duration::from_secs(5))?;
+
                 let backup_path = path.with_extension("corrupted.bak");
                 if let Err(backup_err) = std::fs::rename(&path, &backup_path) {
                     // Log but don't fail - we'll just overwrite
@@ -138,9 +150,10 @@ impl CommandHistory {
         }
     }
 
-    /// Save history atomically (write to temp, then rename)
+    /// Save history atomically with file locking (write to temp, then rename)
     ///
     /// Requirement 7.1: Use atomic writes to prevent corruption
+    /// Requirement 7.5: Use file locking for concurrent access
     pub fn save(&self) -> Result<(), DxError> {
         let path = Self::history_path().ok_or_else(|| DxError::Io {
             message: "Could not determine home directory".into(),
@@ -150,6 +163,10 @@ impl CommandHistory {
                 message: format!("Failed to create history directory: {}", e),
             })?;
         }
+
+        // Acquire exclusive lock for writing
+        let _lock = FileLock::acquire(&path, LockType::Exclusive, Duration::from_secs(5))?;
+
         let content = serde_json::to_string_pretty(self).map_err(|e| DxError::Io {
             message: format!("Failed to serialize history: {}", e),
         })?;
@@ -166,6 +183,7 @@ impl CommandHistory {
         })?;
 
         Ok(())
+        // Lock is automatically released when _lock goes out of scope
     }
 
     /// Add entry with max entries enforcement (Requirement 9.3)

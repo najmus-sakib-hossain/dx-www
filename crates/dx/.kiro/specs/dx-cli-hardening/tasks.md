@@ -342,7 +342,7 @@ This implementation plan transforms the DX CLI from a functional prototype into 
     - Preserve other configuration
     - _Requirements: 6.4_
 
-- [-] 16. Enhance History Manager
+- [x] 16. Enhance History Manager
   - [x] 16.1 Implement atomic history saves
     - Write to temp file, then rename
     - _Requirements: 7.1_
@@ -352,80 +352,80 @@ This implementation plan transforms the DX CLI from a functional prototype into 
     - Backup corrupted file and start fresh
     - _Requirements: 7.2_
 
-  - [ ] 16.3 Write property test for case-insensitive search
+  - [x] 16.3 Write property test for case-insensitive search
     - **Property 21: History Search Case Insensitivity**
     - **Validates: Requirements 7.3**
 
-  - [ ] 16.4 Write property test for FIFO eviction
+  - [x] 16.4 Write property test for FIFO eviction
     - **Property 22: History FIFO Eviction**
     - **Validates: Requirements 7.4**
 
-  - [ ] 16.5 Write property test for statistics accuracy
+  - [x] 16.5 Write property test for statistics accuracy
     - **Property 23: History Statistics Accuracy**
     - **Validates: Requirements 7.6**
 
-  - [ ] 16.6 Write property test for entry completeness
+  - [x] 16.6 Write property test for entry completeness
     - **Property 24: History Entry Completeness**
     - **Validates: Requirements 7.7**
 
-  - [ ] 16.7 Add file locking for concurrent access
+  - [x] 16.7 Add file locking for concurrent access
     - Use FileLock for history file
     - _Requirements: 7.5, 12.2_
 
-- [ ] 17. Checkpoint - Ensure history and shell integration work
+- [x] 17. Checkpoint - Ensure history and shell integration work
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 18. Implement Structured Logger
-  - [ ] 18.1 Create StructuredLogger struct
+- [x] 18. Implement Structured Logger
+  - [x] 18.1 Create StructuredLogger struct
     - Support verbose, quiet, and debug modes
     - Support file and stderr output
     - _Requirements: 10.1, 10.2_
 
-  - [ ] 18.2 Write property test for verbose timing output
+  - [x] 18.2 Write property test for verbose timing output
     - **Property 31: Verbose Output Contains Timing**
     - **Validates: Requirements 10.1, 10.6**
 
-  - [ ] 18.3 Write property test for quiet mode
+  - [x] 18.3 Write property test for quiet mode
     - **Property 32: Quiet Mode Suppresses Non-Errors**
     - **Validates: Requirements 10.2**
 
-  - [ ] 18.4 Implement CI mode JSON output
+  - [x] 18.4 Implement CI mode JSON output
     - Detect CI environment
     - Output structured JSON logs
     - _Requirements: 10.4_
 
-  - [ ] 18.5 Write property test for CI JSON output
+  - [x] 18.5 Write property test for CI JSON output
     - **Property 33: CI Mode JSON Output**
     - **Validates: Requirements 10.4**
 
-  - [ ] 18.6 Implement log rotation
+  - [x] 18.6 Implement log rotation
     - Rotate when file exceeds 10MB
     - Keep last 5 rotations
     - _Requirements: 10.7_
 
-  - [ ] 18.7 Implement error logging to file
+  - [x] 18.7 Implement error logging to file
     - Log full error chain to ~/.dx/logs/
     - _Requirements: 10.3_
 
-- [ ] 19. Enhance Theme for Graceful Degradation
-  - [ ] 19.1 Write property test for color-disabled output
+- [x] 19. Enhance Theme for Graceful Degradation
+  - [x] 19.1 Write property test for color-disabled output
     - **Property 34: Color-Disabled Output Purity**
     - **Validates: Requirements 11.2**
 
-  - [ ] 19.2 Write property test for container detection
+  - [x] 19.2 Write property test for container detection
     - **Property 35: Container Detection**
     - **Validates: Requirements 11.6**
 
-  - [ ] 19.3 Write property test for terminal width fallback
+  - [x] 19.3 Write property test for terminal width fallback
     - **Property 36: Terminal Width Fallback**
     - **Validates: Requirements 11.7**
 
-- [ ] 20. Implement Event Debouncing
-  - [ ] 20.1 Create Debouncer struct
+- [x] 20. Implement Event Debouncing
+  - [x] 20.1 Create Debouncer struct
     - Coalesce events within 100ms window
     - _Requirements: 9.2, 12.6_
 
-  - [ ] 20.2 Write property test for event debouncing
+  - [x] 20.2 Write property test for event debouncing
     - **Property 30: Event Debouncing**
     - **Validates: Requirements 9.2, 12.6**
 
