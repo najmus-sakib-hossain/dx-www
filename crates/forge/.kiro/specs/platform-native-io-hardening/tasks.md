@@ -125,24 +125,24 @@ This implementation plan transforms the design into actionable coding tasks. The
 - [x] 10. Checkpoint - Ensure storage and watcher integration works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Implement resource manager
-  - [ ] 11.1 Create `src/resource_manager.rs`
+- [x] 11. Implement resource manager
+  - [x] 11.1 Create `src/resource_manager.rs`
     - Implement `ResourceManager` with semaphore-based handle limiting
     - Add `HandleGuard` RAII wrapper for automatic release
     - Implement operation queuing when at limit
     - Add shutdown with timeout
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-  - [ ] 11.2 Write property test for file handle limiting
+  - [x] 11.2 Write property test for file handle limiting
     - **Property 12: File Handle Limiting**
     - **Validates: Requirements 6.1**
 
-  - [ ] 11.3 Write property test for handle queuing
+  - [x] 11.3 Write property test for handle queuing
     - **Property 13: Handle Queuing at Limit**
     - **Validates: Requirements 6.2**
 
-- [ ] 12. Enhance error handling
-  - [ ] 12.1 Update `src/error.rs` with enhanced error types
+- [-] 12. Enhance error handling
+  - [x] 12.1 Update `src/error.rs` with enhanced error types
     - Add `ForgeError` struct with full context
     - Add `ErrorContext` with file, operation, timestamp, platform, backend
     - Implement `is_retryable()` method

@@ -6,83 +6,83 @@ This implementation plan transforms the DX CLI from a functional prototype into 
 
 ## Tasks
 
-- [ ] 1. Implement Enhanced Error Handler with Retry Logic
-  - [ ] 1.1 Create EnhancedError struct and ErrorContext
+- [x] 1. Implement Enhanced Error Handler with Retry Logic
+  - [x] 1.1 Create EnhancedError struct and ErrorContext
     - Add retry_count, max_retries, and context fields
     - Implement display_message() with full context
     - Implement should_retry() and next_retry_delay()
     - _Requirements: 1.1, 1.2, 1.7_
 
-  - [ ] 1.2 Write property test for retry exponential backoff
+  - [x] 1.2 Write property test for retry exponential backoff
     - **Property 1: Retry with Exponential Backoff**
     - **Validates: Requirements 1.1, 3.1**
 
-  - [ ] 1.3 Implement with_retry async wrapper function
+  - [x] 1.3 Implement with_retry async wrapper function
     - Accept operation name, max_retries, and async closure
     - Implement exponential backoff (1s, 2s, 4s)
     - Accumulate retry information in EnhancedError
     - _Requirements: 1.1, 3.1_
 
-  - [ ] 1.4 Write property test for error retryability classification
+  - [x] 1.4 Write property test for error retryability classification
     - **Property 2: Error Retryability Classification**
     - **Validates: Requirements 1.7**
 
-  - [ ] 1.5 Enhance DxError with comprehensive hints
+  - [x] 1.5 Enhance DxError with comprehensive hints
     - Add hints for PermissionDenied, TLS, DNS errors
     - Ensure all hinted errors return non-empty strings
     - _Requirements: 1.3, 3.4, 3.6, 11.5_
 
-  - [ ] 1.6 Write property test for error hints completeness
+  - [x] 1.6 Write property test for error hints completeness
     - **Property 3: Error Hints Completeness**
     - **Validates: Requirements 1.3, 3.4, 3.6, 11.5**
 
-- [ ] 2. Checkpoint - Ensure error handling compiles and tests pass
+- [x] 2. Checkpoint - Ensure error handling compiles and tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 3. Implement Input Validator
-  - [ ] 3.1 Create InputValidator struct and ValidationError
+- [x] 3. Implement Input Validator
+  - [x] 3.1 Create InputValidator struct and ValidationError
     - Define ValidationError with field, value, expected, suggestion
     - Implement Display trait for user-friendly messages
     - _Requirements: 8.1_
 
-  - [ ] 3.2 Implement validate_port function
+  - [x] 3.2 Implement validate_port function
     - Validate port is in range 1-65535
     - Return ValidationError with expected range
     - _Requirements: 8.4_
 
-  - [ ] 3.3 Write property test for port validation
+  - [x] 3.3 Write property test for port validation
     - **Property 25: Port Validation Range**
     - **Validates: Requirements 8.4**
 
-  - [ ] 3.4 Implement validate_version function
+  - [x] 3.4 Implement validate_version function
     - Parse and validate semver format (X.Y.Z)
     - Return ValidationError with expected format
     - _Requirements: 8.5_
 
-  - [ ] 3.5 Write property test for version validation
+  - [x] 3.5 Write property test for version validation
     - **Property 26: Version Validation Format**
     - **Validates: Requirements 8.5**
 
-  - [ ] 3.6 Implement sanitize_for_shell function
+  - [x] 3.6 Implement sanitize_for_shell function
     - Define SHELL_METACHARACTERS constant
     - Escape all metacharacters with backslash
     - _Requirements: 8.3_
 
-  - [ ] 3.7 Write property test for shell metacharacter escaping
+  - [x] 3.7 Write property test for shell metacharacter escaping
     - **Property 27: Shell Metacharacter Escaping**
     - **Validates: Requirements 8.3**
 
-  - [ ] 3.8 Implement check_path_traversal function
+  - [x] 3.8 Implement check_path_traversal function
     - Resolve path and check if within project root
     - Handle symlinks that escape project directory
     - Return SecurityWarning for violations
     - _Requirements: 8.2_
 
-  - [ ] 3.9 Write property test for path traversal detection
+  - [x] 3.9 Write property test for path traversal detection
     - **Property 28: Path Traversal Detection**
     - **Validates: Requirements 8.2**
 
-- [ ] 4. Checkpoint - Ensure input validation works
+- [-] 4. Checkpoint - Ensure input validation works
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Enhance Path Resolver

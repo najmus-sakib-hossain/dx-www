@@ -290,26 +290,13 @@ impl InputValidator {
     }
 
     /// Validate that a string is not empty
-    pub fn validate_not_empty(field: &str, value: &str) -> Result<&str, ValidationError> {
+    pub fn validate_not_empty<'a>(field: &str, value: &'a str) -> Result<&'a str, ValidationError> {
         if value.trim().is_empty() {
             return Err(ValidationError::new(
                 field,
                 value,
                 "a non-empty value",
             ));
-        }
-        Ok(value)
-    }
-
-    /// Validate that a string matches a pattern
-    pub fn validate_pattern(
-        field: &str,
-        value: &str,
-        pattern: &regex::Regex,
-        expected_desc: &str,
-    ) -> Result<&str, ValidationError> {
-        if !pattern.is_match(value) {
-            return Err(ValidationError::new(field, value, expected_desc));
         }
         Ok(value)
     }

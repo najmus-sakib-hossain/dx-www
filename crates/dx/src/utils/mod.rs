@@ -2,6 +2,7 @@
 
 pub mod error;
 pub mod history;
+pub mod input;
 pub mod patcher;
 pub mod paths;
 pub mod shell;

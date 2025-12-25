@@ -128,6 +128,9 @@ pub mod daemon;
 // Platform-native I/O abstraction layer
 pub mod platform_io;
 
+// Resource management
+pub mod resource_manager;
+
 // ========================================================================
 // Primary Public API - Forge Unified Interface
 // ========================================================================
@@ -213,6 +216,12 @@ pub use platform_io::{
     create_platform_io, EventStream, FallbackBackend, FileEvent, FileEventKind,
     IoBackend, Platform, PlatformIO, PlatformInfo, WriteOp,
 };
+
+// ========================================================================
+// Resource Manager exports
+// ========================================================================
+
+pub use resource_manager::{ResourceManager, HandleGuard};
 
 // ========================================================================
 // Legacy exports (deprecated in favor of new Forge API)

@@ -410,6 +410,8 @@ mod tests {
         assert!(spec.version_constraint.is_none());
         assert!(spec.extras.is_empty());
         assert!(spec.markers.is_none());
+        assert!(spec.url.is_none());
+        assert!(spec.path.is_none());
     }
 
     #[test]
@@ -446,5 +448,73 @@ mod tests {
         assert_eq!(spec.extras, vec!["brotli", "socks"]);
         assert_eq!(spec.version_constraint, Some(">=1.21.1,<3".to_string()));
         assert_eq!(spec.markers, Some("python_version >= '3.7'".to_string()));
+    }
+
+    #[test]
+    fn test_dependency_spec_parse_url() {
+        let spec = DependencySpec::parse("mypackage @ https://example.com/mypackage-1.0.0.whl").unwrap();
+        assert_eq!(spec.name, "mypackage");
+        assert_eq!(spec.url, Some("https://example.com/mypackage-1.0.0.whl".to_string()));
+        assert!(spec.version_constraint.is_none());
+        assert!(spec.is_url_dependency());
+    }
+
+    #[test]
+    fn test_dependency_spec_parse_path() {
+        let spec = DependencySpec::parse("mypackage @ file:///path/to/package").unwrap();
+        assert_eq!(spec.name, "mypackage");
+        assert_eq!(spec.path, Some("/path/to/package".to_string()));
+        assert!(spec.version_constraint.is_none());
+        assert!(spec.is_path_dependency());
+    }
+
+    #[test]
+    fn test_dependency_spec_parse_url_with_extras() {
+        let spec = DependencySpec::parse("mypackage[dev] @ https://example.com/pkg.whl").unwrap();
+        assert_eq!(spec.name, "mypackage");
+        assert_eq!(spec.extras, vec!["dev"]);
+        assert_eq!(spec.url, Some("https://example.com/pkg.whl".to_string()));
+    }
+
+    #[test]
+    fn test_dependency_spec_parse_url_with_markers() {
+        let spec = DependencySpec::parse("mypackage @ https://example.com/pkg.whl; python_version >= '3.8'").unwrap();
+        assert_eq!(spec.name, "mypackage");
+        assert_eq!(spec.url, Some("https://example.com/pkg.whl".to_string()));
+        assert_eq!(spec.markers, Some("python_version >= '3.8'".to_string()));
+    }
+
+    #[test]
+    fn test_dependency_spec_name_normalization() {
+        // Hyphens should be normalized to underscores
+        let spec = DependencySpec::parse("my-package>=1.0").unwrap();
+        assert_eq!(spec.name, "my_package");
+
+        // Dots should be normalized to underscores
+        let spec = DependencySpec::parse("my.package>=1.0").unwrap();
+        assert_eq!(spec.name, "my_package");
+
+        // Mixed case should be lowercased
+        let spec = DependencySpec::parse("MyPackage>=1.0").unwrap();
+        assert_eq!(spec.name, "mypackage");
+    }
+
+    #[test]
+    fn test_dependency_spec_display_roundtrip() {
+        let cases = vec![
+            "requests",
+            "requests>=2.0",
+            "requests[security]>=2.0",
+            "requests>=2.0; python_version >= '3.8'",
+        ];
+
+        for case in cases {
+            let spec = DependencySpec::parse(case).unwrap();
+            let formatted = spec.to_string();
+            let reparsed = DependencySpec::parse(&formatted).unwrap();
+            assert_eq!(spec.name, reparsed.name, "name mismatch for {}", case);
+            assert_eq!(spec.extras, reparsed.extras, "extras mismatch for {}", case);
+            assert_eq!(spec.version_constraint, reparsed.version_constraint, "version mismatch for {}", case);
+        }
     }
 }

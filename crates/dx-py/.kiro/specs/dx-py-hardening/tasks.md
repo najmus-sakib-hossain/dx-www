@@ -98,8 +98,8 @@ This implementation plan transforms dx-py from a functional prototype into a bat
     - **Property 6: Wheel Selection Priority**
     - **Validates: Requirements 4.5, 4.6**
 
-- [-] 5. Implement Enhanced PEP 508 Parser (dx-py-package-manager)
-  - [ ] 5.1 Enhance DependencySpec parser
+- [x] 5. Implement Enhanced PEP 508 Parser (dx-py-package-manager)
+  - [x] 5.1 Enhance DependencySpec parser
     - Parse URL dependencies (package @ url)
     - Parse path dependencies (package @ file://path)
     - Parse extras correctly
@@ -107,19 +107,19 @@ This implementation plan transforms dx-py from a functional prototype into a bat
     - Parse markers with new evaluator
     - _Requirements: 1.2_
 
-  - [ ]* 5.2 Write property test for dependency parsing round-trip
+  - [x]* 5.2 Write property test for dependency parsing round-trip
     - **Property 3: PEP 508 Dependency Parsing Round-Trip**
     - **Validates: Requirements 1.2**
 
-- [ ] 6. Checkpoint - Parsing complete
+- [x] 6. Checkpoint - Parsing complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Implement Async Download Manager (dx-py-package-manager)
-  - [ ] 7.1 Add tokio and async reqwest dependencies
+- [-] 7. Implement Async Download Manager (dx-py-package-manager)
+  - [x] 7.1 Add tokio and async reqwest dependencies
     - Update Cargo.toml with async runtime
     - _Requirements: 6.1_
 
-  - [ ] 7.2 Create DownloadManager struct
+  - [-] 7.2 Create DownloadManager struct
     - Configure max concurrent downloads (default 8)
     - Configure retry count and delay
     - Configure timeouts

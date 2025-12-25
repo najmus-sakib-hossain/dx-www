@@ -14,10 +14,18 @@ memmap2.workspace = true
 tempfile = "3.10"
 zip = "0.6"
 hex = "0.4"
-reqwest = { version = "0.11", features = ["json", "blocking"] }
+reqwest = { version = "0.11", features = ["json", "stream"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.10"
+tokio = { version = "1.37", features = [
+    "rt-multi-thread",
+    "macros",
+    "sync",
+    "time",
+    "fs",
+] }
+futures = "0.3"
 
 [dev-dependencies]
 proptest.workspace = true
