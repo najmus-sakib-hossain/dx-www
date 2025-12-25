@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod integration_tests {
-    use dx_serializer::*;
+    use serializer::*;
 
     #[test]
     fn test_full_conversion_pipeline() {

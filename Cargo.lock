@@ -1092,6 +1092,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete"
+version = "4.5.62"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "004eef6b14ce34759aa7de4aea3217e368f463f46a3ed3764ca4b5a4404003b4"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "clap_derive"
 version = "4.5.49"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2082,6 +2091,7 @@ dependencies = [
  "atty",
  "chrono",
  "clap",
+ "clap_complete",
  "console",
  "ctrlc",
  "dialoguer",
@@ -2103,6 +2113,7 @@ dependencies = [
  "serde_json",
  "stack",
  "tempfile",
+ "term_size",
  "textwrap",
  "thiserror 2.0.17",
  "tokio",
@@ -8491,6 +8502,16 @@ dependencies = [
  "futf",
  "mac",
  "utf-8",
+]
+
+[[package]]
+name = "term_size"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e4129646ca0ed8f45d09b929036bafad5377103edd06e50bf574b353d2b08d9"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]

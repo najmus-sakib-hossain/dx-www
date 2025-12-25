@@ -1,6 +1,6 @@
 /// Simple demonstration of Popular vs Custom key handling
 /// Shows that the LOGIC is correct (HashMap lookup with fallback)
-use dx_serializer::Mappings;
+use serializer::Mappings;
 
 fn main() {
     println!("╔═══════════════════════════════════════════════════════════╗");

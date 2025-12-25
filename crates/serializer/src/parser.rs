@@ -61,8 +61,15 @@ impl<'a> Parser<'a> {
                     continue;
                 }
                 Token::Dollar => {
-                    // Alias definition: $c=context
-                    self.parse_alias()?;
+                    // Could be alias definition ($c=context) or key reference ($c.task:value)
+                    // Need to look ahead to determine which
+                    if self.is_alias_definition()? {
+                        self.parse_alias()?;
+                    } else {
+                        // Key reference using alias
+                        let (key, value) = self.parse_key_value_with_alias()?;
+                        root.insert(key, value);
+                    }
                 }
                 Token::Ident(_) | Token::Caret => {
                     // Key-value pair or table
@@ -79,6 +86,98 @@ impl<'a> Parser<'a> {
         }
 
         Ok(DxValue::Object(root))
+    }
+
+    /// Check if the current $ starts an alias definition (has = after alias name)
+    fn is_alias_definition(&mut self) -> Result<bool> {
+        // Save position
+        let saved_pos = self.tokenizer.pos();
+        
+        // Consume $
+        self.tokenizer.next_token()?;
+        
+        // Get alias name
+        let alias_token = self.tokenizer.next_token()?;
+        if !matches!(alias_token, Token::Ident(_)) {
+            // Reset and return false
+            self.tokenizer.reset_to(saved_pos);
+            return Ok(false);
+        }
+        
+        // Check next token
+        self.tokenizer.skip_whitespace();
+        let next = self.tokenizer.peek_token()?;
+        let is_definition = matches!(next, Token::Equals);
+        
+        // Reset position
+        self.tokenizer.reset_to(saved_pos);
+        
+        Ok(is_definition)
+    }
+
+    /// Parse key-value pair that starts with $ (alias reference)
+    fn parse_key_value_with_alias(&mut self) -> Result<(String, DxValue)> {
+        // Consume $
+        self.tokenizer.next_token()?;
+        
+        // Get alias name
+        let alias = match self.tokenizer.next_token()? {
+            Token::Ident(bytes) => std::str::from_utf8(bytes)?.to_string(),
+            _ => {
+                return Err(DxError::InvalidSyntax {
+                    pos: self.tokenizer.pos(),
+                    msg: "Expected alias name after $".to_string(),
+                })
+            }
+        };
+        
+        // Resolve alias
+        let resolved = self.aliases.get(&alias).cloned().ok_or_else(|| {
+            DxError::UnknownAlias(alias.clone())
+        })?;
+        
+        let mut key = resolved;
+        
+        // Check for dot notation (e.g., $c.task)
+        while matches!(self.tokenizer.peek_token()?, Token::Dot) {
+            self.tokenizer.next_token()?; // consume .
+            match self.tokenizer.next_token()? {
+                Token::Ident(bytes) => {
+                    key.push('.');
+                    key.push_str(std::str::from_utf8(bytes)?);
+                }
+                _ => {
+                    return Err(DxError::InvalidSyntax {
+                        pos: self.tokenizer.pos(),
+                        msg: "Expected identifier after .".to_string(),
+                    })
+                }
+            }
+        }
+        
+        // Read operator
+        self.tokenizer.skip_whitespace();
+        let operator = self.tokenizer.next_token()?;
+        
+        let value = match operator {
+            Token::Colon => {
+                self.parse_value()?
+            }
+            Token::Bang => {
+                DxValue::Bool(true)
+            }
+            Token::Void => {
+                DxValue::Null
+            }
+            _ => {
+                return Err(DxError::InvalidSyntax {
+                    pos: self.tokenizer.pos(),
+                    msg: format!("Expected :, !, or ? after key, got {:?}", operator),
+                })
+            }
+        };
+        
+        Ok((key, value))
     }
 
     /// Parse alias definition: $c=context

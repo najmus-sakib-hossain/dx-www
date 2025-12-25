@@ -170,7 +170,6 @@ pub mod fallback {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::zero::slot::DxZeroSlot;
 
     #[test]

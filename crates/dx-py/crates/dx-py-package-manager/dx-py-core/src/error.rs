@@ -54,6 +54,9 @@ pub enum Error {
 
     #[error("Invalid package name: {0}")]
     InvalidPackageName(String),
+
+    #[error("Invalid version: {0}")]
+    InvalidVersion(String),
 }
 
 /// Result type alias for DX-Py operations

@@ -2,8 +2,7 @@
 ///
 /// Shows that DX can convert:
 /// Machine → Human → Machine (lossless)
-use dx_serializer::{format_human, format_machine, Mappings};
-use std::fs;
+use serializer::{format_human, format_machine, Mappings};
 
 fn main() {
     println!("╔════════════════════════════════════════════════════════════╗");

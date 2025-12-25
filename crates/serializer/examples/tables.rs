@@ -2,7 +2,7 @@
 //!
 //! Demonstrates schema-guided tabular data parsing.
 
-use dx_serializer::{format_human, parse, DxValue};
+use serializer::{format_human, parse, DxValue};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== DX Serializer: Table Examples ===\n");

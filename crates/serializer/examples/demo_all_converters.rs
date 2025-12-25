@@ -1,5 +1,5 @@
 /// Ultimate demonstration: All formats → DX ULTRA
-use dx_serializer::*;
+use serializer::*;
 
 fn main() {
     println!("╔════════════════════════════════════════════════════════════╗");

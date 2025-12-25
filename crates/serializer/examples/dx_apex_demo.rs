@@ -2,9 +2,9 @@
 //!
 //! This shows how DX-Apex binary format achieves 5-6× better token efficiency than TOON
 
-use dx_serializer::converters::dx_apex::{apex_text_equivalent, encode_apex};
-use dx_serializer::converters::dx_hyper::encode_hyper;
-use dx_serializer::types::{DxArray, DxObject, DxValue};
+use serializer::converters::dx_apex::{apex_text_equivalent, encode_apex};
+use serializer::converters::dx_hyper::encode_hyper;
+use serializer::types::{DxArray, DxObject, DxValue};
 
 fn main() {
     println!("╔═══════════════════════════════════════════════════════════╗");

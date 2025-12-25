@@ -9,7 +9,7 @@
 #[cfg(test)]
 mod property_tests {
     use crate::error::DxError;
-    use crate::utf8::{validate_utf8, validate_utf8_detailed, validate_string_input, Utf8ValidationError};
+    use crate::utf8::{validate_utf8, validate_utf8_detailed, validate_string_input};
     use proptest::prelude::*;
 
     /// Generate valid UTF-8 strings

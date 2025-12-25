@@ -1,20 +1,50 @@
 //! Theme definitions for consistent CLI styling
+//!
+//! Provides a Vercel-inspired color scheme with graceful degradation
+//! when colors are not supported.
 
 use console::{Style, Term};
 use owo_colors::OwoColorize;
 
-/// The DX CLI theme
+/// Color mode for terminal output
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ColorMode {
+    /// Always use colors
+    Always,
+    /// Never use colors
+    Never,
+    /// Auto-detect based on terminal capabilities
+    Auto,
+}
+
+impl Default for ColorMode {
+    fn default() -> Self {
+        Self::Auto
+    }
+}
+
+/// The DX CLI theme with Vercel-inspired styling
 #[allow(dead_code)]
 pub struct Theme {
     term: Term,
+    /// Primary brand color (cyan)
     pub primary: Style,
+    /// Secondary/accent color (magenta)
     pub secondary: Style,
+    /// Success color (green)
     pub success: Style,
+    /// Warning color (yellow)
     pub warning: Style,
+    /// Error color (red)
     pub error: Style,
+    /// Muted/dimmed text (gray)
     pub dim: Style,
+    /// Bold text
     pub bold: Style,
+    /// Highlighted text (cyan bold)
     pub highlight: Style,
+    /// Whether colors are enabled
+    pub colors_enabled: bool,
 }
 
 impl Default for Theme {
@@ -24,7 +54,19 @@ impl Default for Theme {
 }
 
 impl Theme {
+    /// Create a new theme with auto-detected color mode
     pub fn new() -> Self {
+        Self::with_color_mode(ColorMode::Auto)
+    }
+
+    /// Create a new theme with specified color mode
+    pub fn with_color_mode(mode: ColorMode) -> Self {
+        let colors_enabled = match mode {
+            ColorMode::Always => true,
+            ColorMode::Never => false,
+            ColorMode::Auto => atty::is(atty::Stream::Stderr),
+        };
+
         Self {
             term: Term::stderr(),
             primary: Style::new().cyan(),
@@ -35,91 +77,229 @@ impl Theme {
             dim: Style::new().dim(),
             bold: Style::new().bold(),
             highlight: Style::new().cyan().bold(),
+            colors_enabled,
         }
     }
 
-    /// Print the DX header/logo
-    pub fn print_header(&self) {
+    /// Print the DX logo with version
+    /// Requirement 2.3: Display DX logo with version information
+    pub fn print_logo(&self) {
         let version = env!("CARGO_PKG_VERSION");
+        eprintln!();
+        if self.colors_enabled {
+            eprintln!(
+                "  {}  {}",
+                "▲".cyan().bold(),
+                format!("DX v{version}").bright_white().bold()
+            );
+        } else {
+            eprintln!("  ▲  DX v{version}");
+        }
+        eprintln!();
+    }
 
+    /// Print the DX header/logo (alias for print_logo)
+    pub fn print_header(&self) {
+        self.print_logo();
+    }
+
+    /// Print a success message with green checkmark
+    /// Requirement 2.4: Prefix success messages with ✓
+    pub fn success(&self, message: &str) {
+        if self.colors_enabled {
+            eprintln!("  {} {}", "✓".green().bold(), message.white());
+        } else {
+            eprintln!("  ✓ {}", message);
+        }
+    }
+
+    /// Print a success message (alias)
+    pub fn print_success(&self, message: &str) {
         eprintln!();
-        eprintln!("  {}  {}", "▲".cyan().bold(), format!("DX v{version}").bright_white().bold());
+        self.success(message);
+    }
+
+    /// Print an error message with red X
+    /// Requirement 2.5: Prefix error messages with ✗
+    pub fn error(&self, message: &str) {
+        if self.colors_enabled {
+            eprintln!("  {} {}", "✗".red().bold(), message.red());
+        } else {
+            eprintln!("  ✗ {}", message);
+        }
+    }
+
+    /// Print an error message (alias)
+    pub fn print_error(&self, message: &str) {
         eprintln!();
+        self.error(message);
+    }
+
+    /// Print an info message with cyan arrow
+    /// Requirement 2.6: Prefix info messages with →
+    pub fn info(&self, message: &str) {
+        if self.colors_enabled {
+            eprintln!("  {} {}", "→".cyan(), message.white());
+        } else {
+            eprintln!("  → {}", message);
+        }
+    }
+
+    /// Print a warning message with yellow warning symbol
+    /// Requirement 2.7: Prefix warning messages with ⚠
+    pub fn warn(&self, message: &str) {
+        if self.colors_enabled {
+            eprintln!("  {} {}", "⚠".yellow().bold(), message.yellow());
+        } else {
+            eprintln!("  ⚠ {}", message);
+        }
+    }
+
+    /// Print a warning message (alias)
+    pub fn print_warning(&self, message: &str) {
+        self.warn(message);
+    }
+
+    /// Print a step indicator in format [current/total] message
+    /// Requirement 2.8: Step indicators in format "[current/total] message"
+    pub fn step(&self, current: usize, total: usize, message: &str) {
+        let step_info = format!("[{}/{}]", current, total);
+        if self.colors_enabled {
+            eprintln!(
+                "  {} {} {}",
+                step_info.bright_black(),
+                "→".cyan(),
+                message.white()
+            );
+        } else {
+            eprintln!("  {} → {}", step_info, message);
+        }
+    }
+
+    /// Print a step (alias)
+    pub fn print_step(&self, step: usize, total: usize, message: &str) {
+        self.step(step, total, message);
+    }
+
+    /// Print a subtle hint
+    pub fn hint(&self, message: &str) {
+        if self.colors_enabled {
+            eprintln!("  {} {}", "hint:".bright_black(), message.bright_black());
+        } else {
+            eprintln!("  hint: {}", message);
+        }
+    }
+
+    /// Print a command suggestion
+    pub fn suggest_command(&self, cmd: &str) {
+        eprintln!();
+        if self.colors_enabled {
+            eprintln!(
+                "  {} Run {} to get started",
+                "→".cyan(),
+                format!("`{cmd}`").cyan().bold()
+            );
+        } else {
+            eprintln!("  → Run `{}` to get started", cmd);
+        }
+    }
+
+    /// Print a command hint (alias)
+    pub fn print_hint(&self, command: &str) {
+        self.suggest_command(command);
     }
 
     /// Print a section header
     pub fn print_section(&self, title: &str) {
-        eprintln!("  {} {}", "│".bright_black(), title.bright_white().bold());
+        if self.colors_enabled {
+            eprintln!(
+                "  {} {}",
+                "│".bright_black(),
+                title.bright_white().bold()
+            );
+        } else {
+            eprintln!("  │ {}", title);
+        }
     }
 
-    /// Print an info line
+    /// Print an info line with label and value
     pub fn print_info(&self, label: &str, value: &str) {
-        eprintln!("  {} {}: {}", "│".bright_black(), label.bright_black(), value.white());
-    }
-
-    /// Print a success message
-    pub fn print_success(&self, message: &str) {
-        eprintln!();
-        eprintln!("  {} {}", "✓".green().bold(), message.white());
-    }
-
-    /// Print a warning message
-    pub fn print_warning(&self, message: &str) {
-        eprintln!("  {} {}", "⚠".yellow().bold(), message.yellow());
-    }
-
-    /// Print an error message
-    pub fn print_error(&self, message: &str) {
-        eprintln!();
-        eprintln!("  {} {}", "✕".red().bold(), message.red());
-    }
-
-    /// Print a step in a process
-    #[allow(dead_code)]
-    pub fn print_step(&self, step: usize, total: usize, message: &str) {
-        eprintln!(
-            "  {} {} {}",
-            format!("[{step}/{total}]").bright_black(),
-            "→".cyan(),
-            message.white()
-        );
-    }
-
-    /// Print a command hint
-    pub fn print_hint(&self, command: &str) {
-        eprintln!();
-        eprintln!("  {} Run {} to get started", "→".cyan(), format!("`{command}`").cyan().bold());
+        if self.colors_enabled {
+            eprintln!(
+                "  {} {}: {}",
+                "│".bright_black(),
+                label.bright_black(),
+                value.white()
+            );
+        } else {
+            eprintln!("  │ {}: {}", label, value);
+        }
     }
 
     /// Print a link
     pub fn print_link(&self, label: &str, url: &str) {
-        eprintln!("  {} {}: {}", "│".bright_black(), label.bright_black(), url.cyan().underline());
+        if self.colors_enabled {
+            eprintln!(
+                "  {} {}: {}",
+                "│".bright_black(),
+                label.bright_black(),
+                url.cyan().underline()
+            );
+        } else {
+            eprintln!("  │ {}: {}", label, url);
+        }
     }
 
     /// Print a divider line
     pub fn print_divider(&self) {
-        eprintln!("  {}", "─".repeat(48).bright_black());
+        if self.colors_enabled {
+            eprintln!("  {}", "─".repeat(48).bright_black());
+        } else {
+            eprintln!("  {}", "─".repeat(48));
+        }
     }
 
     /// Print an empty line with the sidebar
     #[allow(dead_code)]
     pub fn print_empty(&self) {
-        eprintln!("  {}", "│".bright_black());
+        if self.colors_enabled {
+            eprintln!("  {}", "│".bright_black());
+        } else {
+            eprintln!("  │");
+        }
     }
 
     /// Print ready message for dev server
     pub fn print_ready(&self, url: &str, time_ms: u64) {
         eprintln!();
-        eprintln!("  {} Ready in {}", "✓".green().bold(), format!("{time_ms}ms").cyan().bold());
-        eprintln!();
-        eprintln!("  {} Local:   {}", "→".cyan(), url.cyan().bold().underline());
+        if self.colors_enabled {
+            eprintln!(
+                "  {} Ready in {}",
+                "✓".green().bold(),
+                format!("{time_ms}ms").cyan().bold()
+            );
+            eprintln!();
+            eprintln!(
+                "  {} Local:   {}",
+                "→".cyan(),
+                url.cyan().bold().underline()
+            );
+        } else {
+            eprintln!("  ✓ Ready in {}ms", time_ms);
+            eprintln!();
+            eprintln!("  → Local:   {}", url);
+        }
         eprintln!();
     }
 
     /// Print cancelled message
     pub fn print_cancelled(&self) {
         eprintln!();
-        eprintln!("  {} Cancelled", "○".bright_black());
+        if self.colors_enabled {
+            eprintln!("  {} Cancelled", "○".bright_black());
+        } else {
+            eprintln!("  ○ Cancelled");
+        }
         eprintln!();
     }
 
@@ -127,13 +307,20 @@ impl Theme {
     pub fn print_build_stats(&self, duration_ms: u64, bundle_size: &str, files: usize) {
         eprintln!();
         self.print_divider();
-        eprintln!(
-            "  {} Built in {} │ {} │ {} files",
-            "✓".green().bold(),
-            format!("{duration_ms}ms").cyan().bold(),
-            bundle_size.magenta().bold(),
-            files.to_string().white().bold()
-        );
+        if self.colors_enabled {
+            eprintln!(
+                "  {} Built in {} │ {} │ {} files",
+                "✓".green().bold(),
+                format!("{duration_ms}ms").cyan().bold(),
+                bundle_size.magenta().bold(),
+                files.to_string().white().bold()
+            );
+        } else {
+            eprintln!(
+                "  ✓ Built in {}ms │ {} │ {} files",
+                duration_ms, bundle_size, files
+            );
+        }
         self.print_divider();
         eprintln!();
     }
@@ -149,30 +336,38 @@ impl Theme {
         eprintln!();
         self.print_divider();
 
-        let status = if failed == 0 {
-            "PASS".green().bold().to_string()
-        } else {
-            "FAIL".red().bold().to_string()
-        };
+        if self.colors_enabled {
+            let status = if failed == 0 {
+                "PASS".green().bold().to_string()
+            } else {
+                "FAIL".red().bold().to_string()
+            };
 
-        let failed_str = if failed > 0 {
-            failed.to_string().red().bold().to_string()
-        } else {
-            failed.to_string().bright_black().to_string()
-        };
+            let failed_str = if failed > 0 {
+                failed.to_string().red().bold().to_string()
+            } else {
+                failed.to_string().bright_black().to_string()
+            };
 
-        eprintln!(
-            "  {} {} {} passed {} {} failed {} {} skipped {} in {}",
-            status,
-            "│".bright_black(),
-            passed.to_string().green().bold(),
-            "│".bright_black(),
-            failed_str,
-            "│".bright_black(),
-            skipped.to_string().bright_black(),
-            "│".bright_black(),
-            format!("{duration_ms}ms").cyan()
-        );
+            eprintln!(
+                "  {} {} {} passed {} {} failed {} {} skipped {} in {}",
+                status,
+                "│".bright_black(),
+                passed.to_string().green().bold(),
+                "│".bright_black(),
+                failed_str,
+                "│".bright_black(),
+                skipped.to_string().bright_black(),
+                "│".bright_black(),
+                format!("{duration_ms}ms").cyan()
+            );
+        } else {
+            let status = if failed == 0 { "PASS" } else { "FAIL" };
+            eprintln!(
+                "  {} │ {} passed │ {} failed │ {} skipped │ in {}ms",
+                status, passed, failed, skipped, duration_ms
+            );
+        }
 
         self.print_divider();
         eprintln!();
@@ -189,6 +384,59 @@ impl Theme {
     pub fn clear(&self) {
         let _ = self.term.clear_screen();
     }
+
+    // === Methods that return formatted strings (for testing) ===
+
+    /// Format a success message and return as string
+    pub fn format_success(&self, message: &str) -> String {
+        if self.colors_enabled {
+            format!("  {} {}", "✓".green().bold(), message.white())
+        } else {
+            format!("  ✓ {}", message)
+        }
+    }
+
+    /// Format an error message and return as string
+    pub fn format_error(&self, message: &str) -> String {
+        if self.colors_enabled {
+            format!("  {} {}", "✗".red().bold(), message.red())
+        } else {
+            format!("  ✗ {}", message)
+        }
+    }
+
+    /// Format an info message and return as string
+    pub fn format_info(&self, message: &str) -> String {
+        if self.colors_enabled {
+            format!("  {} {}", "→".cyan(), message.white())
+        } else {
+            format!("  → {}", message)
+        }
+    }
+
+    /// Format a warning message and return as string
+    pub fn format_warn(&self, message: &str) -> String {
+        if self.colors_enabled {
+            format!("  {} {}", "⚠".yellow().bold(), message.yellow())
+        } else {
+            format!("  ⚠ {}", message)
+        }
+    }
+
+    /// Format a step indicator and return as string
+    pub fn format_step(&self, current: usize, total: usize, message: &str) -> String {
+        let step_info = format!("[{}/{}]", current, total);
+        if self.colors_enabled {
+            format!(
+                "  {} {} {}",
+                step_info.bright_black(),
+                "→".cyan(),
+                message.white()
+            )
+        } else {
+            format!("  {} → {}", step_info, message)
+        }
+    }
 }
 
 /// ASCII art logo for splash screens (kept minimal)
@@ -201,3 +449,126 @@ pub const LOGO_SMALL: &str = r"
    ██████╔╝██╔╝ ██╗
    ╚═════╝ ╚═╝  ╚═╝
 ";
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    #[test]
+    fn test_theme_creation() {
+        let theme = Theme::new();
+        // Auto mode should detect based on terminal
+        assert!(theme.colors_enabled || !theme.colors_enabled); // Just verify it doesn't panic
+    }
+
+    #[test]
+    fn test_color_mode_always() {
+        let theme = Theme::with_color_mode(ColorMode::Always);
+        assert!(theme.colors_enabled);
+    }
+
+    #[test]
+    fn test_color_mode_never() {
+        let theme = Theme::with_color_mode(ColorMode::Never);
+        assert!(!theme.colors_enabled);
+    }
+
+    // Feature: dx-cli, Property 2: Message Prefix Formatting
+    // Validates: Requirements 2.4, 2.5, 2.6, 2.7
+    //
+    // For any message displayed through Theme methods (success, error, info, warn),
+    // the output should contain the appropriate prefix symbol (✓, ✗, →, ⚠).
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_success_message_has_checkmark(message in "\\PC*") {
+            let theme = Theme::with_color_mode(ColorMode::Never);
+            let output = theme.format_success(&message);
+            prop_assert!(output.contains("✓"), "Success message should contain ✓");
+        }
+
+        #[test]
+        fn prop_error_message_has_x(message in "\\PC*") {
+            let theme = Theme::with_color_mode(ColorMode::Never);
+            let output = theme.format_error(&message);
+            prop_assert!(output.contains("✗"), "Error message should contain ✗");
+        }
+
+        #[test]
+        fn prop_info_message_has_arrow(message in "\\PC*") {
+            let theme = Theme::with_color_mode(ColorMode::Never);
+            let output = theme.format_info(&message);
+            prop_assert!(output.contains("→"), "Info message should contain →");
+        }
+
+        #[test]
+        fn prop_warn_message_has_warning(message in "\\PC*") {
+            let theme = Theme::with_color_mode(ColorMode::Never);
+            let output = theme.format_warn(&message);
+            prop_assert!(output.contains("⚠"), "Warning message should contain ⚠");
+        }
+    }
+
+    // Feature: dx-cli, Property 3: Color-Disabled Output Purity
+    // Validates: Requirements 2.2
+    //
+    // For any Theme with colors_enabled set to false, all output methods
+    // should produce strings containing no ANSI escape sequences.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_no_ansi_when_colors_disabled(message in "[a-zA-Z0-9 ]{0,100}") {
+            let theme = Theme::with_color_mode(ColorMode::Never);
+            
+            let outputs = vec![
+                theme.format_success(&message),
+                theme.format_error(&message),
+                theme.format_info(&message),
+                theme.format_warn(&message),
+            ];
+
+            for output in outputs {
+                // ANSI escape sequences start with \x1b[ or \033[
+                prop_assert!(
+                    !output.contains("\x1b[") && !output.contains("\x1b]"),
+                    "Output should not contain ANSI escape sequences when colors disabled: {}",
+                    output
+                );
+            }
+        }
+    }
+
+    // Feature: dx-cli, Property 4: Step Indicator Format
+    // Validates: Requirements 2.8
+    //
+    // For any step display with current and total values, the output should
+    // match the pattern "[{current}/{total}] {message}".
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_step_indicator_format(
+            current in 1usize..100,
+            total in 1usize..100,
+            message in "[a-zA-Z0-9 ]{1,50}"
+        ) {
+            let theme = Theme::with_color_mode(ColorMode::Never);
+            let output = theme.format_step(current, total, &message);
+            
+            let expected_prefix = format!("[{}/{}]", current, total);
+            prop_assert!(
+                output.contains(&expected_prefix),
+                "Step output should contain [current/total] format: {}",
+                output
+            );
+            prop_assert!(
+                output.contains(&message),
+                "Step output should contain the message: {}",
+                output
+            );
+        }
+    }
+}

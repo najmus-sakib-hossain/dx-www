@@ -2,8 +2,8 @@
 ///
 /// This demonstrates how DX-Hyper achieves 5× better token efficiency than TOON
 /// using only keyboard characters and aggressive compression techniques.
-use dx_serializer::converters::dx_hyper::{decode_hyper, encode_hyper};
-use dx_serializer::types::{DxArray, DxObject, DxValue};
+use serializer::converters::dx_hyper::{decode_hyper, encode_hyper};
+use serializer::types::{DxArray, DxObject, DxValue};
 
 fn main() {
     println!("╔═══════════════════════════════════════════════════════════╗");

@@ -42,6 +42,8 @@ pub enum Token<'a> {
     At,
     /// Percent (%) - Type hint
     Percent,
+    /// Dot (.) - Path separator
+    Dot,
     /// Identifier/String
     Ident(&'a [u8]),
     /// Integer
@@ -65,6 +67,11 @@ impl<'a> Tokenizer<'a> {
     /// Get current position
     pub fn pos(&self) -> usize {
         self.pos
+    }
+
+    /// Reset to a saved position
+    pub fn reset_to(&mut self, pos: usize) {
+        self.pos = pos;
     }
 
     /// Check if at end
@@ -317,6 +324,10 @@ impl<'a> Tokenizer<'a> {
             b'%' => {
                 self.pos += 1;
                 Token::Percent
+            }
+            b'.' => {
+                self.pos += 1;
+                Token::Dot
             }
             b'0'..=b'9' | b'-' => {
                 return self.read_number();

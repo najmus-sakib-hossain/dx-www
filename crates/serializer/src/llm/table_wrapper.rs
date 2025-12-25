@@ -99,7 +99,7 @@ impl TableWrapper {
     /// Calculate optimal column widths that fit within max_width
     pub fn calculate_widths(
         &self,
-        section: &DxSection,
+        _section: &DxSection,
         header_widths: &[usize],
         cell_widths: &[Vec<usize>],
     ) -> Vec<usize> {

@@ -1,7 +1,7 @@
 // EDITOR WORKFLOW DEMONSTRATION
 // Shows how an LSP/Editor would use bidirectional conversion
 
-use dx_serializer::{format_machine, Mappings};
+use serializer::{format_machine, Mappings};
 
 fn main() {
     println!("╔═══════════════════════════════════════════════════════════════╗");

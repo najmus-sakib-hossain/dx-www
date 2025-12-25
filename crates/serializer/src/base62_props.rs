@@ -112,7 +112,7 @@ mod property_tests {
             (999999u64, "4c91", 4), // 999999 -> 4c91 (4 chars vs 6 decimal)
         ];
 
-        for (n, expected_prefix, expected_len) in cases {
+        for (n, _expected_prefix, expected_len) in cases {
             let encoded = encode_base62(n);
             assert_eq!(
                 encoded.len(),

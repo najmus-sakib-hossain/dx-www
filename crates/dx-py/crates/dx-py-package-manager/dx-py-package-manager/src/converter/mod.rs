@@ -6,4 +6,4 @@ pub mod wheel;
 pub mod dpp_builder;
 
 pub use wheel::WheelFile;
-pub use dpp_builder::DppBuilder;
+pub use dpp_builder::{DppBuilder, inspect_dpp};

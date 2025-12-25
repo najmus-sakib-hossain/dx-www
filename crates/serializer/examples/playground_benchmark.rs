@@ -1,4 +1,4 @@
-use dx_serializer::converters::dx_hyper::{decode_hyper, encode_hyper};
+use serializer::converters::dx_hyper::{decode_hyper, encode_hyper};
 /// DX-Serializer Playground Benchmark
 ///
 /// Takes dx-human.dx and creates:
@@ -7,10 +7,9 @@ use dx_serializer::converters::dx_hyper::{decode_hyper, encode_hyper};
 /// 3. machine.dx (DX-Zero - binary)
 ///
 /// Then benchmarks all three formats!
-use dx_serializer::converters::json::json_to_dx;
-use dx_serializer::types::{DxObject, DxValue};
+use serializer::converters::json::json_to_dx;
+use serializer::types::{DxObject, DxValue};
 use std::fs;
-use std::time::Instant;
 
 fn main() {
     println!("\n╔══════════════════════════════════════════════════════════════╗");
@@ -310,6 +309,7 @@ database.host       : localhost
         Err(e) => println!("❌ Conversion error: {}", e),
     }
 }
+
 
 // Helper function to estimate token count
 fn estimate_tokens(text: &str) -> usize {

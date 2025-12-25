@@ -6,7 +6,7 @@
 //! - Inline small object optimization
 //! - Zero-copy access
 
-use dx_serializer::zero::{DxZeroBuilder, DxZeroHeader, DxZeroSlot};
+use serializer::zero::{DxZeroBuilder, DxZeroHeader, DxZeroSlot};
 
 /// Example user struct in DX-Zero format
 ///

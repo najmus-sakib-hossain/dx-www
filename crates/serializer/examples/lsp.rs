@@ -2,8 +2,8 @@
 //!
 //! Shows how to integrate the human formatter for IDE/LSP usage.
 
-use dx_serializer::formatter::FormatterConfig;
-use dx_serializer::{format_human, parse};
+use serializer::formatter::FormatterConfig;
+use serializer::{format_human, parse};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== DX Serializer: LSP Integration ===\n");
@@ -37,6 +37,7 @@ limits.requests:1000^timeout:30^max_size:10485760
         column_padding: 2,
         use_unicode: false, // For terminals without Unicode support
         add_dividers: false,
+        use_colors: false,
     };
 
     // Note: Would need to implement custom formatter with config

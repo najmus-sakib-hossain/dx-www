@@ -16,6 +16,7 @@ path = "src/main.rs"
 [dependencies]
 # CLI Framework
 clap = { version = "4.5", features = ["derive", "env", "string", "wrap_help"] }
+clap_complete = "4.5"
 
 # Terminal UI
 console = "0.15"
@@ -48,6 +49,7 @@ humantime = "2.1"
 ctrlc = "3.4"
 which = "7.0"
 home = "0.5"
+term_size = "0.3"
 open = "5.3"
 url = "2.5"
 textwrap = "0.16"

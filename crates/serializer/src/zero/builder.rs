@@ -203,9 +203,9 @@ mod tests {
         builder.write_u64(0, 12345);
         builder.write_string(8, "test");
 
-        let size = builder.finish();
+        let _size = builder.finish();
 
-        assert!(size > 0);
+        assert!(_size > 0);
         assert_eq!(buffer[0], 0x5A); // Magic
         assert_eq!(buffer[1], 0x44);
     }
@@ -217,7 +217,7 @@ mod tests {
 
         builder.write_string(0, "Hello"); // 5 bytes, inline
 
-        let size = builder.finish();
+        let _size = builder.finish();
 
         // Check slot is inline
         let slot_data = &buffer[4..20];
@@ -256,8 +256,8 @@ mod tests {
         builder.write_string(17, "name");
         builder.write_string(33, "email");
 
-        let size = builder.finish();
-        assert!(size > 0);
+        let _size = builder.finish();
+        assert!(_size > 0);
     }
 
     #[test]

@@ -1,9 +1,9 @@
 //! Example: Performance comparison with JSON
 
-use dx_serializer::*;
+use serializer::*;
 use std::time::Instant;
 
-fn main() -> Result<()> {
+fn main() -> serializer::error::Result<()> {
     println!("=== DX vs JSON Performance Comparison ===\n");
 
     // Test data

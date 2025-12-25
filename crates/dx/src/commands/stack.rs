@@ -241,13 +241,9 @@ pub enum MonorepoCommands {
 
     /// Run command in all packages
     RunAll {
-        /// Command to run
-        #[arg(index = 1)]
-        command: String,
-
-        /// Additional arguments
-        #[arg(trailing_var_arg = true)]
-        args: Vec<String>,
+        /// Command to run, followed by optional arguments
+        #[arg(trailing_var_arg = true, num_args = 1..)]
+        command_and_args: Vec<String>,
     },
 
     /// Show dependency graph
@@ -820,7 +816,8 @@ async fn run_monorepo(
             eprintln!("    {} @shared/utils (1.0.0)", "└".bright_black());
             eprintln!();
         }
-        MonorepoCommands::RunAll { command: cmd, args: _ } => {
+        MonorepoCommands::RunAll { command_and_args } => {
+            let cmd = command_and_args.first().map(|s| s.as_str()).unwrap_or("build");
             theme.print_section(&format!(
                 "dx stack workspace run-all {} [{}]",
                 cmd,

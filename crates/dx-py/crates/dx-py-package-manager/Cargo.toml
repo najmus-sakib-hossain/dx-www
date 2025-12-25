@@ -1,6 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["dx-py-core", "dx-py-package-manager"]
+members = [
+    "dx-py-core",
+    "dx-py-package-manager",
+    "dx-py-project-manager",
+    "dx-py-compat",
+    "dx-py-cli",
+]
 
 [workspace.package]
 version = "0.1.0"

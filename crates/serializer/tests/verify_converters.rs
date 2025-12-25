@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod verification_tests {
-    use dx_serializer::*;
+    use serializer::*;
 
     #[test]
     fn verify_json_to_dx_ultra() {

@@ -1,8 +1,8 @@
 //! Example: Advanced features
 
-use dx_serializer::*;
+use serializer::*;
 
-fn main() -> Result<()> {
+fn main() -> serializer::error::Result<()> {
     println!("=== Advanced DX Features ===\n");
 
     // Feature 1: Vacuum parsing (spaces in strings without quotes)

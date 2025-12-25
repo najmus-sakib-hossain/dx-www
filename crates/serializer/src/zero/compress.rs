@@ -475,7 +475,7 @@ mod tests {
             compressor.write(&data);
         }
 
-        let mut chunks = compressor.finish();
+        let chunks = compressor.finish();
         println!("Produced {} chunks", chunks.len());
 
         // Decompress all

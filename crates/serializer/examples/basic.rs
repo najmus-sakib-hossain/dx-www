@@ -2,7 +2,7 @@
 //!
 //! This example demonstrates fundamental parsing and encoding operations.
 
-use dx_serializer::{encode, format_human, parse, DxValue};
+use serializer::{encode, format_human, parse, DxValue};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== DX Serializer: Basic Usage ===\n");

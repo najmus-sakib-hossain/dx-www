@@ -2,9 +2,8 @@
 //!
 //! Parses Python wheel files (ZIP format) and extracts metadata.
 
-use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
+use std::io::Read;
 use std::path::Path;
 use zip::ZipArchive;
 

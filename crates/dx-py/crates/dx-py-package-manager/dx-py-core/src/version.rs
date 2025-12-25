@@ -7,7 +7,7 @@
 /// Versions are packed into a fixed-size struct for efficient
 /// parallel comparison using AVX2 instructions.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct PackedVersion {
     pub major: u32,
     pub minor: u32,

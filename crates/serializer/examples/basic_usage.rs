@@ -1,8 +1,8 @@
 //! Example: Basic usage of dx-serializer
 
-use dx_serializer::*;
+use serializer::*;
 
-fn main() -> Result<()> {
+fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("=== DX Serializer Example ===\n");
 
     // Example 1: Parse simple DX

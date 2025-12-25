@@ -1,0 +1,492 @@
+//! Virtual environment management
+//!
+//! Provides ultra-fast virtual environment creation and management.
+
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+
+use crate::{Error, Result};
+
+/// Virtual environment information
+#[derive(Debug, Clone)]
+pub struct Venv {
+    /// Path to the virtual environment
+    pub path: PathBuf,
+    /// Python version used
+    pub python_version: String,
+    /// Path to the Python executable in the venv
+    pub python_path: PathBuf,
+}
+
+impl Venv {
+    /// Create a new Venv info
+    pub fn new(path: PathBuf, python_version: String) -> Self {
+        #[cfg(unix)]
+        let python_path = path.join("bin").join("python");
+        #[cfg(windows)]
+        let python_path = path.join("Scripts").join("python.exe");
+
+        Self {
+            path,
+            python_version,
+            python_path,
+        }
+    }
+
+    /// Get the site-packages directory
+    pub fn site_packages(&self) -> PathBuf {
+        #[cfg(unix)]
+        {
+            self.path
+                .join("lib")
+                .join(format!("python{}", &self.python_version[..self.python_version.rfind('.').unwrap_or(self.python_version.len())]))
+                .join("site-packages")
+        }
+        #[cfg(windows)]
+        {
+            self.path.join("Lib").join("site-packages")
+        }
+    }
+
+    /// Get the bin/Scripts directory
+    pub fn bin_dir(&self) -> PathBuf {
+        #[cfg(unix)]
+        {
+            self.path.join("bin")
+        }
+        #[cfg(windows)]
+        {
+            self.path.join("Scripts")
+        }
+    }
+
+    /// Check if the venv exists and is valid
+    pub fn is_valid(&self) -> bool {
+        self.python_path.exists()
+    }
+}
+
+/// Cached venv skeleton for fast creation
+#[derive(Debug)]
+struct VenvSkeleton {
+    /// Python version this skeleton is for
+    python_version: String,
+    /// Path to the skeleton
+    path: PathBuf,
+}
+
+/// Virtual environment manager
+///
+/// Creates virtual environments in under 10ms using cached skeletons.
+pub struct VenvManager {
+    /// Cache directory for venv skeletons
+    cache_dir: PathBuf,
+    /// Cached skeletons by Python version
+    skeletons: HashMap<String, VenvSkeleton>,
+}
+
+impl VenvManager {
+    /// Create a new venv manager
+    pub fn new() -> Self {
+        let cache_dir = dirs::cache_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("dx-py")
+            .join("venv-cache");
+
+        Self {
+            cache_dir,
+            skeletons: HashMap::new(),
+        }
+    }
+
+    /// Create a venv manager with a custom cache directory
+    pub fn with_cache_dir(cache_dir: PathBuf) -> Self {
+        Self {
+            cache_dir,
+            skeletons: HashMap::new(),
+        }
+    }
+
+    /// Create a virtual environment
+    pub fn create(&mut self, path: &Path, python: &Path) -> Result<Venv> {
+        let python_version = self.get_python_version(python)?;
+
+        // Check if we can reuse a cached skeleton
+        if let Some(skeleton) = self.get_skeleton(&python_version) {
+            self.copy_skeleton(&skeleton.path, path)?;
+        } else {
+            // Create minimal venv structure
+            self.create_minimal_venv(path, python, &python_version)?;
+
+            // Cache skeleton for future use
+            self.store_skeleton(&python_version, path)?;
+        }
+
+        Ok(Venv::new(path.to_path_buf(), python_version))
+    }
+
+    /// Create a minimal virtual environment structure
+    fn create_minimal_venv(&self, path: &Path, python: &Path, python_version: &str) -> Result<()> {
+        // Create directory structure
+        #[cfg(unix)]
+        {
+            std::fs::create_dir_all(path.join("bin"))?;
+            let lib_dir = path
+                .join("lib")
+                .join(format!("python{}", &python_version[..python_version.rfind('.').unwrap_or(python_version.len())]))
+                .join("site-packages");
+            std::fs::create_dir_all(&lib_dir)?;
+        }
+        #[cfg(windows)]
+        {
+            std::fs::create_dir_all(path.join("Scripts"))?;
+            std::fs::create_dir_all(path.join("Lib").join("site-packages"))?;
+        }
+
+        // Create symlink to Python executable
+        #[cfg(unix)]
+        {
+            let python_link = path.join("bin").join("python");
+            if !python_link.exists() {
+                std::os::unix::fs::symlink(python, &python_link)
+                    .map_err(|e| Error::VenvError(format!("Failed to create symlink: {}", e)))?;
+            }
+            let python3_link = path.join("bin").join("python3");
+            if !python3_link.exists() {
+                std::os::unix::fs::symlink(python, &python3_link)
+                    .map_err(|e| Error::VenvError(format!("Failed to create symlink: {}", e)))?;
+            }
+        }
+        #[cfg(windows)]
+        {
+            let python_exe = path.join("Scripts").join("python.exe");
+            if !python_exe.exists() {
+                std::fs::copy(python, &python_exe)
+                    .map_err(|e| Error::VenvError(format!("Failed to copy Python: {}", e)))?;
+            }
+        }
+
+        // Write activation scripts
+        self.write_activate_scripts(path, python_version)?;
+
+        // Write pyvenv.cfg
+        self.write_pyvenv_cfg(path, python, python_version)?;
+
+        Ok(())
+    }
+
+    /// Write activation scripts for various shells
+    fn write_activate_scripts(&self, venv: &Path, _python_version: &str) -> Result<()> {
+        let venv_path = venv.to_string_lossy();
+
+        // bash/zsh activation
+        #[cfg(unix)]
+        {
+            let activate_sh = format!(
+                r#"# This file must be used with "source bin/activate" *from bash*
+# you cannot run it directly
+
+deactivate () {{
+    if [ -n "${{_OLD_VIRTUAL_PATH:-}}" ] ; then
+        PATH="${{_OLD_VIRTUAL_PATH:-}}"
+        export PATH
+        unset _OLD_VIRTUAL_PATH
+    fi
+
+    if [ -n "${{_OLD_VIRTUAL_PYTHONHOME:-}}" ] ; then
+        PYTHONHOME="${{_OLD_VIRTUAL_PYTHONHOME:-}}"
+        export PYTHONHOME
+        unset _OLD_VIRTUAL_PYTHONHOME
+    fi
+
+    if [ -n "${{BASH:-}}" -o -n "${{ZSH_VERSION:-}}" ] ; then
+        hash -r 2> /dev/null
+    fi
+
+    if [ -n "${{_OLD_VIRTUAL_PS1:-}}" ] ; then
+        PS1="${{_OLD_VIRTUAL_PS1:-}}"
+        export PS1
+        unset _OLD_VIRTUAL_PS1
+    fi
+
+    unset VIRTUAL_ENV
+    if [ ! "${{1:-}}" = "nondestructive" ] ; then
+        unset -f deactivate
+    fi
+}}
+
+deactivate nondestructive
+
+VIRTUAL_ENV="{}"
+export VIRTUAL_ENV
+
+_OLD_VIRTUAL_PATH="$PATH"
+PATH="$VIRTUAL_ENV/bin:$PATH"
+export PATH
+
+if [ -z "${{VIRTUAL_ENV_DISABLE_PROMPT:-}}" ] ; then
+    _OLD_VIRTUAL_PS1="${{PS1:-}}"
+    PS1="($(basename "$VIRTUAL_ENV")) ${{PS1:-}}"
+    export PS1
+fi
+
+if [ -n "${{BASH:-}}" -o -n "${{ZSH_VERSION:-}}" ] ; then
+    hash -r 2> /dev/null
+fi
+"#,
+                venv_path
+            );
+            std::fs::write(venv.join("bin").join("activate"), activate_sh)?;
+        }
+
+        // fish activation
+        #[cfg(unix)]
+        {
+            let activate_fish = format!(
+                r#"function deactivate -d "Exit virtual environment and return to normal shell environment"
+    if test -n "$_OLD_VIRTUAL_PATH"
+        set -gx PATH $_OLD_VIRTUAL_PATH
+        set -e _OLD_VIRTUAL_PATH
+    end
+    if test -n "$_OLD_VIRTUAL_PYTHONHOME"
+        set -gx PYTHONHOME $_OLD_VIRTUAL_PYTHONHOME
+        set -e _OLD_VIRTUAL_PYTHONHOME
+    end
+    if test -n "$_OLD_FISH_PROMPT_OVERRIDE"
+        functions -e fish_prompt
+        set -e _OLD_FISH_PROMPT_OVERRIDE
+        functions -c _old_fish_prompt fish_prompt
+        functions -e _old_fish_prompt
+    end
+    set -e VIRTUAL_ENV
+    if test "$argv[1]" != "nondestructive"
+        functions -e deactivate
+    end
+end
+
+deactivate nondestructive
+
+set -gx VIRTUAL_ENV "{}"
+set -gx _OLD_VIRTUAL_PATH $PATH
+set -gx PATH "$VIRTUAL_ENV/bin" $PATH
+"#,
+                venv_path
+            );
+            std::fs::write(venv.join("bin").join("activate.fish"), activate_fish)?;
+        }
+
+        // PowerShell activation
+        #[cfg(windows)]
+        {
+            let activate_ps1 = format!(
+                r#"$script:THIS_PATH = $myinvocation.mycommand.path
+$script:BASE_DIR = Split-Path (Resolve-Path "$THIS_PATH/..") -Parent
+
+function global:deactivate([switch] $NonDestructive) {{
+    if (Test-Path variable:_OLD_VIRTUAL_PATH) {{
+        $env:PATH = $variable:_OLD_VIRTUAL_PATH
+        Remove-Variable "_OLD_VIRTUAL_PATH" -Scope global
+    }}
+
+    if (Test-Path function:_old_virtual_prompt) {{
+        $function:prompt = $function:_old_virtual_prompt
+        Remove-Item function:\_old_virtual_prompt
+    }}
+
+    if ($env:VIRTUAL_ENV) {{
+        Remove-Item env:VIRTUAL_ENV -ErrorAction SilentlyContinue
+    }}
+
+    if (!$NonDestructive) {{
+        Remove-Item function:deactivate
+    }}
+}}
+
+deactivate -nondestructive
+
+$env:VIRTUAL_ENV = "{}"
+$env:_OLD_VIRTUAL_PATH = $env:PATH
+$env:PATH = "$env:VIRTUAL_ENV\Scripts;$env:PATH"
+"#,
+                venv_path
+            );
+            std::fs::write(venv.join("Scripts").join("Activate.ps1"), activate_ps1)?;
+        }
+
+        #[cfg(unix)]
+        {
+            let activate_ps1 = format!(
+                r#"$env:VIRTUAL_ENV = "{}"
+$env:_OLD_VIRTUAL_PATH = $env:PATH
+$env:PATH = "$env:VIRTUAL_ENV/bin:$env:PATH"
+"#,
+                venv_path
+            );
+            std::fs::write(venv.join("bin").join("Activate.ps1"), activate_ps1)?;
+        }
+
+        Ok(())
+    }
+
+    /// Write pyvenv.cfg file
+    fn write_pyvenv_cfg(&self, venv: &Path, python: &Path, python_version: &str) -> Result<()> {
+        let home = python.parent().unwrap_or(Path::new(""));
+        let cfg = format!(
+            r#"home = {}
+include-system-site-packages = false
+version = {}
+"#,
+            home.display(),
+            python_version
+        );
+        std::fs::write(venv.join("pyvenv.cfg"), cfg)?;
+        Ok(())
+    }
+
+    /// Get Python version from executable
+    fn get_python_version(&self, python: &Path) -> Result<String> {
+        let output = std::process::Command::new(python)
+            .args(["--version"])
+            .output()
+            .map_err(|e| Error::PythonNotFound(format!("Failed to run Python: {}", e)))?;
+
+        let version_str = String::from_utf8_lossy(&output.stdout);
+        let version = version_str
+            .trim()
+            .strip_prefix("Python ")
+            .unwrap_or(version_str.trim())
+            .to_string();
+
+        Ok(version)
+    }
+
+    /// Get a cached skeleton for a Python version
+    fn get_skeleton(&self, python_version: &str) -> Option<&VenvSkeleton> {
+        self.skeletons.get(python_version)
+    }
+
+    /// Copy a skeleton to create a new venv
+    fn copy_skeleton(&self, skeleton: &Path, dest: &Path) -> Result<()> {
+        self.copy_dir_recursive(skeleton, dest)?;
+        Ok(())
+    }
+
+    /// Recursively copy a directory
+    fn copy_dir_recursive(&self, src: &Path, dest: &Path) -> Result<()> {
+        std::fs::create_dir_all(dest)?;
+
+        for entry in std::fs::read_dir(src)? {
+            let entry = entry?;
+            let src_path = entry.path();
+            let dest_path = dest.join(entry.file_name());
+
+            if src_path.is_dir() {
+                self.copy_dir_recursive(&src_path, &dest_path)?;
+            } else if src_path.is_symlink() {
+                #[cfg(unix)]
+                {
+                    let target = std::fs::read_link(&src_path)?;
+                    std::os::unix::fs::symlink(&target, &dest_path)
+                        .map_err(|e| Error::VenvError(format!("Failed to create symlink: {}", e)))?;
+                }
+                #[cfg(windows)]
+                {
+                    std::fs::copy(&src_path, &dest_path)?;
+                }
+            } else {
+                std::fs::copy(&src_path, &dest_path)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Store a venv as a skeleton for future use
+    fn store_skeleton(&mut self, python_version: &str, venv: &Path) -> Result<()> {
+        let skeleton_path = self.cache_dir.join(python_version);
+        std::fs::create_dir_all(&skeleton_path)?;
+
+        self.copy_dir_recursive(venv, &skeleton_path)?;
+
+        self.skeletons.insert(
+            python_version.to_string(),
+            VenvSkeleton {
+                python_version: python_version.to_string(),
+                path: skeleton_path,
+            },
+        );
+
+        Ok(())
+    }
+
+    /// Remove a virtual environment
+    pub fn remove(&self, path: &Path) -> Result<()> {
+        if path.exists() {
+            std::fs::remove_dir_all(path)?;
+        }
+        Ok(())
+    }
+
+    /// Check if a path is a valid virtual environment
+    pub fn is_venv(&self, path: &Path) -> bool {
+        path.join("pyvenv.cfg").exists()
+    }
+}
+
+impl Default for VenvManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_venv_new() {
+        let venv = Venv::new(PathBuf::from("/tmp/test-venv"), "3.12.0".to_string());
+        assert_eq!(venv.python_version, "3.12.0");
+    }
+
+    #[test]
+    fn test_venv_manager_new() {
+        let manager = VenvManager::new();
+        assert!(manager.cache_dir.to_string_lossy().contains("dx-py"));
+    }
+
+    #[test]
+    fn test_venv_manager_with_cache_dir() {
+        let temp_dir = TempDir::new().unwrap();
+        let manager = VenvManager::with_cache_dir(temp_dir.path().to_path_buf());
+        assert_eq!(manager.cache_dir, temp_dir.path());
+    }
+
+    #[test]
+    fn test_is_venv() {
+        let temp_dir = TempDir::new().unwrap();
+        let manager = VenvManager::new();
+
+        // Not a venv initially
+        assert!(!manager.is_venv(temp_dir.path()));
+
+        // Create pyvenv.cfg
+        std::fs::write(temp_dir.path().join("pyvenv.cfg"), "version = 3.12.0").unwrap();
+        assert!(manager.is_venv(temp_dir.path()));
+    }
+
+    #[test]
+    fn test_remove_venv() {
+        let temp_dir = TempDir::new().unwrap();
+        let venv_path = temp_dir.path().join("test-venv");
+        std::fs::create_dir_all(&venv_path).unwrap();
+        std::fs::write(venv_path.join("pyvenv.cfg"), "version = 3.12.0").unwrap();
+
+        let manager = VenvManager::new();
+        assert!(venv_path.exists());
+
+        manager.remove(&venv_path).unwrap();
+        assert!(!venv_path.exists());
+    }
+}

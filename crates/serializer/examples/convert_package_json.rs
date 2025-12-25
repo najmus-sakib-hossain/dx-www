@@ -1,5 +1,5 @@
 /// Practical example: Convert package.json to DX ULTRA
-use dx_serializer::json_to_dx;
+use serializer::json_to_dx;
 
 const PACKAGE_JSON: &str = r#"{
   "name": "awesome-app",

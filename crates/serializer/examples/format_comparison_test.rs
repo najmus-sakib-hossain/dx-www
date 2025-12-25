@@ -2,7 +2,7 @@
 ///
 /// Tests ALL formats (JSON, TOON, DX-Hyper, Binary) on playground files
 /// to demonstrate that DX-Hyper is THE UNIVERSAL FORMAT
-use dx_serializer::converters::json::json_to_dx;
+use serializer::converters::json::json_to_dx;
 use std::fs;
 
 fn main() {

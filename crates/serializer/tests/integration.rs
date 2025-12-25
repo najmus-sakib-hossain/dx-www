@@ -1,6 +1,6 @@
 //! Comprehensive integration tests for dx-serializer
 
-use dx_serializer::*;
+use serializer::*;
 
 #[test]
 fn test_complete_round_trip() {

@@ -15,7 +15,7 @@ mod property_tests {
         let abbrevs: Vec<String> = dict
             .global_mappings()
             .iter()
-            .filter(|(&abbrev, &full)| {
+            .filter(|(&abbrev, &_full)| {
                 // Exclude short aliases: keys where compress(expand(key)) != key
                 // These are one-way expansion aliases like "v" -> "version"
                 // where "version" compresses to "vr", not "v"

@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod roundtrip_tests {
-    use dx_serializer::{format_machine, Mappings};
+    use serializer::{format_machine, Mappings};
 
     #[test]
     fn test_simple_roundtrip() {
