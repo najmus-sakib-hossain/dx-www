@@ -261,8 +261,8 @@ This implementation plan transforms the DX Serializer into a production-grade "q
     - **Validates: Requirements 5.6**
     - **Note: Implemented in io/io_props.rs**
 
-- [ ] 15. Implement UTF-8 validation
-  - [ ] 15.1 Add UTF-8 validation to string parsing
+- [-] 15. Implement UTF-8 validation
+  - [-] 15.1 Add UTF-8 validation to string parsing
     - Validate all string inputs
     - Return Utf8Error with byte offset
     - _Requirements: 6.6_
