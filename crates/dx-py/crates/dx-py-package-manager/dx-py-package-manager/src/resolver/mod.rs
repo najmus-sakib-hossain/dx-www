@@ -805,3 +805,239 @@ mod tests {
         assert_eq!(res1.packages[0].name, res2.packages[0].name);
     }
 }
+
+
+/// Async resolver that fetches from PyPI
+pub struct PyPiResolver {
+    /// Async PyPI client
+    client: crate::AsyncPyPiClient,
+    /// Resolution hint cache
+    hints: HintCache,
+    /// Marker environment for filtering dependencies
+    marker_env: dx_py_compat::markers::MarkerEnvironment,
+    /// Platform environment for wheel selection
+    platform_env: dx_py_core::wheel::PlatformEnvironment,
+    /// Active extras for marker evaluation
+    active_extras: HashSet<String>,
+}
+
+impl PyPiResolver {
+    /// Create a new PyPI resolver
+    pub fn new(client: crate::AsyncPyPiClient) -> Self {
+        Self {
+            client,
+            hints: HintCache::new(),
+            marker_env: dx_py_compat::markers::MarkerEnvironment::current(),
+            platform_env: dx_py_core::wheel::PlatformEnvironment::detect(),
+            active_extras: HashSet::new(),
+        }
+    }
+
+    /// Create a resolver with custom environments
+    pub fn with_environments(
+        client: crate::AsyncPyPiClient,
+        marker_env: dx_py_compat::markers::MarkerEnvironment,
+        platform_env: dx_py_core::wheel::PlatformEnvironment,
+    ) -> Self {
+        Self {
+            client,
+            hints: HintCache::new(),
+            marker_env,
+            platform_env,
+            active_extras: HashSet::new(),
+        }
+    }
+
+    /// Set active extras for marker evaluation
+    pub fn with_extras(mut self, extras: HashSet<String>) -> Self {
+        self.active_extras = extras;
+        self
+    }
+
+    /// Get the marker environment
+    pub fn marker_env(&self) -> &dx_py_compat::markers::MarkerEnvironment {
+        &self.marker_env
+    }
+
+    /// Get the platform environment
+    pub fn platform_env(&self) -> &dx_py_core::wheel::PlatformEnvironment {
+        &self.platform_env
+    }
+
+    /// Resolve dependencies from PyPI
+    pub async fn resolve(&mut self, deps: &[crate::DependencySpec]) -> Result<Resolution> {
+        let start = std::time::Instant::now();
+
+        // Convert DependencySpec to Dependency
+        let converted_deps: Vec<Dependency> = deps
+            .iter()
+            .filter(|d| self.evaluate_markers(d))
+            .filter_map(|d| self.convert_dependency(d))
+            .collect();
+
+        // Check hint cache first
+        let input_hash = self.hash_dependency_specs(deps);
+        if let Some(cached) = self.hints.lookup(input_hash) {
+            if cached.is_valid() {
+                return Ok(Resolution::from_cache(cached.packages.clone()));
+            }
+        }
+
+        // Full resolution
+        let resolution = self.resolve_internal(&converted_deps).await?;
+
+        // Cache the result
+        self.hints.store(input_hash, &resolution);
+
+        let elapsed = start.elapsed();
+        Ok(Resolution::new(
+            resolution.packages,
+            elapsed.as_millis() as u64,
+        ))
+    }
+
+    /// Evaluate markers for a dependency
+    fn evaluate_markers(&self, dep: &crate::DependencySpec) -> bool {
+        if let Some(ref markers) = dep.markers {
+            let extras: Vec<String> = self.active_extras.iter().cloned().collect();
+            dx_py_compat::markers::MarkerEvaluator::evaluate(markers, &self.marker_env, &extras)
+        } else {
+            true
+        }
+    }
+
+    /// Convert DependencySpec to Dependency
+    fn convert_dependency(&self, spec: &crate::DependencySpec) -> Option<Dependency> {
+        let constraint = if let Some(ref vc) = spec.version_constraint {
+            VersionConstraint::parse(vc).ok()?
+        } else {
+            VersionConstraint::Any
+        };
+
+        Some(Dependency {
+            name: spec.name.clone(),
+            constraint,
+            extras: spec.extras.clone(),
+            markers: spec.markers.clone(),
+        })
+    }
+
+    /// Hash dependency specs for cache lookup
+    fn hash_dependency_specs(&self, deps: &[crate::DependencySpec]) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        for dep in deps {
+            dep.name.hash(&mut hasher);
+            dep.version_constraint.hash(&mut hasher);
+            dep.extras.hash(&mut hasher);
+            dep.markers.hash(&mut hasher);
+        }
+        hasher.finish()
+    }
+
+    /// Internal resolution using PyPI data
+    async fn resolve_internal(&self, deps: &[Dependency]) -> Result<Resolution> {
+        let start = std::time::Instant::now();
+
+        // Track selected versions
+        let mut selected: HashMap<String, ResolvedPackage> = HashMap::new();
+        // Track constraints per package
+        let mut constraints: HashMap<String, Vec<VersionConstraint>> = HashMap::new();
+        // Work queue
+        let mut queue: VecDeque<Dependency> = deps.iter().cloned().collect();
+        // Track visited to avoid cycles
+        let mut visited: HashSet<String> = HashSet::new();
+
+        while let Some(dep) = queue.pop_front() {
+            // Skip if already resolved with compatible version
+            if let Some(resolved) = selected.get(&dep.name) {
+                if dep.constraint.satisfies(&resolved.version) {
+                    continue;
+                } else {
+                    return Err(Error::DependencyConflict(format!(
+                        "Package {} requires {:?} but {} is already selected",
+                        dep.name, dep.constraint, resolved.version_string
+                    )));
+                }
+            }
+
+            // Skip if already visited
+            if visited.contains(&dep.name) {
+                continue;
+            }
+            visited.insert(dep.name.clone());
+
+            // Add constraint
+            constraints
+                .entry(dep.name.clone())
+                .or_default()
+                .push(dep.constraint.clone());
+
+            // Fetch versions from PyPI
+            let versions = self.client.get_versions(&dep.name).await?;
+            if versions.is_empty() {
+                return Err(Error::PackageNotFound(dep.name.clone()));
+            }
+
+            // Convert to PackedVersion and find best match
+            let packed_versions: Vec<(PackedVersion, String)> = versions
+                .iter()
+                .filter_map(|v| {
+                    PackedVersion::parse(v).map(|pv| (pv, v.clone()))
+                })
+                .collect();
+
+            let best = self.find_best_version(&dep.name, &constraints, &packed_versions)?;
+
+            // Create resolved package
+            let mut resolved = ResolvedPackage::new(&dep.name, best.0, &best.1);
+
+            // Fetch dependencies for this version
+            let sub_deps = self.client.get_dependencies(&dep.name, &best.1).await?;
+            
+            // Filter by markers and convert
+            for sub_dep in sub_deps {
+                if self.evaluate_markers(&sub_dep) {
+                    if let Some(converted) = self.convert_dependency(&sub_dep) {
+                        resolved.dependencies.push(converted.name.clone());
+                        queue.push_back(converted);
+                    }
+                }
+            }
+
+            selected.insert(dep.name.clone(), resolved);
+        }
+
+        let elapsed = start.elapsed();
+        let packages: Vec<_> = selected.into_values().collect();
+
+        Ok(Resolution::new(packages, elapsed.as_millis() as u64))
+    }
+
+    /// Find the best version satisfying all constraints
+    fn find_best_version(
+        &self,
+        package: &str,
+        constraints: &HashMap<String, Vec<VersionConstraint>>,
+        versions: &[(PackedVersion, String)],
+    ) -> Result<(PackedVersion, String)> {
+        let package_constraints = constraints.get(package).map(|c| c.as_slice()).unwrap_or(&[]);
+
+        // Filter by all constraints
+        let mut candidates: Vec<(PackedVersion, String)> = versions
+            .iter()
+            .filter(|(v, _)| package_constraints.iter().all(|c| c.satisfies(v)))
+            .cloned()
+            .collect();
+
+        // Sort by version descending (prefer newest)
+        candidates.sort_by(|a, b| b.0.cmp(&a.0));
+
+        candidates.into_iter().next().ok_or_else(|| {
+            Error::NoMatchingVersion {
+                package: package.to_string(),
+                constraint: format!("{:?}", package_constraints),
+            }
+        })
+    }
+}

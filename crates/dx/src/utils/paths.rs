@@ -519,4 +519,110 @@ mod tests {
             }
         }
     }
+
+    // Feature: dx-cli, Property 9: Unicode Path Handling
+    // Validates: Requirements 2.5
+    //
+    // For any path string containing Unicode characters (emoji, CJK, RTL scripts,
+    // combining characters), resolve_path should preserve all Unicode characters
+    // in the resulting PathBuf.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_unicode_path_handling(
+            // Generate paths with various Unicode characters
+            prefix in "[a-zA-Z0-9]{1,5}",
+            unicode_part in prop::sample::select(vec![
+                "文件夹",           // CJK (Chinese)
+                "フォルダ",         // Japanese
+                "폴더",             // Korean
+                "📁",               // Emoji
+                "مجلد",             // RTL (Arabic)
+                "תיקייה",           // Hebrew
+                "café",             // Latin with diacritics
+                "naïve",            // Combining characters
+                "Ω≈ç√∫",           // Math symbols
+                "日本語テスト",     // Mixed Japanese
+            ]),
+            suffix in "[a-zA-Z0-9]{1,5}"
+        ) {
+            let path = format!("{}/{}/{}", prefix, unicode_part, suffix);
+            let result = resolve_path(&path);
+            let result_str = result.to_string_lossy();
+
+            // Unicode characters should be preserved
+            prop_assert!(
+                result_str.contains(unicode_part),
+                "Unicode characters should be preserved: expected '{}' in '{}'",
+                unicode_part,
+                result_str
+            );
+        }
+    }
+
+    // Feature: dx-cli, Property 7: Long Path Prefix on Windows
+    // Validates: Requirements 2.3
+    //
+    // For any Windows path exceeding 200 characters that does not already start
+    // with \\?\, handle_long_path() should prepend the \\?\ prefix. Paths already
+    // prefixed or under 200 characters should remain unchanged.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_long_path_prefix(
+            // Generate path lengths around the 200 char threshold
+            path_length in 150usize..300
+        ) {
+            // Create a path of the specified length
+            let base = "C:\\test\\";
+            let remaining = path_length.saturating_sub(base.len());
+            let filler: String = std::iter::repeat('a').take(remaining).collect();
+            let path_str = format!("{}{}", base, filler);
+            let path = PathBuf::from(&path_str);
+
+            let result = handle_long_path(&path);
+            let result_str = result.to_string_lossy();
+
+            #[cfg(windows)]
+            {
+                if path_str.len() > 200 {
+                    // Long paths should get the prefix
+                    prop_assert!(
+                        result_str.starts_with("\\\\?\\"),
+                        "Long path ({} chars) should have \\\\?\\ prefix: {}",
+                        path_str.len(),
+                        result_str
+                    );
+                } else {
+                    // Short paths should remain unchanged
+                    prop_assert_eq!(
+                        result_str.as_ref(),
+                        path_str.as_str(),
+                        "Short path should remain unchanged"
+                    );
+                }
+            }
+
+            #[cfg(not(windows))]
+            {
+                // On non-Windows, path should remain unchanged
+                prop_assert_eq!(
+                    result_str.as_ref(),
+                    path_str.as_str(),
+                    "Non-Windows path should remain unchanged"
+                );
+            }
+        }
+    }
+
+    // Test that already-prefixed paths are not double-prefixed
+    #[test]
+    #[cfg(windows)]
+    fn test_long_path_no_double_prefix() {
+        let already_prefixed = PathBuf::from("\\\\?\\C:\\very\\long\\path");
+        let result = handle_long_path(&already_prefixed);
+        assert_eq!(result, already_prefixed);
+    }
 }

@@ -82,100 +82,100 @@ This implementation plan transforms the DX CLI from a functional prototype into 
     - **Property 28: Path Traversal Detection**
     - **Validates: Requirements 8.2**
 
-- [-] 4. Checkpoint - Ensure input validation works
+- [x] 4. Checkpoint - Ensure input validation works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Enhance Path Resolver
-  - [ ] 5.1 Add Unicode path support
+- [x] 5. Enhance Path Resolver
+  - [x] 5.1 Add Unicode path support
     - Ensure resolve_path handles emoji, CJK, RTL scripts
     - Test with various Unicode characters
     - _Requirements: 2.5_
 
-  - [ ] 5.2 Write property test for Unicode path handling
+  - [x] 5.2 Write property test for Unicode path handling
     - **Property 9: Unicode Path Handling**
     - **Validates: Requirements 2.5**
 
-  - [ ] 5.3 Write property test for path separator normalization
+  - [x] 5.3 Write property test for path separator normalization
     - **Property 5: Path Separator Normalization**
     - **Validates: Requirements 2.1**
 
-  - [ ] 5.4 Write property test for home directory expansion
+  - [x] 5.4 Write property test for home directory expansion
     - **Property 6: Home Directory Expansion**
     - **Validates: Requirements 2.2**
 
-  - [ ] 5.5 Write property test for long path prefix (Windows)
+  - [x] 5.5 Write property test for long path prefix (Windows)
     - **Property 7: Long Path Prefix on Windows**
     - **Validates: Requirements 2.3**
 
-  - [ ] 5.6 Write property test for symlink resolution depth
+  - [x] 5.6 Write property test for symlink resolution depth
     - **Property 8: Symlink Resolution Depth Limit**
     - **Validates: Requirements 2.4**
 
-  - [ ] 5.7 Implement is_within_project function
+  - [x] 5.7 Implement is_within_project function
     - Resolve both paths including symlinks
     - Check if resolved path starts with project root
     - _Requirements: 2.7_
 
-  - [ ] 5.8 Implement escape_for_shell for paths
+  - [x] 5.8 Implement escape_for_shell for paths
     - Handle spaces and special characters in paths
     - _Requirements: 2.6_
 
-  - [ ] 5.9 Implement fallback_dir for non-writable home
+  - [x] 5.9 Implement fallback_dir for non-writable home
     - Return current_dir/.dx as fallback
     - _Requirements: 11.3_
 
-- [ ] 6. Implement File Lock Manager
-  - [ ] 6.1 Create FileLock struct and LockType enum
+- [x] 6. Implement File Lock Manager
+  - [x] 6.1 Create FileLock struct and LockType enum
     - Define Shared and Exclusive lock types
     - Store path and lock file handle
     - _Requirements: 12.1, 12.2_
 
-  - [ ] 6.2 Implement acquire with timeout
+  - [x] 6.2 Implement acquire with timeout
     - Use platform-specific locking (flock on Unix, LockFile on Windows)
     - Implement blocking wait with timeout
     - _Requirements: 12.7_
 
-  - [ ] 6.3 Implement try_acquire non-blocking
+  - [x] 6.3 Implement try_acquire non-blocking
     - Return immediately with Some(lock) or None
     - _Requirements: 12.7_
 
-  - [ ] 6.4 Write property test for blocking vs non-blocking
+  - [x] 6.4 Write property test for blocking vs non-blocking
     - **Property 37: File Lock Blocking vs Non-Blocking**
     - **Validates: Requirements 12.7**
 
-  - [ ] 6.5 Implement Drop for automatic release
+  - [x] 6.5 Implement Drop for automatic release
     - Ensure lock is released even on panic
     - _Requirements: 12.1_
 
-- [ ] 7. Checkpoint - Ensure file locking works
+- [x] 7. Checkpoint - Ensure file locking works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement Resilient Network Client
-  - [ ] 8.1 Create NetworkClient and ProxyConfig structs
+- [x] 8. Implement Resilient Network Client
+  - [x] 8.1 Create NetworkClient and ProxyConfig structs
     - Implement ProxyConfig::from_env()
     - Parse HTTP_PROXY, HTTPS_PROXY, NO_PROXY
     - _Requirements: 3.5_
 
-  - [ ] 8.2 Write property test for proxy configuration
+  - [x] 8.2 Write property test for proxy configuration
     - **Property 10: Proxy Configuration from Environment**
     - **Validates: Requirements 3.5**
 
-  - [ ] 8.3 Implement get with retry
+  - [x] 8.3 Implement get with retry
     - Use with_retry wrapper for automatic retries
     - Respect proxy configuration
     - _Requirements: 3.1_
 
-  - [ ] 8.4 Implement download_resumable
+  - [x] 8.4 Implement download_resumable
     - Use HTTP Range headers for files >1MB
     - Track download progress
     - _Requirements: 3.3_
 
-  - [ ] 8.5 Implement is_offline detection
+  - [x] 8.5 Implement is_offline detection
     - Check network availability
     - _Requirements: 3.7, 11.4_
 
-- [ ] 9. Implement Resource Manager
-  - [ ] 9.1 Create ResourceManager struct
+- [-] 9. Implement Resource Manager
+  - [-] 9.1 Create ResourceManager struct
     - Track temp files and child processes
     - Implement process semaphore for limiting
     - _Requirements: 9.1, 9.7_

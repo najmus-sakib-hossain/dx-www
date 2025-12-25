@@ -367,6 +367,10 @@ pub enum DxError {
     /// Internal error
     #[error("Internal error: {message}")]
     Internal { message: String },
+
+    /// Lock acquisition timeout
+    #[error("Lock acquisition timed out after {timeout:?} for: {path}")]
+    LockTimeout { path: PathBuf, timeout: Duration },
 }
 
 impl DxError {
@@ -510,6 +514,9 @@ impl DxError {
             }
             DxError::Internal { .. } => {
                 Some("An internal error occurred. Please report this issue with the error details")
+            }
+            DxError::LockTimeout { .. } => {
+                Some("Another process may be holding the lock. Wait and try again, or check for stale lock files")
             }
         }
     }

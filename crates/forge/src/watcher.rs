@@ -915,4 +915,88 @@ mod property_tests {
         // but the watcher should handle it gracefully either way
         let _ = received_delete;
     }
+
+    /// Property 25: Thread-Safe Watcher Operations
+    /// Start and stop operations from arbitrary threads should maintain
+    /// consistent state and not exhibit undefined behavior.
+    #[tokio::test]
+    async fn prop_thread_safe_watcher_operations() {
+        use std::sync::Arc;
+        use tokio::sync::Barrier;
+
+        let temp_dir = TempDir::new().unwrap();
+        let num_iterations = 10;
+
+        for _ in 0..num_iterations {
+            let (watcher, _rx) = PlatformFileWatcher::with_defaults().unwrap();
+            let watcher = Arc::new(tokio::sync::RwLock::new(watcher));
+
+            // Start from one task
+            let watcher_clone = Arc::clone(&watcher);
+            let path = temp_dir.path().to_path_buf();
+            let start_handle = tokio::spawn(async move {
+                let mut w = watcher_clone.write().await;
+                w.watch(&path).await
+            });
+
+            // Wait for start to complete
+            let start_result = start_handle.await.unwrap();
+            assert!(start_result.is_ok(), "Start should succeed");
+
+            // Verify running state
+            {
+                let w = watcher.read().await;
+                assert!(w.is_running().await, "Should be running after start");
+            }
+
+            // Stop from another task
+            let watcher_clone = Arc::clone(&watcher);
+            let stop_handle = tokio::spawn(async move {
+                let mut w = watcher_clone.write().await;
+                w.stop().await
+            });
+
+            let stop_result = stop_handle.await.unwrap();
+            assert!(stop_result.is_ok(), "Stop should succeed");
+
+            // Verify stopped state
+            {
+                let w = watcher.read().await;
+                assert!(!w.is_running().await, "Should not be running after stop");
+            }
+        }
+    }
+
+    /// Property 14: Watcher Handle Cleanup
+    /// After stopping a watcher, all registered watch handles should be released.
+    #[tokio::test]
+    async fn prop_watcher_handle_cleanup() {
+        let temp_dir = TempDir::new().unwrap();
+
+        // Create some files to watch
+        for i in 0..10 {
+            let file_path = temp_dir.path().join(format!("file_{}.txt", i));
+            tokio::fs::write(&file_path, format!("content {}", i))
+                .await
+                .unwrap();
+        }
+
+        let (mut watcher, _rx) = PlatformFileWatcher::with_defaults().unwrap();
+
+        // Start watching
+        watcher.watch(temp_dir.path()).await.unwrap();
+        assert!(watcher.is_running().await);
+
+        // Stop watching
+        watcher.stop().await.unwrap();
+        assert!(!watcher.is_running().await);
+
+        // After stop, we should be able to start again without issues
+        // (this verifies handles were properly released)
+        let (mut watcher2, _rx2) = PlatformFileWatcher::with_defaults().unwrap();
+        let result = watcher2.watch(temp_dir.path()).await;
+        assert!(result.is_ok(), "Should be able to watch same directory after previous watcher stopped");
+
+        watcher2.stop().await.unwrap();
+    }
 }

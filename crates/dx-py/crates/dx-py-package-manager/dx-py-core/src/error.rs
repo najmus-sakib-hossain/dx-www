@@ -57,6 +57,10 @@ pub enum Error {
 
     #[error("Invalid version: {0}")]
     InvalidVersion(String),
+
+    // Network errors
+    #[error("Network error: {0}")]
+    Network(String),
 }
 
 /// Result type alias for DX-Py operations

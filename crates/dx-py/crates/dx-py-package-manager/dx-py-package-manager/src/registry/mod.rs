@@ -518,3 +518,228 @@ mod tests {
         }
     }
 }
+
+
+/// Async PyPI client for fetching package metadata and downloading packages
+pub struct AsyncPyPiClient {
+    /// HTTP client
+    client: reqwest::Client,
+    /// Base URL for PyPI API
+    base_url: String,
+    /// Extra index URLs
+    extra_indexes: Vec<String>,
+}
+
+impl Default for AsyncPyPiClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl AsyncPyPiClient {
+    /// Create a new async PyPI client with default settings
+    pub fn new() -> Self {
+        Self::with_base_url("https://pypi.org")
+    }
+
+    /// Create a new async PyPI client with a custom base URL
+    pub fn with_base_url(base_url: &str) -> Self {
+        let client = reqwest::Client::builder()
+            .user_agent("dx-py/0.1.0")
+            .timeout(std::time::Duration::from_secs(300))
+            .connect_timeout(std::time::Duration::from_secs(30))
+            .pool_max_idle_per_host(10)
+            .build()
+            .expect("Failed to create HTTP client");
+
+        Self {
+            client,
+            base_url: base_url.trim_end_matches('/').to_string(),
+            extra_indexes: Vec::new(),
+        }
+    }
+
+    /// Add extra index URLs
+    pub fn with_extra_indexes(mut self, indexes: Vec<String>) -> Self {
+        self.extra_indexes = indexes;
+        self
+    }
+
+    /// Get the base URL
+    pub fn base_url(&self) -> &str {
+        &self.base_url
+    }
+
+    /// Get extra index URLs
+    pub fn extra_indexes(&self) -> &[String] {
+        &self.extra_indexes
+    }
+
+    /// Get package metadata from PyPI
+    pub async fn get_package(&self, name: &str) -> Result<PyPiPackageInfo> {
+        let url = format!("{}/pypi/{}/json", self.base_url, name);
+
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| Error::Network(format!("Network error: {}", e)))?;
+
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Err(Error::PackageNotFound(name.to_string()));
+        }
+
+        if !response.status().is_success() {
+            return Err(Error::Network(format!(
+                "HTTP error: {}",
+                response.status()
+            )));
+        }
+
+        response
+            .json()
+            .await
+            .map_err(|e| Error::Network(format!("JSON parse error: {}", e)))
+    }
+
+    /// Get package metadata for a specific version
+    pub async fn get_package_version(&self, name: &str, version: &str) -> Result<PyPiPackageInfo> {
+        let url = format!("{}/pypi/{}/{}/json", self.base_url, name, version);
+
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| Error::Network(format!("Network error: {}", e)))?;
+
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Err(Error::PackageNotFound(format!("{}=={}", name, version)));
+        }
+
+        if !response.status().is_success() {
+            return Err(Error::Network(format!(
+                "HTTP error: {}",
+                response.status()
+            )));
+        }
+
+        response
+            .json()
+            .await
+            .map_err(|e| Error::Network(format!("JSON parse error: {}", e)))
+    }
+
+    /// Get all available versions for a package
+    pub async fn get_versions(&self, name: &str) -> Result<Vec<String>> {
+        let info = self.get_package(name).await?;
+        let mut versions: Vec<String> = info.releases.keys().cloned().collect();
+        versions.sort();
+        Ok(versions)
+    }
+
+    /// Get dependencies for a package version
+    pub async fn get_dependencies(&self, name: &str, version: &str) -> Result<Vec<DependencySpec>> {
+        let info = self.get_package_version(name, version).await?;
+        let deps = info.info.requires_dist.unwrap_or_default();
+        
+        deps.iter()
+            .map(|s| DependencySpec::parse(s))
+            .collect()
+    }
+
+    /// Find the best wheel file for the given platform environment
+    pub async fn find_best_wheel(
+        &self,
+        name: &str,
+        version: &str,
+        env: &dx_py_core::wheel::PlatformEnvironment,
+    ) -> Result<Option<ReleaseFile>> {
+        let info = self.get_package_version(name, version).await?;
+        let files = info.releases.get(version).cloned().unwrap_or_default();
+
+        let mut best_wheel: Option<(ReleaseFile, u32)> = None;
+
+        for file in files {
+            if file.packagetype != "bdist_wheel" {
+                continue;
+            }
+
+            // Parse wheel tag
+            if let Ok(tag) = dx_py_core::wheel::WheelTag::parse(&file.filename) {
+                if tag.is_compatible(env) {
+                    let score = tag.specificity_score(env);
+                    if best_wheel.as_ref().map_or(true, |(_, best_score)| score > *best_score) {
+                        best_wheel = Some((file, score));
+                    }
+                }
+            }
+        }
+
+        Ok(best_wheel.map(|(file, _)| file))
+    }
+
+    /// Find any compatible wheel or fall back to sdist
+    pub async fn find_distribution(
+        &self,
+        name: &str,
+        version: &str,
+        env: &dx_py_core::wheel::PlatformEnvironment,
+    ) -> Result<Option<ReleaseFile>> {
+        // First try to find a compatible wheel
+        if let Some(wheel) = self.find_best_wheel(name, version, env).await? {
+            return Ok(Some(wheel));
+        }
+
+        // Fall back to sdist
+        let info = self.get_package_version(name, version).await?;
+        let files = info.releases.get(version).cloned().unwrap_or_default();
+
+        for file in files {
+            if file.packagetype == "sdist" {
+                return Ok(Some(file));
+            }
+        }
+
+        Ok(None)
+    }
+
+    /// Download a file and verify its integrity
+    pub async fn download(&self, url: &str, expected_sha256: &str) -> Result<Vec<u8>> {
+        let response = self
+            .client
+            .get(url)
+            .send()
+            .await
+            .map_err(|e| Error::Network(format!("Download error: {}", e)))?;
+
+        if !response.status().is_success() {
+            return Err(Error::Network(format!(
+                "Download failed: {}",
+                response.status()
+            )));
+        }
+
+        let data = response
+            .bytes()
+            .await
+            .map_err(|e| Error::Network(format!("Read error: {}", e)))?
+            .to_vec();
+
+        // Verify SHA256
+        crate::verify_sha256(&data, expected_sha256)?;
+
+        Ok(data)
+    }
+}
+
+impl Clone for AsyncPyPiClient {
+    fn clone(&self) -> Self {
+        Self {
+            client: self.client.clone(),
+            base_url: self.base_url.clone(),
+            extra_indexes: self.extra_indexes.clone(),
+        }
+    }
+}

@@ -69,7 +69,12 @@ stack = { path = "../stack" }
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["processthreadsapi"] }
+winapi = { version = "0.3", features = [
+    "processthreadsapi",
+    "fileapi",
+    "minwinbase",
+    "winerror",
+] }
 
 [dev-dependencies]
 assert_cmd = "2.0"

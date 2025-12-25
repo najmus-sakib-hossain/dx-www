@@ -10,6 +10,6 @@ pub mod venv;
 pub mod workspace;
 
 pub use dx_py_core::{Error, Result};
-pub use python::PythonManager;
-pub use venv::VenvManager;
+pub use python::{PythonManager, RealPythonManager, PythonInstall, PythonRelease};
+pub use venv::{VenvManager, RealVenvManager, Venv};
 pub use workspace::WorkspaceManager;

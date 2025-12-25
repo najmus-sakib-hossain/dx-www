@@ -131,6 +131,15 @@ pub mod platform_io;
 // Resource management
 pub mod resource_manager;
 
+// Configuration validation
+pub mod config;
+
+// Metrics collection
+pub mod metrics;
+
+// Graceful shutdown handling
+pub mod shutdown;
+
 // ========================================================================
 // Primary Public API - Forge Unified Interface
 // ========================================================================
@@ -222,6 +231,24 @@ pub use platform_io::{
 // ========================================================================
 
 pub use resource_manager::{ResourceManager, HandleGuard};
+
+// ========================================================================
+// Configuration Validation exports
+// ========================================================================
+
+pub use config::{ConfigValidator, ValidationError, ValidationResult};
+
+// ========================================================================
+// Metrics exports
+// ========================================================================
+
+pub use metrics::MetricsCollector;
+
+// ========================================================================
+// Shutdown handling exports
+// ========================================================================
+
+pub use shutdown::{ShutdownHandler, ShutdownConfig, ShutdownState, ExitCode};
 
 // ========================================================================
 // Legacy exports (deprecated in favor of new Forge API)

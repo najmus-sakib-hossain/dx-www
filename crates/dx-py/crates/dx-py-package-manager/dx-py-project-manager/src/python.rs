@@ -345,3 +345,343 @@ mod tests {
         assert_eq!(pinned, None);
     }
 }
+
+
+use serde::Deserialize;
+
+/// Python release information from python-build-standalone
+#[derive(Debug, Clone, Deserialize)]
+pub struct PythonRelease {
+    /// Python version
+    pub version: String,
+    /// Download URL
+    pub url: String,
+    /// SHA256 hash
+    pub sha256: String,
+    /// Platform (windows, macos, linux)
+    pub platform: String,
+    /// Architecture (x86_64, aarch64)
+    pub arch: String,
+}
+
+/// Real Python manager with download support
+pub struct RealPythonManager {
+    /// Base Python manager
+    manager: PythonManager,
+    /// HTTP client for downloads
+    client: reqwest::blocking::Client,
+}
+
+impl RealPythonManager {
+    /// Create a new real Python manager
+    pub fn new() -> Self {
+        Self {
+            manager: PythonManager::new(),
+            client: reqwest::blocking::Client::builder()
+                .user_agent("dx-py/0.1.0")
+                .timeout(std::time::Duration::from_secs(600))
+                .build()
+                .expect("Failed to create HTTP client"),
+        }
+    }
+
+    /// Create a real Python manager with a custom install directory
+    pub fn with_install_dir(install_dir: PathBuf) -> Self {
+        Self {
+            manager: PythonManager::with_install_dir(install_dir),
+            client: reqwest::blocking::Client::builder()
+                .user_agent("dx-py/0.1.0")
+                .timeout(std::time::Duration::from_secs(600))
+                .build()
+                .expect("Failed to create HTTP client"),
+        }
+    }
+
+    /// Get the install directory
+    pub fn install_dir(&self) -> &Path {
+        self.manager.install_dir()
+    }
+
+    /// List available Python versions from python-build-standalone
+    pub fn list_available(&self) -> Result<Vec<PythonRelease>> {
+        // Get releases from GitHub API
+        let url = "https://api.github.com/repos/indygreg/python-build-standalone/releases?per_page=10";
+        
+        let response = self.client
+            .get(url)
+            .header("Accept", "application/vnd.github.v3+json")
+            .send()
+            .map_err(|e| Error::PythonNotFound(format!("Failed to fetch releases: {}", e)))?;
+
+        if !response.status().is_success() {
+            return Err(Error::PythonNotFound(format!(
+                "GitHub API error: {}",
+                response.status()
+            )));
+        }
+
+        let releases: Vec<GitHubRelease> = response.json()
+            .map_err(|e| Error::PythonNotFound(format!("Failed to parse releases: {}", e)))?;
+
+        let mut python_releases = Vec::new();
+        let (platform, arch) = self.detect_platform();
+
+        for release in releases {
+            for asset in release.assets {
+                if let Some(pr) = self.parse_asset(&asset, &platform, &arch) {
+                    python_releases.push(pr);
+                }
+            }
+        }
+
+        Ok(python_releases)
+    }
+
+    /// Detect current platform and architecture
+    fn detect_platform(&self) -> (String, String) {
+        #[cfg(target_os = "windows")]
+        let platform = "windows".to_string();
+        #[cfg(target_os = "macos")]
+        let platform = "apple-darwin".to_string();
+        #[cfg(target_os = "linux")]
+        let platform = "unknown-linux-gnu".to_string();
+        #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+        let platform = "unknown".to_string();
+
+        #[cfg(target_arch = "x86_64")]
+        let arch = "x86_64".to_string();
+        #[cfg(target_arch = "aarch64")]
+        let arch = "aarch64".to_string();
+        #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+        let arch = "unknown".to_string();
+
+        (platform, arch)
+    }
+
+    /// Parse a GitHub asset into a PythonRelease
+    fn parse_asset(&self, asset: &GitHubAsset, platform: &str, arch: &str) -> Option<PythonRelease> {
+        let name = &asset.name;
+        
+        // Filter for install_only builds for our platform
+        if !name.contains("install_only") {
+            return None;
+        }
+        if !name.contains(platform) {
+            return None;
+        }
+        if !name.contains(arch) {
+            return None;
+        }
+
+        // Extract version from filename
+        // Format: cpython-3.12.0+20231002-x86_64-unknown-linux-gnu-install_only.tar.gz
+        let version = name
+            .strip_prefix("cpython-")?
+            .split('+')
+            .next()?
+            .to_string();
+
+        Some(PythonRelease {
+            version,
+            url: asset.browser_download_url.clone(),
+            sha256: String::new(), // Would need to fetch from checksum file
+            platform: platform.to_string(),
+            arch: arch.to_string(),
+        })
+    }
+
+    /// Install a Python version
+    pub fn install(&self, version: &str) -> Result<PythonInstall> {
+        // Check if already installed
+        if self.manager.is_installed(version) {
+            let path = self.manager.python_path(version);
+            return Ok(PythonInstall::new(path, version.to_string()).managed());
+        }
+
+        // Find the release for this version
+        let releases = self.list_available()?;
+        let release = releases
+            .iter()
+            .find(|r| r.version == version || r.version.starts_with(version))
+            .ok_or_else(|| Error::PythonNotFound(format!("Version {} not found", version)))?;
+
+        // Download the archive
+        let data = self.download(&release.url)?;
+
+        // Verify SHA256 if available
+        if !release.sha256.is_empty() {
+            self.verify_sha256(&data, &release.sha256)?;
+        }
+
+        // Extract to install directory
+        let install_path = self.manager.version_path(&release.version);
+        self.extract(&data, &install_path, &release.url)?;
+
+        let python_path = self.manager.python_path(&release.version);
+        Ok(PythonInstall::new(python_path, release.version.clone()).managed())
+    }
+
+    /// Download a file
+    fn download(&self, url: &str) -> Result<Vec<u8>> {
+        let response = self.client
+            .get(url)
+            .send()
+            .map_err(|e| Error::PythonNotFound(format!("Download failed: {}", e)))?;
+
+        if !response.status().is_success() {
+            return Err(Error::PythonNotFound(format!(
+                "Download failed: {}",
+                response.status()
+            )));
+        }
+
+        let data = response.bytes()
+            .map_err(|e| Error::PythonNotFound(format!("Failed to read response: {}", e)))?
+            .to_vec();
+
+        Ok(data)
+    }
+
+    /// Verify SHA256 hash
+    fn verify_sha256(&self, data: &[u8], expected: &str) -> Result<()> {
+        use sha2::{Digest, Sha256};
+        let mut hasher = Sha256::new();
+        hasher.update(data);
+        let computed = hex::encode(hasher.finalize());
+
+        if computed != expected.to_lowercase() {
+            return Err(Error::PythonNotFound(format!(
+                "SHA256 mismatch: expected {}, got {}",
+                expected, computed
+            )));
+        }
+
+        Ok(())
+    }
+
+    /// Extract archive to destination
+    fn extract(&self, data: &[u8], dest: &Path, url: &str) -> Result<()> {
+        std::fs::create_dir_all(dest)?;
+
+        if url.ends_with(".tar.gz") || url.ends_with(".tgz") {
+            self.extract_tar_gz(data, dest)?;
+        } else if url.ends_with(".zip") {
+            self.extract_zip(data, dest)?;
+        } else {
+            return Err(Error::PythonNotFound(format!(
+                "Unknown archive format: {}",
+                url
+            )));
+        }
+
+        Ok(())
+    }
+
+    /// Extract tar.gz archive
+    fn extract_tar_gz(&self, data: &[u8], dest: &Path) -> Result<()> {
+        use flate2::read::GzDecoder;
+        use tar::Archive;
+
+        let decoder = GzDecoder::new(std::io::Cursor::new(data));
+        let mut archive = Archive::new(decoder);
+
+        // Extract, stripping the first component (usually "python")
+        for entry in archive.entries().map_err(|e| Error::PythonNotFound(format!("Failed to read archive: {}", e)))? {
+            let mut entry = entry.map_err(|e| Error::PythonNotFound(format!("Failed to read entry: {}", e)))?;
+            let path = entry.path().map_err(|e| Error::PythonNotFound(format!("Invalid path: {}", e)))?;
+            
+            // Strip first component
+            let stripped: PathBuf = path.components().skip(1).collect();
+            if stripped.as_os_str().is_empty() {
+                continue;
+            }
+
+            let dest_path = dest.join(&stripped);
+            
+            if entry.header().entry_type().is_dir() {
+                std::fs::create_dir_all(&dest_path)?;
+            } else {
+                if let Some(parent) = dest_path.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                entry.unpack(&dest_path).map_err(|e| Error::PythonNotFound(format!("Failed to extract: {}", e)))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Extract zip archive
+    fn extract_zip(&self, data: &[u8], dest: &Path) -> Result<()> {
+        use std::io::Read;
+        use zip::ZipArchive;
+
+        let cursor = std::io::Cursor::new(data);
+        let mut archive = ZipArchive::new(cursor)
+            .map_err(|e| Error::PythonNotFound(format!("Failed to open zip: {}", e)))?;
+
+        for i in 0..archive.len() {
+            let mut file = archive.by_index(i)
+                .map_err(|e| Error::PythonNotFound(format!("Failed to read entry: {}", e)))?;
+
+            let path = file.name().to_string();
+            
+            // Strip first component
+            let stripped: PathBuf = PathBuf::from(&path).components().skip(1).collect();
+            if stripped.as_os_str().is_empty() {
+                continue;
+            }
+
+            let dest_path = dest.join(&stripped);
+
+            if file.is_dir() {
+                std::fs::create_dir_all(&dest_path)?;
+            } else {
+                if let Some(parent) = dest_path.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                let mut content = Vec::new();
+                file.read_to_end(&mut content)
+                    .map_err(|e| Error::PythonNotFound(format!("Failed to read file: {}", e)))?;
+                std::fs::write(&dest_path, &content)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check if a version is installed
+    pub fn is_installed(&self, version: &str) -> bool {
+        self.manager.is_installed(version)
+    }
+
+    /// Discover Python installations
+    pub fn discover(&mut self) -> Vec<PythonInstall> {
+        self.manager.discover()
+    }
+
+    /// Find a Python installation
+    pub fn find(&self, version_constraint: &str) -> Option<&PythonInstall> {
+        self.manager.find(version_constraint)
+    }
+}
+
+impl Default for RealPythonManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// GitHub release response
+#[derive(Debug, Deserialize)]
+struct GitHubRelease {
+    tag_name: String,
+    assets: Vec<GitHubAsset>,
+}
+
+/// GitHub asset response
+#[derive(Debug, Deserialize)]
+struct GitHubAsset {
+    name: String,
+    browser_download_url: String,
+}

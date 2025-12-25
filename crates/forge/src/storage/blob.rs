@@ -725,4 +725,100 @@ mod property_tests {
             assert!(result.is_err());
         }
     }
+
+    /// Property 23: Concurrent Read Support
+    /// Multiple concurrent reads to the same blob should all succeed
+    /// and return identical data.
+    #[tokio::test]
+    async fn prop_concurrent_read_support() {
+        use std::sync::Arc;
+        use tokio::sync::Barrier;
+
+        let temp_dir = TempDir::new().unwrap();
+        let repo = Arc::new(BlobRepository::new(temp_dir.path()).unwrap());
+
+        // Create and store a blob
+        let content = b"Test content for concurrent reads - this is some longer content to make the test more meaningful".to_vec();
+        let blob = Blob::from_content("test.txt", content.clone());
+        let hash = blob.hash().to_string();
+
+        repo.store_local(&blob).await.unwrap();
+
+        // Concurrent reads
+        let num_readers = 20;
+        let barrier = Arc::new(Barrier::new(num_readers));
+        let mut handles = Vec::new();
+
+        for _ in 0..num_readers {
+            let repo = Arc::clone(&repo);
+            let hash = hash.clone();
+            let expected_content = content.clone();
+            let barrier = Arc::clone(&barrier);
+
+            handles.push(tokio::spawn(async move {
+                // Wait for all readers to be ready
+                barrier.wait().await;
+
+                // Read the blob
+                let loaded = repo.load_local(&hash).await.unwrap();
+
+                // Verify content matches
+                assert_eq!(loaded.content, expected_content);
+                assert!(loaded.verify_integrity().unwrap());
+            }));
+        }
+
+        // Wait for all reads to complete
+        for handle in handles {
+            handle.await.unwrap();
+        }
+    }
+
+    /// Property 24: Write Serialization
+    /// Concurrent writes to the same blob should result in consistent state.
+    #[tokio::test]
+    async fn prop_write_serialization() {
+        use std::sync::Arc;
+        use tokio::sync::Barrier;
+
+        let temp_dir = TempDir::new().unwrap();
+        let repo = Arc::new(BlobRepository::new(temp_dir.path()).unwrap());
+
+        // Create blobs with same path but different content
+        let num_writers = 10;
+        let barrier = Arc::new(Barrier::new(num_writers));
+        let mut handles = Vec::new();
+
+        for i in 0..num_writers {
+            let repo = Arc::clone(&repo);
+            let barrier = Arc::clone(&barrier);
+
+            handles.push(tokio::spawn(async move {
+                // Wait for all writers to be ready
+                barrier.wait().await;
+
+                // Create and store a blob
+                let content = format!("Content from writer {}", i).into_bytes();
+                let blob = Blob::from_content("shared.txt", content);
+                let hash = blob.hash().to_string();
+
+                repo.store_local(&blob).await.unwrap();
+
+                // Return the hash we wrote
+                hash
+            }));
+        }
+
+        // Collect all hashes
+        let mut hashes = Vec::new();
+        for handle in handles {
+            hashes.push(handle.await.unwrap());
+        }
+
+        // All written blobs should be readable and valid
+        for hash in &hashes {
+            let loaded = repo.load_local(hash).await.unwrap();
+            assert!(loaded.verify_integrity().unwrap());
+        }
+    }
 }

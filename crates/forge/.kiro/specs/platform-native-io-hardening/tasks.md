@@ -141,7 +141,7 @@ This implementation plan transforms the design into actionable coding tasks. The
     - **Property 13: Handle Queuing at Limit**
     - **Validates: Requirements 6.2**
 
-- [-] 12. Enhance error handling
+- [x] 12. Enhance error handling
   - [x] 12.1 Update `src/error.rs` with enhanced error types
     - Add `ForgeError` struct with full context
     - Add `ErrorContext` with file, operation, timestamp, platform, backend
@@ -149,30 +149,30 @@ This implementation plan transforms the design into actionable coding tasks. The
     - Add `suggestions()` method for each category
     - _Requirements: 5.1, 5.3, 5.4_
 
-  - [ ] 12.2 Implement exponential backoff retry
+  - [x] 12.2 Implement exponential backoff retry
     - Update `with_retry()` to use proper exponential backoff
     - Add timing validation between attempts
     - _Requirements: 5.2_
 
-  - [ ] 12.3 Add structured error logging
+  - [x] 12.3 Add structured error logging
     - Log all errors with timestamp, category, context
     - Add platform-specific error handlers
     - _Requirements: 5.5_
 
-  - [ ] 12.4 Write property test for error categorization
+  - [x] 12.4 Write property test for error categorization
     - **Property 9: Error Categorization Completeness**
     - **Validates: Requirements 5.1**
 
-  - [ ] 12.5 Write property test for exponential backoff
+  - [x] 12.5 Write property test for exponential backoff
     - **Property 10: Exponential Backoff Retry**
     - **Validates: Requirements 5.2**
 
-  - [ ] 12.6 Write property test for error context completeness
+  - [x] 12.6 Write property test for error context completeness
     - **Property 11: Error Context Completeness**
     - **Validates: Requirements 5.3, 5.4, 5.5**
 
-- [ ] 13. Implement configuration validator
-  - [ ] 13.1 Create `src/config/validator.rs`
+- [x] 13. Implement configuration validator
+  - [x] 13.1 Create `src/config/validator.rs`
     - Implement `ConfigValidator` struct
     - Add validation for required fields
     - Add range validation with error messages
@@ -180,112 +180,112 @@ This implementation plan transforms the design into actionable coding tasks. The
     - Add network address validation
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [ ] 13.2 Integrate validator into Forge startup
+  - [x] 13.2 Integrate validator into Forge startup
     - Call validator before initialization
     - Display all validation errors on failure
     - Exit with appropriate code
     - _Requirements: 7.6_
 
-  - [ ] 13.3 Write property test for configuration validation
+  - [x] 13.3 Write property test for configuration validation
     - **Property 15: Configuration Validation Completeness**
     - **Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5, 7.6**
 
-- [ ] 14. Checkpoint - Ensure resource management and error handling work
+- [x] 14. Checkpoint - Ensure resource management and error handling work
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Implement structured logging and metrics
-  - [ ] 15.1 Update logging to use structured JSON format
+- [x] 15. Implement structured logging and metrics
+  - [x] 15.1 Update logging to use structured JSON format
     - Configure tracing-subscriber for JSON output
     - Add timing information for I/O operations in debug mode
     - Add slow operation warnings
     - _Requirements: 8.1, 8.3, 8.5_
 
-  - [ ] 15.2 Create `src/metrics.rs` with metrics collector
+  - [x] 15.2 Create `src/metrics.rs` with metrics collector
     - Implement `MetricsCollector` with atomic counters
     - Add histogram for I/O latency
     - Implement `export_json()` method
     - _Requirements: 8.4_
 
-  - [ ] 15.3 Implement log rotation
+  - [x] 15.3 Implement log rotation
     - Configure tracing-appender for file rotation at 100MB
     - _Requirements: 8.6_
 
-  - [ ] 15.4 Add configurable log levels
+  - [x] 15.4 Add configurable log levels
     - Support trace, debug, info, warn, error levels
     - Filter based on configured level
     - _Requirements: 8.2_
 
-  - [ ] 15.5 Write property test for structured logging
+  - [x] 15.5 Write property test for structured logging
     - **Property 16: Structured Logging Format**
     - **Validates: Requirements 8.1, 8.3**
 
-  - [ ] 15.6 Write property test for log level filtering
+  - [x] 15.6 Write property test for log level filtering
     - **Property 17: Log Level Filtering**
     - **Validates: Requirements 8.2**
 
-  - [ ] 15.7 Write property test for metrics availability
+  - [x] 15.7 Write property test for metrics availability
     - **Property 18: Metrics Availability**
     - **Validates: Requirements 8.4**
 
-- [ ] 16. Implement graceful shutdown
-  - [ ] 16.1 Update daemon shutdown handling
+- [x] 16. Implement graceful shutdown
+  - [x] 16.1 Update daemon shutdown handling
     - Handle SIGTERM/SIGINT signals
     - Complete in-flight write operations
     - Flush pending log entries
     - Save state to disk
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-  - [ ] 16.2 Add shutdown timeout with force termination
+  - [x] 16.2 Add shutdown timeout with force termination
     - Force terminate after 30 seconds with warning
     - Return appropriate exit codes
     - _Requirements: 9.5, 9.6_
 
-  - [ ] 16.3 Add panic handler for resource cleanup
+  - [x] 16.3 Add panic handler for resource cleanup
     - Install panic hook for emergency cleanup
     - Attempt to release critical resources
     - _Requirements: 6.6_
 
-  - [ ] 16.4 Write property test for graceful shutdown
+  - [x] 16.4 Write property test for graceful shutdown
     - **Property 21: Graceful Shutdown Completeness**
     - **Validates: Requirements 9.2, 9.3, 9.4**
 
-  - [ ] 16.5 Write property test for exit codes
+  - [x] 16.5 Write property test for exit codes
     - **Property 22: Exit Code Correctness**
     - **Validates: Requirements 9.6**
 
-- [ ] 17. Implement thread safety improvements
-  - [ ] 17.1 Update storage layer for concurrent access
+- [x] 17. Implement thread safety improvements
+  - [x] 17.1 Update storage layer for concurrent access
     - Ensure concurrent reads work correctly
     - Serialize writes to same blob
     - _Requirements: 10.1, 10.2_
 
-  - [ ] 17.2 Make watcher thread-safe
+  - [x] 17.2 Make watcher thread-safe
     - Ensure start/stop can be called from any thread
     - Add proper synchronization
     - _Requirements: 10.3_
 
-  - [ ] 17.3 Update database connection pooling
+  - [x] 17.3 Update database connection pooling
     - Add configurable pool size
     - Ensure pool respects configured limit
     - _Requirements: 10.5_
 
-  - [ ] 17.4 Add watcher handle cleanup verification
+  - [x] 17.4 Add watcher handle cleanup verification
     - Ensure all handles released on stop
     - _Requirements: 6.5_
 
-  - [ ] 17.5 Write property test for concurrent reads
+  - [x] 17.5 Write property test for concurrent reads
     - **Property 23: Concurrent Read Support**
     - **Validates: Requirements 10.1**
 
-  - [ ] 17.6 Write property test for write serialization
+  - [x] 17.6 Write property test for write serialization
     - **Property 24: Write Serialization**
     - **Validates: Requirements 10.2**
 
-  - [ ] 17.7 Write property test for thread-safe watcher
+  - [x] 17.7 Write property test for thread-safe watcher
     - **Property 25: Thread-Safe Watcher Operations**
     - **Validates: Requirements 10.3**
 
-  - [ ] 17.8 Write property test for watcher handle cleanup
+  - [x] 17.8 Write property test for watcher handle cleanup
     - **Property 14: Watcher Handle Cleanup**
     - **Validates: Requirements 6.5**
 

@@ -87,7 +87,7 @@ where
 
     loop {
         attempts += 1;
-        let attempt_start = Instant::now();
+        let _attempt_start = Instant::now();
 
         match operation() {
             Ok(result) => return Ok(result),
@@ -202,7 +202,7 @@ pub struct RetryAttempt {
 }
 
 /// Categorized error types for better handling
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ErrorCategory {
     /// Network-related errors (retryable)
     Network,
@@ -598,5 +598,362 @@ mod tests {
 
         let no_retry = RetryPolicy::no_retry();
         assert_eq!(no_retry.max_attempts, 1);
+    }
+
+    #[test]
+    fn test_delay_for_attempt() {
+        let policy = RetryPolicy {
+            max_attempts: 5,
+            initial_delay: Duration::from_millis(100),
+            backoff_multiplier: 2.0,
+            max_delay: Duration::from_secs(10),
+        };
+
+        // Attempt 0 should have no delay
+        assert_eq!(policy.delay_for_attempt(0), Duration::ZERO);
+        
+        // Attempt 1 should have initial delay
+        assert_eq!(policy.delay_for_attempt(1), Duration::from_millis(100));
+        
+        // Attempt 2 should be 2x initial
+        assert_eq!(policy.delay_for_attempt(2), Duration::from_millis(200));
+        
+        // Attempt 3 should be 4x initial
+        assert_eq!(policy.delay_for_attempt(3), Duration::from_millis(400));
+    }
+
+    #[test]
+    fn test_forge_error_suggestions() {
+        let context = ErrorContext::new("test_operation")
+            .with_file("/test/path.txt")
+            .with_backend("fallback");
+        
+        let error = ForgeError::new(
+            ErrorCategory::FileSystem,
+            "File not found",
+            context,
+        );
+        
+        let suggestions = error.suggestions();
+        assert!(!suggestions.is_empty());
+        assert!(suggestions.iter().any(|s| s.contains("permission") || s.contains("path")));
+    }
+
+    #[test]
+    fn test_error_context_defaults() {
+        let context = ErrorContext::default();
+        assert!(context.file.is_none());
+        assert!(context.operation.is_empty());
+        assert_eq!(context.retry_count, 0);
+        assert_eq!(context.platform, std::env::consts::OS);
+    }
+}
+
+/// Property-based tests for error handling
+#[cfg(test)]
+mod property_tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    /// Generate arbitrary error messages for different categories
+    fn error_message_strategy() -> impl Strategy<Value = (String, ErrorCategory)> {
+        prop_oneof![
+            Just(("network connection failed".to_string(), ErrorCategory::Network)),
+            Just(("socket error occurred".to_string(), ErrorCategory::Network)),
+            Just(("dns resolution failed".to_string(), ErrorCategory::Network)),
+            Just(("connection refused".to_string(), ErrorCategory::Network)),
+            Just(("file not found".to_string(), ErrorCategory::FileSystem)),
+            Just(("permission denied".to_string(), ErrorCategory::FileSystem)),
+            Just(("directory does not exist".to_string(), ErrorCategory::FileSystem)),
+            Just(("io error reading file".to_string(), ErrorCategory::FileSystem)),
+            Just(("invalid config value".to_string(), ErrorCategory::Configuration)),
+            Just(("config file missing".to_string(), ErrorCategory::Configuration)),
+            Just(("validation failed for field".to_string(), ErrorCategory::Validation)),
+            Just(("required field missing".to_string(), ErrorCategory::Validation)),
+            Just(("dependency not found".to_string(), ErrorCategory::Dependency)),
+            Just(("version mismatch".to_string(), ErrorCategory::Dependency)),
+            Just(("operation timed out".to_string(), ErrorCategory::Timeout)),
+            Just(("request timeout exceeded".to_string(), ErrorCategory::Timeout)),
+            Just(("unexpected internal error".to_string(), ErrorCategory::Unknown)),
+        ]
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        /// Property 9: Error Categorization Completeness
+        /// For any error produced by the system, the error categorization function
+        /// SHALL assign exactly one category from {Network, FileSystem, Configuration,
+        /// Validation, Dependency, Timeout, Unknown}.
+        #[test]
+        fn prop_error_categorization_completeness((msg, expected_category) in error_message_strategy()) {
+            let error = anyhow::anyhow!("{}", msg);
+            let category = categorize_error(&error);
+            
+            // Category must be one of the valid categories
+            let valid_categories = [
+                ErrorCategory::Network,
+                ErrorCategory::FileSystem,
+                ErrorCategory::Configuration,
+                ErrorCategory::Validation,
+                ErrorCategory::Dependency,
+                ErrorCategory::Timeout,
+                ErrorCategory::Unknown,
+            ];
+            
+            prop_assert!(valid_categories.contains(&category),
+                "Category {:?} is not a valid category", category);
+            
+            // For known error messages, verify correct categorization
+            prop_assert_eq!(category, expected_category,
+                "Error '{}' should be {:?} but was {:?}", msg, expected_category, category);
+        }
+
+        /// Property 9 (continued): Any arbitrary error gets categorized
+        #[test]
+        fn prop_any_error_gets_categorized(msg in "[a-zA-Z0-9 ]{1,100}") {
+            let error = anyhow::anyhow!("{}", msg);
+            let category = categorize_error(&error);
+            
+            // Must be assigned exactly one category
+            let valid_categories = [
+                ErrorCategory::Network,
+                ErrorCategory::FileSystem,
+                ErrorCategory::Configuration,
+                ErrorCategory::Validation,
+                ErrorCategory::Dependency,
+                ErrorCategory::Timeout,
+                ErrorCategory::Unknown,
+            ];
+            
+            prop_assert!(valid_categories.contains(&category),
+                "Category {:?} is not valid", category);
+        }
+
+        /// Property 10: Exponential Backoff Retry
+        /// For any retryable error with retry policy configured for N attempts,
+        /// the delay between attempt i and attempt i+1 SHALL be greater than or
+        /// equal to the delay between attempt i-1 and attempt i (exponential growth),
+        /// up to the maximum delay.
+        #[test]
+        fn prop_exponential_backoff(
+            max_attempts in 2..10u32,
+            initial_delay_ms in 10..500u64,
+            multiplier in 1.1..3.0f64,
+            max_delay_ms in 1000..10000u64,
+        ) {
+            let policy = RetryPolicy {
+                max_attempts,
+                initial_delay: Duration::from_millis(initial_delay_ms),
+                backoff_multiplier: multiplier,
+                max_delay: Duration::from_millis(max_delay_ms),
+            };
+            
+            let mut prev_delay = Duration::ZERO;
+            
+            for attempt in 0..max_attempts {
+                let delay = policy.delay_for_attempt(attempt);
+                
+                if attempt == 0 {
+                    // First attempt has no delay
+                    prop_assert_eq!(delay, Duration::ZERO,
+                        "Attempt 0 should have zero delay");
+                } else if attempt == 1 {
+                    // Second attempt has initial delay
+                    prop_assert_eq!(delay, policy.initial_delay,
+                        "Attempt 1 should have initial delay");
+                } else {
+                    // Subsequent attempts should have exponentially growing delay
+                    // (or be capped at max_delay)
+                    prop_assert!(
+                        delay >= prev_delay || delay == policy.max_delay,
+                        "Delay should grow exponentially: attempt {} delay {:?} < prev {:?}",
+                        attempt, delay, prev_delay
+                    );
+                    
+                    // Delay should never exceed max
+                    prop_assert!(delay <= policy.max_delay,
+                        "Delay {:?} exceeds max {:?}", delay, policy.max_delay);
+                }
+                
+                prev_delay = delay;
+            }
+        }
+
+        /// Property 10 (continued): Verify actual timing in retry execution
+        #[test]
+        fn prop_exponential_backoff_timing(
+            num_failures in 1..4usize,
+        ) {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async {
+                let policy = RetryPolicy {
+                    max_attempts: (num_failures + 1) as u32,
+                    initial_delay: Duration::from_millis(50),
+                    backoff_multiplier: 2.0,
+                    max_delay: Duration::from_secs(1),
+                };
+                
+                let mut attempt_count = 0;
+                let target_failures = num_failures;
+                
+                let operation = || {
+                    attempt_count += 1;
+                    if attempt_count <= target_failures {
+                        Err::<(), _>("simulated failure")
+                    } else {
+                        Ok(())
+                    }
+                };
+                
+                let start = Instant::now();
+                let result = with_retry(&policy, operation).await;
+                let elapsed = start.elapsed();
+                
+                prop_assert!(result.is_ok(), "Operation should eventually succeed");
+                
+                // Calculate expected minimum delay
+                let mut expected_min_delay = Duration::ZERO;
+                for i in 1..=target_failures {
+                    expected_min_delay += policy.delay_for_attempt(i as u32);
+                }
+                
+                // Allow some tolerance for timing
+                let tolerance = Duration::from_millis(50);
+                prop_assert!(
+                    elapsed >= expected_min_delay.saturating_sub(tolerance),
+                    "Elapsed {:?} should be >= expected {:?}", elapsed, expected_min_delay
+                );
+                
+                Ok(())
+            })?;
+        }
+
+        /// Property 11: Error Context Completeness
+        /// For any error logged by the system, the error record SHALL contain:
+        /// a non-empty message, a valid category, a timestamp, and context-specific
+        /// suggestions (non-empty list).
+        #[test]
+        fn prop_error_context_completeness(
+            operation in "[a-zA-Z_]{1,50}",
+            file_path in prop::option::of("[a-zA-Z0-9/._]{1,100}"),
+            retry_count in 0..10u32,
+        ) {
+            let mut context = ErrorContext::new(operation.clone());
+            
+            if let Some(ref path) = file_path {
+                context = context.with_file(path);
+            }
+            context = context.with_retry_count(retry_count);
+            context = context.with_backend("test_backend");
+            
+            // Create ForgeError for each category
+            let categories = [
+                ErrorCategory::Network,
+                ErrorCategory::FileSystem,
+                ErrorCategory::Configuration,
+                ErrorCategory::Validation,
+                ErrorCategory::Dependency,
+                ErrorCategory::Timeout,
+                ErrorCategory::Unknown,
+            ];
+            
+            for category in categories {
+                let error = ForgeError::new(
+                    category,
+                    format!("Test error for {:?}", category),
+                    context.clone(),
+                );
+                
+                // Verify non-empty message
+                prop_assert!(!error.message.is_empty(),
+                    "Error message should not be empty");
+                
+                // Verify valid category
+                prop_assert_eq!(error.category, category,
+                    "Category should match");
+                
+                // Verify timestamp is set (not zero)
+                prop_assert!(error.context.timestamp.timestamp() > 0,
+                    "Timestamp should be set");
+                
+                // Verify operation is preserved
+                prop_assert_eq!(&error.context.operation, &operation,
+                    "Operation should be preserved");
+                
+                // Verify suggestions are non-empty
+                let suggestions = error.suggestions();
+                prop_assert!(!suggestions.is_empty(),
+                    "Suggestions should not be empty for category {:?}", category);
+                
+                // Verify platform is set
+                prop_assert!(!error.context.platform.is_empty(),
+                    "Platform should be set");
+                
+                // Verify backend is set
+                prop_assert!(!error.context.backend.is_empty(),
+                    "Backend should be set");
+            }
+        }
+
+        /// Property 11 (continued): Verify ForgeError display format
+        #[test]
+        fn prop_error_display_format(
+            msg in "[a-zA-Z0-9 ]{1,100}",
+        ) {
+            let context = ErrorContext::new("test_op");
+            let error = ForgeError::new(
+                ErrorCategory::FileSystem,
+                msg.clone(),
+                context,
+            );
+            
+            let display = error.to_string();
+            
+            // Display should contain category name
+            prop_assert!(display.contains("filesystem"),
+                "Display should contain category name");
+            
+            // Display should contain message
+            prop_assert!(display.contains(&msg),
+                "Display should contain message");
+        }
+    }
+
+    /// Test that retryable categories are correctly identified
+    #[test]
+    fn test_retryable_categories() {
+        assert!(ErrorCategory::Network.is_retryable());
+        assert!(ErrorCategory::FileSystem.is_retryable());
+        assert!(ErrorCategory::Timeout.is_retryable());
+        
+        assert!(!ErrorCategory::Configuration.is_retryable());
+        assert!(!ErrorCategory::Validation.is_retryable());
+        assert!(!ErrorCategory::Dependency.is_retryable());
+        assert!(!ErrorCategory::Unknown.is_retryable());
+    }
+
+    /// Test ForgeError logging (structured format)
+    #[test]
+    fn test_structured_error_logging() {
+        let context = ErrorContext::new("read_file")
+            .with_file("/test/file.txt")
+            .with_backend("fallback")
+            .with_retry_count(2);
+        
+        let error = ForgeError::new(
+            ErrorCategory::FileSystem,
+            "File not found",
+            context,
+        );
+        
+        // Verify all fields are accessible for structured logging
+        assert_eq!(error.category.name(), "filesystem");
+        assert_eq!(error.message, "File not found");
+        assert_eq!(error.context.operation, "read_file");
+        assert_eq!(error.context.file, Some(PathBuf::from("/test/file.txt")));
+        assert_eq!(error.context.backend, "fallback");
+        assert_eq!(error.context.retry_count, 2);
+        assert!(!error.context.platform.is_empty());
     }
 }

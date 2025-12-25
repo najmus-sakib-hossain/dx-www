@@ -3,6 +3,8 @@
 pub mod error;
 pub mod history;
 pub mod input;
+pub mod lock;
+pub mod network;
 pub mod patcher;
 pub mod paths;
 pub mod shell;

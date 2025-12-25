@@ -490,3 +490,124 @@ mod tests {
         assert!(!venv_path.exists());
     }
 }
+
+
+/// Real virtual environment manager with pip bootstrap support
+pub struct RealVenvManager {
+    /// Base venv manager
+    manager: VenvManager,
+}
+
+impl RealVenvManager {
+    /// Create a new real venv manager
+    pub fn new() -> Self {
+        Self {
+            manager: VenvManager::new(),
+        }
+    }
+
+    /// Create a real venv manager with a custom cache directory
+    pub fn with_cache_dir(cache_dir: PathBuf) -> Self {
+        Self {
+            manager: VenvManager::with_cache_dir(cache_dir),
+        }
+    }
+
+    /// Create a virtual environment
+    pub fn create(&mut self, path: &Path, python: &Path) -> Result<Venv> {
+        self.manager.create(path, python)
+    }
+
+    /// Create a virtual environment with pip and setuptools
+    pub fn create_with_packages(&mut self, path: &Path, python: &Path) -> Result<Venv> {
+        let venv = self.manager.create(path, python)?;
+        
+        // Bootstrap pip using ensurepip
+        self.bootstrap_pip(&venv)?;
+        
+        Ok(venv)
+    }
+
+    /// Bootstrap pip into the virtual environment using ensurepip
+    fn bootstrap_pip(&self, venv: &Venv) -> Result<()> {
+        let output = std::process::Command::new(&venv.python_path)
+            .args(["-m", "ensurepip", "--upgrade"])
+            .output()
+            .map_err(|e| Error::VenvError(format!("Failed to run ensurepip: {}", e)))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(Error::VenvError(format!("ensurepip failed: {}", stderr)));
+        }
+
+        Ok(())
+    }
+
+    /// Install packages into the virtual environment using pip
+    pub fn pip_install(&self, venv: &Venv, packages: &[&str]) -> Result<()> {
+        if packages.is_empty() {
+            return Ok(());
+        }
+
+        let mut args = vec!["-m", "pip", "install", "--quiet"];
+        args.extend(packages.iter().map(|s| *s));
+
+        let output = std::process::Command::new(&venv.python_path)
+            .args(&args)
+            .output()
+            .map_err(|e| Error::VenvError(format!("Failed to run pip: {}", e)))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(Error::VenvError(format!("pip install failed: {}", stderr)));
+        }
+
+        Ok(())
+    }
+
+    /// Run a command in the virtual environment
+    pub fn run(&self, venv: &Venv, cmd: &str, args: &[&str]) -> Result<std::process::ExitStatus> {
+        let bin_dir = venv.bin_dir();
+        
+        // Look for the command in the venv's bin directory first
+        #[cfg(windows)]
+        let cmd_path = bin_dir.join(format!("{}.exe", cmd));
+        #[cfg(not(windows))]
+        let cmd_path = bin_dir.join(cmd);
+
+        let actual_cmd = if cmd_path.exists() {
+            cmd_path
+        } else {
+            PathBuf::from(cmd)
+        };
+
+        let status = std::process::Command::new(&actual_cmd)
+            .args(args)
+            .env("VIRTUAL_ENV", &venv.path)
+            .env("PATH", format!("{}{}{}",
+                bin_dir.display(),
+                std::path::MAIN_SEPARATOR,
+                std::env::var("PATH").unwrap_or_default()
+            ))
+            .status()
+            .map_err(|e| Error::VenvError(format!("Failed to run command: {}", e)))?;
+
+        Ok(status)
+    }
+
+    /// Remove a virtual environment
+    pub fn remove(&self, path: &Path) -> Result<()> {
+        self.manager.remove(path)
+    }
+
+    /// Check if a path is a valid virtual environment
+    pub fn is_venv(&self, path: &Path) -> bool {
+        self.manager.is_venv(path)
+    }
+}
+
+impl Default for RealVenvManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
