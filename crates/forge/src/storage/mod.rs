@@ -10,7 +10,7 @@ use ropey::Rope;
 use std::path::Path;
 
 pub use blob::{Blob, BlobMetadata, BlobRepository};
-pub use db::Database;
+pub use db::{Database, DatabasePool, DatabasePoolConfig, PooledConnection};
 pub use oplog::OperationLog;
 pub use r2::{batch_upload_blobs, R2Config, R2Storage, SyncResult};
 

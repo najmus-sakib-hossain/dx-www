@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc d9b1722ad647a799eb8aecd95b1183ac159156ce17a824ce3ba0b4d02678eccf # shrinks to value = Object(DxObject { fields: [("a", Float(1.9912281978685986e184))], lookup: {"a": 0} })
+cc 6953be3f497e93f7110a0c9f2db351c60ff7efda06b07901ce93bc63c3046f40 # shrinks to input = "a:0a"

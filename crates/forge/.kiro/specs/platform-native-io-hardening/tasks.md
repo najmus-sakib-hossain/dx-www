@@ -289,45 +289,45 @@ This implementation plan transforms the design into actionable coding tasks. The
     - **Property 14: Watcher Handle Cleanup**
     - **Validates: Requirements 6.5**
 
-  - [ ] 17.9 Write property test for connection pool sizing
+  - [x] 17.9 Write property test for connection pool sizing
     - **Property 26: Connection Pool Sizing**
     - **Validates: Requirements 10.5**
 
-- [ ] 18. Checkpoint - Ensure all hardening features work
+- [x] 18. Checkpoint - Ensure all hardening features work
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 19. Add cross-platform integration tests
-  - [ ] 19.1 Create platform-specific test configurations
+- [x] 19. Add cross-platform integration tests
+  - [x] 19.1 Create platform-specific test configurations
     - Add CI configuration for Linux, macOS, Windows
     - Configure test matrix for all platforms
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-  - [ ] 19.2 Add stress tests
+  - [x] 19.2 Add stress tests
     - Test 1000+ concurrent file operations
     - Test 10,000+ watched files
     - _Requirements: 4.5, 2.4_
 
-  - [ ] 19.3 Add graceful degradation tests
+  - [x] 19.3 Add graceful degradation tests
     - Test fallback when native I/O unavailable
     - _Requirements: 4.6_
 
-- [ ] 20. Final integration and documentation
-  - [ ] 20.1 Update public API exports in `src/lib.rs`
+- [x] 20. Final integration and documentation
+  - [x] 20.1 Update public API exports in `src/lib.rs`
     - Export `PlatformIO` trait and types
     - Export `ResourceManager`
     - Export `MetricsCollector`
     - Export `ConfigValidator`
 
-  - [ ] 20.2 Update README with platform-native I/O documentation
+  - [x] 20.2 Update README with platform-native I/O documentation
     - Document supported platforms and backends
     - Document configuration options
     - Document metrics and observability
 
-  - [ ] 20.3 Add API documentation
+  - [x] 20.3 Add API documentation
     - Document all new public types and functions
     - Add examples for common use cases
 
-- [ ] 21. Final checkpoint - Full test suite passes on all platforms
+- [x] 21. Final checkpoint - Full test suite passes on all platforms
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

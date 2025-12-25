@@ -40,6 +40,10 @@ notify = { version = "6.1", default-features = false, features = [
 ignore = "0.4"
 glob = "0.3"
 
+# Cryptography
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+rand = "0.8"
+
 # Utilities
 anyhow = "1.0"
 thiserror = "2.0"

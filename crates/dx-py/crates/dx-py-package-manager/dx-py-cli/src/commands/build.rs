@@ -2,28 +2,25 @@
 
 use std::path::Path;
 
-use dx_py_compat::PyProjectToml;
+use dx_py_package_manager::BuildFrontend;
 use dx_py_core::Result;
 
 /// Run the build command
 pub fn run(output: &str, wheel_only: bool, sdist_only: bool) -> Result<()> {
-    let pyproject_path = Path::new("pyproject.toml");
+    let project_dir = std::env::current_dir()
+        .map_err(|e| dx_py_core::Error::Cache(format!("Failed to get current directory: {}", e)))?;
 
-    if !pyproject_path.exists() {
-        return Err(dx_py_core::Error::Cache(
-            "No pyproject.toml found. Run 'dx-py init' first.".to_string(),
-        ));
-    }
+    let build_frontend = BuildFrontend::new(&project_dir)?;
 
-    let pyproject = PyProjectToml::load(pyproject_path)?;
-
-    let name = pyproject.name().ok_or_else(|| {
+    let name = build_frontend.name().ok_or_else(|| {
         dx_py_core::Error::Cache("No project name in pyproject.toml".to_string())
     })?;
 
-    let version = pyproject.version().unwrap_or("0.0.0");
+    let version = build_frontend.version().unwrap_or("0.0.0");
 
     println!("Building {} v{}...", name, version);
+    println!("  Build backend: {}", build_frontend.build_backend());
+    println!("  Build requires: {:?}", build_frontend.build_requires());
 
     // Create output directory
     let output_dir = Path::new(output);
@@ -35,24 +32,32 @@ pub fn run(output: &str, wheel_only: bool, sdist_only: bool) -> Result<()> {
     let build_sdist = !wheel_only;
 
     if build_wheel {
-        println!("Building wheel...");
-        let wheel_name = format!(
-            "{}-{}-py3-none-any.whl",
-            name.replace('-', "_"),
-            version
-        );
-        println!("  Would create: {}/{}", output, wheel_name);
+        println!("\nBuilding wheel...");
+        match build_frontend.build_wheel(output_dir) {
+            Ok(wheel_path) => {
+                println!("  Created: {}", wheel_path.display());
+            }
+            Err(e) => {
+                eprintln!("  Failed to build wheel: {}", e);
+                return Err(e);
+            }
+        }
     }
 
     if build_sdist {
-        println!("Building sdist...");
-        let sdist_name = format!("{}-{}.tar.gz", name, version);
-        println!("  Would create: {}/{}", output, sdist_name);
+        println!("\nBuilding sdist...");
+        match build_frontend.build_sdist(output_dir) {
+            Ok(sdist_path) => {
+                println!("  Created: {}", sdist_path.display());
+            }
+            Err(e) => {
+                eprintln!("  Failed to build sdist: {}", e);
+                return Err(e);
+            }
+        }
     }
 
-    println!("\n(This is a placeholder - actual build not implemented)");
-    println!("\nTo build manually:");
-    println!("  python -m build");
+    println!("\nBuild complete!");
 
     Ok(())
 }

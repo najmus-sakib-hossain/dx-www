@@ -253,70 +253,70 @@ This implementation plan transforms dx-py from a functional prototype into a bat
     - Linux: .tar.gz archives
     - _Requirements: 8.4_
 
-- [ ] 15. Implement Configuration System (dx-py-compat)
-  - [ ] 15.1 Create Config struct
+- [x] 15. Implement Configuration System (dx-py-compat)
+  - [x] 15.1 Create Config struct
     - Define all configuration options
     - Set sensible defaults
     - _Requirements: 11.1, 11.2, 11.3_
 
-  - [ ] 15.2 Implement config loading
+  - [x] 15.2 Implement config loading
     - Load from environment variables
     - Load from ~/.config/dx-py/config.toml
     - Load from pyproject.toml [tool.dx-py]
     - Merge with priority (env > project > global > default)
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
 
-  - [ ]* 15.3 Write property test for configuration layering
+  - [x]* 15.3 Write property test for configuration layering
     - **Property 9: Configuration Layering**
     - **Validates: Requirements 11.1, 11.3**
 
-- [ ] 16. Implement Real Build System (dx-py-cli)
-  - [ ] 16.1 Implement PEP 517 build frontend
+- [x] 16. Implement Real Build System (dx-py-cli)
+  - [x] 16.1 Implement PEP 517 build frontend
     - Parse build-system from pyproject.toml
     - Create isolated build environment
     - Call build backend hooks
     - _Requirements: 9.1, 9.2, 9.3_
 
-  - [ ] 16.2 Implement wheel building
+  - [x] 16.2 Implement wheel building
     - Call build_wheel hook
     - Copy wheel to output directory
     - _Requirements: 9.1_
 
-  - [ ] 16.3 Implement sdist building
+  - [x] 16.3 Implement sdist building
     - Call build_sdist hook
     - Copy sdist to output directory
     - _Requirements: 9.2_
 
-- [ ] 17. Implement Real Publish System (dx-py-cli)
-  - [ ] 17.1 Implement PyPI upload
+- [x] 17. Implement Real Publish System (dx-py-cli)
+  - [x] 17.1 Implement PyPI upload
     - Use multipart form upload
     - Support API token authentication
     - Support custom repository URLs
     - _Requirements: 9.4, 9.5, 9.6_
 
-- [ ] 18. Implement Real Tool Manager (dx-py-project-manager)
-  - [ ] 18.1 Implement tool installation
+- [x] 18. Implement Real Tool Manager (dx-py-project-manager)
+  - [x] 18.1 Implement tool installation
     - Create isolated venv for tool
     - Install tool package
     - Create wrapper scripts
     - _Requirements: 10.1, 10.2, 10.3_
 
-  - [ ] 18.2 Implement ephemeral tool execution
+  - [x] 18.2 Implement ephemeral tool execution
     - Create temporary venv
     - Install tool
     - Run command
     - Clean up
     - _Requirements: 10.5_
 
-  - [ ] 18.3 Implement tool upgrade
+  - [x] 18.3 Implement tool upgrade
     - Upgrade package in tool venv
     - _Requirements: 10.6_
 
-- [ ] 19. Checkpoint - All features complete
+- [x] 19. Checkpoint - All features complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 20. Implement Robust Error Handling
-  - [ ] 20.1 Implement atomic file operations
+- [-] 20. Implement Robust Error Handling
+  - [-] 20.1 Implement atomic file operations
     - Write to temp file, then rename
     - Clean up on failure
     - _Requirements: 5.6_

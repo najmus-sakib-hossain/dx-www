@@ -12,3 +12,4 @@ blake3.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
+tempfile = "3.10"

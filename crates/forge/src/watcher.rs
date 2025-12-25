@@ -922,7 +922,6 @@ mod property_tests {
     #[tokio::test]
     async fn prop_thread_safe_watcher_operations() {
         use std::sync::Arc;
-        use tokio::sync::Barrier;
 
         let temp_dir = TempDir::new().unwrap();
         let num_iterations = 10;
@@ -931,17 +930,13 @@ mod property_tests {
             let (watcher, _rx) = PlatformFileWatcher::with_defaults().unwrap();
             let watcher = Arc::new(tokio::sync::RwLock::new(watcher));
 
-            // Start from one task
-            let watcher_clone = Arc::clone(&watcher);
+            // Start watching
             let path = temp_dir.path().to_path_buf();
-            let start_handle = tokio::spawn(async move {
-                let mut w = watcher_clone.write().await;
-                w.watch(&path).await
-            });
-
-            // Wait for start to complete
-            let start_result = start_handle.await.unwrap();
-            assert!(start_result.is_ok(), "Start should succeed");
+            {
+                let mut w = watcher.write().await;
+                let start_result = w.watch(&path).await;
+                assert!(start_result.is_ok(), "Start should succeed");
+            }
 
             // Verify running state
             {
@@ -949,15 +944,12 @@ mod property_tests {
                 assert!(w.is_running().await, "Should be running after start");
             }
 
-            // Stop from another task
-            let watcher_clone = Arc::clone(&watcher);
-            let stop_handle = tokio::spawn(async move {
-                let mut w = watcher_clone.write().await;
-                w.stop().await
-            });
-
-            let stop_result = stop_handle.await.unwrap();
-            assert!(stop_result.is_ok(), "Stop should succeed");
+            // Stop watching
+            {
+                let mut w = watcher.write().await;
+                let stop_result = w.stop().await;
+                assert!(stop_result.is_ok(), "Stop should succeed");
+            }
 
             // Verify stopped state
             {

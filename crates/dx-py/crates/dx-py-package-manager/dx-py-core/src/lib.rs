@@ -3,6 +3,7 @@
 //! This crate provides the foundational types, binary format headers, and shared
 //! utilities used across all DX-Py crates.
 
+pub mod atomic;
 pub mod error;
 pub mod headers;
 pub mod pep440;
@@ -36,6 +37,7 @@ pub const MAX_NAME_LENGTH: usize = 64;
 /// Maximum version string length
 pub const MAX_VERSION_LENGTH: usize = 24;
 
+pub use atomic::{atomic_write, atomic_write_str, AtomicDir, AtomicFile, CleanupGuard};
 pub use error::{Error, Result};
 pub use headers::{fnv1a_hash, DplEntry, DplHeader, DppHeader, DppMetadata, SourceType};
 pub use pep440::{ParseError as Pep440ParseError, Pep440Version, PreRelease};

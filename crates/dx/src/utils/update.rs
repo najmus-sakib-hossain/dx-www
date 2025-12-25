@@ -1,14 +1,19 @@
 //! Self-update system for the DX CLI
 //!
 //! Provides update checking and delta patching functionality.
-//! - Requirement 6.1: Check for updates from GitHub releases API
-//! - Requirement 6.2: Display current and new version numbers
-//! - Requirement 6.3: Prefer delta updates over full binary downloads
-//! - Requirement 6.4: Verify Ed25519 signatures on updates
-//! - Requirement 6.7: Display release notes summary
+//! - Requirement 5.1: Verify Ed25519 signature before applying
+//! - Requirement 5.2: Return SignatureInvalid on failure
+//! - Requirement 5.3: Create backup of current binary before replacement
+//! - Requirement 5.4: Restore from backup if update fails
+//! - Requirement 5.5: Prefer delta updates over full binary downloads
+//! - Requirement 5.7: Use atomic rename operations
+//! - Requirement 5.8: Display both version numbers and release notes
 
 use crate::utils::error::DxError;
+use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::{Path, PathBuf};
 
 /// Current version of the DX CLI
 pub const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -319,10 +324,242 @@ fn summarize_release_notes(notes: &str) -> String {
     }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+//  SIGNATURE VERIFICATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Verify Ed25519 signature of update binary
+///
+/// Requirement 5.1: Verify Ed25519 signature before applying
+/// Requirement 5.2: Return SignatureInvalid on failure
+///
+/// # Arguments
+/// * `data` - The binary data to verify
+/// * `signature_bytes` - The 64-byte Ed25519 signature
+/// * `public_key_bytes` - The 32-byte Ed25519 public key
+///
+/// # Returns
+/// * `Ok(())` - If signature is valid
+/// * `Err(SignatureInvalid)` - If signature verification fails
+pub fn verify_signature(
+    data: &[u8],
+    signature_bytes: &[u8],
+    public_key_bytes: &[u8],
+) -> Result<(), DxError> {
+    // Parse the public key
+    let public_key = VerifyingKey::from_bytes(
+        public_key_bytes
+            .try_into()
+            .map_err(|_| DxError::SignatureInvalid)?,
+    )
+    .map_err(|_| DxError::SignatureInvalid)?;
+
+    // Parse the signature
+    let signature = Signature::from_bytes(
+        signature_bytes
+            .try_into()
+            .map_err(|_| DxError::SignatureInvalid)?,
+    );
+
+    // Verify the signature
+    public_key
+        .verify(data, &signature)
+        .map_err(|_| DxError::SignatureInvalid)
+}
+
+/// Verify signature from hex-encoded strings
+///
+/// Convenience wrapper for verify_signature that accepts hex-encoded inputs.
+pub fn verify_signature_hex(
+    data: &[u8],
+    signature_hex: &str,
+    public_key_hex: &str,
+) -> Result<(), DxError> {
+    let signature_bytes = hex_decode(signature_hex)?;
+    let public_key_bytes = hex_decode(public_key_hex)?;
+    verify_signature(data, &signature_bytes, &public_key_bytes)
+}
+
+/// Decode hex string to bytes
+fn hex_decode(hex: &str) -> Result<Vec<u8>, DxError> {
+    let hex = hex.trim();
+    if hex.len() % 2 != 0 {
+        return Err(DxError::SignatureInvalid);
+    }
+
+    (0..hex.len())
+        .step_by(2)
+        .map(|i| {
+            u8::from_str_radix(&hex[i..i + 2], 16).map_err(|_| DxError::SignatureInvalid)
+        })
+        .collect()
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  UPDATE APPLICATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Update applier for the DX CLI
+///
+/// Handles backup, atomic replacement, and restore on failure.
+pub struct UpdateApplier {
+    /// Path to the current binary
+    binary_path: PathBuf,
+    /// Path to the backup file
+    backup_path: PathBuf,
+}
+
+impl UpdateApplier {
+    /// Create a new update applier for the given binary path
+    pub fn new(binary_path: impl Into<PathBuf>) -> Self {
+        let binary_path = binary_path.into();
+        let backup_path = binary_path.with_extension("bak");
+        Self {
+            binary_path,
+            backup_path,
+        }
+    }
+
+    /// Create an update applier for the current executable
+    pub fn for_current_exe() -> Result<Self, DxError> {
+        let binary_path = std::env::current_exe().map_err(|e| DxError::Io {
+            message: format!("Failed to get current executable path: {}", e),
+        })?;
+        Ok(Self::new(binary_path))
+    }
+
+    /// Create a backup of the current binary
+    ///
+    /// Requirement 5.3: Create backup of current binary before replacement
+    pub fn create_backup(&self) -> Result<(), DxError> {
+        if self.binary_path.exists() {
+            fs::copy(&self.binary_path, &self.backup_path).map_err(|e| DxError::Io {
+                message: format!(
+                    "Failed to create backup at {}: {}",
+                    self.backup_path.display(),
+                    e
+                ),
+            })?;
+        }
+        Ok(())
+    }
+
+    /// Restore from backup
+    ///
+    /// Requirement 5.4: Restore from backup if update fails
+    pub fn restore_from_backup(&self) -> Result<(), DxError> {
+        if self.backup_path.exists() {
+            fs::copy(&self.backup_path, &self.binary_path).map_err(|e| DxError::Io {
+                message: format!(
+                    "Failed to restore from backup {}: {}",
+                    self.backup_path.display(),
+                    e
+                ),
+            })?;
+        }
+        Ok(())
+    }
+
+    /// Remove the backup file
+    pub fn remove_backup(&self) -> Result<(), DxError> {
+        if self.backup_path.exists() {
+            fs::remove_file(&self.backup_path).map_err(|e| DxError::Io {
+                message: format!(
+                    "Failed to remove backup {}: {}",
+                    self.backup_path.display(),
+                    e
+                ),
+            })?;
+        }
+        Ok(())
+    }
+
+    /// Apply update with atomic replacement
+    ///
+    /// Requirement 5.7: Use atomic rename operations
+    /// Requirement 12.4: Atomic rename to prevent partial updates
+    ///
+    /// # Arguments
+    /// * `new_binary` - The new binary data to install
+    /// * `signature` - The Ed25519 signature of the new binary
+    /// * `public_key` - The Ed25519 public key for verification
+    ///
+    /// # Returns
+    /// * `Ok(())` - If update was applied successfully
+    /// * `Err(...)` - If update failed (backup will be restored)
+    pub fn apply_update(
+        &self,
+        new_binary: &[u8],
+        signature: &[u8],
+        public_key: &[u8],
+    ) -> Result<(), DxError> {
+        // Step 1: Verify signature before doing anything
+        verify_signature(new_binary, signature, public_key)?;
+
+        // Step 2: Create backup
+        self.create_backup()?;
+
+        // Step 3: Write to temp file
+        let temp_path = self.binary_path.with_extension("tmp");
+        let result = self.write_and_replace(new_binary, &temp_path);
+
+        // Step 4: On failure, restore from backup
+        if result.is_err() {
+            let _ = self.restore_from_backup();
+            // Clean up temp file if it exists
+            let _ = fs::remove_file(&temp_path);
+        }
+
+        result
+    }
+
+    /// Write new binary to temp file and atomically replace
+    fn write_and_replace(&self, new_binary: &[u8], temp_path: &Path) -> Result<(), DxError> {
+        // Write to temp file
+        fs::write(temp_path, new_binary).map_err(|e| DxError::Io {
+            message: format!("Failed to write temp file {}: {}", temp_path.display(), e),
+        })?;
+
+        // Set executable permissions on Unix
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let perms = std::fs::Permissions::from_mode(0o755);
+            fs::set_permissions(temp_path, perms).map_err(|e| DxError::Io {
+                message: format!("Failed to set permissions on {}: {}", temp_path.display(), e),
+            })?;
+        }
+
+        // Atomic rename
+        fs::rename(temp_path, &self.binary_path).map_err(|e| DxError::Io {
+            message: format!(
+                "Failed to replace binary {} with {}: {}",
+                self.binary_path.display(),
+                temp_path.display(),
+                e
+            ),
+        })?;
+
+        Ok(())
+    }
+
+    /// Get the backup path
+    pub fn backup_path(&self) -> &Path {
+        &self.backup_path
+    }
+
+    /// Check if a backup exists
+    pub fn has_backup(&self) -> bool {
+        self.backup_path.exists()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ed25519_dalek::SigningKey;
     use proptest::prelude::*;
+    use rand::rngs::OsRng;
 
     #[test]
     fn test_version_comparison() {
@@ -534,6 +771,283 @@ mod tests {
             // Higher major version is always newer
             prop_assert!(is_newer_version(&v2, &v1));
             prop_assert!(!is_newer_version(&v1, &v2));
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  SIGNATURE VERIFICATION TESTS
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// Helper to generate a valid keypair and signature for testing
+    fn generate_test_signature(data: &[u8]) -> (Vec<u8>, Vec<u8>) {
+        use ed25519_dalek::Signer;
+        let signing_key = SigningKey::generate(&mut OsRng);
+        let signature = signing_key.sign(data);
+        let public_key = signing_key.verifying_key();
+        (signature.to_bytes().to_vec(), public_key.to_bytes().to_vec())
+    }
+
+    #[test]
+    fn test_valid_signature_verification() {
+        let data = b"test binary data";
+        let (signature, public_key) = generate_test_signature(data);
+        
+        let result = verify_signature(data, &signature, &public_key);
+        assert!(result.is_ok(), "Valid signature should verify successfully");
+    }
+
+    #[test]
+    fn test_invalid_signature_fails() {
+        let data = b"test binary data";
+        let (mut signature, public_key) = generate_test_signature(data);
+        
+        // Corrupt the signature
+        signature[0] ^= 0xFF;
+        
+        let result = verify_signature(data, &signature, &public_key);
+        assert!(matches!(result, Err(DxError::SignatureInvalid)));
+    }
+
+    #[test]
+    fn test_wrong_data_fails() {
+        let data = b"test binary data";
+        let (signature, public_key) = generate_test_signature(data);
+        
+        // Verify with different data
+        let wrong_data = b"different data";
+        let result = verify_signature(wrong_data, &signature, &public_key);
+        assert!(matches!(result, Err(DxError::SignatureInvalid)));
+    }
+
+    #[test]
+    fn test_wrong_public_key_fails() {
+        let data = b"test binary data";
+        let (signature, _) = generate_test_signature(data);
+        
+        // Generate a different keypair
+        let (_, wrong_public_key) = generate_test_signature(b"other data");
+        
+        let result = verify_signature(data, &signature, &wrong_public_key);
+        assert!(matches!(result, Err(DxError::SignatureInvalid)));
+    }
+
+    #[test]
+    fn test_invalid_signature_length() {
+        let data = b"test binary data";
+        let (_, public_key) = generate_test_signature(data);
+        
+        // Too short signature
+        let short_sig = vec![0u8; 32];
+        let result = verify_signature(data, &short_sig, &public_key);
+        assert!(matches!(result, Err(DxError::SignatureInvalid)));
+    }
+
+    #[test]
+    fn test_invalid_public_key_length() {
+        let data = b"test binary data";
+        let (signature, _) = generate_test_signature(data);
+        
+        // Too short public key
+        let short_key = vec![0u8; 16];
+        let result = verify_signature(data, &signature, &short_key);
+        assert!(matches!(result, Err(DxError::SignatureInvalid)));
+    }
+
+    #[test]
+    fn test_hex_decode() {
+        assert_eq!(hex_decode("00").unwrap(), vec![0u8]);
+        assert_eq!(hex_decode("ff").unwrap(), vec![255u8]);
+        assert_eq!(hex_decode("0102").unwrap(), vec![1u8, 2u8]);
+        assert_eq!(hex_decode("AABB").unwrap(), vec![170u8, 187u8]);
+        
+        // Invalid hex
+        assert!(hex_decode("0").is_err()); // Odd length
+        assert!(hex_decode("GG").is_err()); // Invalid chars
+    }
+
+    // Feature: dx-cli-hardening, Property 15: Signature Verification Gates Updates
+    // **Validates: Requirements 5.1, 5.2**
+    //
+    // For any update payload, if the Ed25519 signature verification fails,
+    // the update SHALL be aborted and a SignatureInvalid error SHALL be returned.
+    // Valid signatures SHALL allow the update to proceed.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_valid_signature_allows_update(data in proptest::collection::vec(any::<u8>(), 1..1000)) {
+            let (signature, public_key) = generate_test_signature(&data);
+            let result = verify_signature(&data, &signature, &public_key);
+            prop_assert!(result.is_ok(), "Valid signature should allow update");
+        }
+
+        #[test]
+        fn prop_invalid_signature_blocks_update(
+            data in proptest::collection::vec(any::<u8>(), 1..1000),
+            corrupt_byte in 0usize..64,
+            corrupt_value in any::<u8>()
+        ) {
+            let (mut signature, public_key) = generate_test_signature(&data);
+            
+            // Corrupt the signature (ensure we actually change it)
+            let original = signature[corrupt_byte];
+            signature[corrupt_byte] = if corrupt_value == original {
+                corrupt_value.wrapping_add(1)
+            } else {
+                corrupt_value
+            };
+            
+            let result = verify_signature(&data, &signature, &public_key);
+            prop_assert!(
+                matches!(result, Err(DxError::SignatureInvalid)),
+                "Corrupted signature should return SignatureInvalid"
+            );
+        }
+
+        #[test]
+        fn prop_wrong_data_blocks_update(
+            data1 in proptest::collection::vec(any::<u8>(), 1..500),
+            data2 in proptest::collection::vec(any::<u8>(), 1..500)
+        ) {
+            // Only test when data is actually different
+            prop_assume!(data1 != data2);
+            
+            let (signature, public_key) = generate_test_signature(&data1);
+            let result = verify_signature(&data2, &signature, &public_key);
+            prop_assert!(
+                matches!(result, Err(DxError::SignatureInvalid)),
+                "Signature for different data should fail"
+            );
+        }
+    }
+
+    // Feature: dx-cli-hardening, Property 16: Delta Patch Preference
+    // **Validates: Requirements 5.5**
+    //
+    // When a delta patch is available, the update system SHALL choose the delta patch.
+    // When only full download is available, it SHALL use that.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_delta_preferred_when_available(
+            full_size in 1_000_000u64..100_000_000,
+            delta_size in 100_000u64..1_000_000
+        ) {
+            let info = UpdateInfo {
+                current_version: "1.0.0".to_string(),
+                new_version: "1.1.0".to_string(),
+                release_notes: String::new(),
+                download_url: "https://example.com/dx".to_string(),
+                delta_url: Some("https://example.com/dx.patch".to_string()),
+                full_size,
+                delta_size: Some(delta_size),
+                signature: String::new(),
+            };
+
+            prop_assert!(info.has_delta(), "Should report delta available");
+            prop_assert!(
+                info.preferred_url().contains("patch"),
+                "Should prefer delta URL when available"
+            );
+            prop_assert_eq!(
+                info.preferred_size(),
+                delta_size,
+                "Should report delta size when delta available"
+            );
+        }
+
+        #[test]
+        fn prop_full_used_when_no_delta(full_size in 1_000_000u64..100_000_000) {
+            let info = UpdateInfo {
+                current_version: "1.0.0".to_string(),
+                new_version: "1.1.0".to_string(),
+                release_notes: String::new(),
+                download_url: "https://example.com/dx".to_string(),
+                delta_url: None,
+                full_size,
+                delta_size: None,
+                signature: String::new(),
+            };
+
+            prop_assert!(!info.has_delta(), "Should report no delta");
+            prop_assert!(
+                !info.preferred_url().contains("patch"),
+                "Should use full URL when no delta"
+            );
+            prop_assert_eq!(
+                info.preferred_size(),
+                full_size,
+                "Should report full size when no delta"
+            );
+        }
+    }
+
+    // Feature: dx-cli-hardening, Property 17: Update Version Display
+    // **Validates: Requirements 5.8**
+    //
+    // For any available update, the display output SHALL contain both the current
+    // version and the new version, plus a non-empty release notes summary if available.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_version_display_contains_both_versions(
+            major1 in 0u32..100,
+            minor1 in 0u32..100,
+            patch1 in 0u32..100,
+            major2 in 0u32..100,
+            minor2 in 0u32..100,
+            patch2 in 0u32..100
+        ) {
+            let current = format!("{}.{}.{}", major1, minor1, patch1);
+            let new_ver = format!("{}.{}.{}", major2, minor2, patch2);
+
+            let info = UpdateInfo {
+                current_version: current.clone(),
+                new_version: new_ver.clone(),
+                release_notes: "Bug fixes and improvements".to_string(),
+                download_url: String::new(),
+                delta_url: None,
+                full_size: 0,
+                delta_size: None,
+                signature: String::new(),
+            };
+
+            let display = info.version_display();
+
+            prop_assert!(
+                display.contains(&current),
+                "Display should contain current version: {} not in {}",
+                current,
+                display
+            );
+            prop_assert!(
+                display.contains(&new_ver),
+                "Display should contain new version: {} not in {}",
+                new_ver,
+                display
+            );
+        }
+
+        #[test]
+        fn prop_release_notes_preserved(notes in "[a-zA-Z0-9 ]{1,100}") {
+            let info = UpdateInfo {
+                current_version: "1.0.0".to_string(),
+                new_version: "1.1.0".to_string(),
+                release_notes: notes.clone(),
+                download_url: String::new(),
+                delta_url: None,
+                full_size: 0,
+                delta_size: None,
+                signature: String::new(),
+            };
+
+            prop_assert_eq!(
+                info.release_notes,
+                notes,
+                "Release notes should be preserved"
+            );
         }
     }
 }

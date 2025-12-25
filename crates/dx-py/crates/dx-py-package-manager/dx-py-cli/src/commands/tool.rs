@@ -1,23 +1,13 @@
 //! Global tool management (pipx replacement)
 
-use std::path::PathBuf;
-
+use dx_py_project_manager::ToolManager;
 use dx_py_core::Result;
 
-/// Get the tools directory
-fn tools_dir() -> PathBuf {
-    dirs::data_local_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join("dx-py")
-        .join("tools")
-}
-
 /// Install a tool globally
-pub fn install(name: &str, python: Option<&str>) -> Result<()> {
-    let tools_path = tools_dir();
-    let tool_path = tools_path.join(name);
+pub fn install(name: &str, _python: Option<&str>) -> Result<()> {
+    let tool_manager = ToolManager::new()?;
 
-    if tool_path.exists() {
+    if tool_manager.is_installed(name) {
         println!("Tool '{}' is already installed.", name);
         println!("Run 'dx-py tool uninstall {}' to remove it first.", name);
         return Ok(());
@@ -25,18 +15,23 @@ pub fn install(name: &str, python: Option<&str>) -> Result<()> {
 
     println!("Installing tool '{}'...", name);
 
-    if let Some(py) = python {
-        println!("Using Python {}", py);
+    match tool_manager.install(name) {
+        Ok(installed) => {
+            println!("✓ Tool '{}' installed successfully!", name);
+            println!("  Location: {}", installed.tool_dir.display());
+            if !installed.scripts.is_empty() {
+                println!("  Scripts:");
+                for script in &installed.scripts {
+                    println!("    - {}", script.display());
+                }
+            }
+            println!("\nMake sure {} is in your PATH", tool_manager.bin_dir().display());
+        }
+        Err(e) => {
+            eprintln!("✗ Failed to install '{}': {}", name, e);
+            return Err(e);
+        }
     }
-
-    // In a real implementation, we would:
-    // 1. Create an isolated virtual environment
-    // 2. Install the package
-    // 3. Create wrapper scripts in a bin directory
-
-    println!("(This is a placeholder - actual installation not implemented)");
-    println!("\nTo install tools manually:");
-    println!("  pip install --user {}", name);
 
     Ok(())
 }
@@ -45,69 +40,91 @@ pub fn install(name: &str, python: Option<&str>) -> Result<()> {
 pub fn run(name: &str, args: &[String]) -> Result<()> {
     println!("Running tool '{}' ephemerally...", name);
 
-    if !args.is_empty() {
-        println!("Arguments: {}", args.join(" "));
+    let tool_manager = ToolManager::new()?;
+
+    match tool_manager.run_ephemeral(name, args) {
+        Ok(exit_code) => {
+            if exit_code != 0 {
+                std::process::exit(exit_code);
+            }
+        }
+        Err(e) => {
+            eprintln!("✗ Failed to run '{}': {}", name, e);
+            return Err(e);
+        }
     }
-
-    // In a real implementation, we would:
-    // 1. Create a temporary virtual environment
-    // 2. Install the package
-    // 3. Run the command
-    // 4. Clean up
-
-    println!("(This is a placeholder - actual execution not implemented)");
-    println!("\nTo run tools manually:");
-    println!("  pipx run {} {}", name, args.join(" "));
 
     Ok(())
 }
 
 /// List installed tools
 pub fn list() -> Result<()> {
-    let tools_path = tools_dir();
+    let tool_manager = ToolManager::new()?;
+    let tools = tool_manager.list()?;
 
-    if !tools_path.exists() {
+    if tools.is_empty() {
         println!("No tools installed.");
         println!("\nTo install a tool:");
         println!("  dx-py tool install <name>");
         return Ok(());
     }
 
-    let entries: Vec<_> = std::fs::read_dir(&tools_path)?
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().is_dir())
-        .collect();
-
-    if entries.is_empty() {
-        println!("No tools installed.");
-        return Ok(());
-    }
-
     println!("Installed tools:\n");
 
-    for entry in entries {
-        let name = entry.file_name();
-        println!("  {}", name.to_string_lossy());
+    for name in tools {
+        println!("  {}", name);
     }
+
+    println!("\nTools directory: {}", tool_manager.tools_dir().display());
+    println!("Bin directory: {}", tool_manager.bin_dir().display());
 
     Ok(())
 }
 
 /// Uninstall a tool
 pub fn uninstall(name: &str) -> Result<()> {
-    let tools_path = tools_dir();
-    let tool_path = tools_path.join(name);
+    let tool_manager = ToolManager::new()?;
 
-    if !tool_path.exists() {
+    if !tool_manager.is_installed(name) {
         println!("Tool '{}' is not installed.", name);
         return Ok(());
     }
 
     println!("Uninstalling tool '{}'...", name);
 
-    std::fs::remove_dir_all(&tool_path)?;
+    match tool_manager.uninstall(name) {
+        Ok(()) => {
+            println!("✓ Tool '{}' uninstalled.", name);
+        }
+        Err(e) => {
+            eprintln!("✗ Failed to uninstall '{}': {}", name, e);
+            return Err(e);
+        }
+    }
 
-    println!("Tool '{}' uninstalled.", name);
+    Ok(())
+}
+
+/// Upgrade a tool to the latest version
+pub fn upgrade(name: &str) -> Result<()> {
+    let tool_manager = ToolManager::new()?;
+
+    if !tool_manager.is_installed(name) {
+        println!("Tool '{}' is not installed.", name);
+        return Ok(());
+    }
+
+    println!("Upgrading tool '{}'...", name);
+
+    match tool_manager.upgrade(name) {
+        Ok(()) => {
+            println!("✓ Tool '{}' upgraded.", name);
+        }
+        Err(e) => {
+            eprintln!("✗ Failed to upgrade '{}': {}", name, e);
+            return Err(e);
+        }
+    }
 
     Ok(())
 }

@@ -174,128 +174,128 @@ This implementation plan transforms the DX CLI from a functional prototype into 
     - Check network availability
     - _Requirements: 3.7, 11.4_
 
-- [-] 9. Implement Resource Manager
-  - [-] 9.1 Create ResourceManager struct
+- [x] 9. Implement Resource Manager
+  - [x] 9.1 Create ResourceManager struct
     - Track temp files and child processes
     - Implement process semaphore for limiting
     - _Requirements: 9.1, 9.7_
 
-  - [ ] 9.2 Implement register_temp_file and create_temp_file
+  - [x] 9.2 Implement register_temp_file and create_temp_file
     - Track all temp files for cleanup
     - _Requirements: 9.4, 9.7_
 
-  - [ ] 9.3 Implement spawn_limited
+  - [x] 9.3 Implement spawn_limited
     - Acquire semaphore before spawning
     - Track child process for cleanup
     - _Requirements: 9.1_
 
-  - [ ] 9.4 Write property test for process limit enforcement
+  - [x] 9.4 Write property test for process limit enforcement
     - **Property 29: Process Limit Enforcement**
     - **Validates: Requirements 9.1**
 
-  - [ ] 9.5 Implement cleanup and Drop
+  - [x] 9.5 Implement cleanup and Drop
     - Remove all temp files
     - Terminate all child processes
     - _Requirements: 9.4, 9.5_
 
-  - [ ] 9.6 Implement check_disk_space
+  - [x] 9.6 Implement check_disk_space
     - Check available space on path's filesystem
     - Warn if below 100MB
     - _Requirements: 9.6_
 
-  - [ ] 9.7 Implement terminate_children with graceful shutdown
+  - [x] 9.7 Implement terminate_children with graceful shutdown
     - Send SIGTERM, wait timeout, then SIGKILL
     - _Requirements: 9.5_
 
-- [ ] 10. Checkpoint - Ensure resource management works
+- [x] 10. Checkpoint - Ensure resource management works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Implement Crash Reporter
-  - [ ] 11.1 Create CrashReport struct
+- [x] 11. Implement Crash Reporter
+  - [x] 11.1 Create CrashReport struct
     - Include all required fields (id, timestamp, version, os, arch, etc.)
     - Implement Serialize for JSON output
     - _Requirements: 10.5_
 
-  - [ ] 11.2 Implement CrashReporter::install
+  - [x] 11.2 Implement CrashReporter::install
     - Set custom panic hook
     - Integrate with ResourceManager for cleanup
     - _Requirements: 1.5_
 
-  - [ ] 11.3 Implement generate_report
+  - [x] 11.3 Implement generate_report
     - Capture panic message and location
     - Capture backtrace
     - Capture system info and recent commands
     - _Requirements: 1.5, 10.5_
 
-  - [ ] 11.4 Implement save_report
+  - [x] 11.4 Implement save_report
     - Save to ~/.dx/crash-reports/
     - Use timestamp in filename
     - _Requirements: 1.5_
 
-  - [ ] 11.5 Implement display_crash_message
+  - [x] 11.5 Implement display_crash_message
     - Show user-friendly message with report location
     - _Requirements: 1.5_
 
-- [ ] 12. Enhance Config Loader
-  - [ ] 12.1 Add field validation
+- [x] 12. Enhance Config Loader
+  - [x] 12.1 Add field validation
     - Validate types and ranges for all fields
     - Return ConfigInvalid with field name
     - _Requirements: 4.1_
 
-  - [ ] 12.2 Write property test for config field validation
+  - [x] 12.2 Write property test for config field validation
     - **Property 11: Config Field Validation**
     - **Validates: Requirements 4.1**
 
-  - [ ] 12.3 Write property test for config error location
+  - [x] 12.3 Write property test for config error location
     - **Property 4: Config Error Location Reporting**
     - **Validates: Requirements 1.4**
 
-  - [ ] 12.4 Implement unknown field detection
+  - [x] 12.4 Implement unknown field detection
     - Parse TOML and check for unknown keys
     - Log warnings but continue loading
     - _Requirements: 4.3_
 
-  - [ ] 12.5 Write property test for unknown fields
+  - [x] 12.5 Write property test for unknown fields
     - **Property 12: Unknown Config Fields Warning**
     - **Validates: Requirements 4.3**
 
-  - [ ] 12.6 Implement config merging
+  - [x] 12.6 Implement config merging
     - Load global config from ~/.dx/config.toml
     - Merge with local config (local overrides)
     - _Requirements: 4.5_
 
-  - [ ] 12.7 Write property test for config merge precedence
+  - [x] 12.7 Write property test for config merge precedence
     - **Property 13: Config Merge Precedence**
     - **Validates: Requirements 4.5**
 
-  - [ ] 12.8 Implement atomic save with backup
+  - [x] 12.8 Implement atomic save with backup
     - Write to temp file, then atomic rename
     - Create .bak backup before overwriting
     - _Requirements: 4.6, 4.7_
 
-  - [ ] 12.9 Write property test for config backup
+  - [x] 12.9 Write property test for config backup
     - **Property 14: Config Backup on Save**
     - **Validates: Requirements 4.7**
 
-  - [ ] 12.10 Enhance cache invalidation
+  - [x] 12.10 Enhance cache invalidation
     - Check source mtime vs cache mtime
     - Reload from source if stale
     - _Requirements: 4.4, 12.5_
 
-  - [ ] 12.11 Write property test for cache invalidation
+  - [x] 12.11 Write property test for cache invalidation
     - **Property 38: Cache Invalidation on Source Change**
     - **Validates: Requirements 12.5**
 
-- [ ] 13. Checkpoint - Ensure config loader enhancements work
+- [x] 13. Checkpoint - Ensure config loader enhancements work
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 14. Enhance Update System
-  - [ ] 14.1 Add signature verification
+- [-] 14. Enhance Update System
+  - [x] 14.1 Add signature verification
     - Verify Ed25519 signature before applying
     - Return SignatureInvalid on failure
     - _Requirements: 5.1, 5.2_
 
-  - [ ] 14.2 Write property test for signature verification
+  - [-] 14.2 Write property test for signature verification
     - **Property 15: Signature Verification Gates Updates**
     - **Validates: Requirements 5.1, 5.2**
 

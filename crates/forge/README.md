@@ -186,6 +186,67 @@ DX Forge provides:
 - **Injection Manager**: Fetches and caches components from storage
 - **Event Bus**: Global event streaming for observability
 
+## ⚡ Platform-Native I/O
+
+DX Forge automatically uses the most performant I/O backend for your platform:
+
+| Platform | Backend | Features |
+|----------|---------|----------|
+| Linux (5.1+) | io_uring | Batch submit, SQPOLL, zero-copy |
+| macOS | kqueue | VNode events, timer events |
+| Windows | IOCP | Overlapped I/O, directory changes |
+| Fallback | tokio | Cross-platform compatibility |
+
+### Usage
+
+```rust
+use dx_forge::{create_platform_io, PlatformIO, WriteOp};
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // Automatically selects the best backend
+    let io = create_platform_io();
+    println!("Using backend: {}", io.backend_name());
+    
+    // Single file operations
+    io.write_all(Path::new("file.txt"), b"Hello").await?;
+    let content = io.read_all(Path::new("file.txt")).await?;
+    
+    // Batch operations (optimized for io_uring)
+    let ops = vec![
+        WriteOp::new("a.txt", b"Content A".to_vec()),
+        WriteOp::new("b.txt", b"Content B".to_vec()),
+    ];
+    io.batch_write(&ops).await?;
+    
+    Ok(())
+}
+```
+
+### Configuration
+
+```rust
+use dx_forge::ForgeConfig;
+
+let config = ForgeConfig::new(".")
+    .with_max_file_handles(2048)      // Default: 1024
+    .with_operation_timeout(30);       // Seconds
+```
+
+### Metrics & Observability
+
+```rust
+use dx_forge::MetricsCollector;
+
+let metrics = MetricsCollector::new();
+// ... perform operations ...
+
+let stats = metrics.export_json();
+println!("Operations: {}", stats["operations_total"]);
+println!("Cache hit rate: {}%", stats["cache_hit_rate"]);
+println!("P99 latency: {}μs", stats["io_latency_p99_us"]);
+```
+
 ## 🔧 Configuration Magic Example
 
 The killer feature - instant config injection:

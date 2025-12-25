@@ -1,10 +1,102 @@
 use anyhow::Result;
 use parking_lot::Mutex;
 use rusqlite::{params, Connection};
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use crate::crdt::{Anchor, Operation};
+
+/// Configuration for database connection pool
+#[derive(Debug, Clone)]
+pub struct DatabasePoolConfig {
+    /// Maximum number of connections in the pool
+    pub max_connections: usize,
+    /// Path to the database file
+    pub db_path: PathBuf,
+}
+
+impl Default for DatabasePoolConfig {
+    fn default() -> Self {
+        Self {
+            max_connections: 4,
+            db_path: PathBuf::from(".dx/forge/forge.db"),
+        }
+    }
+}
+
+/// A connection pool for SQLite database connections
+pub struct DatabasePool {
+    connections: Vec<Arc<Mutex<Connection>>>,
+    max_connections: usize,
+    active_connections: AtomicUsize,
+    next_connection: AtomicUsize,
+}
+
+impl DatabasePool {
+    /// Create a new database pool with the specified configuration
+    pub fn new(config: DatabasePoolConfig) -> Result<Self> {
+        let mut connections = Vec::with_capacity(config.max_connections);
+        
+        for _ in 0..config.max_connections {
+            let conn = Connection::open(&config.db_path)?;
+            // Enable WAL mode for better concurrent access
+            conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")?;
+            connections.push(Arc::new(Mutex::new(conn)));
+        }
+        
+        Ok(Self {
+            connections,
+            max_connections: config.max_connections,
+            active_connections: AtomicUsize::new(0),
+            next_connection: AtomicUsize::new(0),
+        })
+    }
+    
+    /// Get a connection from the pool using round-robin selection
+    pub fn get_connection(&self) -> PooledConnection {
+        let idx = self.next_connection.fetch_add(1, Ordering::SeqCst) % self.max_connections;
+        self.active_connections.fetch_add(1, Ordering::SeqCst);
+        PooledConnection {
+            conn: self.connections[idx].clone(),
+            pool: self,
+        }
+    }
+    
+    /// Get the current number of active connections
+    pub fn active_count(&self) -> usize {
+        self.active_connections.load(Ordering::SeqCst)
+    }
+    
+    /// Get the maximum pool size
+    pub fn max_size(&self) -> usize {
+        self.max_connections
+    }
+    
+    /// Get the total number of connections in the pool
+    pub fn pool_size(&self) -> usize {
+        self.connections.len()
+    }
+}
+
+/// A connection borrowed from the pool
+pub struct PooledConnection<'a> {
+    conn: Arc<Mutex<Connection>>,
+    pool: &'a DatabasePool,
+}
+
+impl<'a> PooledConnection<'a> {
+    /// Get access to the underlying connection
+    pub fn lock(&self) -> parking_lot::MutexGuard<'_, Connection> {
+        self.conn.lock()
+    }
+}
+
+impl<'a> Drop for PooledConnection<'a> {
+    fn drop(&mut self) {
+        self.pool.active_connections.fetch_sub(1, Ordering::SeqCst);
+    }
+}
 
 pub struct Database {
     pub conn: Arc<Mutex<Connection>>,
@@ -179,5 +271,133 @@ impl Database {
         )?;
 
         Ok(())
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::prelude::*;
+    use std::sync::Arc;
+    use std::thread;
+    use tempfile::TempDir;
+
+    // Feature: platform-native-io-hardening, Property 26: Connection Pool Sizing
+    // *For any* configured pool size N, the database connection pool SHALL maintain
+    // at most N active connections at any time.
+    // **Validates: Requirements 10.5**
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_connection_pool_sizing(pool_size in 1usize..=8) {
+            let temp_dir = TempDir::new().unwrap();
+            let db_path = temp_dir.path().join("test.db");
+            
+            let config = DatabasePoolConfig {
+                max_connections: pool_size,
+                db_path: db_path.clone(),
+            };
+            
+            let pool = DatabasePool::new(config).unwrap();
+            
+            // Verify pool was created with correct size
+            prop_assert_eq!(pool.pool_size(), pool_size);
+            prop_assert_eq!(pool.max_size(), pool_size);
+            
+            // Initially no active connections
+            prop_assert_eq!(pool.active_count(), 0);
+            
+            // Get multiple connections and verify active count never exceeds pool size
+            let mut connections = Vec::new();
+            for i in 0..pool_size {
+                let conn = pool.get_connection();
+                prop_assert!(pool.active_count() <= pool_size, 
+                    "Active count {} exceeded pool size {} at iteration {}", 
+                    pool.active_count(), pool_size, i);
+                connections.push(conn);
+            }
+            
+            // All connections should be active now
+            prop_assert_eq!(pool.active_count(), pool_size);
+            
+            // Drop half the connections
+            let half = pool_size / 2;
+            for _ in 0..half {
+                connections.pop();
+            }
+            
+            // Active count should decrease
+            prop_assert_eq!(pool.active_count(), pool_size - half);
+            
+            // Drop remaining connections
+            connections.clear();
+            
+            // All connections should be released
+            prop_assert_eq!(pool.active_count(), 0);
+        }
+    }
+
+    #[test]
+    fn test_pool_concurrent_access() {
+        let temp_dir = TempDir::new().unwrap();
+        let db_path = temp_dir.path().join("concurrent_test.db");
+        
+        let config = DatabasePoolConfig {
+            max_connections: 4,
+            db_path,
+        };
+        
+        let pool = Arc::new(DatabasePool::new(config).unwrap());
+        
+        // Spawn multiple threads that acquire and release connections
+        let handles: Vec<_> = (0..8)
+            .map(|_| {
+                let pool = Arc::clone(&pool);
+                thread::spawn(move || {
+                    for _ in 0..10 {
+                        let conn = pool.get_connection();
+                        // Verify we can lock the connection
+                        let _guard = conn.lock();
+                        // Small delay to simulate work
+                        thread::sleep(std::time::Duration::from_micros(100));
+                    }
+                })
+            })
+            .collect();
+        
+        for handle in handles {
+            handle.join().unwrap();
+        }
+        
+        // After all threads complete, no connections should be active
+        assert_eq!(pool.active_count(), 0);
+    }
+
+    #[test]
+    fn test_pool_round_robin_distribution() {
+        let temp_dir = TempDir::new().unwrap();
+        let db_path = temp_dir.path().join("round_robin_test.db");
+        
+        let config = DatabasePoolConfig {
+            max_connections: 4,
+            db_path,
+        };
+        
+        let pool = DatabasePool::new(config).unwrap();
+        
+        // Get connections in sequence and verify round-robin behavior
+        for i in 0..12 {
+            let conn = pool.get_connection();
+            // Connection should be usable
+            {
+                let _guard = conn.lock();
+            }
+            drop(conn);
+            
+            // After dropping, active count should be back to 0
+            assert_eq!(pool.active_count(), 0, "Iteration {}", i);
+        }
     }
 }

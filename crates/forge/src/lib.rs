@@ -166,7 +166,7 @@ pub use watcher::{ChangeKind, ChangeSource, DualWatcher, FileChange, FileWatcher
 
 pub use context::{ComponentStateManager, UpdateResult};
 pub use crdt::{Operation, OperationType, Position};
-pub use storage::{Database, OperationLog};
+pub use storage::{Database, DatabasePool, DatabasePoolConfig, OperationLog, PooledConnection};
 
 // ========================================================================
 // Re-export DX tools support types

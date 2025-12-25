@@ -306,8 +306,8 @@ mod tests {
         assert!(FallbackBackend::is_available());
     }
 
-    #[test]
-    fn test_fallback_backend_name() {
+    #[tokio::test]
+    async fn test_fallback_backend_name() {
         let backend = FallbackBackend::new();
         assert_eq!(backend.backend_name(), "fallback");
     }

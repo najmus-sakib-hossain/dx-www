@@ -342,14 +342,14 @@ mod tests {
         assert!(IocpBackend::is_available());
     }
 
-    #[test]
-    fn test_iocp_backend_name() {
+    #[tokio::test]
+    async fn test_iocp_backend_name() {
         let backend = IocpBackend::new(4).unwrap();
         assert_eq!(backend.backend_name(), "iocp");
     }
 
-    #[test]
-    fn test_iocp_thread_count() {
+    #[tokio::test]
+    async fn test_iocp_thread_count() {
         let backend = IocpBackend::new(8).unwrap();
         assert_eq!(backend.thread_count(), 8);
     }
