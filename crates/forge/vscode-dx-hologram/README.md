@@ -147,6 +147,14 @@ Files named `dx` (no extension) get the DX logo as their icon.
 - dx-forge binary (from the DX project)
 - VS Code 1.85.0 or higher
 
+## Platform Support
+
+The extension works on all platforms supported by DX Forge:
+- **Linux** (kernel 5.1+) - Uses io_uring for high-performance I/O
+- **macOS** (11.0+) - Uses kqueue for efficient file watching
+- **Windows** (10/11) - Uses IOCP for async operations
+- **Other** - Falls back to tokio-based async I/O
+
 ## Installation
 
 1. Build the extension:

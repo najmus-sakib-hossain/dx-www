@@ -12,6 +12,34 @@ dx-forge = { version = "0.1.0", path = "../forge" } # Use path or crates.io vers
 anyhow = "1.0"
 ```
 
+## 2. Platform-Native I/O
+
+DX Forge automatically selects the best I/O backend for your platform:
+
+```rust
+use dx_forge::{create_platform_io, PlatformIO};
+use std::path::Path;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let io = create_platform_io();
+    println!("Using backend: {}", io.backend_name());
+    
+    // Read/write operations use platform-native APIs
+    io.write_all(Path::new("config.json"), b"{}").await?;
+    let content = io.read_all(Path::new("config.json")).await?;
+    
+    Ok(())
+}
+```
+
+| Platform | Backend | Min Version |
+|----------|---------|-------------|
+| Linux | io_uring | Kernel 5.1+ |
+| macOS | kqueue | 11.0+ |
+| Windows | IOCP | 10/Server 2019+ |
+| Other | tokio | Any |
+
 ## 2. Creating a DX Tool
 
 To create a tool that integrates with Forge, implement the `DxTool` trait.
@@ -191,4 +219,104 @@ let commit_id = commit_current_dx_state("Applied UI updates")?;
 
 // Revert to a previous state
 checkout_dx_state(&commit_id)?;
+```
+
+## 10. Resource Management
+
+Control concurrent file handles and ensure graceful shutdown:
+
+```rust
+use dx_forge::ResourceManager;
+use std::time::Duration;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // Limit concurrent file handles (default: 1024)
+    let manager = ResourceManager::new(2048);
+    
+    // Acquire handle with RAII guard
+    let guard = manager.acquire_handle().await?;
+    // Handle automatically released when guard drops
+    
+    // Check resource usage
+    println!("Active handles: {}", manager.active_handles());
+    println!("Available: {}", manager.available_handles());
+    
+    // Graceful shutdown
+    manager.shutdown(Duration::from_secs(30)).await?;
+    Ok(())
+}
+```
+
+## 11. Metrics & Observability
+
+Collect and export performance metrics:
+
+```rust
+use dx_forge::MetricsCollector;
+use std::time::Duration;
+
+let metrics = MetricsCollector::new();
+
+// Record operations
+metrics.record_io_operation(Duration::from_millis(5), true);
+metrics.record_cache_hit();
+metrics.set_files_watched(100);
+
+// Export as JSON
+let stats = metrics.export_json();
+println!("{}", serde_json::to_string_pretty(&stats)?);
+
+// Available metrics:
+// - files_watched
+// - operations_total
+// - cache_hit_rate
+// - errors_total
+// - io_latency_p50_us, io_latency_p95_us, io_latency_p99_us
+```
+
+## 12. Configuration Validation
+
+Validate configuration at startup:
+
+```rust
+use dx_forge::{ConfigValidator, ForgeConfig};
+
+let config = ForgeConfig::new(".");
+
+match ConfigValidator::validate(&config) {
+    Ok(_) => println!("Configuration valid"),
+    Err(errors) => {
+        for err in errors {
+            eprintln!("Error in '{}': {}", err.field, err.message);
+            eprintln!("  Suggestion: {}", err.suggestion);
+        }
+        std::process::exit(1);
+    }
+}
+```
+
+## 13. Graceful Shutdown
+
+Handle shutdown signals properly:
+
+```rust
+use dx_forge::{ShutdownHandler, ShutdownConfig, ExitCode};
+
+let handler = ShutdownHandler::new(ShutdownConfig {
+    timeout: std::time::Duration::from_secs(30),
+    force_after_timeout: true,
+    flush_logs: true,
+    save_state: true,
+});
+
+// Subscribe to shutdown notifications
+let mut rx = handler.subscribe();
+tokio::spawn(async move {
+    rx.recv().await;
+    println!("Shutdown signal received");
+});
+
+// When ready to shutdown
+handler.initiate_shutdown();
 ```

@@ -193,14 +193,15 @@ DX Forge automatically uses the most performant I/O backend for your platform:
 | Platform | Backend | Features |
 |----------|---------|----------|
 | Linux (5.1+) | io_uring | Batch submit, SQPOLL, zero-copy |
-| macOS | kqueue | VNode events, timer events |
-| Windows | IOCP | Overlapped I/O, directory changes |
+| macOS (11.0+) | kqueue | VNode events, timer events |
+| Windows (10+) | IOCP | Overlapped I/O, directory changes |
 | Fallback | tokio | Cross-platform compatibility |
 
 ### Usage
 
 ```rust
 use dx_forge::{create_platform_io, PlatformIO, WriteOp};
+use std::path::Path;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -223,14 +224,26 @@ async fn main() -> anyhow::Result<()> {
 }
 ```
 
-### Configuration
+### Resource Management
 
 ```rust
-use dx_forge::ForgeConfig;
+use dx_forge::ResourceManager;
+use std::time::Duration;
 
-let config = ForgeConfig::new(".")
-    .with_max_file_handles(2048)      // Default: 1024
-    .with_operation_timeout(30);       // Seconds
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // Limit concurrent file handles (default: 1024)
+    let manager = ResourceManager::new(2048);
+    
+    // Acquire handle with RAII guard
+    let guard = manager.acquire_handle().await?;
+    // ... use handle ...
+    // Automatically released when guard drops
+    
+    // Graceful shutdown with timeout
+    manager.shutdown(Duration::from_secs(30)).await?;
+    Ok(())
+}
 ```
 
 ### Metrics & Observability
@@ -245,6 +258,40 @@ let stats = metrics.export_json();
 println!("Operations: {}", stats["operations_total"]);
 println!("Cache hit rate: {}%", stats["cache_hit_rate"]);
 println!("P99 latency: {}μs", stats["io_latency_p99_us"]);
+```
+
+### Configuration Validation
+
+```rust
+use dx_forge::{ConfigValidator, ForgeConfig};
+
+let config = ForgeConfig::new(".");
+match ConfigValidator::validate(&config) {
+    Ok(_) => println!("Configuration valid"),
+    Err(errors) => {
+        for err in errors {
+            println!("Error in {}: {} ({})", err.field, err.message, err.suggestion);
+        }
+    }
+}
+```
+
+### Graceful Shutdown
+
+```rust
+use dx_forge::{ShutdownHandler, ShutdownConfig, ExitCode};
+
+let handler = ShutdownHandler::new(ShutdownConfig::default());
+
+// Subscribe to shutdown signals
+let mut rx = handler.subscribe();
+tokio::spawn(async move {
+    rx.recv().await;
+    println!("Shutdown initiated");
+});
+
+// Initiate graceful shutdown
+handler.initiate_shutdown();
 ```
 
 ## 🔧 Configuration Magic Example

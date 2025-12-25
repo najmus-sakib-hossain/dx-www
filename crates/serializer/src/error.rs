@@ -58,6 +58,15 @@ pub const DX_MAGIC: [u8; 2] = [0x5A, 0x44]; // "ZD" in ASCII
 /// Current binary format version
 pub const DX_VERSION: u8 = 1;
 
+/// Maximum input size (100 MB) - prevents memory exhaustion attacks
+pub const MAX_INPUT_SIZE: usize = 100 * 1024 * 1024;
+
+/// Maximum recursion depth for nested structures - prevents stack overflow
+pub const MAX_RECURSION_DEPTH: usize = 1000;
+
+/// Maximum table row count - prevents memory exhaustion
+pub const MAX_TABLE_ROWS: usize = 10_000_000;
+
 /// Comprehensive error type for all DX serializer operations
 #[derive(Error, Debug, Clone, PartialEq)]
 pub enum DxError {
@@ -177,6 +186,20 @@ pub enum DxError {
     /// Prefix inheritance failed
     #[error("Prefix inheritance failed: {0}")]
     PrefixError(String),
+
+    // === Resource Limit Errors ===
+    
+    /// Input size exceeds maximum allowed
+    #[error("Input too large: {size} bytes exceeds maximum of {max} bytes")]
+    InputTooLarge { size: usize, max: usize },
+
+    /// Recursion depth exceeds maximum allowed
+    #[error("Recursion limit exceeded: depth {depth} exceeds maximum of {max}")]
+    RecursionLimitExceeded { depth: usize, max: usize },
+
+    /// Table row count exceeds maximum allowed
+    #[error("Table too large: {rows} rows exceeds maximum of {max} rows")]
+    TableTooLarge { rows: usize, max: usize },
 }
 
 impl DxError {
@@ -218,6 +241,21 @@ impl DxError {
     /// Create a buffer too small error
     pub fn buffer_too_small(required: usize, available: usize) -> Self {
         DxError::BufferTooSmall { required, available }
+    }
+
+    /// Create an input too large error
+    pub fn input_too_large(size: usize) -> Self {
+        DxError::InputTooLarge { size, max: MAX_INPUT_SIZE }
+    }
+
+    /// Create a recursion limit exceeded error
+    pub fn recursion_limit_exceeded(depth: usize) -> Self {
+        DxError::RecursionLimitExceeded { depth, max: MAX_RECURSION_DEPTH }
+    }
+
+    /// Create a table too large error
+    pub fn table_too_large(rows: usize) -> Self {
+        DxError::TableTooLarge { rows, max: MAX_TABLE_ROWS }
     }
 
     /// Get the byte offset if available

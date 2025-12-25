@@ -224,6 +224,11 @@ impl<'a> Parser<'a> {
             }
         }
 
+        // Defensive: Check recursion depth (prefix stack depth)
+        if self.prefix_stack.len() > crate::error::MAX_RECURSION_DEPTH {
+            return Err(DxError::recursion_limit_exceeded(self.prefix_stack.len()));
+        }
+
         // Read the key
         match self.tokenizer.next_token()? {
             Token::Ident(bytes) => {
@@ -421,6 +426,11 @@ impl<'a> Parser<'a> {
             prev_row = Some(row.clone());
             table.add_row(row).map_err(DxError::SchemaError)?;
 
+            // Defensive: Check table row count limit
+            if table.rows.len() > crate::error::MAX_TABLE_ROWS {
+                return Err(DxError::table_too_large(table.rows.len()));
+            }
+
             // Check for end of line
             self.tokenizer.skip_whitespace();
             if matches!(self.tokenizer.peek(), Some(b'\n')) {
@@ -544,17 +554,34 @@ impl<'a> Parser<'a> {
 }
 
 /// Parse DX bytes into a value
+/// 
+/// # Errors
+/// 
+/// Returns `DxError::InputTooLarge` if input exceeds `MAX_INPUT_SIZE` (100 MB).
 pub fn parse(input: &[u8]) -> Result<DxValue> {
+    // Defensive: Check input size before parsing
+    if input.len() > crate::error::MAX_INPUT_SIZE {
+        return Err(DxError::input_too_large(input.len()));
+    }
+    
     let mut parser = Parser::new(input);
     parser.parse()
 }
 
 /// Parse DX from string
+/// 
+/// # Errors
+/// 
+/// Returns `DxError::InputTooLarge` if input exceeds `MAX_INPUT_SIZE` (100 MB).
 pub fn parse_str(input: &str) -> Result<DxValue> {
     parse(input.as_bytes())
 }
 
 /// Stream parser for large files
+/// 
+/// # Errors
+/// 
+/// Returns `DxError::InputTooLarge` if input exceeds `MAX_INPUT_SIZE` (100 MB).
 pub fn parse_stream<R: std::io::Read>(reader: R) -> Result<DxValue> {
     let mut buffer = Vec::new();
     let mut reader = reader;

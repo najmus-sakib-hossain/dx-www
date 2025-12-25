@@ -6,3 +6,4 @@
 # everyone who runs the test benefits from these saved cases.
 cc d9b1722ad647a799eb8aecd95b1183ac159156ce17a824ce3ba0b4d02678eccf # shrinks to value = Object(DxObject { fields: [("a", Float(1.9912281978685986e184))], lookup: {"a": 0} })
 cc 6953be3f497e93f7110a0c9f2db351c60ff7efda06b07901ce93bc63c3046f40 # shrinks to input = "a:0a"
+cc 657cd95a36f5215b2f1ce267e9c307c9d6e10af3e6ad06bf6fdf377ad63be01c # shrinks to input = "a:0ea"

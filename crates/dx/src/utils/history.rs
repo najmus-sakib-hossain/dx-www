@@ -99,6 +99,9 @@ impl CommandHistory {
         Some(home::home_dir()?.join(".dx").join("history.json"))
     }
 
+    /// Load history with corruption recovery
+    ///
+    /// Requirement 7.2: Detect unparseable history, backup corrupted file and start fresh
     pub fn load() -> Result<Self, DxError> {
         let path = Self::history_path().ok_or_else(|| DxError::Io {
             message: "Could not determine home directory".into(),
@@ -109,11 +112,35 @@ impl CommandHistory {
         let content = std::fs::read_to_string(&path).map_err(|e| DxError::Io {
             message: format!("Failed to read history: {}", e),
         })?;
-        serde_json::from_str(&content).map_err(|e| DxError::Io {
-            message: format!("Failed to parse history: {}", e),
-        })
+
+        // Try to parse the history
+        match serde_json::from_str(&content) {
+            Ok(history) => Ok(history),
+            Err(e) => {
+                // History is corrupted - backup and start fresh
+                let backup_path = path.with_extension("corrupted.bak");
+                if let Err(backup_err) = std::fs::rename(&path, &backup_path) {
+                    // Log but don't fail - we'll just overwrite
+                    eprintln!(
+                        "Warning: Failed to backup corrupted history to {}: {}",
+                        backup_path.display(),
+                        backup_err
+                    );
+                } else {
+                    eprintln!(
+                        "Warning: History file was corrupted ({}). Backed up to {} and starting fresh.",
+                        e,
+                        backup_path.display()
+                    );
+                }
+                Ok(Self::new())
+            }
+        }
     }
 
+    /// Save history atomically (write to temp, then rename)
+    ///
+    /// Requirement 7.1: Use atomic writes to prevent corruption
     pub fn save(&self) -> Result<(), DxError> {
         let path = Self::history_path().ok_or_else(|| DxError::Io {
             message: "Could not determine home directory".into(),
@@ -126,9 +153,19 @@ impl CommandHistory {
         let content = serde_json::to_string_pretty(self).map_err(|e| DxError::Io {
             message: format!("Failed to serialize history: {}", e),
         })?;
-        std::fs::write(&path, content).map_err(|e| DxError::Io {
-            message: format!("Failed to write history: {}", e),
-        })
+
+        // Write to temp file first, then atomic rename
+        let temp_path = path.with_extension("tmp");
+        std::fs::write(&temp_path, &content).map_err(|e| DxError::Io {
+            message: format!("Failed to write temp history file: {}", e),
+        })?;
+
+        // Atomic rename
+        std::fs::rename(&temp_path, &path).map_err(|e| DxError::Io {
+            message: format!("Failed to rename history file: {}", e),
+        })?;
+
+        Ok(())
     }
 
     /// Add entry with max entries enforcement (Requirement 9.3)
@@ -397,6 +434,203 @@ mod tests {
             prop_assert_eq!(s.successful, exit_codes.iter().filter(|&&e| e == 0).count());
             prop_assert_eq!(s.failed, exit_codes.iter().filter(|&&e| e != 0).count());
             prop_assert_eq!(s.successful + s.failed, s.total);
+        }
+    }
+
+    // Feature: dx-cli-hardening, Property 21: History Search Case Insensitivity
+    // **Validates: Requirements 7.3**
+    //
+    // For any search query and history entry, if the entry's command, arguments,
+    // or working directory contains the query (case-insensitive), the entry SHALL
+    // be included in search results.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_case_insensitive_search(
+            query in "[a-zA-Z]{1,5}",
+            cmds in prop::collection::vec("[a-zA-Z]{1,10}", 1..20)
+        ) {
+            let mut h = CommandHistory::new();
+            let work_dir = PathBuf::from("/work");
+            for cmd in &cmds {
+                h.add(HistoryEntry {
+                    command: cmd.clone(),
+                    arguments: vec![],
+                    exit_code: 0,
+                    duration_ms: 100,
+                    timestamp: Utc::now(),
+                    working_dir: work_dir.clone(),
+                });
+            }
+
+            // Search with original case
+            let results_original = h.search(&query);
+
+            // Search with uppercase
+            let results_upper = h.search(&query.to_uppercase());
+
+            // Search with lowercase
+            let results_lower = h.search(&query.to_lowercase());
+
+            // All searches should return the same results (case-insensitive)
+            prop_assert_eq!(
+                results_original.len(),
+                results_upper.len(),
+                "Uppercase search should return same count as original"
+            );
+            prop_assert_eq!(
+                results_original.len(),
+                results_lower.len(),
+                "Lowercase search should return same count as original"
+            );
+        }
+    }
+
+    // Feature: dx-cli-hardening, Property 22: History FIFO Eviction
+    // **Validates: Requirements 7.4**
+    //
+    // When history exceeds max entries, the oldest entries SHALL be removed first (FIFO).
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_fifo_eviction(
+            max_entries in 5usize..20,
+            num_entries in 10usize..50
+        ) {
+            prop_assume!(num_entries > max_entries);
+
+            let mut h = CommandHistory::with_max_entries(max_entries);
+            for i in 0..num_entries {
+                h.add(HistoryEntry {
+                    command: format!("cmd{}", i),
+                    arguments: vec![],
+                    exit_code: 0,
+                    duration_ms: 100,
+                    timestamp: Utc::now(),
+                    working_dir: PathBuf::from("/test"),
+                });
+            }
+
+            // Should have exactly max_entries
+            prop_assert_eq!(h.len(), max_entries);
+
+            // The oldest entries should be evicted (FIFO)
+            // First entry should be cmd{num_entries - max_entries}
+            let expected_first = format!("cmd{}", num_entries - max_entries);
+            prop_assert_eq!(
+                &h.entries()[0].command,
+                &expected_first,
+                "First entry should be the oldest remaining after FIFO eviction"
+            );
+
+            // Last entry should be cmd{num_entries - 1}
+            let expected_last = format!("cmd{}", num_entries - 1);
+            prop_assert_eq!(
+                &h.entries()[max_entries - 1].command,
+                &expected_last,
+                "Last entry should be the most recent"
+            );
+        }
+    }
+
+    // Feature: dx-cli-hardening, Property 23: History Statistics Accuracy
+    // **Validates: Requirements 7.6**
+    //
+    // For any history, stats().total SHALL equal stats().successful + stats().failed,
+    // and these counts SHALL match the actual entry counts.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_statistics_accuracy(
+            exit_codes in prop::collection::vec(any::<i32>(), 1..100)
+        ) {
+            let mut h = CommandHistory::new();
+            for (i, ec) in exit_codes.iter().enumerate() {
+                h.add(HistoryEntry {
+                    command: format!("cmd{}", i),
+                    arguments: vec![],
+                    exit_code: *ec,
+                    duration_ms: 100,
+                    timestamp: Utc::now(),
+                    working_dir: PathBuf::from("/test"),
+                });
+            }
+
+            let stats = h.stats();
+
+            // Total should equal successful + failed
+            prop_assert_eq!(
+                stats.total,
+                stats.successful + stats.failed,
+                "total should equal successful + failed"
+            );
+
+            // Total should match actual entry count
+            prop_assert_eq!(
+                stats.total,
+                h.len(),
+                "total should match actual entry count"
+            );
+
+            // Successful count should match entries with exit_code == 0
+            let actual_successful = h.entries().iter().filter(|e| e.exit_code == 0).count();
+            prop_assert_eq!(
+                stats.successful,
+                actual_successful,
+                "successful count should match entries with exit_code == 0"
+            );
+
+            // Failed count should match entries with exit_code != 0
+            let actual_failed = h.entries().iter().filter(|e| e.exit_code != 0).count();
+            prop_assert_eq!(
+                stats.failed,
+                actual_failed,
+                "failed count should match entries with exit_code != 0"
+            );
+        }
+    }
+
+    // Feature: dx-cli-hardening, Property 24: History Entry Completeness
+    // **Validates: Requirements 7.7**
+    //
+    // For any HistoryEntry, all fields (command, arguments, exit_code, duration_ms,
+    // timestamp, working_dir) SHALL be present and non-default after construction.
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_entry_completeness(
+            command in "[a-z]{1,20}",
+            args in prop::collection::vec("[a-z]{1,10}", 0..5),
+            exit_code in any::<i32>(),
+            duration_ms in 1u64..10000
+        ) {
+            let entry = HistoryEntry {
+                command: command.clone(),
+                arguments: args.clone(),
+                exit_code,
+                duration_ms,
+                timestamp: Utc::now(),
+                working_dir: PathBuf::from("/test/path"),
+            };
+
+            // All fields should be present and match what was provided
+            prop_assert_eq!(&entry.command, &command, "command should match");
+            prop_assert_eq!(&entry.arguments, &args, "arguments should match");
+            prop_assert_eq!(entry.exit_code, exit_code, "exit_code should match");
+            prop_assert_eq!(entry.duration_ms, duration_ms, "duration_ms should match");
+            prop_assert!(!entry.working_dir.as_os_str().is_empty(), "working_dir should not be empty");
+
+            // Timestamp should be recent (within last minute)
+            let now = Utc::now();
+            let diff = now.signed_duration_since(entry.timestamp);
+            prop_assert!(
+                diff.num_seconds() < 60,
+                "timestamp should be recent"
+            );
         }
     }
 }

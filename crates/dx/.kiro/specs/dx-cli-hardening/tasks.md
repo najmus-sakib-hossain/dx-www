@@ -289,65 +289,65 @@ This implementation plan transforms the DX CLI from a functional prototype into 
 - [x] 13. Checkpoint - Ensure config loader enhancements work
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 14. Enhance Update System
+- [x] 14. Enhance Update System
   - [x] 14.1 Add signature verification
     - Verify Ed25519 signature before applying
     - Return SignatureInvalid on failure
     - _Requirements: 5.1, 5.2_
 
-  - [-] 14.2 Write property test for signature verification
+  - [x] 14.2 Write property test for signature verification
     - **Property 15: Signature Verification Gates Updates**
     - **Validates: Requirements 5.1, 5.2**
 
-  - [ ] 14.3 Write property test for delta preference
+  - [x] 14.3 Write property test for delta preference
     - **Property 16: Delta Patch Preference**
     - **Validates: Requirements 5.5**
 
-  - [ ] 14.4 Write property test for version display
+  - [x] 14.4 Write property test for version display
     - **Property 17: Update Version Display**
     - **Validates: Requirements 5.8**
 
-  - [ ] 14.5 Implement backup before update
+  - [x] 14.5 Implement backup before update
     - Create backup of current binary
     - _Requirements: 5.3_
 
-  - [ ] 14.6 Implement restore on failure
+  - [x] 14.6 Implement restore on failure
     - Restore from backup if update fails
     - _Requirements: 5.4_
 
-  - [ ] 14.7 Implement atomic binary replacement
+  - [x] 14.7 Implement atomic binary replacement
     - Write to temp, then atomic rename
     - _Requirements: 5.7, 12.4_
 
-- [ ] 15. Enhance Shell Integration
-  - [ ] 15.1 Write property test for duplicate detection
+- [x] 15. Enhance Shell Integration
+  - [x] 15.1 Write property test for duplicate detection
     - **Property 18: Shell Integration Duplicate Detection**
     - **Validates: Requirements 6.3**
 
-  - [ ] 15.2 Write property test for idempotence
+  - [x] 15.2 Write property test for idempotence
     - **Property 19: Shell Integration Idempotence**
     - **Validates: Requirements 6.7**
 
-  - [ ] 15.3 Write property test for completion validity
+  - [x] 15.3 Write property test for completion validity
     - **Property 20: Completion Script Validity**
     - **Validates: Requirements 6.6**
 
-  - [ ] 15.4 Implement config file creation with permissions
+  - [x] 15.4 Implement config file creation with permissions
     - Create parent directories if needed
     - Set 0644 permissions on Unix
     - _Requirements: 6.2_
 
-  - [ ] 15.5 Implement clean uninstall
+  - [x] 15.5 Implement clean uninstall
     - Remove only DX-related content
     - Preserve other configuration
     - _Requirements: 6.4_
 
-- [ ] 16. Enhance History Manager
-  - [ ] 16.1 Implement atomic history saves
+- [-] 16. Enhance History Manager
+  - [x] 16.1 Implement atomic history saves
     - Write to temp file, then rename
     - _Requirements: 7.1_
 
-  - [ ] 16.2 Implement corruption recovery
+  - [x] 16.2 Implement corruption recovery
     - Detect unparseable history
     - Backup corrupted file and start fresh
     - _Requirements: 7.2_

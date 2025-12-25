@@ -83,11 +83,19 @@ Access via File → Preferences → Settings → Extensions → DX Forge Watcher
 ## How It Works
 
 The extension monitors:
-1. **File System Changes** - Watches workspace files for modifications
+1. **File System Changes** - Watches workspace files for modifications using platform-native I/O (io_uring/kqueue/IOCP)
 2. **Forge Database** - Monitors `.dx/forge/forge.db` for operation logs
 3. **VS Code Events** - Integrates with VS Code's file system watcher
 
 All changes are beautifully formatted and displayed in the "Forge Operations" output channel.
+
+## Platform-Native Performance
+
+The extension leverages DX Forge's platform-native I/O layer:
+- **Linux**: io_uring for maximum throughput
+- **macOS**: kqueue for efficient event notification
+- **Windows**: IOCP for async I/O operations
+- **Fallback**: tokio for cross-platform compatibility
 
 ## Development
 

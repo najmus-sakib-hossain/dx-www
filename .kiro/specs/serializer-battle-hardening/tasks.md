@@ -6,86 +6,86 @@ This implementation plan adds comprehensive property-based tests and defensive v
 
 ## Tasks
 
-- [-] 1. Set up property testing infrastructure
+- [x] 1. Set up property testing infrastructure
   - Add proptest dependency if not present in Cargo.toml
   - Create test module structure under `crates/serializer/tests/property_tests/`
   - _Requirements: Testing Strategy_
 
-- [ ] 2. Implement parser input validation properties
-  - [ ] 2.1 Add property test for null byte handling
+- [x] 2. Implement parser input validation properties
+  - [x] 2.1 Add property test for null byte handling
     - **Property 1: Null Byte Handling**
     - Generate strings with null bytes at random positions
     - Verify parser doesn't panic
     - _Requirements: 1.1_
-  - [ ] 2.2 Add property test for UTF-8 validation with offset
+  - [x] 2.2 Add property test for UTF-8 validation with offset
     - **Property 2: UTF-8 Validation with Offset**
     - Generate byte sequences with invalid UTF-8
     - Verify error offset matches first invalid byte
     - _Requirements: 1.4_
-  - [ ] 2.3 Add property test for error position reporting
+  - [x] 2.3 Add property test for error position reporting
     - **Property 3: Error Position Reporting**
     - Generate syntactically invalid inputs
     - Verify errors contain line, column, and offset
     - _Requirements: 1.5, 7.1_
 
-- [ ] 3. Implement tokenizer robustness properties
-  - [ ] 3.1 Add property test for integer overflow detection
+- [x] 3. Implement tokenizer robustness properties
+  - [x] 3.1 Add property test for integer overflow detection
     - **Property 4: Integer Overflow Detection**
     - Generate numbers outside i64 range
     - Verify IntegerOverflow error is returned
     - _Requirements: 2.1_
-  - [ ] 3.2 Add property test for invalid float detection
+  - [x] 3.2 Add property test for invalid float detection
     - **Property 5: Invalid Float Detection**
     - Generate malformed float strings (e.g., "1.2.3", "1e2e3")
     - Verify InvalidNumber error is returned
     - _Requirements: 2.2_
-  - [ ] 3.3 Add property test for EOF handling
+  - [x] 3.3 Add property test for EOF handling
     - **Property 6: EOF Handling**
     - Generate valid inputs, consume all tokens
     - Verify subsequent next_token() returns Eof
     - _Requirements: 2.3_
-  - [ ] 3.4 Add property test for control character handling
+  - [x] 3.4 Add property test for control character handling
     - **Property 7: Control Character Handling**
     - Generate inputs with control characters
     - Verify consistent handling
     - _Requirements: 2.4_
 
-- [ ] 4. Checkpoint - Ensure all tests pass
+- [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement round-trip consistency properties
-  - [ ] 5.1 Add property test for DxValue round-trip
+- [x] 5. Implement round-trip consistency properties
+  - [x] 5.1 Add property test for DxValue round-trip
     - **Property 8: DxValue Round-Trip**
     - Generate arbitrary DxValue objects
     - Serialize to DX format, parse back
     - Verify semantic equivalence
     - _Requirements: 3.1, 10.1_
-  - [ ] 5.2 Add property test for Human format round-trip
+  - [x] 5.2 Add property test for Human format round-trip
     - **Property 9: Human Format Round-Trip**
     - Generate DxDocument objects
     - Format to Human, parse back
     - Verify semantic equivalence
     - _Requirements: 3.2_
-  - [ ] 5.3 Add property test for LLM format round-trip
+  - [x] 5.3 Add property test for LLM format round-trip
     - **Property 10: LLM Format Round-Trip**
     - Generate DxDocument objects
     - Format to LLM, parse back
     - Verify semantic equivalence
     - _Requirements: 3.3_
-  - [ ] 5.4 Add property test for binary format round-trip
+  - [x] 5.4 Add property test for binary format round-trip
     - **Property 11: Binary Format Round-Trip**
     - Generate valid DX-Zero bytes
     - Read and write back
     - Verify byte-for-byte identity
     - _Requirements: 3.4_
 
-- [ ] 6. Implement binary format security properties
-  - [ ] 6.1 Add property test for header validation
+- [x] 6. Implement binary format security properties
+  - [x] 6.1 Add property test for header validation
     - **Property 12: Header Validation**
     - Generate bytes with invalid magic, version, or flags
     - Verify appropriate errors before data access
     - _Requirements: 4.1, 4.2, 4.5_
-  - [ ] 6.2 Add property test for heap bounds checking
+  - [x] 6.2 Add property test for heap bounds checking
     - **Property 13: Heap Bounds Checking**
     - Generate slots with out-of-bounds heap references
     - Verify out-of-bounds error is returned
@@ -159,24 +159,24 @@ This implementation plan adds comprehensive property-based tests and defensive v
     - Verify original string is recovered
     - _Requirements: 10.2_
 
-- [ ] 14. Add defensive code improvements
-  - [ ] 14.1 Add input size validation to parser
+- [x] 14. Add defensive code improvements
+  - [x] 14.1 Add input size validation to parser
     - Add MAX_INPUT_SIZE constant (100MB)
     - Check input size before parsing
     - Return InputTooLarge error if exceeded
     - _Requirements: 1.2_
-  - [ ] 14.2 Add recursion depth tracking to parser
+  - [x] 14.2 Add recursion depth tracking to parser
     - Add MAX_RECURSION_DEPTH constant (1000)
     - Track depth during nested structure parsing
     - Return RecursionLimitExceeded error if exceeded
     - _Requirements: 1.3_
-  - [ ] 14.3 Add table row limit to parser
+  - [x] 14.3 Add table row limit to parser
     - Add MAX_TABLE_ROWS constant (10 million)
     - Check row count during table parsing
     - Return TableTooLarge error if exceeded
     - _Requirements: 6.2_
 
-- [ ] 15. Final checkpoint - Ensure all tests pass
+- [x] 15. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
   - Run full test suite with `cargo test --all-features`
   - Verify no regressions in existing tests

@@ -9,6 +9,7 @@ This is a demonstration repository for the Forge version control system.
 3. **Traffic Branches** - Red/Yellow/Green deployment branches
 4. **LSP Detection** - Smart change detection via Language Server Protocol
 5. **CRDT Sync** - Conflict-free replicated data types for real-time collaboration
+6. **Platform-Native I/O** - io_uring (Linux), kqueue (macOS), IOCP (Windows)
 
 ## Files in This Demo
 
@@ -41,3 +42,19 @@ All blobs are stored in Cloudflare R2 with:
 - SHA-256 content addressing
 - Zero egress fees
 - 99.999999999% durability
+
+## Platform-Native I/O
+
+Forge automatically uses the best I/O backend for your platform:
+
+| Platform | Backend | Features |
+|----------|---------|----------|
+| Linux 5.1+ | io_uring | Batch submit, SQPOLL |
+| macOS 11+ | kqueue | VNode events |
+| Windows 10+ | IOCP | Overlapped I/O |
+| Other | tokio | Cross-platform fallback |
+
+```bash
+# Check which backend is active
+forge info --backend
+```
