@@ -14,6 +14,47 @@ A modern, high-performance command-line interface that provides unified control 
 
 DX CLI is the central orchestration tool for the DX ecosystem—a comprehensive suite of development tools designed around binary-first principles. It provides a single entry point to manage assets, infrastructure, and development workflows with consistent, beautiful terminal output.
 
+## Hardening Features
+
+DX CLI includes comprehensive production hardening for reliability and robustness:
+
+### Error Handling & Recovery
+- Automatic retry with exponential backoff (1s, 2s, 4s) for transient network failures
+- Comprehensive error messages with actionable hints and remediation steps
+- Crash reporting with diagnostic information saved to `~/.dx/crash-reports/`
+- Graceful signal handling (Ctrl+C) with resource cleanup
+
+### Cross-Platform Support
+- Unicode path handling (emoji, CJK, RTL scripts)
+- Windows long path support (>260 characters)
+- Platform-native path separator normalization
+- Symlink resolution with loop detection (40 levels max)
+
+### Network Resilience
+- Proxy support via HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
+- Offline mode detection with graceful degradation
+- Resumable downloads for large files (>1MB)
+- TLS certificate error guidance
+
+### Configuration Safety
+- Atomic config saves with backup (.bak files)
+- Config validation with detailed error reporting
+- Global + local config merging with clear precedence
+- Unknown field warnings for forward compatibility
+
+### Resource Management
+- Process limiting to prevent resource exhaustion (default: 4 concurrent)
+- Automatic temp file cleanup on exit
+- Graceful child process termination (SIGTERM → SIGKILL)
+- Disk space warnings (<100MB)
+
+### Logging & Diagnostics
+- Verbose mode (`--verbose`) with timing information
+- Quiet mode (`--quiet`) for scripts
+- CI mode with JSON output (auto-detected via CI env var)
+- Log rotation (10MB max, 5 rotations kept)
+- Debug mode via DX_DEBUG=1 environment variable
+
 ## Installation
 
 ```bash
@@ -350,10 +391,22 @@ dx workspace init
 All commands support these global flags:
 
 ```bash
-dx [command] --verbose    # Enable verbose output
+dx [command] --verbose    # Enable verbose output with timing
 dx [command] --quiet      # Suppress all output except errors
 dx [command] --no-color   # Disable colored output
 ```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `NO_COLOR` | Disable colored output |
+| `DX_DEBUG=1` | Enable debug mode with timing |
+| `DX_OFFLINE=1` | Force offline mode |
+| `CI` | Auto-detected for JSON log output |
+| `HTTP_PROXY` | HTTP proxy URL |
+| `HTTPS_PROXY` | HTTPS proxy URL |
+| `NO_PROXY` | Comma-separated hosts to bypass proxy |
 
 ## Configuration
 
@@ -423,12 +476,24 @@ cargo build -p dx
 # Run in development
 cargo run -p dx -- --help
 
-# Run tests
+# Run tests (includes property-based tests)
 cargo test -p dx
 
 # Run with verbose output
 cargo run -p dx -- forge status --verbose
+
+# Run with debug timing
+DX_DEBUG=1 cargo run -p dx -- build
 ```
+
+## Testing
+
+DX CLI uses a dual testing approach:
+
+- **Unit tests**: Verify specific examples and edge cases
+- **Property-based tests**: Verify universal properties across all inputs using `proptest`
+
+All property tests run with minimum 100 iterations and are tagged with requirement references for traceability.
 
 ## Design Principles
 

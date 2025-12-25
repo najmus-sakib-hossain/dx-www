@@ -429,32 +429,32 @@ This implementation plan transforms the DX CLI from a functional prototype into 
     - **Property 30: Event Debouncing**
     - **Validates: Requirements 9.2, 12.6**
 
-- [ ] 21. Checkpoint - Ensure logging and debouncing work
+- [x] 21. Checkpoint - Ensure logging and debouncing work
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 22. Integrate Hardening into Main Entry Point
-  - [ ] 22.1 Install crash reporter at startup
+- [x] 22. Integrate Hardening into Main Entry Point
+  - [x] 22.1 Install crash reporter at startup
     - Call CrashReporter::install() in main
     - _Requirements: 1.5_
 
-  - [ ] 22.2 Initialize resource manager
+  - [x] 22.2 Initialize resource manager
     - Create global ResourceManager instance
     - _Requirements: 9.7_
 
-  - [ ] 22.3 Enhance signal handler
+  - [x] 22.3 Enhance signal handler
     - Integrate with ResourceManager for cleanup
     - Terminate children gracefully on Ctrl+C
     - _Requirements: 1.6, 9.5_
 
-  - [ ] 22.4 Add verbose/quiet/debug flag handling
+  - [x] 22.4 Add verbose/quiet/debug flag handling
     - Initialize StructuredLogger based on flags
     - _Requirements: 10.1, 10.2, 10.6_
 
-  - [ ] 22.5 Add offline mode detection
+  - [x] 22.5 Add offline mode detection
     - Skip update checks when offline
     - _Requirements: 3.2, 3.7, 11.4_
 
-- [ ] 23. Final Checkpoint - Full integration test
+- [x] 23. Final Checkpoint - Full integration test
   - Ensure all tests pass, ask the user if questions arise.
   - Run `cargo test` to verify all property tests pass
   - Run `dx --help` and verify output
