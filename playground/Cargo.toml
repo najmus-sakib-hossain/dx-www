@@ -31,5 +31,12 @@ path = "benchmarks/infinity-comparison.rs"
 name = "dx-format-test"
 path = "src/dx_format_test.rs"
 
+[[bin]]
+name = "dx-vs-toon-rkyv"
+path = "benchmarks/dx-vs-toon-rkyv.rs"
+
 [dependencies]
 serializer = { path = "../crates/serializer" }
+rkyv = { version = "0.8", features = ["bytecheck"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
