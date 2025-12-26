@@ -1,4 +1,10 @@
-#c:nm|dx;v|0.0.1;tt|Enhanced Developing Experience;ds|Orchestrate don't just own your code;au|essensefromexistence;ws|*@/www,@/backend;ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio
+nm|dx
+v|0.0.1
+tt|Enhanced Developing Experience
+ds|Orchestrate don't just own your code
+au|essensefromexistence
+ws|*@/www,@/backend
+ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio
 #f(repo|cont|pl|tk|it)
 https://dx.vercel.app/essensefromexistence/dx|none|none|none|*cli,docs,examples,packages,scripts,style,tests
 #:js|javascript/typescript|bun-runtime|tsc|vite|bun-package-manager|react
