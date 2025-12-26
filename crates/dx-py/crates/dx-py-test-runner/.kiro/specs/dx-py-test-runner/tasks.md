@@ -6,17 +6,17 @@ This plan implements a high-performance Python test runner in Rust with PyO3 bin
 
 ## Tasks
 
-- [-] 1. Set up project structure and core types
-  - [-] 1.1 Initialize Cargo workspace with crate structure
+- [x] 1. Set up project structure and core types
+  - [x] 1.1 Initialize Cargo workspace with crate structure
     - Create `Cargo.toml` workspace with members: `dx-py-core`, `dx-py-discovery`, `dx-py-protocol`, `dx-py-daemon`, `dx-py-graph`, `dx-py-executor`, `dx-py-fixture`, `dx-py-snapshot`, `dx-py-cli`
     - Add shared dependencies: `tree-sitter`, `tree-sitter-python`, `blake3`, `memmap2`, `crossbeam`, `tokio`, `pyo3`, `proptest`, `bincode`, `serde`
     - _Requirements: All_
-  - [ ] 1.2 Define core types in dx-py-core
+  - [x] 1.2 Define core types in dx-py-core
     - Implement `TestCase`, `TestId`, `Marker`, `FixtureId` structs
     - Implement `TestResult`, `TestStatus`, `AssertionStats` structs
     - Implement `Serialize`/`Deserialize` for all types
     - _Requirements: 1.5, 3.4, 3.5_
-  - [ ] 1.3 Write property test for core type serialization round-trip
+  - [x] 1.3 Write property test for core type serialization round-trip
     - **Property 5: Protocol Message Round-Trip**
     - **Validates: Requirements 3.4, 3.5**
 

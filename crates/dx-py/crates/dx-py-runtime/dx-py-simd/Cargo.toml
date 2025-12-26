@@ -21,3 +21,7 @@ runtime-detection = []
 avx2 = []
 # Force AVX-512 (requires AVX-512 CPU)
 avx512 = []
+
+[[bench]]
+name = "simd_benchmarks"
+harness = false

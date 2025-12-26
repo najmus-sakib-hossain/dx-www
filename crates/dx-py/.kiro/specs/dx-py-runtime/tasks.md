@@ -102,7 +102,7 @@ This implementation plan covers all 15 game-changing features of the revolutiona
     - Ensure identical results to SIMD
     - _Requirements: 2.7, 2.8_
 
-  - [ ] 2.8 Implement NEON fallback for ARM
+  - [x] 2.8 Implement NEON fallback for ARM
     - Implement NeonStringEngine for aarch64
     - Use NEON intrinsics for ARM SIMD
     - _Requirements: 2.7_

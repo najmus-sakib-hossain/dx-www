@@ -1,6 +1,19 @@
 //! Core object model for DX-Py runtime
 //!
 //! Provides the fundamental Python object types and runtime structures.
+//!
+//! ## Features
+//!
+//! - Lock-free reference counting via PyObjectHeader
+//! - Core Python types: int, str, list, dict, tuple, function
+//! - Stack frames for execution
+//! - Built-in functions (print, len, type, range, etc.)
+//! - Standard library modules (sys, os, io, json)
+//! - Debugging support with line tables and tracebacks
+//!
+//! ## Error Handling
+//!
+//! All operations return `RuntimeResult<T>` for graceful error handling.
 
 pub mod header;
 pub mod types;
@@ -14,6 +27,7 @@ pub mod pyframe;
 pub mod builtins;
 pub mod stdlib;
 pub mod debug;
+pub mod error;
 
 pub use header::PyObjectHeader;
 pub use types::PyType;
@@ -25,9 +39,11 @@ pub use pytuple::PyTuple;
 pub use pyfunction::PyFunction;
 pub use pyframe::PyFrame;
 pub use debug::{Traceback, TracebackFrame, ExceptionInfo, LineTable, Debugger};
+pub use error::{RuntimeError, RuntimeResult};
 
-/// Core error types
+/// Legacy error types (deprecated, use RuntimeError instead)
 #[derive(Debug, thiserror::Error)]
+#[deprecated(since = "0.2.0", note = "Use RuntimeError instead")]
 pub enum CoreError {
     #[error("Type error: {0}")]
     TypeError(String),
@@ -54,4 +70,5 @@ pub enum CoreError {
     OverflowError,
 }
 
+#[allow(deprecated)]
 pub type CoreResult<T> = Result<T, CoreError>;

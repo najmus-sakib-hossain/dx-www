@@ -6,11 +6,13 @@ use crate::scalar::ScalarStringEngine;
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
 use crate::avx2::Avx2StringEngine;
 
+#[cfg(target_arch = "aarch64")]
+use crate::neon::NeonStringEngine;
+
 /// Runtime SIMD detection and dispatch
 pub struct SimdDispatcher {
     has_avx2: bool,
     has_avx512: bool,
-    #[allow(dead_code)]
     has_neon: bool,
 }
 
@@ -45,11 +47,17 @@ impl SimdDispatcher {
         #[cfg(target_arch = "aarch64")]
         {
             if self.has_neon {
-                // TODO: Implement NEON engine
-                // For now, fall back to scalar
+                return Box::new(NeonStringEngine::new());
             }
         }
         
+        // Use NEON on ARM64 even if not detected (it's always available)
+        #[cfg(target_arch = "aarch64")]
+        {
+            return Box::new(NeonStringEngine::new());
+        }
+        
+        #[cfg(not(target_arch = "aarch64"))]
         Box::new(ScalarStringEngine::new())
     }
     
