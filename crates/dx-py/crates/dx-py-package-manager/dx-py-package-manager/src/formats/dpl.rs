@@ -245,6 +245,9 @@ pub struct DplBuilder {
     entries: Vec<DplEntry>,
     python_version: String,
     platform: String,
+    /// Mapping of extra names to indices (for bitmap encoding)
+    extras_map: std::collections::HashMap<String, u8>,
+    next_extra_index: u8,
 }
 
 impl DplBuilder {
@@ -254,6 +257,8 @@ impl DplBuilder {
             entries: Vec::new(),
             python_version: python_version.to_string(),
             platform: platform.to_string(),
+            extras_map: std::collections::HashMap::new(),
+            next_extra_index: 0,
         }
     }
 
@@ -262,6 +267,53 @@ impl DplBuilder {
         let entry = DplEntry::new(name, version, source_hash);
         self.entries.push(entry);
         self
+    }
+
+    /// Add a package with extras to the lock file
+    pub fn add_package_with_extras(
+        &mut self,
+        name: &str,
+        version: &str,
+        source_hash: [u8; 32],
+        extras: &[&str],
+    ) -> &mut Self {
+        let extras_bitmap = self.encode_extras(extras);
+        let entry = DplEntry::new_with_extras(name, version, source_hash, extras_bitmap);
+        self.entries.push(entry);
+        self
+    }
+
+    /// Encode extras into a bitmap
+    fn encode_extras(&mut self, extras: &[&str]) -> u64 {
+        let mut bitmap = 0u64;
+        for extra in extras {
+            let index = self.get_or_create_extra_index(extra);
+            if index < 64 {
+                bitmap |= 1u64 << index;
+            }
+        }
+        bitmap
+    }
+
+    /// Get or create an index for an extra name
+    fn get_or_create_extra_index(&mut self, extra: &str) -> u8 {
+        if let Some(&index) = self.extras_map.get(extra) {
+            return index;
+        }
+
+        if self.next_extra_index >= 64 {
+            return 63; // Cap at 64 extras
+        }
+
+        let index = self.next_extra_index;
+        self.extras_map.insert(extra.to_string(), index);
+        self.next_extra_index += 1;
+        index
+    }
+
+    /// Get the extras map (for decoding)
+    pub fn extras_map(&self) -> &std::collections::HashMap<String, u8> {
+        &self.extras_map
     }
 
     /// Add a package entry directly

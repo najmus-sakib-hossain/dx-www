@@ -42,7 +42,7 @@ pub use convert::{
     document_to_human, document_to_human_v2, document_to_human_v2_with_config,
     document_to_llm, document_to_machine, human_to_document, human_to_llm,
     human_to_llm_v2, human_to_machine, human_v2_to_document, human_v2_to_machine,
-    llm_to_document, llm_to_human, llm_to_human_v2, llm_to_human_v2_with_config,
+    is_llm_format, llm_to_document, llm_to_human, llm_to_human_v2, llm_to_human_v2_with_config,
     machine_to_document, machine_to_human, machine_to_human_v2, machine_to_llm,
     ConvertError, MachineFormat,
 };

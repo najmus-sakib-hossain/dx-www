@@ -228,3 +228,445 @@ fn test_null_values() {
     assert_eq!(parser.parse_value("~"), DxLlmValue::Null);
     assert_eq!(parser.parse_value("none"), DxLlmValue::Null);
 }
+
+// ============================================================
+// Property 3: Stack Section Preservation
+// For any `[stack]` section, parsing SHALL place all entries in the
+// refs map with keys preserved (not abbreviated) and values joined with `|`.
+// **Validates: Requirements 2.1, 2.2, 2.3**
+// ============================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    #[test]
+    fn prop_stack_section_preserves_keys(
+        key in "[a-z]{2,10}",
+        values in prop::collection::vec("[a-zA-Z][a-zA-Z0-9_/-]{0,15}", 1..5)
+    ) {
+        let parser = HumanV3Parser::new();
+
+        // Create a stack section with pipe-separated values
+        let value_str = values.join(" | ");
+        let input = format!("[stack]\n{} = {}\n", key, value_str);
+
+        let result = parser.parse(&input);
+        prop_assert!(result.is_ok(), "Parse failed: {:?}", result.err());
+
+        let doc = result.unwrap();
+
+        // Key should be preserved (not abbreviated)
+        prop_assert!(doc.refs.contains_key(&key), "Key '{}' not found in refs", key);
+
+        // Values should be joined with | (no spaces)
+        let expected_value = values.join("|");
+        prop_assert_eq!(
+            doc.refs.get(&key),
+            Some(&expected_value),
+            "Expected '{}', got '{:?}'",
+            expected_value,
+            doc.refs.get(&key)
+        );
+    }
+
+    #[test]
+    fn prop_stack_section_multiple_entries(
+        entries in prop::collection::vec(
+            ("[a-z]{2,8}", prop::collection::vec("[a-zA-Z0-9_/-]{1,10}", 1..4)),
+            1..4
+        )
+    ) {
+        // Ensure unique keys
+        let mut seen_keys = std::collections::HashSet::new();
+        let unique_entries: Vec<_> = entries
+            .into_iter()
+            .filter(|(k, _)| seen_keys.insert(k.clone()))
+            .collect();
+
+        prop_assume!(!unique_entries.is_empty());
+
+        let parser = HumanV3Parser::new();
+
+        // Build stack section
+        let mut input = String::from("[stack]\n");
+        for (key, values) in &unique_entries {
+            let value_str = values.join(" | ");
+            input.push_str(&format!("{} = {}\n", key, value_str));
+        }
+
+        let result = parser.parse(&input);
+        prop_assert!(result.is_ok(), "Parse failed: {:?}", result.err());
+
+        let doc = result.unwrap();
+
+        // All entries should be in refs
+        for (key, values) in &unique_entries {
+            prop_assert!(doc.refs.contains_key(key), "Key '{}' not found in refs", key);
+            let expected_value = values.join("|");
+            prop_assert_eq!(
+                doc.refs.get(key),
+                Some(&expected_value),
+                "For key '{}': expected '{}', got '{:?}'",
+                key,
+                expected_value,
+                doc.refs.get(key)
+            );
+        }
+    }
+}
+
+
+// ============================================================
+// Property 5: Nested Section Merging
+// For any set of nested sections sharing a parent, parsing SHALL
+// merge them into a single section with keys prefixed by subsection name.
+// **Validates: Requirements 4.1, 4.2, 4.3**
+// ============================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    #[test]
+    fn prop_nested_sections_merged_with_prefix(
+        subsection1 in "[a-z]{3,8}",
+        subsection2 in "[a-z]{3,8}",
+        key1 in "[a-z]{2,6}",
+        key2 in "[a-z]{2,6}",
+        value1 in "[a-zA-Z0-9_/-]{1,15}",
+        value2 in "[a-zA-Z0-9_/-]{1,15}"
+    ) {
+        // Ensure subsections are different
+        prop_assume!(subsection1 != subsection2);
+
+        let parser = HumanV3Parser::new();
+
+        // Create nested sections under i18n parent
+        let input = format!(
+            "[i18n.{}]\n{} = {}\n\n[i18n.{}]\n{} = {}\n",
+            subsection1, key1, value1,
+            subsection2, key2, value2
+        );
+
+        let result = parser.parse(&input);
+        prop_assert!(result.is_ok(), "Parse failed: {:?}", result.err());
+
+        let doc = result.unwrap();
+
+        // i18n section should exist (mapped to 'i')
+        prop_assert!(doc.sections.contains_key(&'i'), "i18n section not found");
+
+        let section = doc.sections.get(&'i').unwrap();
+
+        // Schema should contain prefixed keys
+        let has_sub1_key = section.schema.iter().any(|k| k.contains(&subsection1));
+        let has_sub2_key = section.schema.iter().any(|k| k.contains(&subsection2));
+
+        prop_assert!(has_sub1_key, "Schema missing key with prefix '{}': {:?}", subsection1, section.schema);
+        prop_assert!(has_sub2_key, "Schema missing key with prefix '{}': {:?}", subsection2, section.schema);
+
+        // Should have exactly one row with all values
+        prop_assert_eq!(section.rows.len(), 1, "Expected 1 row, got {}", section.rows.len());
+    }
+
+    #[test]
+    fn prop_nested_section_order_preserved(
+        subsections in prop::collection::vec("[a-z]{3,6}", 2..5)
+    ) {
+        // Ensure unique subsection names
+        let mut seen = std::collections::HashSet::new();
+        let unique_subs: Vec<_> = subsections
+            .into_iter()
+            .filter(|s| seen.insert(s.clone()))
+            .collect();
+
+        prop_assume!(unique_subs.len() >= 2);
+
+        let parser = HumanV3Parser::new();
+
+        // Build nested sections under i18n
+        let mut input = String::new();
+        for (i, sub) in unique_subs.iter().enumerate() {
+            input.push_str(&format!("[i18n.{}]\nkey{} = value{}\n\n", sub, i, i));
+        }
+
+        let result = parser.parse(&input);
+        prop_assert!(result.is_ok(), "Parse failed: {:?}", result.err());
+
+        let doc = result.unwrap();
+        prop_assert!(doc.sections.contains_key(&'i'), "i18n section not found");
+
+        let section = doc.sections.get(&'i').unwrap();
+
+        // Schema should have keys in the order subsections were defined
+        // Each subsection contributes one key, so schema length should match
+        prop_assert_eq!(
+            section.schema.len(),
+            unique_subs.len(),
+            "Schema length mismatch: expected {}, got {}",
+            unique_subs.len(),
+            section.schema.len()
+        );
+    }
+}
+
+
+// ============================================================
+// Property 8: Round-Trip Consistency
+// For any valid Human V3 document, parsing then serializing to LLM format
+// SHALL produce a document with equivalent context, refs, and section data.
+// **Validates: Requirements 7.1, 7.2, 7.3**
+// ============================================================
+
+use super::serializer::LlmSerializer;
+use super::parser::LlmParser;
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    #[test]
+    fn prop_human_v3_to_llm_preserves_context(
+        name in "[a-zA-Z][a-zA-Z0-9_-]{0,15}",
+        version in "[0-9]+\\.[0-9]+\\.[0-9]+"
+    ) {
+        let parser = HumanV3Parser::new();
+        let serializer = LlmSerializer::new();
+
+        // Create Human V3 input
+        let human_v3 = format!("name = {}\nversion = {}\n", name, version);
+
+        // Parse Human V3 -> DxDocument
+        let doc = parser.parse(&human_v3);
+        prop_assert!(doc.is_ok(), "Human V3 parse failed: {:?}", doc.err());
+        let doc = doc.unwrap();
+
+        // Serialize to LLM format
+        let llm = serializer.serialize(&doc);
+
+        // Parse LLM back to verify
+        let round_trip_doc = LlmParser::parse(&llm);
+        prop_assert!(round_trip_doc.is_ok(), "LLM parse failed: {:?}", round_trip_doc.err());
+        let round_trip_doc = round_trip_doc.unwrap();
+
+        // Verify context values are preserved
+        prop_assert_eq!(
+            doc.context.len(),
+            round_trip_doc.context.len(),
+            "Context size mismatch"
+        );
+
+        // Check name is preserved (key may be abbreviated)
+        let has_name = round_trip_doc.context.values().any(|v| {
+            matches!(v, DxLlmValue::Str(s) if s == &name)
+        });
+        prop_assert!(has_name, "Name '{}' not found in round-trip context", name);
+
+        // Check version is preserved
+        let has_version = round_trip_doc.context.values().any(|v| {
+            matches!(v, DxLlmValue::Str(s) if s == &version)
+        });
+        prop_assert!(has_version, "Version '{}' not found in round-trip context", version);
+    }
+
+    #[test]
+    fn prop_human_v3_to_llm_preserves_stack(
+        key in "[a-z]{2,8}",
+        values in prop::collection::vec("[a-zA-Z0-9_/-]{1,10}", 1..4)
+    ) {
+        let parser = HumanV3Parser::new();
+        let serializer = LlmSerializer::new();
+
+        // Create Human V3 input with stack section
+        let value_str = values.join(" | ");
+        let human_v3 = format!("[stack]\n{} = {}\n", key, value_str);
+
+        // Parse Human V3 -> DxDocument
+        let doc = parser.parse(&human_v3);
+        prop_assert!(doc.is_ok(), "Human V3 parse failed: {:?}", doc.err());
+        let doc = doc.unwrap();
+
+        // Verify refs are set correctly
+        prop_assert!(doc.refs.contains_key(&key), "Key '{}' not found in refs", key);
+        let expected_value = values.join("|");
+        prop_assert_eq!(
+            doc.refs.get(&key),
+            Some(&expected_value),
+            "Refs value mismatch"
+        );
+
+        // Serialize to LLM format
+        let llm = serializer.serialize(&doc);
+
+        // Verify LLM contains the reference definition
+        prop_assert!(
+            llm.contains(&format!("#:{}|", key)),
+            "LLM output missing reference definition for '{}'",
+            key
+        );
+    }
+
+    #[test]
+    fn prop_human_v3_to_llm_preserves_sections(
+        key1 in "[a-z]{2,6}",
+        key2 in "[a-z]{2,6}",
+        val1 in "[a-zA-Z0-9_]{1,10}",
+        val2 in "[a-zA-Z0-9_]{1,10}"
+    ) {
+        prop_assume!(key1 != key2);
+
+        let parser = HumanV3Parser::new();
+        let serializer = LlmSerializer::new();
+
+        // Create Human V3 input with forge section
+        let human_v3 = format!("[forge]\n{} = {}\n{} = {}\n", key1, val1, key2, val2);
+
+        // Parse Human V3 -> DxDocument
+        let doc = parser.parse(&human_v3);
+        prop_assert!(doc.is_ok(), "Human V3 parse failed: {:?}", doc.err());
+        let doc = doc.unwrap();
+
+        // Verify forge section exists (mapped to 'f')
+        prop_assert!(doc.sections.contains_key(&'f'), "Forge section not found");
+
+        let section = doc.sections.get(&'f').unwrap();
+        prop_assert_eq!(section.schema.len(), 2, "Schema should have 2 columns");
+        prop_assert_eq!(section.rows.len(), 1, "Should have 1 row");
+
+        // Serialize to LLM format
+        let llm = serializer.serialize(&doc);
+
+        // Verify LLM contains the section
+        prop_assert!(
+            llm.contains("#f("),
+            "LLM output missing forge section"
+        );
+    }
+
+    #[test]
+    fn prop_human_v3_to_llm_preserves_booleans(
+        key in "[a-z]{2,6}"
+    ) {
+        let parser = HumanV3Parser::new();
+        let serializer = LlmSerializer::new();
+
+        // Create Human V3 input with boolean values
+        let human_v3 = format!("{} = true\n", key);
+
+        // Parse Human V3 -> DxDocument
+        let doc = parser.parse(&human_v3);
+        prop_assert!(doc.is_ok(), "Human V3 parse failed: {:?}", doc.err());
+        let doc = doc.unwrap();
+
+        // Verify boolean is parsed correctly
+        let has_bool = doc.context.values().any(|v| {
+            matches!(v, DxLlmValue::Bool(true))
+        });
+        prop_assert!(has_bool, "Boolean true not found in context");
+
+        // Serialize to LLM format
+        let llm = serializer.serialize(&doc);
+
+        // Verify LLM contains the boolean marker
+        prop_assert!(
+            llm.contains("|+"),
+            "LLM output missing boolean true marker (+)"
+        );
+    }
+}
+
+
+// ============================================================
+// Property 9: Format Detection and Passthrough
+// For any input to `toDense`, if it starts with LLM format sigils
+// (#c:, #:, or #<letter>(), it SHALL be returned unchanged;
+// otherwise it SHALL be parsed as Human V3.
+// **Validates: Requirements 8.1, 8.2**
+// ============================================================
+
+use super::convert::{human_to_llm, is_llm_format};
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    #[test]
+    fn prop_llm_format_passthrough_context(
+        key in "[a-z]{2,6}",
+        value in "[a-zA-Z0-9_]{1,15}"
+    ) {
+        // LLM format with context section
+        let llm_input = format!("#c:{}|{}", key, value);
+
+        // Should be detected as LLM format
+        prop_assert!(is_llm_format(&llm_input), "Should detect as LLM format: {}", llm_input);
+
+        // Should be returned unchanged
+        let result = human_to_llm(&llm_input);
+        prop_assert!(result.is_ok(), "human_to_llm failed: {:?}", result.err());
+        prop_assert_eq!(result.unwrap(), llm_input, "LLM format should be returned unchanged");
+    }
+
+    #[test]
+    fn prop_llm_format_passthrough_section(
+        section_id in "[a-z]",
+        col1 in "[a-z]{2,4}",
+        col2 in "[a-z]{2,4}"
+    ) {
+        // LLM format with data section
+        let llm_input = format!("#{}({}|{})\nval1|val2", section_id, col1, col2);
+
+        // Should be detected as LLM format
+        prop_assert!(is_llm_format(&llm_input), "Should detect as LLM format: {}", llm_input);
+
+        // Should be returned unchanged
+        let result = human_to_llm(&llm_input);
+        prop_assert!(result.is_ok(), "human_to_llm failed: {:?}", result.err());
+        prop_assert_eq!(result.unwrap(), llm_input, "LLM format should be returned unchanged");
+    }
+
+    #[test]
+    fn prop_llm_format_passthrough_refs(
+        key in "[A-Z]",
+        value in "[a-zA-Z0-9_]{1,15}"
+    ) {
+        // LLM format with reference definition
+        let llm_input = format!("#:{}|{}", key, value);
+
+        // Should be detected as LLM format
+        prop_assert!(is_llm_format(&llm_input), "Should detect as LLM format: {}", llm_input);
+
+        // Should be returned unchanged
+        let result = human_to_llm(&llm_input);
+        prop_assert!(result.is_ok(), "human_to_llm failed: {:?}", result.err());
+        prop_assert_eq!(result.unwrap(), llm_input, "LLM format should be returned unchanged");
+    }
+
+    #[test]
+    fn prop_human_v3_format_parsed(
+        name in "[a-zA-Z][a-zA-Z0-9_-]{0,15}",
+        version in "[0-9]+\\.[0-9]+\\.[0-9]+"
+    ) {
+        // Human V3 format (no [config] header)
+        let human_v3 = format!("name = {}\nversion = {}\n", name, version);
+
+        // Should NOT be detected as LLM format
+        prop_assert!(!is_llm_format(&human_v3), "Should NOT detect as LLM format: {}", human_v3);
+
+        // Should be parsed and converted to LLM format
+        let result = human_to_llm(&human_v3);
+        prop_assert!(result.is_ok(), "human_to_llm failed: {:?}", result.err());
+
+        let llm = result.unwrap();
+        // Result should be LLM format (starts with #c:)
+        prop_assert!(llm.starts_with("#c:"), "Result should be LLM format: {}", llm);
+    }
+
+    #[test]
+    fn prop_comment_headers_not_llm_format(
+        title in "[A-Z][A-Z ]{0,20}"
+    ) {
+        // Human format with comment headers (starts with # but not LLM format)
+        let human_with_comments = format!("# ═══════════════════════════════════════════════════════════════════════════════\n#                                   {}\n# ═══════════════════════════════════════════════════════════════════════════════\n\n[config]\n    name = test\n", title);
+
+        // Should NOT be detected as LLM format (comment headers are not LLM sigils)
+        prop_assert!(!is_llm_format(&human_with_comments), "Comment headers should NOT be detected as LLM format");
+    }
+}

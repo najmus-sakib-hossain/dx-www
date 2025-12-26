@@ -6,89 +6,89 @@ This implementation plan covers the Phase 1 performance optimizations for dx-py-
 
 ## Tasks
 
-- [ ] 1. Set up new crate structure and dependencies
+- [x] 1. Set up new crate structure and dependencies
   - Create `dx-py-layout` crate for layout cache
   - Create `dx-py-store` crate for package store
   - Add dependencies: `memmap2`, `dashmap`, `proptest`, `junction` (Windows)
   - Update workspace Cargo.toml
   - _Requirements: 1.3, 3.1_
 
-- [ ] 2. Implement Package Store core functionality
-  - [ ] 2.1 Implement PackageStore struct and path computation
+- [x] 2. Implement Package Store core functionality
+  - [x] 2.1 Implement PackageStore struct and path computation
     - Create `PackageStore` with root directory management
     - Implement `get_path()` using `{hash[0:2]}/{hash[2:4]}/{hash}.dxpkg` format
     - Implement `contains()` for existence checks
     - _Requirements: 3.1, 3.6_
 
-  - [ ] 2.2 Write property test for package store path format
+  - [x] 2.2 Write property test for package store path format
     - **Property 9: Package Store Path Format**
     - **Validates: Requirements 3.6**
 
-  - [ ] 2.3 Implement package storage with integrity verification
+  - [x] 2.3 Implement package storage with integrity verification
     - Implement `store()` for storing package data
     - Implement `store_verified()` with Blake3 hash verification
     - Use atomic writes (temp file + rename)
     - _Requirements: 3.9_
 
-  - [ ] 2.4 Write property test for integrity verification
+  - [x] 2.4 Write property test for integrity verification
     - **Property 12: Package Store Integrity Verification**
     - **Validates: Requirements 3.9**
 
-  - [ ] 2.5 Implement memory-mapped package access
+  - [x] 2.5 Implement memory-mapped package access
     - Implement `MappedPackage` struct with `Mmap`
     - Implement lazy loading in `get()` method
     - Add `DashMap` for concurrent package cache
     - _Requirements: 3.2, 3.3_
 
-  - [ ] 2.6 Implement package file index and lookup
+  - [x] 2.6 Implement package file index and lookup
     - Define `PackageIndex` and `PackageFileEntry` structs
     - Implement `get_file()` for O(1) file lookup
     - Build index when storing packages
     - _Requirements: 3.4_
 
-  - [ ] 2.7 Write property test for file lookup
+  - [x] 2.7 Write property test for file lookup
     - **Property 10: Package Store File Lookup**
     - **Validates: Requirements 3.4**
 
-  - [ ] 2.8 Implement symlink-based installation
+  - [x] 2.8 Implement symlink-based installation
     - Implement `install_to_venv()` using symlinks
     - Use junctions on Windows via `junction` crate
     - Fall back to copy if symlinks fail
     - _Requirements: 3.5_
 
-  - [ ] 2.9 Write property test for symlink installation
+  - [x] 2.9 Write property test for symlink installation
     - **Property 11: Package Store Symlink Installation**
     - **Validates: Requirements 3.5**
 
-  - [ ] 2.10 Implement error handling for missing packages
+  - [x] 2.10 Implement error handling for missing packages
     - Return `PackageNotFound` error for missing hashes
     - Implement proper error types
     - _Requirements: 3.7_
 
-  - [ ] 2.11 Write property test for error handling
+  - [x] 2.11 Write property test for error handling
     - **Property 15: Package Store Error Handling**
     - **Validates: Requirements 3.7**
 
-- [ ] 3. Checkpoint - Package Store complete
-  - Ensure all tests pass, ask the user if questions arise.
+- [x] 3. Checkpoint - Package Store complete
+  - All tests pass (280+ tests including 14 property tests for Package Store)
 
-- [ ] 4. Implement concurrent access for Package Store
-  - [ ] 4.1 Add thread-safe access patterns
+- [x] 4. Implement concurrent access for Package Store
+  - [x] 4.1 Add thread-safe access patterns
     - Use `DashMap` for concurrent package cache
     - Implement proper locking for writes
     - Test with multiple threads
     - _Requirements: 3.8_
 
-  - [ ] 4.2 Write property test for concurrent access
+  - [x] 4.2 Write property test for concurrent access
     - **Property 13: Package Store Concurrent Access**
     - **Validates: Requirements 3.8**
 
-  - [ ] 4.3 Implement package deduplication
+  - [x] 4.3 Implement package deduplication
     - Verify same hash returns same path
     - Test with multiple projects
     - _Requirements: 3.10_
 
-  - [ ] 4.4 Write property test for deduplication
+  - [x] 4.4 Write property test for deduplication
     - **Property 14: Package Store Deduplication**
     - **Validates: Requirements 3.10**
 

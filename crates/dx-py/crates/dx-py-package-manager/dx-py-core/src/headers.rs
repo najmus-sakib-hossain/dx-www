@@ -197,8 +197,12 @@ impl DplHeader {
 /// - name: 48 bytes
 /// - version: 24 bytes
 /// - source_type: 1 byte
-/// - _padding: 15 bytes
+/// - version_major: 2 bytes
+/// - version_minor: 2 bytes
+/// - version_patch: 2 bytes
+/// - extras_bitmap: 8 bytes (supports up to 64 extras)
 /// - source_hash: 32 bytes
+/// - _padding: 1 byte
 #[repr(C, packed)]
 #[derive(Clone, Copy, Pod, Zeroable, Debug)]
 pub struct DplEntry {
@@ -210,10 +214,18 @@ pub struct DplEntry {
     pub version: [u8; 24],
     /// Source type: 0=PyPI, 1=Git, 2=URL, 3=Path
     pub source_type: u8,
-    /// Padding for alignment
-    pub _padding: [u8; 15],
+    /// Major version number (parsed from version string)
+    pub version_major: u16,
+    /// Minor version number (parsed from version string)
+    pub version_minor: u16,
+    /// Patch version number (parsed from version string)
+    pub version_patch: u16,
+    /// Extras bitmap (bit N = 1 means extra N is enabled, up to 64 extras)
+    pub extras_bitmap: u64,
     /// Source integrity hash (BLAKE3)
     pub source_hash: [u8; 32],
+    /// Padding for alignment
+    pub _padding: u8,
 }
 
 // Compile-time assertion that DplEntry is exactly 128 bytes
@@ -235,8 +247,28 @@ impl DplEntry {
         let version_len = version_bytes.len().min(23);
         entry.version[..version_len].copy_from_slice(&version_bytes[..version_len]);
 
+        // Parse version components
+        let (major, minor, patch) = parse_version_components(version);
+        entry.version_major = major;
+        entry.version_minor = minor;
+        entry.version_patch = patch;
+
         entry.source_type = SourceType::PyPi as u8;
         entry.source_hash = source_hash;
+        entry.extras_bitmap = 0;
+        entry._padding = 0;
+        entry
+    }
+
+    /// Create a new DplEntry with extras
+    pub fn new_with_extras(
+        name: &str,
+        version: &str,
+        source_hash: [u8; 32],
+        extras_bitmap: u64,
+    ) -> Self {
+        let mut entry = Self::new(name, version, source_hash);
+        entry.extras_bitmap = extras_bitmap;
         entry
     }
 
@@ -263,6 +295,46 @@ impl DplEntry {
     pub fn source_type(&self) -> SourceType {
         SourceType::from(self.source_type)
     }
+
+    /// Check if a specific extra is enabled (by index, 0-63)
+    pub fn has_extra(&self, extra_index: u8) -> bool {
+        if extra_index >= 64 {
+            return false;
+        }
+        (self.extras_bitmap & (1u64 << extra_index)) != 0
+    }
+
+    /// Set an extra as enabled (by index, 0-63)
+    pub fn set_extra(&mut self, extra_index: u8) {
+        if extra_index < 64 {
+            self.extras_bitmap |= 1u64 << extra_index;
+        }
+    }
+
+    /// Get the parsed version components
+    pub fn version_components(&self) -> (u16, u16, u16) {
+        (self.version_major, self.version_minor, self.version_patch)
+    }
+}
+
+/// Parse version string into (major, minor, patch) components
+fn parse_version_components(version: &str) -> (u16, u16, u16) {
+    let mut parts = version.split(|c: char| c == '.' || c == '-' || c == '+');
+
+    let major = parts
+        .next()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
+    let minor = parts
+        .next()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
+    let patch = parts
+        .next()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
+
+    (major, minor, patch)
 }
 
 /// FNV-1a hash function for package name lookup

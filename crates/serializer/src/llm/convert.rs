@@ -6,6 +6,7 @@
 use crate::llm::human_formatter::{HumanFormatConfig, HumanFormatter};
 use crate::llm::human_formatter_v2::{HumanFormatV2Config, HumanFormatterV2};
 use crate::llm::human_parser::{HumanParseError, HumanParser};
+use crate::llm::human_v3_parser::{HumanV3ParseError, HumanV3Parser};
 use crate::llm::parser::{LlmParser, ParseError};
 use crate::llm::serializer::LlmSerializer;
 use crate::llm::types::DxDocument;
@@ -19,6 +20,9 @@ pub enum ConvertError {
 
     #[error("Human parse error: {0}")]
     HumanParse(#[from] HumanParseError),
+
+    #[error("Human V3 parse error: {0}")]
+    HumanV3Parse(#[from] HumanV3ParseError),
 
     #[error("Machine format error: {msg}")]
     MachineFormat { msg: String },
@@ -54,23 +58,112 @@ pub fn llm_to_human_with_config(
 
 /// Convert Human format string to LLM format string
 ///
+/// This function automatically detects the input format:
+/// - If input starts with `#c:`, `#:`, or `#` followed by a letter and `(`, it's LLM format
+/// - If input contains Unicode table characters (┌, │, etc.), it uses the old HumanParser
+/// - If input contains `[config]` section header, it uses the old HumanParser
+/// - Otherwise, it uses the HumanV3Parser for TOML-like format without `[config]`
+///
 /// # Example
 /// ```
 /// use serializer::llm::convert::human_to_llm;
 ///
-/// let human = r#"
+/// // Human V3 format (no [config] header, no tables)
+/// let human_v3 = r#"
+/// name = "Test"
+/// version = 0.0.1
+///
+/// [forge]
+/// repository = https://example.com
+/// "#;
+/// let llm = human_to_llm(human_v3).unwrap();
+/// assert!(llm.contains("#c:"));
+///
+/// // Old Human format (with [config] header)
+/// let human_old = r#"
 /// [config]
 ///     name = "Test"
 ///     count = 42
 /// "#;
-/// let llm = human_to_llm(human).unwrap();
+/// let llm = human_to_llm(human_old).unwrap();
 /// assert!(llm.contains("#c:"));
+///
+/// // LLM format passthrough
+/// let llm_input = "#c:nm|Test";
+/// let llm = human_to_llm(llm_input).unwrap();
+/// assert_eq!(llm, llm_input);
 /// ```
 pub fn human_to_llm(human_input: &str) -> Result<String, ConvertError> {
-    let parser = HumanParser::new();
-    let doc = parser.parse(human_input)?;
-    let serializer = LlmSerializer::new();
-    Ok(serializer.serialize(&doc))
+    let trimmed = human_input.trim();
+
+    // Check if input is LLM format (starts with LLM sigils)
+    // LLM format starts with: #c: (context), #: (refs), or #<letter>( (section)
+    if is_llm_format(trimmed) {
+        return Ok(human_input.to_string());
+    }
+
+    // Detect format: old Human format has [config] section header or Unicode tables
+    let has_config_header = trimmed.lines().any(|line| {
+        let line = line.trim();
+        line == "[config]" || line.starts_with("[config]")
+    });
+
+    // Check for Unicode table characters (box-drawing characters)
+    let has_unicode_tables = trimmed.contains('┌') || trimmed.contains('│') ||
+                             trimmed.contains('├') || trimmed.contains('└') ||
+                             trimmed.contains('─') || trimmed.contains('┬') ||
+                             trimmed.contains('┼') || trimmed.contains('┴') ||
+                             trimmed.contains('┐') || trimmed.contains('┤') ||
+                             trimmed.contains('┘');
+
+    if has_config_header || has_unicode_tables {
+        // Use old HumanParser for format with [config] headers or Unicode tables
+        let parser = HumanParser::new();
+        let doc = parser.parse(human_input)?;
+        let serializer = LlmSerializer::new();
+        Ok(serializer.serialize(&doc))
+    } else {
+        // Use HumanV3Parser for TOML-like format without [config]
+        let parser = HumanV3Parser::new();
+        let doc = parser.parse(human_input)?;
+        let serializer = LlmSerializer::new();
+        Ok(serializer.serialize(&doc))
+    }
+}
+
+/// Check if input is in LLM format
+///
+/// LLM format starts with:
+/// - `#c:` - context section
+/// - `#:` - reference definition
+/// - `#<letter>(` - data section with schema
+pub fn is_llm_format(input: &str) -> bool {
+    let trimmed = input.trim();
+
+    // Check for context section
+    if trimmed.starts_with("#c:") {
+        return true;
+    }
+
+    // Check for reference definition
+    if trimmed.starts_with("#:") {
+        return true;
+    }
+
+    // Check for data section: #<letter>(
+    if trimmed.starts_with('#') {
+        let chars: Vec<char> = trimmed.chars().collect();
+        if chars.len() >= 3 {
+            let second = chars[1];
+            let third = chars[2];
+            // Check if it's #<letter>( pattern
+            if second.is_ascii_lowercase() && third == '(' {
+                return true;
+            }
+        }
+    }
+
+    false
 }
 
 /// Convert LLM format string to DxDocument
