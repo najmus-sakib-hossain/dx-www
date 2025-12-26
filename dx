@@ -1,80 +1,32 @@
-name                = dx
-version             = 0.0.1
-title               = "Enhanced Developing Experience"
-description         = "Orchestrate dont just own your code"
-author              = essensefromexistence
-workspace           = @/www | @/backend
-editors             = neovim | zed | vscode | cursor | antigravity | replit | firebase-studio
-
-[forge]
-repository          = https://dx.vercel.app/essensefromexistence/dx
-container           = none
-pipeline            = none
-tasks               = none
-items               = cli
-
-[stack]
-js                  = javascript/typescript | bun    | tsc    | vite  | bun   | react    
-python              = py                    | python | python | uv    | pip   | django   
-rust                = rs                    | rust   | native | rustc | cargo | actix-web
-
-[style]
-path                = @/style
-themes              = dx
-
-[ui]
-path                = @/components/ui
-components          = button
-
-[media]
-images              = @/media/images
-videos              = @/media/videos
-sounds              = @/media/sounds
-assets              = @/media/assets
-
-[icon]
-path                = @/icons
-pack                = Lucide
-variant             = Hugeicons
-
-[font]
-path                = @/fonts
-default             = Inter
-
-[scripts]
-status              = dx forge status
-build               = dx workspace build
-
-[driven]
-path                = @/driven
-
-[generator]
-path                = @/generator
-
-[dependencies]
-dx-package-1        = 0.0.1
-dx-package-2        = 0.0.1
-
-[i18n.locales]
-path                = @/locales
-default             = en-US
-dev                 = en-US
-prod                = all
-
-[i18n.ttses]
-path                = @/media/sounds
-default             = en-US
-dev                 = en-US
-prod                = bn-BD
-
-[js.dependencies]
-react               = 19.0.1
-next                = 16.0.1
-
-[python.dependencies]
-django              = latest
-numpy               = latest
-
-[rust.dependencies]
-actix-web           = latest
-rust-crypto         = latest
+#c:nm|dx;v|0.0.1;tt|Enhanced Developing Experience;ds|Orchestrate dont just own your code;au|essensefromexistence;ws|*@/www,@/backend;ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio
+#f(repo|cont|pl|tk|it)
+https://dx.vercel.app/essensefromexistence/dx|none|none|none|cli
+#:js|javascript/typescript|bun|tsc|vite|bun|react
+#:python|py|python|python|uv|pip|django
+#:rust|rs|rust|native|rustc|cargo|actix-web
+#y(pt|th)
+@/style|dx
+#u(pt|cp)
+@/components/ui|button
+#m(img|vid|snd|ast)
+@/media/images|@/media/videos|@/media/sounds|@/media/assets
+#o(pt|pk|vr)
+@/icons|Lucide|Hugeicons
+#t(pt|df)
+@/fonts|Inter
+#s(st|build)
+dx forge status|dx workspace build
+#d(pt)
+@/driven
+#g(pt)
+@/generator
+#x(dx-package-1|dx-package-2)
+0.0.1|0.0.1
+#i(locales_pt|locales_df|locales_dv|locales_pd|ttses_pt|ttses_df|ttses_dv|ttses_pd)
+@/locales|en-US|en-US|all|@/media/sounds|en-US|en-US|bn-BD
+#j(dependencies_react|dependencies_next)
+19.0.1|16.0.1
+#p(dependencies_django|dependencies_numpy)
+latest|latest
+#r(dependencies_actix-web|dependencies_rust-crypto)
+latest|latest

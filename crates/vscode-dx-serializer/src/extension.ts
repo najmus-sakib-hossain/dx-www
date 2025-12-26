@@ -480,6 +480,10 @@ function updateStatusBar(
 /**
  * Format a DX document and return TextEdit array
  * Shared logic for both formatting provider and willSave handler
+ * 
+ * Handles both LLM format and Human V3 format:
+ * - LLM format: Parse with parseLlm, then format to Human V3
+ * - Human V3 format: Parse with parseHumanV3, then re-format for alignment
  */
 function formatDxDocument(document: vscode.TextDocument): vscode.TextEdit[] | null {
     try {
@@ -490,10 +494,39 @@ function formatDxDocument(document: vscode.TextDocument): vscode.TextEdit[] | nu
             return null;
         }
 
-        // Parse the human format content
-        const parseResult = parseHumanV3(content);
-        if (!parseResult.success || !parseResult.document) {
-            console.log('DX Format: Parse failed, skipping format');
+        // Detect the format
+        const detection = detectFormat(content);
+        let dxDocument: import('./llmParser').DxDocument | null = null;
+
+        if (detection.format === 'llm') {
+            // Parse LLM format
+            const { parseLlm } = require('./llmParser');
+            const parseResult = parseLlm(content);
+            if (!parseResult.success || !parseResult.document) {
+                console.log('DX Format: LLM parse failed, skipping format');
+                return null;
+            }
+            dxDocument = parseResult.document;
+        } else if (detection.format === 'human-v3') {
+            // Parse Human V3 format
+            const parseResult = parseHumanV3(content);
+            if (!parseResult.success || !parseResult.document) {
+                console.log('DX Format: Human V3 parse failed, skipping format');
+                return null;
+            }
+            dxDocument = parseResult.document;
+        } else {
+            // Unknown or other format - try Human V3 as fallback
+            const parseResult = parseHumanV3(content);
+            if (!parseResult.success || !parseResult.document) {
+                console.log(`DX Format: Format '${detection.format}' not supported for formatting`);
+                return null;
+            }
+            dxDocument = parseResult.document;
+        }
+
+        // Safety check (should never happen due to early returns above)
+        if (!dxDocument) {
             return null;
         }
 
@@ -502,7 +535,7 @@ function formatDxDocument(document: vscode.TextDocument): vscode.TextEdit[] | nu
         const keyPadding = config.get<number>('keyPadding', 20);
 
         // Format the document with proper alignment
-        const formattedContent = formatDocumentV3(parseResult.document, {
+        const formattedContent = formatDocumentV3(dxDocument, {
             ...DEFAULT_CONFIG,
             keyPadding,
         });
@@ -566,9 +599,8 @@ function registerFormattingProvider(
         )
     );
 
-    // NOTE: willSaveTextDocument handler DISABLED - parser needs fixing
-    // The formatting was causing corruption due to parser bugs
-    /*
+    // willSaveTextDocument handler for auto-format on save
+    // Re-enabled after fixing format detection to handle both LLM and Human V3 formats
     context.subscriptions.push(
         vscode.workspace.onWillSaveTextDocument((event) => {
             // Only format .dx files
@@ -592,7 +624,6 @@ function registerFormattingProvider(
             );
         })
     );
-    */
 
     // Register the "DX: Format Document" command
     context.subscriptions.push(
