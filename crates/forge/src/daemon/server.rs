@@ -43,8 +43,8 @@ pub enum IpcCommand {
     RejectAllPending,
     GetBranchHistory { limit: usize },
     GetFileChanges { limit: Option<usize> },
-    GetGitStatus,
-    SyncWithGit,
+    GetGitStatus { workspace_path: Option<String> },
+    SyncWithGit { workspace_path: Option<String> },
     ClearFileChanges,
     Shutdown { force: bool },
     Ping,
@@ -988,17 +988,17 @@ impl DaemonServerHandler {
                 IpcResponse::FileChanges { changes }
             }
             
-            IpcCommand::GetGitStatus => {
-                self.get_git_status()
+            IpcCommand::GetGitStatus { workspace_path } => {
+                self.get_git_status(workspace_path.as_deref())
             }
             
-            IpcCommand::SyncWithGit => {
+            IpcCommand::SyncWithGit { workspace_path } => {
                 // Reset file change counter and sync with Git
                 self.stats.write().files_changed = 0;
                 self.file_tracker.write().clear();
                 
                 // Get current Git status and populate tracker
-                match self.get_git_status() {
+                match self.get_git_status(workspace_path.as_deref()) {
                     IpcResponse::GitStatus(status) => {
                         let total_changes = status.staged.len() + status.unstaged.len() + status.untracked.len();
                         self.stats.write().files_changed = total_changes as u64;
@@ -1050,13 +1050,19 @@ impl DaemonServerHandler {
         }
     }
     
-    /// Get Git status for the current working directory
-    fn get_git_status(&self) -> IpcResponse {
+    /// Get Git status for the specified workspace directory
+    fn get_git_status(&self, workspace_path: Option<&str>) -> IpcResponse {
         use std::process::Command;
+        
+        // Determine working directory
+        let cwd = workspace_path
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
         
         // Get current branch
         let branch = Command::new("git")
             .args(["rev-parse", "--abbrev-ref", "HEAD"])
+            .current_dir(&cwd)
             .output()
             .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
             .unwrap_or_else(|_| "unknown".to_string());
@@ -1064,12 +1070,21 @@ impl DaemonServerHandler {
         // Get porcelain status
         let status_output = match Command::new("git")
             .args(["status", "--porcelain=v1"])
+            .current_dir(&cwd)
             .output()
         {
-            Ok(output) => String::from_utf8_lossy(&output.stdout).to_string(),
+            Ok(output) => {
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    return IpcResponse::Error {
+                        message: format!("Git status failed: {}", stderr),
+                    };
+                }
+                String::from_utf8_lossy(&output.stdout).to_string()
+            }
             Err(e) => {
                 return IpcResponse::Error {
-                    message: format!("Failed to get git status: {}", e),
+                    message: format!("Failed to run git status: {}", e),
                 };
             }
         };
@@ -1105,7 +1120,7 @@ impl DaemonServerHandler {
                 };
                 
                 // Get diff for staged file
-                let diff = self.get_git_diff(&path, true);
+                let diff = self.get_git_diff(&path, true, &cwd);
                 
                 staged.push(GitFileStatus {
                     path: path.clone(),
@@ -1123,7 +1138,7 @@ impl DaemonServerHandler {
                 };
                 
                 // Get diff for unstaged file
-                let diff = self.get_git_diff(&path, false);
+                let diff = self.get_git_diff(&path, false, &cwd);
                 
                 unstaged.push(GitFileStatus {
                     path,
@@ -1145,7 +1160,7 @@ impl DaemonServerHandler {
     }
     
     /// Get diff for a specific file
-    fn get_git_diff(&self, path: &str, staged: bool) -> Option<FileDiff> {
+    fn get_git_diff(&self, path: &str, staged: bool, cwd: &std::path::Path) -> Option<FileDiff> {
         use std::process::Command;
         
         let args = if staged {
@@ -1156,6 +1171,7 @@ impl DaemonServerHandler {
         
         let numstat = Command::new("git")
             .args(&args)
+            .current_dir(cwd)
             .output()
             .ok()?;
         
@@ -1178,6 +1194,7 @@ impl DaemonServerHandler {
         
         let diff_output = Command::new("git")
             .args(&diff_args)
+            .current_dir(cwd)
             .output()
             .ok()?;
         

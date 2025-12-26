@@ -2,7 +2,7 @@
 
 ## Introduction
 
-DX-Py-Runtime is a revolutionary Python runtime designed to be 5x+ faster than the current best (PyPy/CPython 3.14). The runtime leverages the Binary Dawn architecture with 15 game-changing features including: zero-parse binary bytecode, SIMD-accelerated operations, lock-free parallel garbage collection, tiered JIT compilation, speculative type prediction, zero-copy FFI, binary module format, thread-per-core parallelism, stack allocation optimization, binary IPC protocol, reactive bytecode cache, SIMD collections, compiler-inlined decorators, persistent compilation cache, and cross-process shared objects.
+DX-Py-Runtime is a revolutionary Python runtime designed to be 5x+ faster than the current best (PyPy/CPython 3.14). The runtime leverages the Binary Dawn architecture with 16 game-changing features including: zero-parse binary bytecode, SIMD-accelerated operations, lock-free parallel garbage collection, tiered JIT compilation, speculative type prediction, zero-copy FFI, binary module format, thread-per-core parallelism, stack allocation optimization, binary IPC protocol, reactive bytecode cache, SIMD collections, compiler-inlined decorators, persistent compilation cache, cross-process shared objects, and platform-native async I/O (io_uring/kqueue/IOCP).
 
 ## Glossary
 
@@ -23,6 +23,13 @@ DX-Py-Runtime is a revolutionary Python runtime designed to be 5x+ faster than t
 - **Deoptimization**: Fallback from optimized code when type assumptions fail
 - **Memory_Teleportation**: Zero-copy data sharing between Python and native code
 - **SwissTable**: High-performance hash table implementation used for dictionaries
+- **io_uring**: Linux kernel async I/O interface with zero-syscall fast path via kernel-side polling
+- **kqueue**: BSD/macOS kernel event notification interface for async I/O
+- **IOCP (I/O Completion Ports)**: Windows async I/O mechanism for high-performance networking
+- **Reactor**: Event loop abstraction that dispatches I/O completions to callbacks
+- **SQE (Submission Queue Entry)**: io_uring structure for submitting I/O operations
+- **CQE (Completion Queue Entry)**: io_uring structure for receiving I/O completions
+- **SQPOLL**: io_uring kernel-side polling mode that eliminates syscalls for submissions
 
 ## Requirements
 
@@ -329,6 +336,35 @@ DX-Py-Runtime is a revolutionary Python runtime designed to be 5x+ faster than t
 10. THE System SHALL complete Django request handling in under 5ms cold, 1ms warm
 11. THE System SHALL achieve ≥3x PyPy performance on data science workloads
 12. THE System SHALL maintain CPython compatibility for 95%+ of PyPI packages
+
+### Requirement 17: Platform-Native Async I/O (io_uring/kqueue/IOCP)
+
+**User Story:** As a developer, I want async I/O operations to use platform-native APIs (io_uring on Linux, kqueue on macOS, IOCP on Windows), so that I/O-bound code runs 20-50x faster than Python's asyncio.
+
+#### Acceptance Criteria
+
+1. THE Reactor SHALL use io_uring on Linux with SQPOLL mode for zero-syscall submissions
+2. THE Reactor SHALL use kqueue on macOS/BSD for efficient event notification
+3. THE Reactor SHALL use IOCP (I/O Completion Ports) on Windows for async I/O
+4. THE Reactor SHALL support batched submission of multiple I/O operations in a single syscall
+5. THE Reactor SHALL support registered file descriptors for zero-copy operations
+6. THE Reactor SHALL support registered buffers for zero-copy read/write
+7. THE Reactor SHALL implement multi-shot accept for high-throughput connection handling
+8. THE Reactor SHALL implement zero-copy send (SendZc) for network operations
+9. WHEN submitting batched operations, THE System SHALL use a single syscall for all submissions
+10. WHEN using SQPOLL mode, THE System SHALL achieve zero syscalls for I/O submissions
+11. THE Reactor SHALL provide a unified cross-platform API abstracting platform differences
+12. THE Reactor SHALL integrate with the Thread-Per-Core Executor for per-core I/O handling
+13. WHEN reading a single file, THE System SHALL complete in under 2μs (vs 50μs for asyncio)
+14. WHEN reading 100 files in parallel, THE System SHALL complete in under 100μs (vs 5ms for asyncio)
+15. THE Reactor SHALL achieve 2M+ accepts per second (vs 100K for asyncio)
+16. THE Reactor SHALL achieve 500K+ HTTP requests per second
+17. FOR ALL I/O operations, THE Reactor SHALL produce identical results across all platforms (correctness property)
+18. IF io_uring is unavailable on Linux, THEN THE Reactor SHALL fall back to epoll
+19. THE Reactor SHALL support async file operations (read, write, fsync, close)
+20. THE Reactor SHALL support async network operations (accept, connect, send, recv)
+21. THE Reactor SHALL support async DNS resolution
+22. THE Reactor SHALL provide Python async/await compatible API for seamless integration
 
 </content>
 </invoke>

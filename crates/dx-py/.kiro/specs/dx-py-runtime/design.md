@@ -3048,6 +3048,783 @@ pub enum ConcurrencyError {
 ```
 
 
+### Component 16: Platform-Native Async I/O (io_uring/kqueue/IOCP)
+
+The Reactor provides platform-native async I/O with zero-syscall fast paths and batched operations.
+
+```rust
+use std::os::unix::io::RawFd;
+use std::time::Duration;
+
+/// Cross-platform reactor trait
+pub trait Reactor: Send + Sync {
+    /// Submit an I/O operation
+    fn submit(&mut self, op: IoOperation) -> io::Result<u64>;
+    
+    /// Submit multiple operations in a single syscall
+    fn submit_batch(&mut self, ops: Vec<IoOperation>) -> io::Result<Vec<u64>>;
+    
+    /// Poll for completions (non-blocking)
+    fn poll(&mut self) -> Vec<Completion>;
+    
+    /// Wait for completions with timeout
+    fn wait(&mut self, timeout: Duration) -> io::Result<Vec<Completion>>;
+    
+    /// Register file descriptors for zero-copy operations
+    fn register_files(&mut self, fds: &[RawFd]) -> io::Result<()>;
+    
+    /// Register buffers for zero-copy read/write
+    fn register_buffers(&mut self, buffers: &[IoBuffer]) -> io::Result<()>;
+}
+
+/// I/O operation types
+pub enum IoOperation {
+    /// Read from file descriptor
+    Read {
+        fd: RawFd,
+        buf: IoBuffer,
+        offset: u64,
+        user_data: u64,
+    },
+    /// Write to file descriptor
+    Write {
+        fd: RawFd,
+        buf: IoBuffer,
+        offset: u64,
+        user_data: u64,
+    },
+    /// Accept connection (single-shot)
+    Accept {
+        fd: RawFd,
+        user_data: u64,
+    },
+    /// Accept connections (multi-shot, one SQE for many connections)
+    AcceptMulti {
+        fd: RawFd,
+        user_data: u64,
+    },
+    /// Connect to address
+    Connect {
+        fd: RawFd,
+        addr: SocketAddr,
+        user_data: u64,
+    },
+    /// Send data (with optional zero-copy)
+    Send {
+        fd: RawFd,
+        buf: IoBuffer,
+        flags: SendFlags,
+        user_data: u64,
+    },
+    /// Send with zero-copy (SendZc)
+    SendZeroCopy {
+        fd: RawFd,
+        buf: IoBuffer,
+        user_data: u64,
+    },
+    /// Receive data
+    Recv {
+        fd: RawFd,
+        buf: IoBuffer,
+        user_data: u64,
+    },
+    /// Close file descriptor
+    Close {
+        fd: RawFd,
+        user_data: u64,
+    },
+    /// Fsync file
+    Fsync {
+        fd: RawFd,
+        user_data: u64,
+    },
+    /// Timeout operation
+    Timeout {
+        duration: Duration,
+        user_data: u64,
+    },
+}
+
+/// I/O completion result
+pub struct Completion {
+    /// User data from original operation
+    pub user_data: u64,
+    /// Result (bytes transferred or error code)
+    pub result: io::Result<usize>,
+    /// Additional flags (e.g., for multi-shot)
+    pub flags: CompletionFlags,
+}
+
+bitflags! {
+    pub struct CompletionFlags: u32 {
+        /// More completions coming for multi-shot operation
+        const MORE = 0x01;
+        /// Buffer was provided by kernel
+        const BUFFER_SELECT = 0x02;
+    }
+}
+
+bitflags! {
+    pub struct SendFlags: u32 {
+        /// Zero-copy send
+        const ZEROCOPY = 0x01;
+        /// Don't generate SIGPIPE
+        const NOSIGNAL = 0x02;
+    }
+}
+
+/// I/O buffer (can be registered for zero-copy)
+pub struct IoBuffer {
+    ptr: *mut u8,
+    len: usize,
+    /// Buffer group ID (for registered buffers)
+    buf_group: Option<u16>,
+}
+
+/// Linux io_uring implementation
+#[cfg(target_os = "linux")]
+pub struct IoUringReactor {
+    /// io_uring instance
+    ring: io_uring::IoUring,
+    /// Pending operations: user_data -> callback
+    pending: DashMap<u64, Box<dyn FnOnce(io::Result<usize>) + Send>>,
+    /// Registered file descriptors
+    registered_fds: Vec<RawFd>,
+    /// Registered buffers
+    registered_buffers: Vec<IoBuffer>,
+    /// Next user_data ID
+    next_id: AtomicU64,
+    /// Core ID (for SQPOLL CPU affinity)
+    core_id: usize,
+}
+
+#[cfg(target_os = "linux")]
+impl IoUringReactor {
+    /// Create reactor with SQPOLL mode (zero-syscall submissions)
+    pub fn new(core_id: usize) -> io::Result<Self> {
+        use io_uring::IoUring;
+        
+        let ring = IoUring::builder()
+            .setup_sqpoll(2000)              // Kernel-side polling (2ms idle timeout)
+            .setup_sqpoll_cpu(core_id as u32) // Pin SQPOLL thread to core
+            .setup_single_issuer()            // Single thread optimization
+            .setup_coop_taskrun()             // Cooperative task running
+            .setup_defer_taskrun()            // Defer for batching
+            .build(4096)?;                    // 4096 SQEs
+        
+        Ok(Self {
+            ring,
+            pending: DashMap::new(),
+            registered_fds: Vec::new(),
+            registered_buffers: Vec::new(),
+            next_id: AtomicU64::new(1),
+            core_id,
+        })
+    }
+    
+    /// Create reactor without SQPOLL (fallback mode)
+    pub fn new_basic() -> io::Result<Self> {
+        let ring = io_uring::IoUring::new(1024)?;
+        
+        Ok(Self {
+            ring,
+            pending: DashMap::new(),
+            registered_fds: Vec::new(),
+            registered_buffers: Vec::new(),
+            next_id: AtomicU64::new(1),
+            core_id: 0,
+        })
+    }
+}
+
+#[cfg(target_os = "linux")]
+impl Reactor for IoUringReactor {
+    fn submit(&mut self, op: IoOperation) -> io::Result<u64> {
+        let user_data = self.next_id.fetch_add(1, Ordering::Relaxed);
+        
+        let sqe = match op {
+            IoOperation::Read { fd, buf, offset, .. } => {
+                io_uring::opcode::Read::new(
+                    io_uring::types::Fd(fd),
+                    buf.ptr,
+                    buf.len as u32,
+                )
+                .offset(offset)
+                .build()
+                .user_data(user_data)
+            }
+            IoOperation::Write { fd, buf, offset, .. } => {
+                io_uring::opcode::Write::new(
+                    io_uring::types::Fd(fd),
+                    buf.ptr,
+                    buf.len as u32,
+                )
+                .offset(offset)
+                .build()
+                .user_data(user_data)
+            }
+            IoOperation::Accept { fd, .. } => {
+                io_uring::opcode::Accept::new(
+                    io_uring::types::Fd(fd),
+                    std::ptr::null_mut(),
+                    std::ptr::null_mut(),
+                )
+                .build()
+                .user_data(user_data)
+            }
+            IoOperation::AcceptMulti { fd, .. } => {
+                io_uring::opcode::AcceptMulti::new(io_uring::types::Fd(fd))
+                    .build()
+                    .user_data(user_data)
+            }
+            IoOperation::SendZeroCopy { fd, buf, .. } => {
+                io_uring::opcode::SendZc::new(
+                    io_uring::types::Fd(fd),
+                    buf.ptr,
+                    buf.len as u32,
+                )
+                .build()
+                .user_data(user_data)
+            }
+            IoOperation::Close { fd, .. } => {
+                io_uring::opcode::Close::new(io_uring::types::Fd(fd))
+                    .build()
+                    .user_data(user_data)
+            }
+            IoOperation::Fsync { fd, .. } => {
+                io_uring::opcode::Fsync::new(io_uring::types::Fd(fd))
+                    .build()
+                    .user_data(user_data)
+            }
+            _ => return Err(io::Error::new(io::ErrorKind::Unsupported, "Operation not supported")),
+        };
+        
+        unsafe {
+            self.ring.submission().push(&sqe)
+                .map_err(|_| io::Error::new(io::ErrorKind::Other, "SQ full"))?;
+        }
+        
+        // Submit (may be zero syscalls with SQPOLL)
+        self.ring.submit()?;
+        
+        Ok(user_data)
+    }
+    
+    fn submit_batch(&mut self, ops: Vec<IoOperation>) -> io::Result<Vec<u64>> {
+        let mut user_datas = Vec::with_capacity(ops.len());
+        
+        {
+            let mut sq = self.ring.submission();
+            
+            for op in ops {
+                let user_data = self.next_id.fetch_add(1, Ordering::Relaxed);
+                user_datas.push(user_data);
+                
+                let sqe = self.build_sqe(op, user_data)?;
+                unsafe {
+                    sq.push(&sqe)
+                        .map_err(|_| io::Error::new(io::ErrorKind::Other, "SQ full"))?;
+                }
+            }
+        }
+        
+        // Single syscall for all operations (or zero with SQPOLL)
+        self.ring.submit()?;
+        
+        Ok(user_datas)
+    }
+    
+    fn poll(&mut self) -> Vec<Completion> {
+        let mut completions = Vec::new();
+        
+        for cqe in self.ring.completion() {
+            let user_data = cqe.user_data();
+            let result = cqe.result();
+            
+            completions.push(Completion {
+                user_data,
+                result: if result >= 0 {
+                    Ok(result as usize)
+                } else {
+                    Err(io::Error::from_raw_os_error(-result))
+                },
+                flags: CompletionFlags::from_bits_truncate(cqe.flags()),
+            });
+        }
+        
+        completions
+    }
+    
+    fn wait(&mut self, timeout: Duration) -> io::Result<Vec<Completion>> {
+        self.ring.submit_and_wait_with_timeout(1, timeout)?;
+        Ok(self.poll())
+    }
+    
+    fn register_files(&mut self, fds: &[RawFd]) -> io::Result<()> {
+        self.ring.submitter().register_files(fds)?;
+        self.registered_fds.extend_from_slice(fds);
+        Ok(())
+    }
+    
+    fn register_buffers(&mut self, buffers: &[IoBuffer]) -> io::Result<()> {
+        let iovecs: Vec<_> = buffers.iter()
+            .map(|b| libc::iovec { iov_base: b.ptr as *mut _, iov_len: b.len })
+            .collect();
+        
+        self.ring.submitter().register_buffers(&iovecs)?;
+        self.registered_buffers.extend_from_slice(buffers);
+        Ok(())
+    }
+}
+
+/// macOS/BSD kqueue implementation
+#[cfg(target_os = "macos")]
+pub struct KqueueReactor {
+    /// kqueue file descriptor
+    kq: RawFd,
+    /// Pending operations
+    pending: DashMap<u64, Box<dyn FnOnce(io::Result<usize>) + Send>>,
+    /// Event buffer
+    events: Vec<libc::kevent>,
+    /// Next user_data ID
+    next_id: AtomicU64,
+}
+
+#[cfg(target_os = "macos")]
+impl KqueueReactor {
+    pub fn new() -> io::Result<Self> {
+        let kq = unsafe { libc::kqueue() };
+        if kq < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        
+        Ok(Self {
+            kq,
+            pending: DashMap::new(),
+            events: vec![unsafe { std::mem::zeroed() }; 1024],
+            next_id: AtomicU64::new(1),
+        })
+    }
+}
+
+#[cfg(target_os = "macos")]
+impl Reactor for KqueueReactor {
+    fn submit(&mut self, op: IoOperation) -> io::Result<u64> {
+        let user_data = self.next_id.fetch_add(1, Ordering::Relaxed);
+        
+        let (ident, filter, flags) = match op {
+            IoOperation::Read { fd, .. } => {
+                (fd as usize, libc::EVFILT_READ, libc::EV_ADD | libc::EV_ONESHOT)
+            }
+            IoOperation::Write { fd, .. } => {
+                (fd as usize, libc::EVFILT_WRITE, libc::EV_ADD | libc::EV_ONESHOT)
+            }
+            IoOperation::Accept { fd, .. } => {
+                (fd as usize, libc::EVFILT_READ, libc::EV_ADD | libc::EV_ONESHOT)
+            }
+            _ => return Err(io::Error::new(io::ErrorKind::Unsupported, "Operation not supported")),
+        };
+        
+        let changelist = [libc::kevent {
+            ident,
+            filter,
+            flags,
+            fflags: 0,
+            data: 0,
+            udata: user_data as *mut _,
+        }];
+        
+        let ret = unsafe {
+            libc::kevent(
+                self.kq,
+                changelist.as_ptr(),
+                1,
+                std::ptr::null_mut(),
+                0,
+                std::ptr::null(),
+            )
+        };
+        
+        if ret < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        
+        Ok(user_data)
+    }
+    
+    fn submit_batch(&mut self, ops: Vec<IoOperation>) -> io::Result<Vec<u64>> {
+        let mut user_datas = Vec::with_capacity(ops.len());
+        let mut changelist = Vec::with_capacity(ops.len());
+        
+        for op in ops {
+            let user_data = self.next_id.fetch_add(1, Ordering::Relaxed);
+            user_datas.push(user_data);
+            
+            let (ident, filter, flags) = match op {
+                IoOperation::Read { fd, .. } => {
+                    (fd as usize, libc::EVFILT_READ, libc::EV_ADD | libc::EV_ONESHOT)
+                }
+                IoOperation::Write { fd, .. } => {
+                    (fd as usize, libc::EVFILT_WRITE, libc::EV_ADD | libc::EV_ONESHOT)
+                }
+                _ => continue,
+            };
+            
+            changelist.push(libc::kevent {
+                ident,
+                filter,
+                flags,
+                fflags: 0,
+                data: 0,
+                udata: user_data as *mut _,
+            });
+        }
+        
+        let ret = unsafe {
+            libc::kevent(
+                self.kq,
+                changelist.as_ptr(),
+                changelist.len() as i32,
+                std::ptr::null_mut(),
+                0,
+                std::ptr::null(),
+            )
+        };
+        
+        if ret < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        
+        Ok(user_datas)
+    }
+    
+    fn poll(&mut self) -> Vec<Completion> {
+        let timeout = libc::timespec { tv_sec: 0, tv_nsec: 0 };
+        
+        let n = unsafe {
+            libc::kevent(
+                self.kq,
+                std::ptr::null(),
+                0,
+                self.events.as_mut_ptr(),
+                self.events.len() as i32,
+                &timeout,
+            )
+        };
+        
+        if n <= 0 {
+            return Vec::new();
+        }
+        
+        self.events[..n as usize]
+            .iter()
+            .map(|ev| Completion {
+                user_data: ev.udata as u64,
+                result: if ev.flags & libc::EV_ERROR != 0 {
+                    Err(io::Error::from_raw_os_error(ev.data as i32))
+                } else {
+                    Ok(ev.data as usize)
+                },
+                flags: CompletionFlags::empty(),
+            })
+            .collect()
+    }
+    
+    fn wait(&mut self, timeout: Duration) -> io::Result<Vec<Completion>> {
+        let timeout = libc::timespec {
+            tv_sec: timeout.as_secs() as i64,
+            tv_nsec: timeout.subsec_nanos() as i64,
+        };
+        
+        let n = unsafe {
+            libc::kevent(
+                self.kq,
+                std::ptr::null(),
+                0,
+                self.events.as_mut_ptr(),
+                self.events.len() as i32,
+                &timeout,
+            )
+        };
+        
+        if n < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        
+        Ok(self.events[..n as usize]
+            .iter()
+            .map(|ev| Completion {
+                user_data: ev.udata as u64,
+                result: Ok(ev.data as usize),
+                flags: CompletionFlags::empty(),
+            })
+            .collect())
+    }
+    
+    fn register_files(&mut self, _fds: &[RawFd]) -> io::Result<()> {
+        // kqueue doesn't have file registration like io_uring
+        Ok(())
+    }
+    
+    fn register_buffers(&mut self, _buffers: &[IoBuffer]) -> io::Result<()> {
+        // kqueue doesn't have buffer registration
+        Ok(())
+    }
+}
+
+/// Windows IOCP implementation
+#[cfg(target_os = "windows")]
+pub struct IocpReactor {
+    /// IOCP handle
+    iocp: HANDLE,
+    /// Pending operations
+    pending: DashMap<u64, Box<dyn FnOnce(io::Result<usize>) + Send>>,
+    /// Next user_data ID
+    next_id: AtomicU64,
+}
+
+#[cfg(target_os = "windows")]
+impl IocpReactor {
+    pub fn new() -> io::Result<Self> {
+        use windows_sys::Win32::System::IO::CreateIoCompletionPort;
+        
+        let iocp = unsafe {
+            CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0)
+        };
+        
+        if iocp == 0 {
+            return Err(io::Error::last_os_error());
+        }
+        
+        Ok(Self {
+            iocp,
+            pending: DashMap::new(),
+            next_id: AtomicU64::new(1),
+        })
+    }
+    
+    /// Associate a handle with the IOCP
+    pub fn associate(&self, handle: HANDLE) -> io::Result<()> {
+        use windows_sys::Win32::System::IO::CreateIoCompletionPort;
+        
+        let result = unsafe {
+            CreateIoCompletionPort(handle, self.iocp, 0, 0)
+        };
+        
+        if result == 0 {
+            return Err(io::Error::last_os_error());
+        }
+        
+        Ok(())
+    }
+}
+
+#[cfg(target_os = "windows")]
+impl Reactor for IocpReactor {
+    fn submit(&mut self, op: IoOperation) -> io::Result<u64> {
+        let user_data = self.next_id.fetch_add(1, Ordering::Relaxed);
+        
+        // Windows async I/O is initiated differently - operations are started
+        // with ReadFile/WriteFile with OVERLAPPED structures
+        match op {
+            IoOperation::Read { fd, buf, offset, .. } => {
+                // Create OVERLAPPED structure and initiate read
+                // The completion will be posted to IOCP
+            }
+            IoOperation::Write { fd, buf, offset, .. } => {
+                // Create OVERLAPPED structure and initiate write
+            }
+            _ => {}
+        }
+        
+        Ok(user_data)
+    }
+    
+    fn submit_batch(&mut self, ops: Vec<IoOperation>) -> io::Result<Vec<u64>> {
+        ops.into_iter()
+            .map(|op| self.submit(op))
+            .collect()
+    }
+    
+    fn poll(&mut self) -> Vec<Completion> {
+        use windows_sys::Win32::System::IO::GetQueuedCompletionStatusEx;
+        
+        let mut entries = vec![unsafe { std::mem::zeroed() }; 64];
+        let mut num_entries = 0u32;
+        
+        let result = unsafe {
+            GetQueuedCompletionStatusEx(
+                self.iocp,
+                entries.as_mut_ptr(),
+                entries.len() as u32,
+                &mut num_entries,
+                0,  // Don't wait
+                0,
+            )
+        };
+        
+        if result == 0 {
+            return Vec::new();
+        }
+        
+        entries[..num_entries as usize]
+            .iter()
+            .map(|entry| Completion {
+                user_data: entry.lpCompletionKey as u64,
+                result: Ok(entry.dwNumberOfBytesTransferred as usize),
+                flags: CompletionFlags::empty(),
+            })
+            .collect()
+    }
+    
+    fn wait(&mut self, timeout: Duration) -> io::Result<Vec<Completion>> {
+        use windows_sys::Win32::System::IO::GetQueuedCompletionStatusEx;
+        
+        let mut entries = vec![unsafe { std::mem::zeroed() }; 64];
+        let mut num_entries = 0u32;
+        
+        let result = unsafe {
+            GetQueuedCompletionStatusEx(
+                self.iocp,
+                entries.as_mut_ptr(),
+                entries.len() as u32,
+                &mut num_entries,
+                timeout.as_millis() as u32,
+                0,
+            )
+        };
+        
+        if result == 0 {
+            let err = io::Error::last_os_error();
+            if err.raw_os_error() == Some(258) {  // WAIT_TIMEOUT
+                return Ok(Vec::new());
+            }
+            return Err(err);
+        }
+        
+        Ok(entries[..num_entries as usize]
+            .iter()
+            .map(|entry| Completion {
+                user_data: entry.lpCompletionKey as u64,
+                result: Ok(entry.dwNumberOfBytesTransferred as usize),
+                flags: CompletionFlags::empty(),
+            })
+            .collect())
+    }
+    
+    fn register_files(&mut self, _fds: &[RawFd]) -> io::Result<()> {
+        // IOCP uses handle association instead
+        Ok(())
+    }
+    
+    fn register_buffers(&mut self, _buffers: &[IoBuffer]) -> io::Result<()> {
+        // IOCP doesn't have buffer registration
+        Ok(())
+    }
+}
+
+/// Platform-agnostic reactor factory
+pub fn create_reactor(core_id: usize) -> io::Result<Box<dyn Reactor>> {
+    #[cfg(target_os = "linux")]
+    {
+        // Try io_uring first, fall back to epoll
+        match IoUringReactor::new(core_id) {
+            Ok(reactor) => return Ok(Box::new(reactor)),
+            Err(_) => {
+                // Fall back to basic io_uring without SQPOLL
+                return Ok(Box::new(IoUringReactor::new_basic()?));
+            }
+        }
+    }
+    
+    #[cfg(target_os = "macos")]
+    {
+        return Ok(Box::new(KqueueReactor::new()?));
+    }
+    
+    #[cfg(target_os = "windows")]
+    {
+        return Ok(Box::new(IocpReactor::new()?));
+    }
+    
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        Err(io::Error::new(io::ErrorKind::Unsupported, "Platform not supported"))
+    }
+}
+
+/// Integration with Thread-Per-Core Executor
+pub struct ReactorPool {
+    /// One reactor per core
+    reactors: Vec<Arc<Mutex<Box<dyn Reactor>>>>,
+}
+
+impl ReactorPool {
+    pub fn new(num_cores: usize) -> io::Result<Self> {
+        let mut reactors = Vec::with_capacity(num_cores);
+        
+        for core_id in 0..num_cores {
+            let reactor = create_reactor(core_id)?;
+            reactors.push(Arc::new(Mutex::new(reactor)));
+        }
+        
+        Ok(Self { reactors })
+    }
+    
+    /// Get reactor for current thread's core
+    pub fn get_reactor(&self, core_id: usize) -> Arc<Mutex<Box<dyn Reactor>>> {
+        self.reactors[core_id % self.reactors.len()].clone()
+    }
+}
+
+/// Python async/await compatible future
+pub struct PyFuture<T> {
+    state: Arc<Mutex<FutureState<T>>>,
+    waker: Arc<AtomicWaker>,
+}
+
+enum FutureState<T> {
+    Pending,
+    Ready(T),
+    Error(io::Error),
+}
+
+impl<T: Send + 'static> PyFuture<T> {
+    pub fn new() -> Self {
+        Self {
+            state: Arc::new(Mutex::new(FutureState::Pending)),
+            waker: Arc::new(AtomicWaker::new()),
+        }
+    }
+    
+    pub fn set_result(&self, result: T) {
+        *self.state.lock().unwrap() = FutureState::Ready(result);
+        self.waker.wake();
+    }
+    
+    pub fn set_error(&self, error: io::Error) {
+        *self.state.lock().unwrap() = FutureState::Error(error);
+        self.waker.wake();
+    }
+}
+
+impl<T> Future for PyFuture<T> {
+    type Output = io::Result<T>;
+    
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        self.waker.register(cx.waker());
+        
+        let mut state = self.state.lock().unwrap();
+        match std::mem::replace(&mut *state, FutureState::Pending) {
+            FutureState::Pending => Poll::Pending,
+            FutureState::Ready(value) => Poll::Ready(Ok(value)),
+            FutureState::Error(err) => Poll::Ready(Err(err)),
+        }
+    }
+}
+```
+
+
 ## Data Models
 
 ### Core Python Object Model
@@ -3390,6 +4167,30 @@ pub enum BlockKind {
 
 **Validates: Requirements 3.7**
 
+### Property 21: Platform-Native Async I/O Cross-Platform Correctness
+
+*For any* I/O operation (read, write, accept, connect, send, recv), the result SHALL be identical across all supported platforms (Linux io_uring, macOS kqueue, Windows IOCP).
+
+**Validates: Requirements 17.17**
+
+### Property 22: Batched I/O Single Syscall
+
+*For any* batch of N I/O operations submitted via submit_batch(), the implementation SHALL use at most one syscall for submission (or zero syscalls when SQPOLL mode is active on Linux).
+
+**Validates: Requirements 17.9, 17.10**
+
+### Property 23: Multi-Shot Accept Correctness
+
+*For any* multi-shot accept operation, each accepted connection SHALL be delivered as a separate completion with the MORE flag set until the operation is cancelled.
+
+**Validates: Requirements 17.7**
+
+### Property 24: Zero-Copy Send Correctness
+
+*For any* zero-copy send operation (SendZc), the data buffer SHALL not be modified by the kernel until the completion is received, and the sent data SHALL be identical to the original buffer.
+
+**Validates: Requirements 17.8**
+
 
 ## Error Handling
 
@@ -3541,6 +4342,14 @@ Unit tests verify specific examples and edge cases:
    - C function calls
    - GIL release/acquire
 
+6. **Async I/O Tests**
+   - io_uring operations (Linux)
+   - kqueue operations (macOS)
+   - IOCP operations (Windows)
+   - Batched submission
+   - Multi-shot accept
+   - Zero-copy send
+
 ### Property-Based Tests
 
 Property-based tests verify universal properties across many generated inputs.
@@ -3608,6 +4417,69 @@ proptest! {
         
         prop_assert_eq!(refcount.strong_count(), expected_strong as u64);
         prop_assert_eq!(refcount.weak_count(), expected_weak as u64);
+    }
+    
+    // Feature: dx-py-runtime, Property 21: Platform-Native Async I/O Cross-Platform Correctness
+    #[test]
+    fn prop_async_io_read_write_roundtrip(data in prop::collection::vec(any::<u8>(), 1..4096)) {
+        let reactor = create_reactor(0).unwrap();
+        let temp_file = tempfile::NamedTempFile::new().unwrap();
+        let fd = temp_file.as_raw_fd();
+        
+        // Write data
+        let write_op = IoOperation::Write {
+            fd,
+            buf: IoBuffer { ptr: data.as_ptr() as *mut _, len: data.len(), buf_group: None },
+            offset: 0,
+            user_data: 1,
+        };
+        reactor.submit(write_op).unwrap();
+        let completions = reactor.wait(Duration::from_secs(1)).unwrap();
+        prop_assert_eq!(completions[0].result.unwrap(), data.len());
+        
+        // Read data back
+        let mut read_buf = vec![0u8; data.len()];
+        let read_op = IoOperation::Read {
+            fd,
+            buf: IoBuffer { ptr: read_buf.as_mut_ptr(), len: read_buf.len(), buf_group: None },
+            offset: 0,
+            user_data: 2,
+        };
+        reactor.submit(read_op).unwrap();
+        let completions = reactor.wait(Duration::from_secs(1)).unwrap();
+        prop_assert_eq!(completions[0].result.unwrap(), data.len());
+        
+        // Verify round-trip
+        prop_assert_eq!(read_buf, data);
+    }
+    
+    // Feature: dx-py-runtime, Property 22: Batched I/O Single Syscall
+    #[test]
+    fn prop_batched_io_submission(ops_count in 1usize..100) {
+        let reactor = create_reactor(0).unwrap();
+        let temp_files: Vec<_> = (0..ops_count)
+            .map(|_| tempfile::NamedTempFile::new().unwrap())
+            .collect();
+        
+        let ops: Vec<_> = temp_files.iter().enumerate()
+            .map(|(i, f)| IoOperation::Write {
+                fd: f.as_raw_fd(),
+                buf: IoBuffer { ptr: b"test".as_ptr() as *mut _, len: 4, buf_group: None },
+                offset: 0,
+                user_data: i as u64,
+            })
+            .collect();
+        
+        // All operations submitted in single batch
+        let user_datas = reactor.submit_batch(ops).unwrap();
+        prop_assert_eq!(user_datas.len(), ops_count);
+        
+        // All completions received
+        let mut completions = Vec::new();
+        while completions.len() < ops_count {
+            completions.extend(reactor.wait(Duration::from_secs(1)).unwrap());
+        }
+        prop_assert_eq!(completions.len(), ops_count);
     }
 }
 ```

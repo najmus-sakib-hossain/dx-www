@@ -45,10 +45,17 @@ export class ForgeStatusBar {
      * Start periodic status updates
      */
     private startUpdating(): void {
-        this.updateStatus();
-        this.updateInterval = setInterval(() => {
+        // Only update once initially, then use interval
+        // But only if connected - don't poll when disconnected
+        if (this.client.isConnected()) {
             this.updateStatus();
-        }, 3000); // Update every 3 seconds for more responsive UI
+        }
+        this.updateInterval = setInterval(() => {
+            // Only update if connected to avoid unnecessary polling
+            if (this.client.isConnected()) {
+                this.updateStatus();
+            }
+        }, 5000); // Update every 5 seconds (reduced frequency)
     }
 
     /**
@@ -66,13 +73,18 @@ export class ForgeStatusBar {
      */
     private async updateStatus(): Promise<void> {
         if (this.client.isConnected()) {
-            const status = await this.client.getStatus();
-            const gitStatus = await this.client.getGitStatus();
-            this.gitStatus = gitStatus;
-            if (status) {
-                this.showConnected(status, gitStatus);
-            } else {
-                this.showConnected();
+            try {
+                const status = await this.client.getStatus();
+                const gitStatus = await this.client.getGitStatus();
+                this.gitStatus = gitStatus;
+                if (status) {
+                    this.showConnected(status, gitStatus);
+                } else {
+                    this.showConnected();
+                }
+            } catch (e) {
+                console.error('[Forge StatusBar] Error updating status:', e);
+                this.showDisconnected();
             }
         } else {
             this.showDisconnected();

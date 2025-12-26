@@ -77,6 +77,7 @@ export class ForgeClient {
     private reconnectDelay = 1000;
     private eventHandlers: EventHandler[] = [];
     private connected = false;
+    private connecting = false;
     private port: number;
 
     constructor() {
@@ -95,9 +96,17 @@ export class ForgeClient {
      * Connect to the Forge daemon
      */
     async connect(): Promise<boolean> {
+        // Prevent multiple simultaneous connection attempts
+        if (this.connecting) {
+            console.log('[Forge] Connection already in progress');
+            return false;
+        }
+
         if (this.isConnected()) {
             return true;
         }
+
+        this.connecting = true;
 
         return new Promise((resolve) => {
             try {
@@ -106,22 +115,40 @@ export class ForgeClient {
                 console.log(`[Forge] Connecting to ${url}...`);
                 this.ws = new WebSocket(url);
 
+                // Set a connection timeout
+                const timeout = setTimeout(() => {
+                    console.log('[Forge] Connection timeout');
+                    this.connecting = false;
+                    if (this.ws) {
+                        this.ws.close();
+                        this.ws = null;
+                    }
+                    resolve(false);
+                }, 5000);
+
                 this.ws.on('open', () => {
+                    clearTimeout(timeout);
                     this.connected = true;
+                    this.connecting = false;
                     this.reconnectAttempts = 0;
                     console.log('[Forge] Connected to daemon');
                     resolve(true);
                 });
 
                 this.ws.on('close', () => {
+                    clearTimeout(timeout);
                     this.connected = false;
+                    this.connecting = false;
                     console.log('[Forge] Disconnected from daemon');
-                    this.attemptReconnect();
+                    // Don't auto-reconnect - let the status bar handle showing disconnected state
+                    // User can manually start the daemon if needed
                 });
 
                 this.ws.on('error', (error) => {
+                    clearTimeout(timeout);
                     console.error('[Forge] WebSocket error:', error.message);
                     this.connected = false;
+                    this.connecting = false;
                     resolve(false);
                 });
 
@@ -349,10 +376,15 @@ export class ForgeClient {
      */
     async getGitStatus(): Promise<GitStatusResponse | null> {
         try {
-            const response = await this.send({ command: 'GetGitStatus' });
+            const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const response = await this.send({
+                command: 'GetGitStatus',
+                workspace_path: workspacePath
+            });
             if (response.type === 'GitStatus') {
                 return response as GitStatusResponse;
             }
+            console.error('[Forge] Unexpected response type:', response.type, response);
             return null;
         } catch (e) {
             console.error('[Forge] Failed to get git status:', e);
@@ -365,10 +397,15 @@ export class ForgeClient {
      */
     async syncWithGit(): Promise<GitStatusResponse | null> {
         try {
-            const response = await this.send({ command: 'SyncWithGit' });
+            const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const response = await this.send({
+                command: 'SyncWithGit',
+                workspace_path: workspacePath
+            });
             if (response.type === 'GitStatus') {
                 return response as GitStatusResponse;
             }
+            console.error('[Forge] Unexpected response type:', response.type, response);
             return null;
         } catch (e) {
             console.error('[Forge] Failed to sync with git:', e);

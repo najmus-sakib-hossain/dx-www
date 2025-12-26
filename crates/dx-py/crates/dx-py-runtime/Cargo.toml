@@ -19,6 +19,7 @@ members = [
     "dx-py-core",
     "dx-py-interpreter",
     "dx-py-cli",
+    "dx-py-reactor",
 ]
 
 [workspace.package]

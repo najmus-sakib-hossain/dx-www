@@ -477,7 +477,15 @@ function formatTimestamp(timestamp: string): string {
  */
 async function showGitStatus(client: ForgeClient): Promise<void> {
     if (!client.isConnected()) {
-        vscode.window.showWarningMessage('Forge daemon is not running');
+        // Offer to start the daemon instead of just showing a warning
+        const action = await vscode.window.showWarningMessage(
+            'Forge daemon is not running',
+            'Start Daemon',
+            'Cancel'
+        );
+        if (action === 'Start Daemon') {
+            await vscode.commands.executeCommand('dx.forge.start');
+        }
         return;
     }
 

@@ -688,17 +688,13 @@ async function initializeForgeIntegration(context: vscode.ExtensionContext): Pro
             extensionContext.forgeStatusBar = forgeStatusBar;
         }
 
-        // Auto-connect if enabled
+        // Auto-connect if enabled - DISABLED to prevent loops
+        // Users should manually start the daemon with "DX: Start Forge Daemon"
         const config = vscode.workspace.getConfiguration('dx.forge');
         if (config.get('autoConnect', true)) {
-            forgeStatusBar.showConnecting();
-            const connected = await forgeClient.connect();
-
-            if (connected) {
-                console.log('DX: Connected to Forge daemon');
-            } else {
-                console.log('DX: Forge daemon not running (will show in status bar)');
-            }
+            // Just show disconnected state, don't try to connect automatically
+            forgeStatusBar.showDisconnected();
+            console.log('DX: Forge daemon not running. Use "DX: Start Forge Daemon" to start.');
         }
 
         // Set up file change notifications to Forge
