@@ -7,6 +7,10 @@ members = [
     "dx-py-jit",
     "dx-py-types",
     "dx-py-ffi",
+    "dx-py-modules",
+    "dx-py-parallel",
+    "dx-py-stack",
+    "dx-py-ipc",
 ]
 
 [workspace.package]
@@ -52,3 +56,9 @@ tempfile = "3.9"
 # Error handling
 thiserror = "1.0"
 anyhow = "1.0"
+
+# File watching
+notify = "6.1"
+
+# CPU detection
+num_cpus = "1.16"
