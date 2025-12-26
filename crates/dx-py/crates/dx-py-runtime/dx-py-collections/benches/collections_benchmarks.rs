@@ -14,7 +14,7 @@ fn bench_simd_list_sum_int(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*size as u64));
         
         group.bench_with_input(BenchmarkId::new("simd", size), size, |b, _| {
-            b.iter(|| list.sum_int())
+            b.iter(|| list.sum())
         });
     }
     
@@ -30,7 +30,7 @@ fn bench_simd_list_sum_float(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*size as u64));
         
         group.bench_with_input(BenchmarkId::new("simd", size), size, |b, _| {
-            b.iter(|| list.sum_float())
+            b.iter(|| list.sum())
         });
     }
     
@@ -82,6 +82,22 @@ fn bench_simd_list_count(c: &mut Criterion) {
         
         group.bench_with_input(BenchmarkId::new("simd", size), size, |b, _| {
             b.iter(|| list.count_int(5))
+        });
+    }
+    
+    group.finish();
+}
+
+fn bench_simd_list_map(c: &mut Criterion) {
+    let mut group = c.benchmark_group("simd_list_map");
+    
+    for size in [100, 1000, 10000].iter() {
+        let list = SimdList::from_ints((0..*size as i64).collect());
+        
+        group.throughput(Throughput::Elements(*size as u64));
+        
+        group.bench_with_input(BenchmarkId::new("simd", size), size, |b, _| {
+            b.iter(|| list.map_mul2_int())
         });
     }
     
@@ -169,6 +185,7 @@ criterion_group!(
     bench_simd_list_filter,
     bench_simd_list_index,
     bench_simd_list_count,
+    bench_simd_list_map,
     bench_swiss_dict_insert,
     bench_swiss_dict_get,
     bench_swiss_dict_contains,

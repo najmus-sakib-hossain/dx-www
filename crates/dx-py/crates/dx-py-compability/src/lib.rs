@@ -15,10 +15,20 @@ pub mod runtime;
 pub mod uv;
 pub mod venv;
 
-// Re-export main types
+// Re-export main types from config
 pub use config::{DxPyConfig, ConfigError};
+
+// Re-export main types from markers
 pub use markers::{MarkerEnvironment, MarkerEvaluator, MarkerError, MarkerExpr, MarkerOp};
+
+// Re-export main types from platform
 pub use platform::{Platform, PlatformDetector, Os, Architecture, Libc, WheelTag, WheelTagGenerator};
+
+// Re-export main types from runtime
 pub use runtime::{PythonRuntime, PythonVersion, RuntimeDetector, InstallationSource, RuntimeCapabilities, DetectionError};
+
+// Re-export main types from uv
 pub use uv::{UvConfig, UvConfigLoader, PythonPreference};
+
+// Re-export main types from venv
 pub use venv::{VenvBuilder, VenvOptions, VirtualEnvironment, VenvError};

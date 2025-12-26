@@ -6,15 +6,15 @@ use dx_py_collections::{SimdList, SimdStorage, SwissDict};
 fn test_simd_list_int_sum() {
     let list = SimdList::from_ints(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     
-    let sum = list.sum_int();
-    assert_eq!(sum, 55);
+    let sum = list.sum().unwrap();
+    assert_eq!(sum, 55.0);
 }
 
 #[test]
 fn test_simd_list_float_sum() {
     let list = SimdList::from_floats(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
     
-    let sum = list.sum_float();
+    let sum = list.sum().unwrap();
     assert!((sum - 15.0).abs() < 0.001);
 }
 
@@ -152,6 +152,11 @@ fn test_simd_list_large() {
 fn test_simd_list_map() {
     let list = SimdList::from_ints(vec![1, 2, 3, 4, 5]);
     
-    let doubled = list.map_mul2_int();
-    assert_eq!(doubled, vec![2, 4, 6, 8, 10]);
+    let doubled = list.map_mul2_int().unwrap();
+    // Check the storage contains the doubled values
+    if let SimdStorage::Ints(values) = doubled.storage() {
+        assert_eq!(values, &[2, 4, 6, 8, 10]);
+    } else {
+        panic!("Expected Ints storage");
+    }
 }
