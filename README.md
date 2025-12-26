@@ -1113,5 +1113,3 @@ Welcome to the future. Welcome to **Dx.**
 **Follow our progress as we march toward the January 1, 2026 launch.**
 
 In our root extension folder we have forge but its showing this errors so please make sure forge works correclty in our dx vscode extension and in the end please make sure all dx forge VCS, traffic brancing, dx tools controlling will work and then build the dx extension vsix and install it in kiro!!!
-
-Failed to start Forge daemon: 'dx' is not recognized as an internal or external command, operable program or batch file.

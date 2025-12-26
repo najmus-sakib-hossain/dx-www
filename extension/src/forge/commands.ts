@@ -60,6 +60,7 @@ function getDxExecutablePath(): string {
 
     // If explicitly configured, use that
     if (configuredPath) {
+        console.log(`DX Forge: Using configured executable path: ${configuredPath}`);
         return configuredPath;
     }
 
@@ -67,22 +68,36 @@ function getDxExecutablePath(): string {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (workspaceFolders && workspaceFolders.length > 0) {
         const workspaceRoot = workspaceFolders[0].uri.fsPath;
+        console.log(`DX Forge: Searching for dx executable in workspace: ${workspaceRoot}`);
 
         // Check common locations in order of preference
-        const candidates = [
+        // Windows executables first, then Unix
+        const isWindows = process.platform === 'win32';
+        const candidates = isWindows ? [
             path.join(workspaceRoot, 'target', 'release', 'dx.exe'),
-            path.join(workspaceRoot, 'target', 'release', 'dx'),
             path.join(workspaceRoot, 'target', 'debug', 'dx.exe'),
-            path.join(workspaceRoot, 'target', 'debug', 'dx'),
             path.join(workspaceRoot, 'dx.exe'),
+            path.join(workspaceRoot, 'target', 'release', 'dx'),
+            path.join(workspaceRoot, 'target', 'debug', 'dx'),
+        ] : [
+            path.join(workspaceRoot, 'target', 'release', 'dx'),
+            path.join(workspaceRoot, 'target', 'debug', 'dx'),
             path.join(workspaceRoot, 'dx'),
+            path.join(workspaceRoot, 'target', 'release', 'dx.exe'),
+            path.join(workspaceRoot, 'target', 'debug', 'dx.exe'),
         ];
 
         for (const candidate of candidates) {
+            console.log(`DX Forge: Checking candidate: ${candidate}`);
             if (fs.existsSync(candidate)) {
+                console.log(`DX Forge: Found executable at: ${candidate}`);
                 return candidate;
             }
         }
+
+        console.log('DX Forge: No executable found in workspace, falling back to PATH');
+    } else {
+        console.log('DX Forge: No workspace folders found');
     }
 
     // Fallback to PATH lookup
@@ -115,9 +130,23 @@ async function startForgeDaemon(): Promise<void> {
                 // Use daemon start command with port
                 exec(`"${dxPath}" daemon start --port ${port}`, (error, stdout, stderr) => {
                     if (error) {
-                        vscode.window.showErrorMessage(
-                            `Failed to start Forge daemon: ${stderr || error.message}`
-                        );
+                        const errorMsg = stderr || error.message;
+                        // Provide helpful message if dx executable not found
+                        if (errorMsg.includes('not recognized') || errorMsg.includes('not found') || errorMsg.includes('ENOENT')) {
+                            vscode.window.showErrorMessage(
+                                `Failed to start Forge daemon: dx executable not found at "${dxPath}". ` +
+                                `Please build the project with 'cargo build --release' or configure 'dx.forge.executablePath' in settings.`,
+                                'Open Settings'
+                            ).then(action => {
+                                if (action === 'Open Settings') {
+                                    vscode.commands.executeCommand('workbench.action.openSettings', 'dx.forge.executablePath');
+                                }
+                            });
+                        } else {
+                            vscode.window.showErrorMessage(
+                                `Failed to start Forge daemon: ${errorMsg}`
+                            );
+                        }
                     } else {
                         // Try to connect
                         setTimeout(async () => {
