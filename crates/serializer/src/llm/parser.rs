@@ -5,8 +5,10 @@
 //! ## LLM Format Syntax
 //!
 //! ```text
-//! # Context section
-//! #c:<key>|<val>;<key>|<val>
+//! # Root-level context (key|value pairs without prefix)
+//! nm|dx
+//! v|0.0.1
+//! tt|Enhanced Developing Experience
 //!
 //! # Reference definitions
 //! #:<ref_key>|<ref_value>
@@ -100,10 +102,10 @@ impl LlmParser {
             return Ok(());
         }
 
+        // Legacy support: Context section with #c: prefix
         if let Some(content) = line.strip_prefix("#c:") {
-            // Context section: #c:key|val;key|val
-            let context = Self::parse_context(content)?;
-            doc.context = context;
+            let context = Self::parse_context_legacy(content)?;
+            doc.context.extend(context);
             *current_section = None;
         } else if let Some(content) = line.strip_prefix("#:") {
             // Reference definition: #:key|value
@@ -126,6 +128,10 @@ impl LlmParser {
                 let row = Self::parse_row(line, &section.schema)?;
                 section.rows.push(row);
             }
+        } else if line.contains('|') && !line.starts_with('#') {
+            // Root-level key|value pair (context) - new format without #c: prefix
+            let (key, value) = Self::parse_context_pair(line)?;
+            doc.context.insert(key, value);
         }
 
         Ok(())
@@ -162,8 +168,8 @@ impl LlmParser {
         false
     }
 
-    /// Parse context section: #c:key|val;key|val
-    fn parse_context(content: &str) -> Result<HashMap<String, DxLlmValue>, ParseError> {
+    /// Parse context section: #c:key|val;key|val (legacy format)
+    fn parse_context_legacy(content: &str) -> Result<HashMap<String, DxLlmValue>, ParseError> {
         let mut context = HashMap::new();
 
         if content.is_empty() {
@@ -189,6 +195,20 @@ impl LlmParser {
         }
 
         Ok(context)
+    }
+
+    /// Parse a single root-level context pair: key|value (new format)
+    fn parse_context_pair(line: &str) -> Result<(String, DxLlmValue), ParseError> {
+        let parts: Vec<&str> = line.splitn(2, '|').collect();
+        if parts.len() != 2 {
+            return Err(ParseError::MalformedContext {
+                msg: format!("Expected key|value, got: {}", line),
+            });
+        }
+
+        let key = parts[0].trim().to_string();
+        let value = Self::parse_value(parts[1].trim());
+        Ok((key, value))
     }
 
     /// Parse reference: #:key|value
@@ -362,7 +382,20 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_context() {
+    fn test_parse_context_new_format() {
+        // New format: root-level key|value pairs without #c: prefix
+        let input = "nm|Test\nst|active\nct|42";
+        let doc = LlmParser::parse(input).unwrap();
+
+        assert_eq!(doc.context.len(), 3);
+        assert_eq!(doc.context.get("nm").unwrap().as_str(), Some("Test"));
+        assert_eq!(doc.context.get("st").unwrap().as_str(), Some("active"));
+        assert_eq!(doc.context.get("ct").unwrap().as_num(), Some(42.0));
+    }
+
+    #[test]
+    fn test_parse_context_legacy_format() {
+        // Legacy format: #c:key|val;key|val (still supported for backward compatibility)
         let input = "#c:nm|Test;st|active;ct|42";
         let doc = LlmParser::parse(input).unwrap();
 

@@ -261,8 +261,9 @@ export function testParseDataSectionHeader(): void {
  * Property 1.9: parseLlm parses complete documents
  */
 export function testParseLlmComplete(): void {
-    // Test a complete document
-    const input = `#c:nm|Test;ct|42
+    // Test a complete document with new format (root-level key|value pairs)
+    const input = `nm|Test
+ct|42
 #:A|CommonValue
 #d(id|nm|ac)
 1|Alice|+
@@ -373,10 +374,21 @@ export function runUnitTests(): void {
             }
         },
         {
-            name: 'parseLlm skips comments',
+            name: 'parseLlm skips comments and parses legacy format',
             test: () => {
+                // Legacy format with #c: prefix (still supported)
                 const result = parseLlm('// comment\n#c:nm|Test');
                 return result.success && result.document!.context.has('nm');
+            }
+        },
+        {
+            name: 'parseLlm parses new root-level format',
+            test: () => {
+                // New format: root-level key|value pairs
+                const result = parseLlm('nm|Test\nv|1.0');
+                return result.success &&
+                    result.document!.context.has('nm') &&
+                    result.document!.context.has('v');
             }
         },
         {

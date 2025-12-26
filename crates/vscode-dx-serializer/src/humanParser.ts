@@ -452,17 +452,17 @@ export function serializeValue(value: DxValue): string {
 
 /**
  * Serialize DxDocument to LLM format
+ * 
+ * New format: Root-level key|value pairs without #c: prefix
  */
 export function serializeToLlm(doc: DxDocument): string {
     const lines: string[] = [];
 
-    // Context section
+    // Context section - new format: root-level key|value pairs
     if (doc.context.size > 0) {
-        const pairs: string[] = [];
         for (const [key, value] of doc.context) {
-            pairs.push(`${key}|${serializeValue(value)}`);
+            lines.push(`${key}|${serializeValue(value)}`);
         }
-        lines.push(`#c:${pairs.join(';')}`);
     }
 
     // Reference definitions

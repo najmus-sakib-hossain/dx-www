@@ -769,7 +769,8 @@ repository           = https://example.com`;
                 doc.context.set('nm', strValue('test'));
                 doc.context.set('v', strValue('1.0.0'));
                 const result = serializeToLlmV3(doc);
-                return result.startsWith('#c:') && result.includes('nm|test');
+                // New format: root-level key|value pairs without #c: prefix
+                return !result.includes('#c:') && result.includes('nm|test');
             }
         },
     ];

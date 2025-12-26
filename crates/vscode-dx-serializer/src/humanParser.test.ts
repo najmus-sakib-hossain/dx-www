@@ -349,9 +349,14 @@ export function testSerializeToLlm(): void {
 
     const result = serializeToLlm(doc);
 
-    // Should contain context section
-    if (!result.includes('#c:')) {
-        throw new Error(`Should contain context section: ${result}`);
+    // New format: root-level key|value pairs without #c: prefix
+    if (result.includes('#c:')) {
+        throw new Error(`Should NOT contain #c: prefix (new format): ${result}`);
+    }
+
+    // Should contain context key-value pairs
+    if (!result.includes('nm|Test')) {
+        throw new Error(`Should contain context key-value pair: ${result}`);
     }
 
     // Should contain reference

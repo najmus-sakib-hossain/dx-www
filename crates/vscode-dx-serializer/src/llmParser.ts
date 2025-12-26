@@ -1,14 +1,17 @@
 /**
  * LLM Format Parser for DX Serializer VS Code Extension
  * 
- * Parses the token-optimized LLM format with sigils (#c, #:, #<letter>)
+ * Parses the token-optimized LLM format with sigils (#:, #<letter>)
  * into an internal DxDocument representation.
  * 
  * LLM Format Syntax:
- * - #c:key|value;key|value  - Context section
+ * - key|value               - Root-level context (no prefix needed)
  * - #:ref|value             - Reference definition
  * - #<letter>(schema)       - Data section header
  * - row1|row2|row3          - Data rows (pipe-separated)
+ * 
+ * Legacy Support:
+ * - #c:key|value;key|value  - Old context format (still supported)
  * 
  * Value Types:
  * - String: plain text or quoted
@@ -285,7 +288,7 @@ export function parseLlm(input: string): ParseResult {
             continue;
         }
 
-        // Context section: #c:...
+        // Legacy context section: #c:... (still supported for backward compatibility)
         if (trimmed.startsWith('#c:')) {
             const content = trimmed.substring(3);
             const contextMap = parseContextSection(content);
@@ -349,6 +352,17 @@ export function parseLlm(input: string): ParseResult {
             continue;
         }
 
+        // Root-level key|value pair (context) - new format without #c: prefix
+        if (trimmed.includes('|') && !trimmed.startsWith('#')) {
+            const pipeIdx = trimmed.indexOf('|');
+            const key = trimmed.substring(0, pipeIdx).trim();
+            const rawValue = trimmed.substring(pipeIdx + 1);
+            if (key) {
+                doc.context.set(key, parseValue(rawValue));
+            }
+            continue;
+        }
+
         // Unknown line format
         if (trimmed.startsWith('#')) {
             return {
@@ -357,7 +371,7 @@ export function parseLlm(input: string): ParseResult {
                     message: `Unknown sigil in line: ${trimmed}`,
                     line: lineNum,
                     column: 1,
-                    hint: 'Valid sigils are #c: (context), #: (reference), #<letter>( (data section)',
+                    hint: 'Valid sigils are #: (reference), #<letter>( (data section)',
                 },
             };
         }

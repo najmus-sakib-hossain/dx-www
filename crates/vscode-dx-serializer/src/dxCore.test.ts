@@ -84,10 +84,10 @@ const llmContextSection = fc.array(
     for (const [k, v] of pairs) {
         uniquePairs.set(k, v);
     }
-    const pairStr = Array.from(uniquePairs.entries())
-        .map(([k, v]) => `${k}|${v}`)
-        .join(';');
-    return `#c:${pairStr}`;
+    // New format: root-level key|value pairs (one per line)
+    const lines = Array.from(uniquePairs.entries())
+        .map(([k, v]) => `${k}|${v}`);
+    return lines.join('\n');
 });
 
 /**
@@ -491,9 +491,18 @@ export function runUnitTests(): void {
 
     const tests: Array<{ name: string; test: () => boolean }> = [
         {
-            name: 'toHuman transforms LLM context section',
+            name: 'toHuman transforms LLM context section (legacy)',
             test: () => {
+                // Legacy format still supported
                 const result = core.toHuman('#c:nm|Test;ct|42');
+                return result.success && result.content.includes('name') && result.content.includes('Test');
+            }
+        },
+        {
+            name: 'toHuman transforms LLM context section (new format)',
+            test: () => {
+                // New format: root-level key|value pairs
+                const result = core.toHuman('nm|Test\nct|42');
                 return result.success && result.content.includes('name') && result.content.includes('Test');
             }
         },
@@ -515,9 +524,16 @@ export function runUnitTests(): void {
             }
         },
         {
-            name: 'validate accepts valid LLM content',
+            name: 'validate accepts valid LLM content (legacy)',
             test: () => {
                 const result = core.validate('#c:nm|Test');
+                return result.success;
+            }
+        },
+        {
+            name: 'validate accepts valid LLM content (new format)',
+            test: () => {
+                const result = core.validate('nm|Test\nv|1.0');
                 return result.success;
             }
         },
@@ -564,9 +580,15 @@ export function runUnitTests(): void {
             }
         },
         {
-            name: 'isSaveable returns true for valid content',
+            name: 'isSaveable returns true for valid content (legacy)',
             test: () => {
                 return core.isSaveable('#c:nm|Test');
+            }
+        },
+        {
+            name: 'isSaveable returns true for valid content (new format)',
+            test: () => {
+                return core.isSaveable('nm|Test\nv|1.0');
             }
         },
         {
@@ -687,15 +709,15 @@ export async function testWasmLoading(): Promise<void> {
         if (core.isWasm) {
             console.log('  ✓ WASM module loaded successfully');
 
-            // Test basic operations
-            const toHumanResult = core.toHuman('#c:nm|Test');
+            // Test basic operations with new format
+            const toHumanResult = core.toHuman('nm|Test\nv|1.0');
             if (toHumanResult.success) {
                 console.log('  ✓ WASM toHuman works');
             } else {
                 console.log(`  ✗ WASM toHuman failed: ${toHumanResult.error}`);
             }
 
-            const validateResult = core.validate('#c:nm|Test');
+            const validateResult = core.validate('nm|Test\nv|1.0');
             if (validateResult.success) {
                 console.log('  ✓ WASM validate works');
             } else {
@@ -723,10 +745,12 @@ export async function testParseEquivalence(): Promise<void> {
 
     const extensionPath = path.resolve(__dirname, '..');
     const testCases = [
-        '#c:nm|Test;v|1.0',
-        '#c:nm|Project;ds|A test project',
+        // New format: root-level key|value pairs
+        'nm|Test\nv|1.0',
+        'nm|Project\nds|A test project',
         '#d(id|nm|en)\n1|Alpha|+\n2|Beta|-',
-        '#c:nm|App\n#d(id|nm)\n1|First\n2|Second',
+        // New format with section
+        'nm|App\n#d(id|nm)\n1|First\n2|Second',
     ];
 
     // Get fallback core
@@ -833,7 +857,10 @@ export async function testErrorHandling(): Promise<void> {
 
     // Test that valid content passes
     const validCases = [
+        // Legacy format
         '#c:nm|Test',
+        // New format
+        'nm|Test\nv|1.0',
         '#d(id|nm)\n1|Alpha\n2|Beta',
         'key: value',
     ];

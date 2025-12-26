@@ -77,7 +77,8 @@ pub fn llm_to_human_with_config(
 /// repository = https://example.com
 /// "#;
 /// let llm = human_to_llm(human_v3).unwrap();
-/// assert!(llm.contains("#c:"));
+/// // New format: root-level key|value pairs without #c: prefix
+/// assert!(llm.contains("nm|Test") || llm.contains("name|Test"));
 ///
 /// // Old Human format (with [config] header)
 /// let human_old = r#"
@@ -86,9 +87,9 @@ pub fn llm_to_human_with_config(
 ///     count = 42
 /// "#;
 /// let llm = human_to_llm(human_old).unwrap();
-/// assert!(llm.contains("#c:"));
+/// assert!(llm.contains("nm|Test") || llm.contains("name|Test"));
 ///
-/// // LLM format passthrough
+/// // LLM format passthrough (legacy format)
 /// let llm_input = "#c:nm|Test";
 /// let llm = human_to_llm(llm_input).unwrap();
 /// assert_eq!(llm, llm_input);
@@ -217,7 +218,8 @@ pub fn document_to_human_with_config(doc: &DxDocument, config: HumanFormatConfig
 /// workspace = frontend/www, frontend/mobile
 /// "#;
 /// let llm = human_to_llm_v2(human_v2).unwrap();
-/// assert!(llm.contains("#c:"));
+/// // New format: root-level key|value pairs without #c: prefix
+/// assert!(llm.contains("nm|Test") || llm.contains("name|Test"));
 /// ```
 pub fn human_to_llm_v2(human_input: &str) -> Result<String, ConvertError> {
     // The parser already handles V2 format (full key names, full section names)
@@ -617,14 +619,16 @@ mod tests {
 "#;
         let llm = human_to_llm(human).unwrap();
         
-        assert!(llm.contains("#c:"));
+        // New format: root-level key|value pairs without #c: prefix
+        assert!(!llm.contains("#c:"));
         assert!(llm.contains("nm|Test")); // name compressed to nm
         assert!(llm.contains("ct|42")); // count compressed to ct
     }
 
     #[test]
     fn test_llm_human_round_trip() {
-        let original_llm = "#c:nm|Test;ct|42\n#d(id|vl)\n1|Alpha\n2|Beta";
+        // New format: root-level key|value pairs
+        let original_llm = "nm|Test\nct|42\n#d(id|vl)\n1|Alpha\n2|Beta";
         
         // LLM -> Human -> LLM
         let human = llm_to_human(original_llm).unwrap();
@@ -676,7 +680,8 @@ mod tests {
 
     #[test]
     fn test_llm_to_machine_to_llm() {
-        let original_llm = "#c:nm|Test;ct|42\n#d(id|vl)\n1|Alpha";
+        // New format: root-level key|value pairs
+        let original_llm = "nm|Test\nct|42\n#d(id|vl)\n1|Alpha";
         
         // LLM -> Machine -> LLM
         let machine = llm_to_machine(original_llm).unwrap();
@@ -762,7 +767,8 @@ count = 42
 "#;
         let llm = human_to_llm_v2(human_v2).unwrap();
         
-        assert!(llm.contains("#c:"));
+        // New format: root-level key|value pairs without #c: prefix
+        assert!(!llm.contains("#c:"));
         // Keys should be compressed in LLM format
         assert!(llm.contains("nm|Test") || llm.contains("name|Test")); 
         assert!(llm.contains("ct|42") || llm.contains("count|42"));
@@ -770,7 +776,8 @@ count = 42
 
     #[test]
     fn test_llm_human_v2_round_trip() {
-        let original_llm = "#c:nm|Test;ct|42\n#d(id|vl)\n1|Alpha\n2|Beta";
+        // New format: root-level key|value pairs
+        let original_llm = "nm|Test\nct|42\n#d(id|vl)\n1|Alpha\n2|Beta";
         
         // LLM -> Human V2 -> LLM
         let human_v2 = llm_to_human_v2(original_llm).unwrap();

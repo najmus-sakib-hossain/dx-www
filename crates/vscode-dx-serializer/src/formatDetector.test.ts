@@ -115,10 +115,19 @@ export function runUnitTests(): void {
 
         // LLM Detection (Requirement 5.5)
         {
-            name: 'detectLlm: detects #c: context marker',
+            name: 'detectLlm: detects #c: context marker (legacy)',
             test: () => {
+                // Legacy format still supported
                 const result = detectLlm('#c:nm|test;v|1.0');
                 return result.confidence >= 0.4;
+            }
+        },
+        {
+            name: 'detectLlm: detects root-level key|value pairs (new format)',
+            test: () => {
+                // New format: root-level key|value pairs
+                const result = detectLlm('nm|test\nv|1.0\nau|author');
+                return result.confidence >= 0.3;
             }
         },
         {
@@ -129,10 +138,17 @@ export function runUnitTests(): void {
             }
         },
         {
-            name: 'detectLlm: detects combined markers',
+            name: 'detectLlm: detects combined markers (legacy)',
             test: () => {
                 const result = detectLlm('#c:nm|test\n#f(nm|repo)\nforge|url');
                 return result.confidence >= 0.8;
+            }
+        },
+        {
+            name: 'detectLlm: detects combined markers (new format)',
+            test: () => {
+                const result = detectLlm('nm|test\n#f(nm|repo)\nforge|url');
+                return result.confidence >= 0.5;
             }
         },
 
@@ -175,9 +191,16 @@ export function runUnitTests(): void {
             }
         },
         {
-            name: 'detectFormat: returns llm for LLM',
+            name: 'detectFormat: returns llm for LLM (legacy)',
             test: () => {
                 const result = detectFormat('#c:nm|test\n#f(nm|repo)\nforge|url');
+                return result.format === 'llm';
+            }
+        },
+        {
+            name: 'detectFormat: returns llm for LLM (new format)',
+            test: () => {
+                const result = detectFormat('nm|test\n#f(nm|repo)\nforge|url');
                 return result.format === 'llm';
             }
         },

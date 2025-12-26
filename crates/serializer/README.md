@@ -28,7 +28,9 @@ doc.context.insert("version".to_string(), DxLlmValue::Str("1.0.0".to_string()));
 
 // Convert to DX LLM format (text, 26.8% better than TOON)
 let llm_text = document_to_llm(&doc);
-// Output: #c:nm|MyApp;v|1.0.0
+// Output (new format - root-level key|value pairs):
+// nm|MyApp
+// v|1.0.0
 
 // Convert to DX Machine format (binary, 0.70ns access)
 let mut buffer = Vec::new();
@@ -77,18 +79,26 @@ DX is 13,048× FASTER! 🚀
 Token-optimized text format for humans and LLMs:
 
 ```
-#c:nm|MyApp;v|1.0.0;ac|+
+nm|MyApp
+v|1.0.0
+ac|+
 #d(id|nm|score)
 1|Alice|95.5
 2|Bob|87.0
 ```
 
 **Features:**
+- Root-level key|value pairs for config (no `#c:` prefix needed)
 - `+` / `-` for booleans (vs `true`/`false`)
 - `~` for null
 - `*a,b,c` for arrays
 - `^ref` for references
+- `#:key|value` for reference definitions
+- `#<letter>(schema)` for data sections
 - Abbreviated keys (`nm` → name, `v` → version)
+
+**Legacy Support:**
+- `#c:key|val;key|val` format is still supported for backward compatibility
 
 ### DX Machine Format (Binary)
 

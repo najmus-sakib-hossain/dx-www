@@ -360,7 +360,9 @@ export function validateDx(content: string): ValidationResult {
  * Validate LLM format content
  * 
  * Checks for:
- * - Valid sigil syntax (#c:, #:, #<letter>)
+ * - Valid sigil syntax (#:, #<letter>)
+ * - Root-level key|value pairs (new format)
+ * - Legacy #c: context format (still supported)
  * - Reference definitions
  * - Schema/row consistency
  * 
@@ -383,7 +385,7 @@ function validateLlmFormat(content: string): ValidationResult {
             continue;
         }
 
-        // Context section: #c:...
+        // Legacy context section: #c:... (still supported)
         if (trimmed.startsWith('#c:')) {
             const content = trimmed.substring(3);
             // Validate context format
@@ -461,7 +463,7 @@ function validateLlmFormat(content: string): ValidationResult {
             continue;
         }
 
-        // Unknown sigil
+        // Unknown sigil (but not root-level key|value)
         if (trimmed.startsWith('#')) {
             const sigil = trimmed.substring(0, 2);
             return {
@@ -469,7 +471,7 @@ function validateLlmFormat(content: string): ValidationResult {
                 error: `Unknown sigil '${sigil}'`,
                 line: lineNum,
                 column: 1,
-                hint: 'Valid sigils are #c: (context), #: (reference), #<letter>( (data section)',
+                hint: 'Valid sigils are #: (reference), #<letter>( (data section)',
             };
         }
 
@@ -491,6 +493,13 @@ function validateLlmFormat(content: string): ValidationResult {
                     usedRefs.add(value.trim().substring(1));
                 }
             }
+            continue;
+        }
+
+        // Root-level key|value pair (new format context)
+        if (trimmed.includes('|') && !trimmed.startsWith('#')) {
+            // Valid root-level context pair
+            continue;
         }
     }
 

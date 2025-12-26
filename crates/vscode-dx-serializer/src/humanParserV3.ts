@@ -483,17 +483,17 @@ export function serializeValueV3(value: DxValue): string {
 /**
  * Serialize DxDocument to LLM format
  * Preserves the order of sections as they appear in the document
+ * 
+ * New format: Root-level key|value pairs without #c: prefix
  */
 export function serializeToLlmV3(doc: DxDocument): string {
     const lines: string[] = [];
 
-    // Context section (always first)
+    // Context section (always first) - new format: root-level key|value pairs
     if (doc.context.size > 0) {
-        const pairs: string[] = [];
         for (const [key, value] of doc.context) {
-            pairs.push(`${key}|${serializeValueV3(value)}`);
+            lines.push(`${key}|${serializeValueV3(value)}`);
         }
-        lines.push(`#c:${pairs.join(';')}`);
     }
 
     // Check if document has section order tracking

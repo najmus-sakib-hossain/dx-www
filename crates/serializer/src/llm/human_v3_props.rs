@@ -655,8 +655,11 @@ proptest! {
         prop_assert!(result.is_ok(), "human_to_llm failed: {:?}", result.err());
 
         let llm = result.unwrap();
-        // Result should be LLM format (starts with #c:)
-        prop_assert!(llm.starts_with("#c:"), "Result should be LLM format: {}", llm);
+        // Result should be LLM format (new format: root-level key|value pairs)
+        // Should contain nm| (compressed name) or name|
+        prop_assert!(llm.contains("nm|") || llm.contains("name|"), "Result should contain name key: {}", llm);
+        // Should NOT have #c: prefix (new format)
+        prop_assert!(!llm.contains("#c:"), "Result should NOT have #c: prefix (new format): {}", llm);
     }
 
     #[test]

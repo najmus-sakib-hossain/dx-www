@@ -140,7 +140,15 @@ impl LlmSerializer {
         }
     }
 
-    /// Serialize context section
+    /// Serialize context section as root-level key-value pairs
+    /// 
+    /// Unlike the old format that used `#c:key|val;key|val`, the new format
+    /// outputs root-level key-value pairs without any prefix, matching Human V3:
+    /// ```text
+    /// nm|dx
+    /// v|0.0.1
+    /// tt|Enhanced Developing Experience
+    /// ```
     fn serialize_context(
         &self,
         context: &HashMap<String, DxLlmValue>,
@@ -150,7 +158,7 @@ impl LlmSerializer {
             return String::new();
         }
 
-        let mut pairs: Vec<String> = Vec::new();
+        let mut lines: Vec<String> = Vec::new();
 
         // Sort keys for consistent output
         let mut keys: Vec<_> = context.keys().collect();
@@ -160,11 +168,11 @@ impl LlmSerializer {
             if let Some(value) = context.get(key) {
                 let compressed_key = self.abbrev.compress(key);
                 let serialized_value = self.serialize_value(value, refs);
-                pairs.push(format!("{}|{}", compressed_key, serialized_value));
+                lines.push(format!("{}|{}", compressed_key, serialized_value));
             }
         }
 
-        format!("#c:{}", pairs.join(";"))
+        lines.join("\n")
     }
 
     /// Serialize a data section
@@ -263,7 +271,8 @@ mod tests {
         doc.context.insert("count".to_string(), DxLlmValue::Num(42.0));
 
         let output = serializer.serialize(&doc);
-        assert!(output.contains("#c:"));
+        // New format: root-level key-value pairs without #c: prefix
+        assert!(!output.contains("#c:"));
         assert!(output.contains("ct|42")); // count -> ct
         assert!(output.contains("nm|Test")); // name -> nm
     }

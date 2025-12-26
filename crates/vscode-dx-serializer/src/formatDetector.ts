@@ -214,14 +214,17 @@ export function detectCsv(content: string): FormatDetectionResult {
 /**
  * Detect if content is LLM format
  * Requirement: 5.5
+ * 
+ * New format: Root-level key|value pairs without #c: prefix
+ * Legacy format: #c:key|value;key|value (still supported)
  */
 export function detectLlm(content: string): FormatDetectionResult {
     const hints: string[] = [];
     let confidence = 0;
 
-    // Check for context marker
+    // Check for legacy context marker (still supported)
     if (content.includes('#c:')) {
-        hints.push('Has #c: context marker');
+        hints.push('Has #c: context marker (legacy)');
         confidence += 0.4;
     }
 
@@ -237,12 +240,21 @@ export function detectLlm(content: string): FormatDetectionResult {
         confidence += 0.4;
     }
 
-    // Check for pipe-separated data rows
+    // Check for pipe-separated data rows (new format: root-level key|value)
     const lines = content.split('\n');
     const pipeRows = lines.filter(l => !l.startsWith('#') && l.includes('|')).length;
     if (pipeRows >= 1) {
         hints.push(`Has ${pipeRows} pipe-separated rows`);
         confidence += 0.2;
+    }
+
+    // Check for root-level key|value pairs (new format)
+    // These are lines that start with a short key followed by |
+    const rootKeyValuePattern = /^[a-z]{1,4}\|/;
+    const rootKeyValueLines = lines.filter(l => rootKeyValuePattern.test(l.trim())).length;
+    if (rootKeyValueLines >= 2) {
+        hints.push(`Has ${rootKeyValueLines} root-level key|value pairs`);
+        confidence += 0.3;
     }
 
     return { format: 'llm', confidence: Math.max(0, Math.min(1, confidence)), hints };

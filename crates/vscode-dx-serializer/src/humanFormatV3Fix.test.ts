@@ -9,8 +9,14 @@ import { formatDx, validateDx } from './dxCore';
 import { formatDocumentV3, containsTableFormatting } from './humanFormatterV3';
 import { parseLlm } from './llmParser';
 
-// Test LLM input (from the dx file in the workspace)
-const TEST_LLM_INPUT = `#c:au|essensefromexistence;ds|Orchestrate don't just own your code;ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio;nm|dx;tt|Enhanced Developing Experience;vr|0.0.1;ws|*@/www,@/backend
+// Test LLM input (from the dx file in the workspace) - using new format
+const TEST_LLM_INPUT = `au|essensefromexistence
+ds|Orchestrate don't just own your code
+ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio
+nm|dx
+tt|Enhanced Developing Experience
+vr|0.0.1
+ws|*@/www,@/backend
 #:js|javascript/typescript|bun|tsc|vite|bun|react
 #:rust|rs|rust|native|rustc|cargo|actix-web
 #:python|py|python|python|uv|pip|django
