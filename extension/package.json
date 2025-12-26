@@ -304,6 +304,11 @@
           "type": "boolean",
           "default": true,
           "description": "Show Forge daemon status in status bar"
+        },
+        "dx.forge.executablePath": {
+          "type": "string",
+          "default": "forge-cli",
+          "description": "Path to the forge-cli executable. Use absolute path if forge-cli is not in PATH."
         }
       }
     }

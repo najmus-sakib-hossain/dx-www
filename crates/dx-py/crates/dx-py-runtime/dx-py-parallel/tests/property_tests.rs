@@ -94,7 +94,7 @@ mod scaling_tests {
         let executor = ParallelExecutor::with_threads(4);
         let start = Instant::now();
         let items: Vec<usize> = (0..work_size).collect();
-        let parallel_results = executor.parallel_map(items, |i| {
+        let parallel_results = executor.parallel_map(items, move |i| {
             let mut sum = 0u64;
             for j in 0..iterations {
                 sum = sum.wrapping_add((i * j) as u64);

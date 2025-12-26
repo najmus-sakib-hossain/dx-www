@@ -126,10 +126,13 @@ impl EscapeAnalyzer {
         let mut offset = 0u32;
         
         // Track which local variables hold allocations
-        let mut local_allocs: HashMap<u16, u32> = HashMap::new();
+        let _local_allocs: HashMap<u16, u32> = HashMap::new();
         
         while (offset as usize) < bytecode.len() {
             let opcode = bytecode[offset as usize];
+            
+            // Collect candidates to mark as escaped
+            let mut to_escape: Vec<(u32, EscapeReason)> = Vec::new();
             
             match opcode {
                 // Return escapes the top of stack
@@ -139,7 +142,7 @@ impl EscapeAnalyzer {
                     for &alloc_offset in self.stack_candidates.iter() {
                         // Conservative: mark recent allocations as escaping
                         if alloc_offset < offset && offset - alloc_offset < 20 {
-                            self.mark_escaped(alloc_offset, EscapeReason::Returned);
+                            to_escape.push((alloc_offset, EscapeReason::Returned));
                         }
                     }
                 }
@@ -148,7 +151,7 @@ impl EscapeAnalyzer {
                 0x57 | 0x58 => { // Yield, YieldFrom
                     for &alloc_offset in self.stack_candidates.iter() {
                         if alloc_offset < offset && offset - alloc_offset < 20 {
-                            self.mark_escaped(alloc_offset, EscapeReason::Yielded);
+                            to_escape.push((alloc_offset, EscapeReason::Yielded));
                         }
                     }
                 }
@@ -157,7 +160,7 @@ impl EscapeAnalyzer {
                 0x04 => { // StoreGlobal
                     for &alloc_offset in self.stack_candidates.iter() {
                         if alloc_offset < offset && offset - alloc_offset < 10 {
-                            self.mark_escaped(alloc_offset, EscapeReason::StoredGlobal);
+                            to_escape.push((alloc_offset, EscapeReason::StoredGlobal));
                         }
                     }
                 }
@@ -166,7 +169,7 @@ impl EscapeAnalyzer {
                 0x06 => { // StoreAttr
                     for &alloc_offset in self.stack_candidates.iter() {
                         if alloc_offset < offset && offset - alloc_offset < 10 {
-                            self.mark_escaped(alloc_offset, EscapeReason::StoredField);
+                            to_escape.push((alloc_offset, EscapeReason::StoredField));
                         }
                     }
                 }
@@ -176,12 +179,17 @@ impl EscapeAnalyzer {
                     // Conservative: assume calls escape their arguments
                     for &alloc_offset in self.stack_candidates.iter() {
                         if alloc_offset < offset && offset - alloc_offset < 30 {
-                            self.mark_escaped(alloc_offset, EscapeReason::PassedToCall);
+                            to_escape.push((alloc_offset, EscapeReason::PassedToCall));
                         }
                     }
                 }
                 
                 _ => {}
+            }
+            
+            // Now mark all collected escapes
+            for (alloc_offset, reason) in to_escape {
+                self.mark_escaped(alloc_offset, reason);
             }
             
             offset += self.opcode_size(opcode);

@@ -256,7 +256,9 @@ mod tests {
         assert_eq!(parsed.msg_type, MessageType::TransferArray);
         assert!(parsed.flags.contains(HbtpFlags::SHARED_MEMORY));
         assert!(parsed.flags.contains(HbtpFlags::REQUIRES_ACK));
-        assert_eq!(parsed.payload_len, 12345);
+        // Access packed field through a copy
+        let payload_len = parsed.payload_len;
+        assert_eq!(payload_len, 12345);
     }
     
     #[test]

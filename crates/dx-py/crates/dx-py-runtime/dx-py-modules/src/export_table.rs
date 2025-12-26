@@ -5,11 +5,21 @@ use crate::format::{ExportEntry, ExportKind, DpmError};
 /// Perfect hash function using FNV-1a with seed
 #[inline]
 fn perfect_hash(name: &str, seed: u32, table_size: usize) -> usize {
-    let mut hash: u64 = 14695981039346656037u64.wrapping_add(seed as u64);
+    // Use a combination of seed and FNV-1a for better distribution
+    let mut hash: u64 = 14695981039346656037u64;
+    hash ^= seed as u64;
+    hash = hash.wrapping_mul(1099511628211);
+    
     for byte in name.bytes() {
         hash ^= byte as u64;
         hash = hash.wrapping_mul(1099511628211);
     }
+    
+    // Mix the bits more thoroughly
+    hash ^= hash >> 33;
+    hash = hash.wrapping_mul(0xff51afd7ed558ccd);
+    hash ^= hash >> 33;
+    
     (hash as usize) % table_size
 }
 
@@ -39,10 +49,11 @@ impl ExportTable {
             return Ok(Self::new());
         }
         
-        let table_size = (exports.len() * 2).next_power_of_two();
+        // Use a larger table size to reduce collision probability
+        let table_size = (exports.len() * 4).next_power_of_two().max(16);
         
         // Try different seeds to find a perfect hash
-        for seed in 0..1000u32 {
+        for seed in 0..1000000u32 {
             let mut entries: Vec<Option<ExportEntry>> = vec![None; table_size];
             let mut collision = false;
             

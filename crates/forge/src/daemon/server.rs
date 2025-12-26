@@ -1,6 +1,7 @@
 //! Forge Daemon IPC Server
 //!
 //! Handles CLI and extension connections via Unix sockets (or TCP on Windows).
+//! Also provides WebSocket server for VS Code extension integration.
 
 use crate::daemon::{DaemonEvent, DaemonState};
 use crate::tools::{ToolRegistry, ToolStatus};
@@ -13,11 +14,13 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::broadcast;
+use futures::{SinkExt, StreamExt};
+use tokio_tungstenite::accept_async;
+use tokio_tungstenite::tungstenite;
 
 #[cfg(unix)]
 use tokio::net::{UnixListener, UnixStream};
 
-#[cfg(windows)]
 use tokio::net::{TcpListener, TcpStream};
 
 // ============================================================================
@@ -209,6 +212,14 @@ impl DaemonServer {
             .unwrap_or(9877)
     }
 
+    /// Get the WebSocket port for VS Code extension
+    pub fn ws_port() -> u16 {
+        std::env::var("DX_FORGE_WS_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(9876)
+    }
+
     /// Get the PID file path
     pub fn pid_path() -> PathBuf {
         let runtime_dir = std::env::var("XDG_RUNTIME_DIR")
@@ -237,11 +248,23 @@ impl DaemonServer {
         // Write PID file
         Self::write_pid_file()?;
 
+        let ws_port = Self::ws_port();
+        
         println!("╔══════════════════════════════════════════════════════════════╗");
         println!("║        ⚔️  FORGE DAEMON SERVER - Binary Dawn Edition          ║");
         println!("╠══════════════════════════════════════════════════════════════╣");
         println!("║  Tools Registered: {}                                         ║", self.tool_registry.count());
+        println!("║  WebSocket Port: {}                                        ║", ws_port);
         println!("╚══════════════════════════════════════════════════════════════╝");
+
+        // Start WebSocket server in background
+        let ws_handler = self.clone_for_handler();
+        let ws_shutdown = self.shutdown.clone();
+        tokio::spawn(async move {
+            if let Err(e) = ws_handler.start_websocket_server(ws_port, ws_shutdown).await {
+                eprintln!("WebSocket server error: {}", e);
+            }
+        });
 
         #[cfg(unix)]
         {
@@ -381,6 +404,79 @@ struct DaemonServerHandler {
 }
 
 impl DaemonServerHandler {
+    /// Start WebSocket server for VS Code extension
+    async fn start_websocket_server(&self, port: u16, shutdown: Arc<AtomicBool>) -> Result<()> {
+        let addr = format!("127.0.0.1:{}", port);
+        let listener = TcpListener::bind(&addr).await?;
+        println!("🌐 WebSocket Server listening on: ws://{}", addr);
+
+        loop {
+            if shutdown.load(Ordering::SeqCst) {
+                break;
+            }
+
+            tokio::select! {
+                result = listener.accept() => {
+                    match result {
+                        Ok((stream, addr)) => {
+                            println!("📡 WebSocket connection from: {}", addr);
+                            let handler = DaemonServerHandler {
+                                tool_registry: self.tool_registry.clone(),
+                                shutdown: self.shutdown.clone(),
+                                state: self.state.clone(),
+                                stats: self.stats.clone(),
+                                event_tx: self.event_tx.clone(),
+                                branch_state: self.branch_state.clone(),
+                            };
+                            tokio::spawn(async move {
+                                if let Err(e) = handler.handle_websocket_connection(stream).await {
+                                    eprintln!("WebSocket connection error: {}", e);
+                                }
+                            });
+                        }
+                        Err(e) => {
+                            eprintln!("WebSocket accept error: {}", e);
+                        }
+                    }
+                }
+                _ = tokio::time::sleep(tokio::time::Duration::from_millis(100)) => {
+                    // Check shutdown flag periodically
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Handle a WebSocket connection
+    async fn handle_websocket_connection(&self, stream: TcpStream) -> Result<()> {
+        let ws_stream = accept_async(stream).await?;
+        let (mut write, mut read) = ws_stream.split();
+
+        while let Some(msg) = read.next().await {
+            match msg {
+                Ok(tungstenite::Message::Text(text)) => {
+                    let response = self.handle_command(&text);
+                    let response_json = serde_json::to_string(&response)?;
+                    write.send(tungstenite::Message::Text(response_json.into())).await?;
+                }
+                Ok(tungstenite::Message::Ping(data)) => {
+                    write.send(tungstenite::Message::Pong(data)).await?;
+                }
+                Ok(tungstenite::Message::Close(_)) => {
+                    break;
+                }
+                Err(e) => {
+                    eprintln!("WebSocket message error: {}", e);
+                    break;
+                }
+                _ => {}
+            }
+        }
+
+        Ok(())
+    }
+
     #[cfg(unix)]
     async fn handle_unix_connection(&self, stream: UnixStream) -> Result<()> {
         let (reader, mut writer) = stream.into_split();

@@ -62,9 +62,10 @@ fn arb_code_object() -> impl Strategy<Value = CodeObject> {
     (
         arb_name(),
         prop::collection::vec(arb_constant(), 0..10),
-        prop::collection::vec(arb_name(), 0..10),
+        prop::collection::hash_set(arb_name(), 0..10),  // Use hash_set for unique names
         arb_bytecode(),
-    ).prop_map(|(name, constants, names, code)| {
+    ).prop_map(|(name, constants, names_set, code)| {
+        let names: Vec<String> = names_set.into_iter().collect();
         CodeObject {
             name: name.clone(),
             qualname: name,

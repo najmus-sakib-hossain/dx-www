@@ -1,11 +1,14 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::*;
-use forge::{context, server, storage, watcher_legacy};
+use forge::{context, server, storage, watcher_legacy, daemon::{DaemonServer, DaemonConfig, ForgeDaemon}};
 use std::path::PathBuf;
 use tracing_appender::rolling;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::EnvFilter;
+
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 
 #[derive(Parser)]
 #[command(name = "forge")]
@@ -179,6 +182,55 @@ enum Commands {
         #[arg(long)]
         version: String,
     },
+
+    /// Start the Forge daemon (background service)
+    #[command(name = "daemon")]
+    Daemon {
+        #[command(subcommand)]
+        action: DaemonAction,
+    },
+}
+
+#[derive(Subcommand)]
+enum DaemonAction {
+    /// Start the Forge daemon
+    Start {
+        /// Project root directory
+        #[arg(default_value = ".")]
+        path: PathBuf,
+
+        /// Run in foreground (don't daemonize)
+        #[arg(long)]
+        foreground: bool,
+
+        /// WebSocket port for VS Code extension
+        #[arg(long, default_value = "9876")]
+        port: u16,
+
+        /// IPC port for CLI communication (Windows)
+        #[arg(long, default_value = "9877")]
+        ipc_port: u16,
+    },
+
+    /// Stop the Forge daemon
+    Stop {
+        /// Force stop without graceful shutdown
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Restart the Forge daemon
+    Restart {
+        /// Project root directory
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
+
+    /// Show daemon status
+    Status,
+
+    /// List registered tools
+    Tools,
 }
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 10)]
@@ -413,7 +465,284 @@ async fn main() -> Result<()> {
             );
             println!("   {} {}", "Path:".bright_black(), path.display());
         }
+
+        Commands::Daemon { action } => {
+            match action {
+                DaemonAction::Start { path, foreground, port, ipc_port } => {
+                    println!("{}", "🚀 Starting Forge Daemon...".cyan().bold());
+                    
+                    // Check if daemon is already running
+                    if is_daemon_running() {
+                        println!("{}", "⚠️  Forge daemon is already running".yellow());
+                        return Ok(());
+                    }
+
+                    // Set environment variables for ports
+                    std::env::set_var("DX_FORGE_WS_PORT", port.to_string());
+                    std::env::set_var("DX_FORGE_IPC_PORT", ipc_port.to_string());
+
+                    if foreground {
+                        // Run in foreground
+                        println!("📁 Project: {}", path.display());
+                        println!("🔌 WebSocket port: {}", port);
+                        println!("🔌 IPC port: {}", ipc_port);
+                        println!();
+                        
+                        let server = DaemonServer::new();
+                        server.start().await?;
+                    } else {
+                        // Spawn as background process
+                        #[cfg(windows)]
+                        {
+                            use std::process::Command;
+                            let exe = std::env::current_exe()?;
+                            let child = Command::new(exe)
+                                .args(["daemon", "start", "--foreground", "--port", &port.to_string(), "--ipc-port", &ipc_port.to_string(), &path.to_string_lossy()])
+                                .creation_flags(0x00000008) // DETACHED_PROCESS
+                                .spawn()?;
+                            
+                            println!("{} Forge daemon started (PID: {})", "✓".green(), child.id());
+                            println!("   WebSocket: ws://127.0.0.1:{}", port);
+                            println!("   IPC: 127.0.0.1:{}", ipc_port);
+                        }
+                        
+                        #[cfg(unix)]
+                        {
+                            use std::process::Command;
+                            let exe = std::env::current_exe()?;
+                            let child = Command::new(exe)
+                                .args(["daemon", "start", "--foreground", "--port", &port.to_string(), "--ipc-port", &ipc_port.to_string(), &path.to_string_lossy()])
+                                .spawn()?;
+                            
+                            println!("{} Forge daemon started (PID: {})", "✓".green(), child.id());
+                            println!("   WebSocket: ws://127.0.0.1:{}", port);
+                            println!("   Socket: {}", DaemonServer::socket_path().display());
+                        }
+                    }
+                }
+
+                DaemonAction::Stop { force } => {
+                    println!("{}", "🛑 Stopping Forge Daemon...".cyan().bold());
+                    
+                    if !is_daemon_running() {
+                        println!("{}", "⚠️  Forge daemon is not running".yellow());
+                        return Ok(());
+                    }
+
+                    // Send shutdown command via IPC
+                    match send_ipc_command(r#"{"command":"Shutdown","force":false}"#).await {
+                        Ok(_) => {
+                            println!("{} Forge daemon stopped", "✓".green());
+                        }
+                        Err(e) => {
+                            if force {
+                                // Force kill by PID
+                                if let Ok(pid_str) = std::fs::read_to_string(DaemonServer::pid_path()) {
+                                    if let Ok(pid) = pid_str.trim().parse::<u32>() {
+                                        #[cfg(windows)]
+                                        {
+                                            let _ = std::process::Command::new("taskkill")
+                                                .args(["/F", "/PID", &pid.to_string()])
+                                                .output();
+                                        }
+                                        #[cfg(unix)]
+                                        {
+                                            let _ = std::process::Command::new("kill")
+                                                .args(["-9", &pid.to_string()])
+                                                .output();
+                                        }
+                                        println!("{} Forge daemon force stopped (PID: {})", "✓".green(), pid);
+                                    }
+                                }
+                            } else {
+                                println!("{} Failed to stop daemon: {}", "✗".red(), e);
+                                println!("   Use --force to force stop");
+                            }
+                        }
+                    }
+                    
+                    // Clean up PID file
+                    let _ = std::fs::remove_file(DaemonServer::pid_path());
+                }
+
+                DaemonAction::Restart { path } => {
+                    println!("{}", "🔄 Restarting Forge Daemon...".cyan().bold());
+                    
+                    // Stop if running
+                    if is_daemon_running() {
+                        let _ = send_ipc_command(r#"{"command":"Shutdown","force":false}"#).await;
+                        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                    }
+                    
+                    // Start again
+                    #[cfg(windows)]
+                    {
+                        use std::process::Command;
+                        let exe = std::env::current_exe()?;
+                        let child = Command::new(exe)
+                            .args(["daemon", "start", "--foreground", &path.to_string_lossy()])
+                            .creation_flags(0x00000008)
+                            .spawn()?;
+                        
+                        println!("{} Forge daemon restarted (PID: {})", "✓".green(), child.id());
+                    }
+                    
+                    #[cfg(unix)]
+                    {
+                        use std::process::Command;
+                        let exe = std::env::current_exe()?;
+                        let child = Command::new(exe)
+                            .args(["daemon", "start", "--foreground", &path.to_string_lossy()])
+                            .spawn()?;
+                        
+                        println!("{} Forge daemon restarted (PID: {})", "✓".green(), child.id());
+                    }
+                }
+
+                DaemonAction::Status => {
+                    if !is_daemon_running() {
+                        println!("{} Forge daemon is {}", "●".red(), "not running".red());
+                        return Ok(());
+                    }
+
+                    match send_ipc_command(r#"{"command":"GetStatus"}"#).await {
+                        Ok(response) => {
+                            if let Ok(status) = serde_json::from_str::<serde_json::Value>(&response) {
+                                println!("{} Forge daemon is {}", "●".green(), "running".green());
+                                println!();
+                                println!("{}", "Status:".cyan().bold());
+                                println!("   State:          {}", status["state"].as_str().unwrap_or("unknown"));
+                                println!("   Uptime:         {}s", status["uptime_seconds"].as_u64().unwrap_or(0));
+                                println!("   Files changed:  {}", status["files_changed"].as_u64().unwrap_or(0));
+                                println!("   Tools executed: {}", status["tools_executed"].as_u64().unwrap_or(0));
+                                println!("   Cache hits:     {}", status["cache_hits"].as_u64().unwrap_or(0));
+                                println!("   Errors:         {}", status["errors"].as_u64().unwrap_or(0));
+                            }
+                        }
+                        Err(e) => {
+                            println!("{} Failed to get status: {}", "✗".red(), e);
+                        }
+                    }
+                }
+
+                DaemonAction::Tools => {
+                    if !is_daemon_running() {
+                        println!("{}", "⚠️  Forge daemon is not running".yellow());
+                        return Ok(());
+                    }
+
+                    match send_ipc_command(r#"{"command":"ListTools"}"#).await {
+                        Ok(response) => {
+                            if let Ok(data) = serde_json::from_str::<serde_json::Value>(&response) {
+                                if let Some(tools) = data["tools"].as_array() {
+                                    println!("{}", "📦 Registered Tools".cyan().bold());
+                                    println!("{}", "═".repeat(60).bright_black());
+                                    
+                                    for tool in tools {
+                                        let status_icon = match tool["status"].as_str().unwrap_or("") {
+                                            "Ready" => "●".green(),
+                                            "Running" => "●".yellow(),
+                                            "Disabled" => "●".bright_black(),
+                                            "Error" => "●".red(),
+                                            _ => "●".white(),
+                                        };
+                                        
+                                        println!(
+                                            "{} {} {} {}",
+                                            status_icon,
+                                            tool["name"].as_str().unwrap_or("unknown").bright_cyan().bold(),
+                                            format!("v{}", tool["version"].as_str().unwrap_or("0.0.0")).bright_black(),
+                                            if tool["is_dummy"].as_bool().unwrap_or(false) { "[dummy]".bright_black() } else { "".into() }
+                                        );
+                                        println!(
+                                            "     Runs: {} | Errors: {}",
+                                            tool["run_count"].as_u64().unwrap_or(0),
+                                            tool["error_count"].as_u64().unwrap_or(0)
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            println!("{} Failed to list tools: {}", "✗".red(), e);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     Ok(())
+}
+
+/// Check if daemon is running by checking PID file
+fn is_daemon_running() -> bool {
+    let pid_path = DaemonServer::pid_path();
+    if !pid_path.exists() {
+        return false;
+    }
+    
+    if let Ok(pid_str) = std::fs::read_to_string(&pid_path) {
+        if let Ok(pid) = pid_str.trim().parse::<u32>() {
+            // Check if process is actually running
+            #[cfg(windows)]
+            {
+                use std::process::Command;
+                let output = Command::new("tasklist")
+                    .args(["/FI", &format!("PID eq {}", pid)])
+                    .output();
+                if let Ok(out) = output {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    return stdout.contains(&pid.to_string());
+                }
+            }
+            #[cfg(unix)]
+            {
+                use std::process::Command;
+                let output = Command::new("kill")
+                    .args(["-0", &pid.to_string()])
+                    .output();
+                if let Ok(out) = output {
+                    return out.status.success();
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+/// Send IPC command to daemon
+async fn send_ipc_command(command: &str) -> Result<String> {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    
+    #[cfg(windows)]
+    {
+        use tokio::net::TcpStream;
+        let port = DaemonServer::ipc_port();
+        let mut stream = TcpStream::connect(format!("127.0.0.1:{}", port)).await?;
+        stream.write_all(command.as_bytes()).await?;
+        stream.write_all(b"\n").await?;
+        stream.flush().await?;
+        
+        let mut reader = BufReader::new(stream);
+        let mut response = String::new();
+        reader.read_line(&mut response).await?;
+        Ok(response)
+    }
+    
+    #[cfg(unix)]
+    {
+        use tokio::net::UnixStream;
+        let socket_path = DaemonServer::socket_path();
+        let mut stream = UnixStream::connect(&socket_path).await?;
+        stream.write_all(command.as_bytes()).await?;
+        stream.write_all(b"\n").await?;
+        stream.flush().await?;
+        
+        let mut reader = BufReader::new(stream);
+        let mut response = String::new();
+        reader.read_line(&mut response).await?;
+        Ok(response)
+    }
 }

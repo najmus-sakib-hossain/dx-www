@@ -11,6 +11,9 @@ members = [
     "dx-py-parallel",
     "dx-py-stack",
     "dx-py-ipc",
+    "dx-py-cache",
+    "dx-py-collections",
+    "dx-py-decorators",
 ]
 
 [workspace.package]

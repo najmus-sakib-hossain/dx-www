@@ -49,6 +49,14 @@ export function registerForgeCommands(context: vscode.ExtensionContext): void {
 }
 
 /**
+ * Get the configured dx executable path
+ */
+function getDxExecutablePath(): string {
+    const config = vscode.workspace.getConfiguration('dx.forge');
+    return config.get('executablePath', 'forge-cli');
+}
+
+/**
  * Start the Forge daemon
  */
 async function startForgeDaemon(): Promise<void> {
@@ -59,6 +67,10 @@ async function startForgeDaemon(): Promise<void> {
         return;
     }
 
+    const dxPath = getDxExecutablePath();
+    const config = vscode.workspace.getConfiguration('dx.forge');
+    const port = config.get('port', 9876);
+
     vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
@@ -67,7 +79,8 @@ async function startForgeDaemon(): Promise<void> {
         },
         async () => {
             return new Promise<void>((resolve) => {
-                exec('dx forge start', (error, stdout, stderr) => {
+                // Use daemon start command with port
+                exec(`"${dxPath}" daemon start --port ${port}`, (error, stdout, stderr) => {
                     if (error) {
                         vscode.window.showErrorMessage(
                             `Failed to start Forge daemon: ${stderr || error.message}`
@@ -97,6 +110,7 @@ async function startForgeDaemon(): Promise<void> {
  */
 async function stopForgeDaemon(): Promise<void> {
     const client = getForgeClient();
+    const dxPath = getDxExecutablePath();
 
     vscode.window.withProgress(
         {
@@ -106,7 +120,7 @@ async function stopForgeDaemon(): Promise<void> {
         },
         async () => {
             return new Promise<void>((resolve) => {
-                exec('dx forge stop', (error, stdout, stderr) => {
+                exec(`"${dxPath}" daemon stop`, (error, stdout, stderr) => {
                     if (error) {
                         vscode.window.showErrorMessage(
                             `Failed to stop Forge daemon: ${stderr || error.message}`
@@ -126,6 +140,8 @@ async function stopForgeDaemon(): Promise<void> {
  * Restart the Forge daemon
  */
 async function restartForgeDaemon(): Promise<void> {
+    const dxPath = getDxExecutablePath();
+
     vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
@@ -134,7 +150,7 @@ async function restartForgeDaemon(): Promise<void> {
         },
         async () => {
             return new Promise<void>((resolve) => {
-                exec('dx forge restart', (error, stdout, stderr) => {
+                exec(`"${dxPath}" daemon restart`, (error, stdout, stderr) => {
                     if (error) {
                         vscode.window.showErrorMessage(
                             `Failed to restart Forge daemon: ${stderr || error.message}`
