@@ -14,6 +14,11 @@ members = [
     "dx-py-cache",
     "dx-py-collections",
     "dx-py-decorators",
+    "dx-py-pcc",
+    "dx-py-entangled",
+    "dx-py-core",
+    "dx-py-interpreter",
+    "dx-py-cli",
 ]
 
 [workspace.package]
@@ -65,3 +70,13 @@ notify = "6.1"
 
 # CPU detection
 num_cpus = "1.16"
+
+
+# UUID generation
+uuid = { version = "1.6", features = ["v4"] }
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# simd-json for fast JSON parsing
+simd-json = "0.13"

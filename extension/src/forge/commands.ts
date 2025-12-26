@@ -51,10 +51,10 @@ export function registerForgeCommands(context: vscode.ExtensionContext): void {
 }
 
 /**
- * Get the configured dx executable path
+ * Get the configured forge-cli executable path
  * Auto-detects from workspace if not explicitly configured
  */
-function getDxExecutablePath(): string {
+function getForgeCliPath(): string {
     const config = vscode.workspace.getConfiguration('dx.forge');
     const configuredPath = config.get<string>('executablePath', '');
 
@@ -68,23 +68,21 @@ function getDxExecutablePath(): string {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (workspaceFolders && workspaceFolders.length > 0) {
         const workspaceRoot = workspaceFolders[0].uri.fsPath;
-        console.log(`DX Forge: Searching for dx executable in workspace: ${workspaceRoot}`);
+        console.log(`DX Forge: Searching for forge-cli executable in workspace: ${workspaceRoot}`);
 
         // Check common locations in order of preference
         // Windows executables first, then Unix
         const isWindows = process.platform === 'win32';
         const candidates = isWindows ? [
-            path.join(workspaceRoot, 'target', 'release', 'dx.exe'),
-            path.join(workspaceRoot, 'target', 'debug', 'dx.exe'),
-            path.join(workspaceRoot, 'dx.exe'),
-            path.join(workspaceRoot, 'target', 'release', 'dx'),
-            path.join(workspaceRoot, 'target', 'debug', 'dx'),
+            path.join(workspaceRoot, 'target', 'release', 'forge-cli.exe'),
+            path.join(workspaceRoot, 'target', 'debug', 'forge-cli.exe'),
+            path.join(workspaceRoot, 'target', 'release', 'forge-cli'),
+            path.join(workspaceRoot, 'target', 'debug', 'forge-cli'),
         ] : [
-            path.join(workspaceRoot, 'target', 'release', 'dx'),
-            path.join(workspaceRoot, 'target', 'debug', 'dx'),
-            path.join(workspaceRoot, 'dx'),
-            path.join(workspaceRoot, 'target', 'release', 'dx.exe'),
-            path.join(workspaceRoot, 'target', 'debug', 'dx.exe'),
+            path.join(workspaceRoot, 'target', 'release', 'forge-cli'),
+            path.join(workspaceRoot, 'target', 'debug', 'forge-cli'),
+            path.join(workspaceRoot, 'target', 'release', 'forge-cli.exe'),
+            path.join(workspaceRoot, 'target', 'debug', 'forge-cli.exe'),
         ];
 
         for (const candidate of candidates) {
@@ -101,7 +99,7 @@ function getDxExecutablePath(): string {
     }
 
     // Fallback to PATH lookup
-    return 'dx';
+    return 'forge-cli';
 }
 
 /**
@@ -115,11 +113,11 @@ async function startForgeDaemon(): Promise<void> {
         return;
     }
 
-    const dxPath = getDxExecutablePath();
+    const forgePath = getForgeCliPath();
     const config = vscode.workspace.getConfiguration('dx.forge');
     const port = config.get('port', 9876);
 
-    vscode.window.withProgress(
+    await vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
             title: 'Starting Forge daemon...',
@@ -128,13 +126,14 @@ async function startForgeDaemon(): Promise<void> {
         async () => {
             return new Promise<void>((resolve) => {
                 // Use daemon start command with port
-                exec(`"${dxPath}" daemon start --port ${port}`, (error, stdout, stderr) => {
+                // Set a timeout to prevent hanging if the process doesn't exit cleanly
+                const child = exec(`"${forgePath}" daemon start --port ${port}`, { timeout: 10000 }, (error, stdout, stderr) => {
                     if (error) {
                         const errorMsg = stderr || error.message;
-                        // Provide helpful message if dx executable not found
+                        // Provide helpful message if forge-cli executable not found
                         if (errorMsg.includes('not recognized') || errorMsg.includes('not found') || errorMsg.includes('ENOENT')) {
                             vscode.window.showErrorMessage(
-                                `Failed to start Forge daemon: dx executable not found at "${dxPath}". ` +
+                                `Failed to start Forge daemon: forge-cli executable not found at "${forgePath}". ` +
                                 `Please build the project with 'cargo build --release' or configure 'dx.forge.executablePath' in settings.`,
                                 'Open Settings'
                             ).then(action => {
@@ -142,29 +141,36 @@ async function startForgeDaemon(): Promise<void> {
                                     vscode.commands.executeCommand('workbench.action.openSettings', 'dx.forge.executablePath');
                                 }
                             });
-                        } else {
+                        } else if (!errorMsg.includes('SIGTERM') && !errorMsg.includes('killed')) {
+                            // Ignore timeout kills - daemon likely started successfully
                             vscode.window.showErrorMessage(
                                 `Failed to start Forge daemon: ${errorMsg}`
                             );
                         }
-                    } else {
-                        // Try to connect
-                        setTimeout(async () => {
-                            const connected = await client.connect();
-                            if (connected) {
-                                vscode.window.showInformationMessage('Forge daemon started');
-                            } else {
-                                vscode.window.showWarningMessage(
-                                    'Forge daemon started but connection failed'
-                                );
-                            }
-                        }, 1000);
                     }
                     resolve();
                 });
+
+                // Also resolve after a short delay if the process seems to have started
+                // This handles the case where the daemon daemonizes but exec doesn't return
+                setTimeout(() => {
+                    resolve();
+                }, 3000);
             });
         }
     );
+
+    // Try to connect after the progress closes
+    setTimeout(async () => {
+        const connected = await client.connect();
+        if (connected) {
+            vscode.window.showInformationMessage('Forge daemon started');
+        } else {
+            vscode.window.showWarningMessage(
+                'Forge daemon may have started but connection failed. Check if it\'s running.'
+            );
+        }
+    }, 1000);
 }
 
 /**
@@ -172,7 +178,7 @@ async function startForgeDaemon(): Promise<void> {
  */
 async function stopForgeDaemon(): Promise<void> {
     const client = getForgeClient();
-    const dxPath = getDxExecutablePath();
+    const forgePath = getForgeCliPath();
 
     vscode.window.withProgress(
         {
@@ -182,7 +188,7 @@ async function stopForgeDaemon(): Promise<void> {
         },
         async () => {
             return new Promise<void>((resolve) => {
-                exec(`"${dxPath}" daemon stop`, (error, stdout, stderr) => {
+                exec(`"${forgePath}" daemon stop`, (error, stdout, stderr) => {
                     if (error) {
                         vscode.window.showErrorMessage(
                             `Failed to stop Forge daemon: ${stderr || error.message}`
@@ -202,7 +208,7 @@ async function stopForgeDaemon(): Promise<void> {
  * Restart the Forge daemon
  */
 async function restartForgeDaemon(): Promise<void> {
-    const dxPath = getDxExecutablePath();
+    const forgePath = getForgeCliPath();
 
     vscode.window.withProgress(
         {
@@ -212,7 +218,7 @@ async function restartForgeDaemon(): Promise<void> {
         },
         async () => {
             return new Promise<void>((resolve) => {
-                exec(`"${dxPath}" daemon restart`, (error, stdout, stderr) => {
+                exec(`"${forgePath}" daemon restart`, (error, stdout, stderr) => {
                     if (error) {
                         vscode.window.showErrorMessage(
                             `Failed to restart Forge daemon: ${stderr || error.message}`
