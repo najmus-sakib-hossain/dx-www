@@ -244,7 +244,7 @@ async fn test_uninstall_package() {
 #[test]
 #[ignore = "requires Python to be installed"]
 fn test_venv_creation() {
-    use dx_py_project_manager::{RealVenvManager, PythonManager};
+    use dx_py_workspace::{RealVenvManager, PythonManager};
     use tempfile::TempDir;
     use std::process::Command;
 
@@ -299,7 +299,7 @@ fn test_venv_creation() {
 /// Test activation script generation
 #[test]
 fn test_activation_scripts_generated() {
-    use dx_py_project_manager::Venv;
+    use dx_py_workspace::Venv;
     use tempfile::TempDir;
 
     let temp_dir = TempDir::new().unwrap();

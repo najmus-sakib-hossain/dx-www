@@ -3,7 +3,6 @@ resolver = "2"
 members = [
     "dx-py-core",
     "dx-py-package-manager",
-    "dx-py-project-manager",
     "dx-py-compat",
     "dx-py-cli",
     "dx-py-store",

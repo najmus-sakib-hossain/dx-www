@@ -12,7 +12,7 @@ path = "src/main.rs"
 [dependencies]
 dx-py-core = { path = "../dx-py-core" }
 dx-py-package-manager = { path = "../dx-py-package-manager" }
-dx-py-project-manager = { path = "../dx-py-project-manager" }
+dx-py-workspace = { path = "../../dx-py-workspace" }
 dx-py-compat = { path = "../dx-py-compat" }
 dx-py-layout = { path = "../dx-py-layout" }
 dx-py-store = { path = "../dx-py-store" }

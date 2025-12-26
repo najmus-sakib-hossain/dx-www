@@ -1,4 +1,4 @@
-//! dx-py-project-manager: Python project lifecycle management
+//! dx-py-workspace: Python project lifecycle and workspace management
 //!
 //! This crate provides project management functionality including:
 //! - Python version management (discovery, installation, pinning)

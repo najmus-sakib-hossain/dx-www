@@ -6,7 +6,7 @@
 use std::path::Path;
 
 use dx_py_core::Result;
-use dx_py_project_manager::{PythonManager, RealPythonManager};
+use dx_py_workspace::{PythonManager, RealPythonManager};
 
 /// Install a Python version
 pub fn install(version: &str) -> Result<()> {

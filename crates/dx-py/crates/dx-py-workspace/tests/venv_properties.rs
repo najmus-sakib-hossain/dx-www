@@ -40,7 +40,7 @@ proptest! {
         std::fs::write(venv_path.join("pyvenv.cfg"), "version = 3.12.0").unwrap();
         
         // Create a mock VenvManager (used for potential future activation script generation)
-        let _manager = dx_py_project_manager::VenvManager::new();
+        let _manager = dx_py_workspace::VenvManager::new();
         
         // The VenvManager should have created activation scripts
         // We'll verify the scripts contain required elements
@@ -141,7 +141,7 @@ proptest! {
 
 #[test]
 fn test_venv_site_packages_path() {
-    let venv = dx_py_project_manager::Venv::new(
+    let venv = dx_py_workspace::Venv::new(
         PathBuf::from("/tmp/test-venv"),
         "3.12.0".to_string()
     );
@@ -157,7 +157,7 @@ fn test_venv_site_packages_path() {
 
 #[test]
 fn test_venv_bin_dir_path() {
-    let venv = dx_py_project_manager::Venv::new(
+    let venv = dx_py_workspace::Venv::new(
         PathBuf::from("/tmp/test-venv"),
         "3.12.0".to_string()
     );

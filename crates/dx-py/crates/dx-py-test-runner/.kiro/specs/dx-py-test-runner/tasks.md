@@ -1,0 +1,269 @@
+# Implementation Plan: dx-py-test-runner
+
+## Overview
+
+This plan implements a high-performance Python test runner in Rust with PyO3 bindings. The implementation follows a bottom-up approach: core types → discovery → protocol → daemon → graph → executor → fixtures → snapshots → CLI.
+
+## Tasks
+
+- [-] 1. Set up project structure and core types
+  - [-] 1.1 Initialize Cargo workspace with crate structure
+    - Create `Cargo.toml` workspace with members: `dx-py-core`, `dx-py-discovery`, `dx-py-protocol`, `dx-py-daemon`, `dx-py-graph`, `dx-py-executor`, `dx-py-fixture`, `dx-py-snapshot`, `dx-py-cli`
+    - Add shared dependencies: `tree-sitter`, `tree-sitter-python`, `blake3`, `memmap2`, `crossbeam`, `tokio`, `pyo3`, `proptest`, `bincode`, `serde`
+    - _Requirements: All_
+  - [ ] 1.2 Define core types in dx-py-core
+    - Implement `TestCase`, `TestId`, `Marker`, `FixtureId` structs
+    - Implement `TestResult`, `TestStatus`, `AssertionStats` structs
+    - Implement `Serialize`/`Deserialize` for all types
+    - _Requirements: 1.5, 3.4, 3.5_
+  - [ ] 1.3 Write property test for core type serialization round-trip
+    - **Property 5: Protocol Message Round-Trip**
+    - **Validates: Requirements 3.4, 3.5**
+
+- [ ] 2. Implement Discovery Engine
+  - [ ] 2.1 Create tree-sitter Python parser wrapper
+    - Initialize tree-sitter with Python grammar
+    - Implement AST traversal for function and class definitions
+    - _Requirements: 1.1_
+  - [ ] 2.2 Implement test detection logic
+    - Detect `test_*` and `*_test` function patterns
+    - Detect `Test*` class patterns and scan methods
+    - Detect `@pytest.mark.*` decorators
+    - _Requirements: 1.2, 1.3, 1.4_
+  - [ ] 2.3 Write property test for test function detection
+    - **Property 1: Test Function Detection**
+    - **Validates: Requirements 1.2, 1.3, 1.4**
+  - [ ] 2.4 Implement binary Test Index (.dxti) format
+    - Define binary header structure (magic, version, counts)
+    - Implement file table and test table serialization
+    - Implement string pool for names and paths
+    - _Requirements: 1.5_
+  - [ ] 2.5 Implement index caching with file hash validation
+    - Store file modification times and hashes
+    - Load from index when files unchanged
+    - _Requirements: 1.6_
+  - [ ] 2.6 Write property test for Test Index round-trip
+    - **Property 2: Test Index Round-Trip**
+    - **Validates: Requirements 1.5, 1.6**
+
+- [ ] 3. Checkpoint - Discovery complete
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 4. Implement Binary Protocol
+  - [ ] 4.1 Define binary message structures
+    - Implement `TestMessage` with 32-byte header
+    - Implement `TestResultMessage` with 40-byte header
+    - Use `#[repr(C, packed)]` for memory layout
+    - _Requirements: 3.1_
+  - [ ] 4.2 Write property test for header size
+    - **Property 4: Binary Message Header Size**
+    - **Validates: Requirements 3.1**
+  - [ ] 4.3 Implement serialization/deserialization
+    - Serialize TestCase to TestMessage bytes
+    - Deserialize TestResultMessage to TestResult
+    - _Requirements: 3.4, 3.5_
+  - [ ] 4.4 Implement error handling for malformed messages
+    - Validate magic bytes
+    - Validate message type
+    - Handle payload size limits
+    - _Requirements: 3.6_
+  - [ ] 4.5 Write property test for protocol error handling
+    - **Property 6: Protocol Error Handling**
+    - **Validates: Requirements 3.6**
+  - [ ] 4.6 Implement shared memory ring buffer
+    - Create memory-mapped buffer for large payloads
+    - Implement lock-free SPSC queue
+    - _Requirements: 3.3_
+
+- [ ] 5. Implement Daemon Pool
+  - [ ] 5.1 Create Python worker process management
+    - Spawn Python interpreter processes
+    - Establish shared memory communication
+    - _Requirements: 2.1_
+  - [ ] 5.2 Implement module pre-loading
+    - Pre-import configurable modules (django, sqlalchemy, numpy)
+    - Track pre-loaded state per worker
+    - _Requirements: 2.2_
+  - [ ] 5.3 Implement worker assignment and return logic
+    - Maintain available worker queue
+    - Assign tests to available workers
+    - Return workers to pool after completion
+    - _Requirements: 2.3, 2.4_
+  - [ ] 5.4 Write property test for worker pool invariant
+    - **Property 3: Worker Pool Invariant**
+    - **Validates: Requirements 2.3, 2.4, 2.5**
+  - [ ] 5.5 Implement test queuing when pool exhausted
+    - Queue tests when no workers available
+    - Process queue as workers become available
+    - _Requirements: 2.5_
+  - [ ] 5.6 Implement graceful shutdown
+    - Handle shutdown signal
+    - Terminate all workers cleanly
+    - _Requirements: 2.6_
+
+- [ ] 6. Checkpoint - Protocol and Daemon complete
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 7. Implement Dependency Graph
+  - [ ] 7.1 Implement import extraction using tree-sitter
+    - Parse import statements and import_from statements
+    - Resolve relative imports to absolute paths
+    - _Requirements: 4.6_
+  - [ ] 7.2 Build import graph with petgraph
+    - Create directed graph of file dependencies
+    - Store test associations per file
+    - _Requirements: 4.1_
+  - [ ] 7.3 Write property test for graph construction
+    - **Property 7: Import Graph Construction**
+    - **Validates: Requirements 4.1**
+  - [ ] 7.4 Implement transitive dependency detection
+    - BFS/DFS traversal to find all dependents
+    - Return affected tests for changed files
+    - _Requirements: 4.2_
+  - [ ] 7.5 Write property test for transitive dependency detection
+    - **Property 8: Transitive Dependency Detection**
+    - **Validates: Requirements 4.2**
+  - [ ] 7.6 Implement graph serialization and caching
+    - Serialize graph to binary format
+    - Load from cache when valid
+    - _Requirements: 4.4, 4.5_
+  - [ ] 7.7 Write property test for graph round-trip
+    - **Property 10: Dependency Graph Round-Trip**
+    - **Validates: Requirements 4.4, 4.5**
+
+- [ ] 8. Implement Work-Stealing Executor
+  - [ ] 8.1 Create work-stealing queue infrastructure
+    - Set up global injector queue
+    - Create per-worker local queues with stealers
+    - _Requirements: 5.1_
+  - [ ] 8.2 Implement test distribution logic
+    - Push tests to global queue
+    - Workers pull from local, then global, then steal
+    - _Requirements: 5.1_
+  - [ ] 8.3 Write property test for distribution completeness
+    - **Property 11: Test Distribution Completeness**
+    - **Validates: Requirements 5.1**
+  - [ ] 8.4 Implement result aggregation
+    - Collect results from all workers
+    - Ensure all tests accounted for
+    - _Requirements: 5.3_
+  - [ ] 8.5 Write property test for result aggregation
+    - **Property 12: Result Aggregation Completeness**
+    - **Validates: Requirements 5.3**
+  - [ ] 8.6 Implement fault tolerance
+    - Catch worker panics
+    - Continue execution on remaining workers
+    - _Requirements: 5.5_
+  - [ ] 8.7 Write property test for fault tolerance
+    - **Property 13: Executor Fault Tolerance**
+    - **Validates: Requirements 5.5**
+
+- [ ] 9. Checkpoint - Graph and Executor complete
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 10. Implement Fixture Cache
+  - [ ] 10.1 Implement fixture serialization with bincode
+    - Serialize fixture values to bytes
+    - Store in cache directory with fixture ID
+    - _Requirements: 6.1_
+  - [ ] 10.2 Implement memory-mapped fixture loading
+    - Memory-map cached fixture files
+    - Deserialize from mapped memory
+    - _Requirements: 6.2_
+  - [ ] 10.3 Implement cache invalidation via Blake3 hashing
+    - Hash fixture function source
+    - Invalidate when hash changes
+    - _Requirements: 6.3, 6.4_
+  - [ ] 10.4 Write property test for fixture cache round-trip
+    - **Property 14: Fixture Cache Round-Trip**
+    - **Validates: Requirements 6.1, 6.3**
+
+- [ ] 11. Implement Snapshot Index
+  - [ ] 11.1 Implement Blake3 hash storage for snapshots
+    - Compute and store content hashes
+    - Store in binary index format
+    - _Requirements: 7.1_
+  - [ ] 11.2 Write property test for hash correctness
+    - **Property 15: Snapshot Hash Correctness**
+    - **Validates: Requirements 7.1**
+  - [ ] 11.3 Implement hash-first verification
+    - Compare hashes before loading content
+    - Return Match on hash equality
+    - _Requirements: 7.2, 7.3_
+  - [ ] 11.4 Implement diff generation for mismatches
+    - Load content on hash mismatch
+    - Generate unified diff
+    - _Requirements: 7.4_
+  - [ ] 11.5 Write property test for diff generation
+    - **Property 16: Snapshot Diff Generation**
+    - **Validates: Requirements 7.4**
+  - [ ] 11.6 Implement snapshot update
+    - Update both hash and content atomically
+    - _Requirements: 7.5_
+  - [ ] 11.7 Write property test for update consistency
+    - **Property 17: Snapshot Update Consistency**
+    - **Validates: Requirements 7.5**
+
+- [ ] 12. Checkpoint - Fixture and Snapshot complete
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 13. Implement CLI
+  - [ ] 13.1 Set up clap CLI structure
+    - Define `dx-py test` command
+    - Add `--watch`, `--update-snapshots`, `--ci` flags
+    - Add pattern argument for filtering
+    - _Requirements: 8.1, 8.2, 8.6_
+  - [ ] 13.2 Implement test pattern filtering
+    - Support glob patterns
+    - Filter discovered tests by pattern
+    - _Requirements: 8.3_
+  - [ ] 13.3 Write property test for pattern filtering
+    - **Property 18: Test Pattern Filtering**
+    - **Validates: Requirements 8.3**
+  - [ ] 13.4 Implement watch mode with file system notifications
+    - Use notify crate for file watching
+    - Trigger affected test execution on changes
+    - _Requirements: 4.3, 8.2_
+  - [ ] 13.5 Write property test for watch mode filtering
+    - **Property 9: Watch Mode Filtering**
+    - **Validates: Requirements 4.3**
+  - [ ] 13.6 Implement test result display
+    - Show pass/fail with colors
+    - Display duration and summary
+    - _Requirements: 8.4, 8.5, 10.1, 10.2, 10.3, 10.5_
+  - [ ] 13.7 Implement JUnit XML output for CI
+    - Generate valid JUnit XML format
+    - Write to file or stdout
+    - _Requirements: 10.4_
+  - [ ] 13.8 Write property test for JUnit XML validity
+    - **Property 19: JUnit XML Validity**
+    - **Validates: Requirements 10.4**
+
+- [ ] 14. Implement Python Bindings
+  - [ ] 14.1 Create PyO3 module structure
+    - Define `dx_py_test_runner` Python module
+    - Export discovery, execution, fixture, snapshot APIs
+    - _Requirements: 9.1, 9.2_
+  - [ ] 14.2 Implement @dx.fixture decorator
+    - Python decorator that registers fixtures
+    - Integrate with Fixture_Cache
+    - _Requirements: 9.3_
+  - [ ] 14.3 Implement dx.snapshot() function
+    - Python function for snapshot assertions
+    - Integrate with Snapshot_Index
+    - _Requirements: 9.4_
+  - [ ] 14.4 Create Python worker script
+    - Script that runs in daemon workers
+    - Handles binary protocol communication
+    - _Requirements: 2.1, 3.2_
+
+- [ ] 15. Final checkpoint - All components complete
+  - Ensure all tests pass, ask the user if questions arise.
+
+## Notes
+
+- All tasks including property tests are required for comprehensive coverage
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation
+- Property tests validate universal correctness properties (19 total)
+- Unit tests validate specific examples and edge cases

@@ -3,7 +3,7 @@
 //! Commands for installing, running, and managing global Python tools
 //! in isolated virtual environments.
 
-use dx_py_project_manager::ToolManager;
+use dx_py_workspace::ToolManager;
 use dx_py_core::Result;
 
 /// Install a tool globally

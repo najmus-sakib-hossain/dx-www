@@ -18,6 +18,7 @@ pub mod operation;
 pub mod pool;
 pub mod py_future;
 pub mod reactor;
+pub mod async_ops;
 
 // Platform-specific implementations
 #[cfg(target_os = "linux")]
@@ -37,6 +38,11 @@ pub use operation::{IoOperation, SendFlags};
 pub use pool::ReactorPool;
 pub use py_future::PyFuture;
 pub use reactor::{Reactor, ReactorFeature, ReactorStats};
+pub use async_ops::{
+    async_read_file, async_write_file, async_read_files_batch,
+    async_accept, async_connect, async_send, async_recv,
+    async_resolve, async_resolve_batch, DnsResult, CompletionHandler,
+};
 
 /// Create a platform-appropriate reactor for the given core ID.
 ///

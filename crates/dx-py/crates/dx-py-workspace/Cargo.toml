@@ -1,13 +1,13 @@
 [package]
-name = "dx-py-project-manager"
+name = "dx-py-workspace"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Python project lifecycle management"
+description = "Python project lifecycle and workspace management"
 
 [dependencies]
-dx-py-core = { path = "../dx-py-core" }
-dx-py-package-manager = { path = "../dx-py-package-manager" }
+dx-py-core = { path = "../dx-py-package-manager/dx-py-core" }
+dx-py-package-manager = { path = "../dx-py-package-manager/dx-py-package-manager" }
 thiserror.workspace = true
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"

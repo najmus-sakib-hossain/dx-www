@@ -69,7 +69,7 @@ members = ["packages/*"]
         }
 
         // Load workspace and enumerate members
-        let manager = dx_py_project_manager::WorkspaceManager::load(root).unwrap();
+        let manager = dx_py_workspace::WorkspaceManager::load(root).unwrap();
         let member_paths = manager.enumerate_members().unwrap();
 
         // Verify: enumerated members should match created packages
@@ -158,7 +158,7 @@ exclude = [{}]
         }
 
         // Load workspace and enumerate members
-        let manager = dx_py_project_manager::WorkspaceManager::load(root).unwrap();
+        let manager = dx_py_workspace::WorkspaceManager::load(root).unwrap();
         let member_paths = manager.enumerate_members().unwrap();
 
         // Verify: only included packages should be enumerated
@@ -232,7 +232,7 @@ members = ["packages/*", "libs/*"]
         }
 
         // Load workspace and enumerate members
-        let manager = dx_py_project_manager::WorkspaceManager::load(root).unwrap();
+        let manager = dx_py_workspace::WorkspaceManager::load(root).unwrap();
         let member_paths = manager.enumerate_members().unwrap();
 
         // Verify: all packages from both patterns should be enumerated
@@ -290,7 +290,7 @@ members = ["packages/*"]
         }
 
         // Load workspace and enumerate members
-        let manager = dx_py_project_manager::WorkspaceManager::load(root).unwrap();
+        let manager = dx_py_workspace::WorkspaceManager::load(root).unwrap();
         let member_paths = manager.enumerate_members().unwrap();
 
         // Verify: only directories with pyproject.toml should be enumerated
@@ -327,7 +327,7 @@ version = "1.0.0"
 "#;
     std::fs::write(root.join("pyproject.toml"), pyproject).unwrap();
 
-    let manager = dx_py_project_manager::WorkspaceManager::load(root).unwrap();
+    let manager = dx_py_workspace::WorkspaceManager::load(root).unwrap();
     let member_paths = manager.enumerate_members().unwrap();
 
     assert_eq!(member_paths.len(), 1);
@@ -350,7 +350,7 @@ members = ["packages/*"]
 "#;
     std::fs::write(root.join("pyproject.toml"), workspace_pyproject).unwrap();
 
-    let manager = dx_py_project_manager::WorkspaceManager::load(root).unwrap();
+    let manager = dx_py_workspace::WorkspaceManager::load(root).unwrap();
     assert!(manager.is_workspace());
 }
 
@@ -367,6 +367,6 @@ version = "1.0.0"
 "#;
     std::fs::write(root.join("pyproject.toml"), pyproject).unwrap();
 
-    let manager = dx_py_project_manager::WorkspaceManager::load(root).unwrap();
+    let manager = dx_py_workspace::WorkspaceManager::load(root).unwrap();
     assert!(!manager.is_workspace());
 }

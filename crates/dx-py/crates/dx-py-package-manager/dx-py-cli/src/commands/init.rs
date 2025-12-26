@@ -4,7 +4,7 @@ use std::path::Path;
 
 use dx_py_compat::{BuildSystem, ProjectSection, PyProjectToml};
 use dx_py_core::Result;
-use dx_py_project_manager::{PythonManager, VenvManager};
+use dx_py_workspace::{PythonManager, VenvManager};
 
 /// Run the init command
 pub fn run(path: &str, name: Option<&str>, python_version: Option<&str>) -> Result<()> {
