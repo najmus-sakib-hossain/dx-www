@@ -92,47 +92,47 @@ This implementation plan covers the Phase 1 performance optimizations for dx-py-
     - **Property 14: Package Store Deduplication**
     - **Validates: Requirements 3.10**
 
-- [ ] 5. Enhance DPL Lock File format
-  - [ ] 5.1 Extend DplEntry with version fields and extras bitmap
+- [x] 5. Enhance DPL Lock File format
+  - [x] 5.1 Extend DplEntry with version fields and extras bitmap
     - Add `version_major`, `version_minor`, `version_patch` fields
     - Add `extras_bitmap` field (u64)
     - Update `DplBuilder` to populate new fields
     - _Requirements: 2.5, 2.6_
 
-  - [ ] 5.2 Implement extras bitmap encoding/decoding
+  - [x] 5.2 Implement extras bitmap encoding/decoding
     - Create extras-to-bitmap mapping
     - Implement `has_extra()` method
     - _Requirements: 2.6_
 
-  - [ ] 5.3 Write property test for DPL entry fields
+  - [x] 5.3 Write property test for DPL entry fields
     - **Property 6: DPL Entry Fields Correctness**
     - **Validates: Requirements 2.4, 2.5, 2.6, 2.7**
 
-  - [ ] 5.4 Verify magic bytes in DPL files
+  - [x] 5.4 Verify magic bytes in DPL files
     - Ensure builder writes correct magic
     - Ensure reader validates magic
     - _Requirements: 2.1_
 
-  - [ ] 5.5 Write property test for magic bytes
+  - [x] 5.5 Write property test for magic bytes
     - **Property 7: DPL Magic Bytes**
     - **Validates: Requirements 2.1**
 
-  - [ ] 5.6 Write property test for DPL round-trip
+  - [x] 5.6 Write property test for DPL round-trip
     - **Property 5: DPL Round-Trip Consistency**
     - **Validates: Requirements 2.8, 2.9, 2.10**
 
-  - [ ] 5.7 Implement corruption handling
+  - [x] 5.7 Implement corruption handling
     - Handle truncated files
     - Handle invalid magic bytes
     - Handle malformed entries
     - _Requirements: 2.11_
 
-  - [ ] 5.8 Write property test for corruption handling
+  - [x] 5.8 Write property test for corruption handling
     - **Property 8: DPL Corruption Handling**
     - **Validates: Requirements 2.11**
 
-- [ ] 6. Checkpoint - DPL enhancements complete
-  - Ensure all tests pass, ask the user if questions arise.
+- [x] 6. Checkpoint - DPL enhancements complete
+  - All tests pass (15 DPL property tests including new enhancement tests)
 
 - [ ] 7. Implement Layout Cache
   - [ ] 7.1 Define layout index binary format

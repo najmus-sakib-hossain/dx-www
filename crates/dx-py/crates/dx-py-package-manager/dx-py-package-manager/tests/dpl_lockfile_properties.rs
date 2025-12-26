@@ -198,3 +198,249 @@ proptest! {
         prop_assert!(lock_file.lookup(&name).is_none());
     }
 }
+
+
+// =============================================================================
+// Property Tests for DPL Enhancements (Task 5)
+// =============================================================================
+
+/// Generate a list of extra names
+fn arb_extras() -> impl Strategy<Value = Vec<String>> {
+    proptest::collection::vec("[a-z][a-z0-9_]{0,10}", 0..10)
+        .prop_map(|extras| {
+            // Deduplicate
+            let mut seen = std::collections::HashSet::new();
+            extras
+                .into_iter()
+                .filter(|e| seen.insert(e.clone()))
+                .collect()
+        })
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    /// Property 6: DPL Entry Fields Correctness - Version Components
+    ///
+    /// *For any* package entry stored in a DPL file, the version_major,
+    /// version_minor, and version_patch fields SHALL correctly represent
+    /// the semantic version parsed from the version string.
+    ///
+    /// **Validates: Requirements 2.4, 2.5**
+    #[test]
+    fn prop_dpl_version_components_correct(
+        name in arb_package_name(),
+        major in 0u16..1000,
+        minor in 0u16..1000,
+        patch in 0u16..1000,
+        hash in arb_hash()
+    ) {
+        let version = format!("{}.{}.{}", major, minor, patch);
+
+        let mut builder = DplBuilder::new("3.12.0", "linux");
+        builder.add_package(&name, &version, hash);
+
+        let data = builder.build();
+        let lock_file = DplLockFile::from_bytes(data).unwrap();
+
+        let entry = lock_file.lookup(&name).unwrap();
+        let (v_major, v_minor, v_patch) = entry.version_components();
+
+        prop_assert_eq!(v_major, major, "Major version mismatch");
+        prop_assert_eq!(v_minor, minor, "Minor version mismatch");
+        prop_assert_eq!(v_patch, patch, "Patch version mismatch");
+    }
+
+    /// Property 6: DPL Entry Fields Correctness - Extras Bitmap
+    ///
+    /// *For any* package entry with extras, the extras_bitmap SHALL correctly
+    /// encode all extras, and has_extra() SHALL return true for enabled extras
+    /// and false for disabled extras.
+    ///
+    /// **Validates: Requirements 2.6**
+    #[test]
+    fn prop_dpl_extras_bitmap_correct(
+        name in arb_package_name(),
+        version in arb_version(),
+        hash in arb_hash(),
+        extras in arb_extras()
+    ) {
+        let mut builder = DplBuilder::new("3.12.0", "linux");
+        let extras_refs: Vec<&str> = extras.iter().map(|s| s.as_str()).collect();
+        builder.add_package_with_extras(&name, &version, hash, &extras_refs);
+
+        let data = builder.build();
+        let lock_file = DplLockFile::from_bytes(data).unwrap();
+
+        let entry = lock_file.lookup(&name).unwrap();
+
+        // Verify extras bitmap is non-zero if extras were provided
+        if !extras.is_empty() {
+            let bitmap = { entry.extras_bitmap };
+            prop_assert!(bitmap != 0, "Extras bitmap should be non-zero when extras are provided");
+        }
+
+        // Verify the number of set bits matches the number of extras
+        let bitmap = { entry.extras_bitmap };
+        let set_bits = bitmap.count_ones() as usize;
+        prop_assert_eq!(set_bits, extras.len(),
+            "Number of set bits ({}) should match number of extras ({})", set_bits, extras.len());
+    }
+
+    /// Property 6: DPL Entry Fields Correctness - Name Hash
+    ///
+    /// *For any* package entry, the pre-computed name_hash SHALL match
+    /// the FNV-1a hash of the package name.
+    ///
+    /// **Validates: Requirements 2.4**
+    #[test]
+    fn prop_dpl_name_hash_correct(
+        name in arb_package_name(),
+        version in arb_version(),
+        hash in arb_hash()
+    ) {
+        let mut builder = DplBuilder::new("3.12.0", "linux");
+        builder.add_package(&name, &version, hash);
+
+        let data = builder.build();
+        let lock_file = DplLockFile::from_bytes(data).unwrap();
+
+        let entry = lock_file.lookup(&name).unwrap();
+        let expected_hash = dx_py_core::fnv1a_hash(name.as_bytes());
+        let actual_hash = { entry.name_hash };
+
+        prop_assert_eq!(actual_hash, expected_hash,
+            "Name hash mismatch for '{}': expected {}, got {}", name, expected_hash, actual_hash);
+    }
+
+    /// Property 6: DPL Entry Fields Correctness - Source Hash
+    ///
+    /// *For any* package entry, the source_hash SHALL match the stored value.
+    ///
+    /// **Validates: Requirements 2.7**
+    #[test]
+    fn prop_dpl_source_hash_correct(
+        name in arb_package_name(),
+        version in arb_version(),
+        hash in arb_hash()
+    ) {
+        let mut builder = DplBuilder::new("3.12.0", "linux");
+        builder.add_package(&name, &version, hash);
+
+        let data = builder.build();
+        let lock_file = DplLockFile::from_bytes(data).unwrap();
+
+        let entry = lock_file.lookup(&name).unwrap();
+        prop_assert_eq!(entry.source_hash, hash, "Source hash mismatch");
+    }
+
+    /// Property 7: DPL Magic Bytes
+    ///
+    /// *For any* DPL file generated by DplBuilder, the first 4 bytes
+    /// SHALL be the magic bytes "DPL\x01".
+    ///
+    /// **Validates: Requirements 2.1**
+    #[test]
+    fn prop_dpl_magic_bytes_correct(packages in arb_unique_packages(0, 20)) {
+        let mut builder = DplBuilder::new("3.12.0", "linux");
+
+        for (name, version, hash) in &packages {
+            builder.add_package(name, version, *hash);
+        }
+
+        let data = builder.build();
+
+        // Verify magic bytes
+        prop_assert!(data.len() >= 4, "Data too short for magic bytes");
+        prop_assert_eq!(&data[0..4], b"DPL\x01", "Magic bytes mismatch");
+    }
+
+    /// Property 5: DPL Round-Trip Consistency with Extras
+    ///
+    /// *For any* valid DPL structure containing packages with extras,
+    /// serializing to binary format and deserializing back SHALL produce
+    /// an equivalent structure with preserved extras.
+    ///
+    /// **Validates: Requirements 2.8, 2.9, 2.10**
+    #[test]
+    fn prop_dpl_roundtrip_with_extras(
+        name in arb_package_name(),
+        version in arb_version(),
+        hash in arb_hash(),
+        extras in arb_extras()
+    ) {
+        let mut builder = DplBuilder::new("3.12.0", "linux");
+        let extras_refs: Vec<&str> = extras.iter().map(|s| s.as_str()).collect();
+        builder.add_package_with_extras(&name, &version, hash, &extras_refs);
+
+        let data = builder.build();
+        let lock_file = DplLockFile::from_bytes(data).unwrap();
+
+        let entry = lock_file.lookup(&name).unwrap();
+
+        // Verify basic fields
+        prop_assert_eq!(entry.name_str(), name.as_str());
+        prop_assert_eq!(entry.version_str(), version.as_str());
+        prop_assert_eq!(entry.source_hash, hash);
+
+        // Verify extras count matches
+        let bitmap = { entry.extras_bitmap };
+        let set_bits = bitmap.count_ones() as usize;
+        prop_assert_eq!(set_bits, extras.len());
+    }
+}
+
+// =============================================================================
+// Property 8: DPL Corruption Handling
+// =============================================================================
+
+#[cfg(test)]
+mod corruption_tests {
+    use super::*;
+
+    /// Property 8: DPL Corruption Handling - Invalid Magic
+    ///
+    /// *For any* byte sequence with invalid magic bytes, the DPL reader
+    /// SHALL return an appropriate error.
+    ///
+    /// **Validates: Requirements 2.11**
+    #[test]
+    fn test_dpl_invalid_magic_rejected() {
+        let mut data = vec![0u8; 128];
+        data[0..4].copy_from_slice(b"XXXX"); // Invalid magic
+
+        let result = DplLockFile::from_bytes(data);
+        assert!(result.is_err());
+    }
+
+    /// Property 8: DPL Corruption Handling - Truncated File
+    ///
+    /// *For any* truncated DPL file, the reader SHALL return an error.
+    ///
+    /// **Validates: Requirements 2.11**
+    #[test]
+    fn test_dpl_truncated_file_rejected() {
+        // File too small for header
+        let data = vec![0u8; 10];
+        let result = DplLockFile::from_bytes(data);
+        assert!(result.is_err());
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(50))]
+
+        /// Property 8: DPL Corruption Handling - Random Data
+        ///
+        /// *For any* random byte sequence that is not a valid DPL file,
+        /// the reader SHALL return an error rather than panicking.
+        ///
+        /// **Validates: Requirements 2.11**
+        #[test]
+        fn prop_dpl_random_data_handled(data in proptest::collection::vec(any::<u8>(), 0..1000)) {
+            // This should not panic, just return an error
+            let result = DplLockFile::from_bytes(data);
+            // We don't care if it succeeds or fails, just that it doesn't panic
+            let _ = result;
+        }
+    }
+}

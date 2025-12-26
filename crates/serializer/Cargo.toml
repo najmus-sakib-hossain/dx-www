@@ -12,6 +12,9 @@ categories = ["encoding", "parser-implementations"]
 readme = "README.md"
 license = "MIT"
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 name = "serializer"
 path = "src/lib.rs"

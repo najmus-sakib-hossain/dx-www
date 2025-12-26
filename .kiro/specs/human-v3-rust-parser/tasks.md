@@ -134,6 +134,15 @@ This plan implements a Human V3 parser in Rust for the serializer crate, enablin
 - [x] 12. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
+- [x] 13. Build VSIX and install to Kiro
+  - Build WASM with `wasm` feature enabled
+  - Copy WASM files to `crates/vscode-dx-serializer/wasm/` with `dx_serializer` naming
+  - Update JS file to reference correct wasm filename
+  - Compile TypeScript with `npm run compile`
+  - Package VSIX with `npx @vscode/vsce package`
+  - Install to Kiro with `kiro --install-extension`
+  - _Requirements: 8.1, 8.2, 8.3_
+
 ## Notes
 
 - All property-based tests are required for comprehensive coverage
