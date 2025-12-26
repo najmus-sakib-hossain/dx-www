@@ -3,7 +3,6 @@
 //! Compares:
 //! 1. DX LLM Format vs TOON (text/token efficiency for LLMs)
 //! 2. DX Machine Format vs rkyv (binary/runtime performance)
-//! 3. DX Zero-Copy Format vs rkyv (zero-copy performance)
 //!
 //! This proves DX is the best serializer in the world!
 
