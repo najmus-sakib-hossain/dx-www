@@ -5,6 +5,8 @@
 import * as vscode from 'vscode';
 import { ForgeClient, getForgeClient } from './client';
 import { exec } from 'child_process';
+import * as path from 'path';
+import * as fs from 'fs';
 
 /**
  * Register all Forge-related commands
@@ -50,10 +52,41 @@ export function registerForgeCommands(context: vscode.ExtensionContext): void {
 
 /**
  * Get the configured dx executable path
+ * Auto-detects from workspace if not explicitly configured
  */
 function getDxExecutablePath(): string {
     const config = vscode.workspace.getConfiguration('dx.forge');
-    return config.get('executablePath', 'forge-cli');
+    const configuredPath = config.get<string>('executablePath', '');
+
+    // If explicitly configured, use that
+    if (configuredPath) {
+        return configuredPath;
+    }
+
+    // Try to auto-detect from workspace
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (workspaceFolders && workspaceFolders.length > 0) {
+        const workspaceRoot = workspaceFolders[0].uri.fsPath;
+
+        // Check common locations in order of preference
+        const candidates = [
+            path.join(workspaceRoot, 'target', 'release', 'dx.exe'),
+            path.join(workspaceRoot, 'target', 'release', 'dx'),
+            path.join(workspaceRoot, 'target', 'debug', 'dx.exe'),
+            path.join(workspaceRoot, 'target', 'debug', 'dx'),
+            path.join(workspaceRoot, 'dx.exe'),
+            path.join(workspaceRoot, 'dx'),
+        ];
+
+        for (const candidate of candidates) {
+            if (fs.existsSync(candidate)) {
+                return candidate;
+            }
+        }
+    }
+
+    // Fallback to PATH lookup
+    return 'dx';
 }
 
 /**
