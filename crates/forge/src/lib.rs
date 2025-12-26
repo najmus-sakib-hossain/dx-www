@@ -137,6 +137,9 @@ pub mod resource_manager;
 // Configuration validation
 pub mod config;
 
+// DX Directory Management
+pub mod dx_dir;
+
 // Metrics collection
 pub mod metrics;
 
@@ -251,6 +254,12 @@ pub use resource_manager::{ResourceManager, HandleGuard};
 // ========================================================================
 
 pub use config::{ConfigValidator, ValidationError, ValidationResult};
+
+// ========================================================================
+// DX Directory exports
+// ========================================================================
+
+pub use dx_dir::{DxPaths, DX_SUBDIRS, current_project};
 
 // ========================================================================
 // Metrics exports

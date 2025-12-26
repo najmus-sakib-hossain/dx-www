@@ -1,6 +1,6 @@
 [package]
-name = "dx-py-bytecode"
-description = "Binary Python Bytecode (DPB) - Zero Parse Format for DX-Py-Runtime"
+name = "dx-py-modules"
+description = "Binary Module Format (DPM) for DX-Py-Runtime"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,9 +9,10 @@ authors.workspace = true
 [dependencies]
 memmap2.workspace = true
 blake3.workspace = true
+dashmap.workspace = true
 thiserror.workspace = true
 bitflags.workspace = true
-tempfile = "3.9"
+dx-py-bytecode = { path = "../dx-py-bytecode" }
 
 [dev-dependencies]
 proptest.workspace = true

@@ -9,8 +9,15 @@ use std::path::PathBuf;
 mod commands;
 mod config;
 mod daemon_client;
+mod dx_dir;
 
-use commands::{branch::BranchCommands, config::ConfigCommands, forge::ForgeCommands, tools::ToolsCommands};
+use commands::{
+    branch::BranchCommands, 
+    cache::CacheCommands,
+    config::ConfigCommands, 
+    forge::ForgeCommands, 
+    tools::ToolsCommands
+};
 
 // Internal crate imports
 use dx_compiler as www;
@@ -42,6 +49,10 @@ enum Commands {
     /// Configuration management
     #[command(subcommand)]
     Config(ConfigCommands),
+
+    /// Cache directory management (.dx folder)
+    #[command(subcommand)]
+    Cache(CacheCommands),
 
     /// Create a new DX project
     New {
@@ -110,6 +121,7 @@ async fn main() -> Result<()> {
         Commands::Tools(cmd) => cmd.execute().await,
         Commands::Branch(cmd) => cmd.execute().await,
         Commands::Config(cmd) => cmd.execute().await,
+        Commands::Cache(cmd) => cmd.execute().await,
 
         // Existing commands
         Commands::New { name, template } => {
