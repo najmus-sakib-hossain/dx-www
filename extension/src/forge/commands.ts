@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode';
-import { ForgeClient, getForgeClient } from './client';
+import { ForgeClient, getForgeClient, TrackedFileChange } from './client';
 import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -46,6 +46,13 @@ export function registerForgeCommands(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.commands.registerCommand('dx.tools.list', async () => {
             await showToolList(client);
+        })
+    );
+
+    // Show File Changes
+    context.subscriptions.push(
+        vscode.commands.registerCommand('dx.forge.changes', async () => {
+            await showFileChanges(client);
         })
     );
 }
@@ -339,4 +346,113 @@ function formatUptime(seconds: number): string {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     return `${h}h ${m}m`;
+}
+
+
+/**
+ * Show file changes with diffs in a quick pick
+ */
+async function showFileChanges(client: ForgeClient): Promise<void> {
+    if (!client.isConnected()) {
+        vscode.window.showWarningMessage('Forge daemon is not running');
+        return;
+    }
+
+    const changes = await client.getFileChanges(50);
+    if (changes.length === 0) {
+        vscode.window.showInformationMessage('No file changes tracked');
+        return;
+    }
+
+    const items: vscode.QuickPickItem[] = changes.map(change => {
+        const fileName = change.path.split(/[/\\]/).pop() || change.path;
+        const icon = getChangeTypeIcon(change.change_type);
+        const diffInfo = change.diff
+            ? `+${change.diff.additions} -${change.diff.deletions}`
+            : 'no diff';
+        const time = formatTimestamp(change.timestamp);
+
+        return {
+            label: `${icon} ${fileName}`,
+            description: `${change.change_type} | ${diffInfo}`,
+            detail: `${change.path} • ${time}`,
+            change: change
+        } as vscode.QuickPickItem & { change: TrackedFileChange };
+    });
+
+    // Add action items
+    items.unshift(
+        { label: '', kind: vscode.QuickPickItemKind.Separator },
+        { label: '$(trash) Clear All Changes', description: 'Clear tracked changes' }
+    );
+
+    const selected = await vscode.window.showQuickPick(items, {
+        title: 'DX Forge - File Changes',
+        placeHolder: 'Select a file to view diff or clear changes'
+    });
+
+    if (selected) {
+        if (selected.label.includes('Clear All')) {
+            await client.clearFileChanges();
+            vscode.window.showInformationMessage('File changes cleared');
+        } else if ((selected as any).change) {
+            const change = (selected as any).change as TrackedFileChange;
+            await showFileDiff(change);
+        }
+    }
+}
+
+/**
+ * Show file diff in a new document
+ */
+async function showFileDiff(change: TrackedFileChange): Promise<void> {
+    if (!change.diff || change.diff.hunks.length === 0) {
+        vscode.window.showInformationMessage(`No diff available for ${change.path}`);
+        return;
+    }
+
+    // Build diff content
+    let diffContent = `# Diff: ${change.path}\n`;
+    diffContent += `# Type: ${change.change_type}\n`;
+    diffContent += `# Time: ${change.timestamp}\n`;
+    diffContent += `# Additions: +${change.diff.additions} | Deletions: -${change.diff.deletions}\n`;
+    diffContent += `\n`;
+
+    for (const hunk of change.diff.hunks) {
+        diffContent += `@@ -${hunk.old_start},${hunk.old_lines} +${hunk.new_start},${hunk.new_lines} @@\n`;
+        diffContent += hunk.content;
+        diffContent += '\n';
+    }
+
+    // Show in a new document
+    const doc = await vscode.workspace.openTextDocument({
+        content: diffContent,
+        language: 'diff'
+    });
+    await vscode.window.showTextDocument(doc, { preview: true });
+}
+
+function getChangeTypeIcon(changeType: string): string {
+    switch (changeType.toLowerCase()) {
+        case 'created': return '$(add)';
+        case 'modified': return '$(edit)';
+        case 'deleted': return '$(trash)';
+        default: return '$(file)';
+    }
+}
+
+function formatTimestamp(timestamp: string): string {
+    try {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffSecs = Math.floor(diffMs / 1000);
+
+        if (diffSecs < 60) return `${diffSecs}s ago`;
+        if (diffSecs < 3600) return `${Math.floor(diffSecs / 60)}m ago`;
+        if (diffSecs < 86400) return `${Math.floor(diffSecs / 3600)}h ago`;
+        return date.toLocaleDateString();
+    } catch {
+        return timestamp;
+    }
 }

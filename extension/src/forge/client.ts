@@ -25,6 +25,27 @@ export interface ToolInfo {
     error_count: number;
 }
 
+export interface DiffHunk {
+    old_start: number;
+    old_lines: number;
+    new_start: number;
+    new_lines: number;
+    content: string;
+}
+
+export interface FileDiff {
+    additions: number;
+    deletions: number;
+    hunks: DiffHunk[];
+}
+
+export interface TrackedFileChange {
+    path: string;
+    change_type: string;
+    timestamp: string;
+    diff?: FileDiff;
+}
+
 export interface ForgeEvent {
     type: 'file_changed' | 'tool_started' | 'tool_completed' | 'tool_failed' | 'error';
     data: any;
@@ -261,15 +282,51 @@ export class ForgeClient {
     /**
      * Notify daemon of file change
      */
-    async notifyFileChange(filePath: string, changeType: 'created' | 'modified' | 'deleted'): Promise<void> {
+    async notifyFileChange(filePath: string, changeType: 'created' | 'modified' | 'deleted'): Promise<TrackedFileChange | null> {
         try {
-            await this.send({
+            const response = await this.send({
                 command: 'FileChanged',
                 path: filePath,
                 change_type: changeType
             });
+            if (response.type === 'FileChangeEvent') {
+                return response as TrackedFileChange;
+            }
+            return null;
         } catch (e) {
             console.error('[Forge] Failed to notify file change:', e);
+            return null;
+        }
+    }
+
+    /**
+     * Get recent file changes with diffs
+     */
+    async getFileChanges(limit?: number): Promise<TrackedFileChange[]> {
+        try {
+            const response = await this.send({
+                command: 'GetFileChanges',
+                limit: limit || 50
+            });
+            if (response.type === 'FileChanges' && response.changes) {
+                return response.changes;
+            }
+            return [];
+        } catch (e) {
+            console.error('[Forge] Failed to get file changes:', e);
+            return [];
+        }
+    }
+
+    /**
+     * Clear tracked file changes
+     */
+    async clearFileChanges(): Promise<boolean> {
+        try {
+            const response = await this.send({ command: 'ClearFileChanges' });
+            return response.type === 'Success';
+        } catch {
+            return false;
         }
     }
 }

@@ -42,6 +42,8 @@ pub enum IpcCommand {
     RejectChange { id: String },
     RejectAllPending,
     GetBranchHistory { limit: usize },
+    GetFileChanges { limit: Option<usize> },
+    ClearFileChanges,
     Shutdown { force: bool },
     Ping,
     // Extension-specific
@@ -57,6 +59,8 @@ pub enum IpcResponse {
     ToolResult(ToolResultResponse),
     BranchStatus(BranchStatusResponse),
     BranchHistory { entries: Vec<BranchHistoryEntry> },
+    FileChanges { changes: Vec<TrackedFileChange> },
+    FileChangeEvent(TrackedFileChange),
     Count { count: usize },
     Success,
     Error { message: String },
@@ -137,6 +141,7 @@ pub struct DaemonServer {
     stats: Arc<RwLock<ServerStats>>,
     event_tx: broadcast::Sender<DaemonEvent>,
     branch_state: Arc<RwLock<BranchState>>,
+    file_tracker: Arc<RwLock<FileChangeTracker>>,
 }
 
 #[derive(Debug, Default)]
@@ -149,6 +154,212 @@ struct ServerStats {
     errors: u64,
     lsp_events: u64,
     fs_events: u64,
+}
+
+/// Tracked file change with diff information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrackedFileChange {
+    pub path: String,
+    pub change_type: String,
+    pub timestamp: String,
+    pub diff: Option<FileDiff>,
+}
+
+/// File diff information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileDiff {
+    pub additions: u32,
+    pub deletions: u32,
+    pub hunks: Vec<DiffHunk>,
+}
+
+/// A diff hunk showing changed lines
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiffHunk {
+    pub old_start: u32,
+    pub old_lines: u32,
+    pub new_start: u32,
+    pub new_lines: u32,
+    pub content: String,
+}
+
+#[derive(Debug, Default)]
+struct FileChangeTracker {
+    /// Recent file changes with diffs
+    changes: Vec<TrackedFileChange>,
+    /// Previous file contents for diff computation
+    file_cache: std::collections::HashMap<String, String>,
+    /// Maximum number of changes to track
+    max_changes: usize,
+}
+
+impl FileChangeTracker {
+    fn new() -> Self {
+        Self {
+            changes: Vec::new(),
+            file_cache: std::collections::HashMap::new(),
+            max_changes: 100,
+        }
+    }
+    
+    /// Track a file change and compute diff
+    fn track_change(&mut self, path: &str, change_type: &str) -> TrackedFileChange {
+        let diff = self.compute_diff(path, change_type);
+        
+        let change = TrackedFileChange {
+            path: path.to_string(),
+            change_type: change_type.to_string(),
+            timestamp: chrono::Utc::now().to_rfc3339(),
+            diff,
+        };
+        
+        // Add to front of list
+        self.changes.insert(0, change.clone());
+        
+        // Trim to max size
+        if self.changes.len() > self.max_changes {
+            self.changes.truncate(self.max_changes);
+        }
+        
+        // Update cache with new content
+        if change_type != "deleted" {
+            if let Ok(content) = std::fs::read_to_string(path) {
+                self.file_cache.insert(path.to_string(), content);
+            }
+        } else {
+            self.file_cache.remove(path);
+        }
+        
+        change
+    }
+    
+    /// Compute diff between cached and current file content
+    fn compute_diff(&self, path: &str, change_type: &str) -> Option<FileDiff> {
+        use similar::{ChangeTag, TextDiff};
+        
+        if change_type == "deleted" {
+            // For deleted files, show all lines as deletions
+            if let Some(old_content) = self.file_cache.get(path) {
+                let lines = old_content.lines().count() as u32;
+                return Some(FileDiff {
+                    additions: 0,
+                    deletions: lines,
+                    hunks: vec![DiffHunk {
+                        old_start: 1,
+                        old_lines: lines,
+                        new_start: 0,
+                        new_lines: 0,
+                        content: format!("-{}", old_content.lines().take(10).collect::<Vec<_>>().join("\n-")),
+                    }],
+                });
+            }
+            return None;
+        }
+        
+        // Read current file content
+        let new_content = std::fs::read_to_string(path).ok()?;
+        
+        if change_type == "created" {
+            // For new files, show all lines as additions
+            let lines = new_content.lines().count() as u32;
+            return Some(FileDiff {
+                additions: lines,
+                deletions: 0,
+                hunks: vec![DiffHunk {
+                    old_start: 0,
+                    old_lines: 0,
+                    new_start: 1,
+                    new_lines: lines,
+                    content: format!("+{}", new_content.lines().take(10).collect::<Vec<_>>().join("\n+")),
+                }],
+            });
+        }
+        
+        // For modified files, compute actual diff
+        let old_content = self.file_cache.get(path).map(|s| s.as_str()).unwrap_or("");
+        let diff = TextDiff::from_lines(old_content, &new_content);
+        
+        let mut additions = 0u32;
+        let mut deletions = 0u32;
+        let mut hunks = Vec::new();
+        let mut current_hunk_content = String::new();
+        let mut hunk_old_start = 0u32;
+        let mut hunk_new_start = 0u32;
+        let mut hunk_old_lines = 0u32;
+        let mut hunk_new_lines = 0u32;
+        let mut in_hunk = false;
+        
+        for (idx, change) in diff.iter_all_changes().enumerate() {
+            match change.tag() {
+                ChangeTag::Delete => {
+                    deletions += 1;
+                    if !in_hunk {
+                        in_hunk = true;
+                        hunk_old_start = idx as u32 + 1;
+                        hunk_new_start = idx as u32 + 1;
+                    }
+                    hunk_old_lines += 1;
+                    current_hunk_content.push_str(&format!("-{}", change));
+                }
+                ChangeTag::Insert => {
+                    additions += 1;
+                    if !in_hunk {
+                        in_hunk = true;
+                        hunk_old_start = idx as u32 + 1;
+                        hunk_new_start = idx as u32 + 1;
+                    }
+                    hunk_new_lines += 1;
+                    current_hunk_content.push_str(&format!("+{}", change));
+                }
+                ChangeTag::Equal => {
+                    if in_hunk {
+                        // End current hunk
+                        hunks.push(DiffHunk {
+                            old_start: hunk_old_start,
+                            old_lines: hunk_old_lines,
+                            new_start: hunk_new_start,
+                            new_lines: hunk_new_lines,
+                            content: current_hunk_content.clone(),
+                        });
+                        current_hunk_content.clear();
+                        hunk_old_lines = 0;
+                        hunk_new_lines = 0;
+                        in_hunk = false;
+                    }
+                }
+            }
+        }
+        
+        // Don't forget the last hunk
+        if in_hunk && !current_hunk_content.is_empty() {
+            hunks.push(DiffHunk {
+                old_start: hunk_old_start,
+                old_lines: hunk_old_lines,
+                new_start: hunk_new_start,
+                new_lines: hunk_new_lines,
+                content: current_hunk_content,
+            });
+        }
+        
+        // Limit hunks to first 5 for performance
+        hunks.truncate(5);
+        
+        Some(FileDiff {
+            additions,
+            deletions,
+            hunks,
+        })
+    }
+    
+    /// Get recent changes
+    fn get_changes(&self) -> &[TrackedFileChange] {
+        &self.changes
+    }
+    
+    /// Clear all tracked changes
+    fn clear(&mut self) {
+        self.changes.clear();
+    }
 }
 
 #[derive(Debug, Default)]
@@ -191,6 +402,7 @@ impl DaemonServer {
             stats: Arc::new(RwLock::new(ServerStats::default())),
             event_tx,
             branch_state: Arc::new(RwLock::new(BranchState::default())),
+            file_tracker: Arc::new(RwLock::new(FileChangeTracker::new())),
         }
     }
 
@@ -375,6 +587,7 @@ impl DaemonServer {
             stats: self.stats.clone(),
             event_tx: self.event_tx.clone(),
             branch_state: self.branch_state.clone(),
+            file_tracker: self.file_tracker.clone(),
         }
     }
 
@@ -401,6 +614,7 @@ struct DaemonServerHandler {
     stats: Arc<RwLock<ServerStats>>,
     event_tx: broadcast::Sender<DaemonEvent>,
     branch_state: Arc<RwLock<BranchState>>,
+    file_tracker: Arc<RwLock<FileChangeTracker>>,
 }
 
 impl DaemonServerHandler {
@@ -427,6 +641,7 @@ impl DaemonServerHandler {
                                 stats: self.stats.clone(),
                                 event_tx: self.event_tx.clone(),
                                 branch_state: self.branch_state.clone(),
+                                file_tracker: self.file_tracker.clone(),
                             };
                             tokio::spawn(async move {
                                 if let Err(e) = handler.handle_websocket_connection(stream).await {
@@ -746,6 +961,19 @@ impl DaemonServerHandler {
                 IpcResponse::BranchHistory { entries }
             }
             
+            IpcCommand::GetFileChanges { limit } => {
+                let tracker = self.file_tracker.read();
+                let changes = tracker.get_changes();
+                let limit = limit.unwrap_or(50);
+                let changes: Vec<_> = changes.iter().take(limit).cloned().collect();
+                IpcResponse::FileChanges { changes }
+            }
+            
+            IpcCommand::ClearFileChanges => {
+                self.file_tracker.write().clear();
+                IpcResponse::Success
+            }
+            
             IpcCommand::Shutdown { force: _ } => {
                 self.shutdown.store(true, Ordering::SeqCst);
                 *self.state.write() = DaemonState::ShuttingDown;
@@ -754,8 +982,19 @@ impl DaemonServerHandler {
             
             IpcCommand::FileChanged { path, change_type } => {
                 self.stats.write().files_changed += 1;
-                println!("📝 File changed: {} ({})", path, change_type);
-                IpcResponse::Success
+                
+                // Track the change with diff
+                let tracked_change = self.file_tracker.write().track_change(&path, &change_type);
+                
+                println!("📝 File changed: {} ({}) [+{} -{} lines]", 
+                    path, 
+                    change_type,
+                    tracked_change.diff.as_ref().map(|d| d.additions).unwrap_or(0),
+                    tracked_change.diff.as_ref().map(|d| d.deletions).unwrap_or(0)
+                );
+                
+                // Return the tracked change with diff info
+                IpcResponse::FileChangeEvent(tracked_change)
             }
         }
     }

@@ -120,6 +120,11 @@
         "command": "dx.tools.list",
         "title": "DX: Show Tool List",
         "icon": "$(tools)"
+      },
+      {
+        "command": "dx.forge.changes",
+        "title": "DX: Show File Changes",
+        "icon": "$(git-compare)"
       }
     ],
     "menus": {

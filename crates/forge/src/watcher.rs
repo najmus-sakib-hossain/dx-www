@@ -233,8 +233,8 @@ impl FileWatcher {
         if let Some(name) = path.file_name() {
             let name_str = name.to_string_lossy();
 
-            // Skip hidden files
-            if name_str.starts_with('.') {
+            // Skip hidden files (but not .gitignore itself)
+            if name_str.starts_with('.') && name_str != ".gitignore" {
                 return false;
             }
 
@@ -249,7 +249,7 @@ impl FileWatcher {
             }
         }
 
-        // Skip target directories and node_modules
+        // Skip target directories, node_modules, and .git
         if let Some(path_str) = path.to_str() {
             if path_str.contains("/target/")
                 || path_str.contains("\\target\\")
@@ -257,12 +257,46 @@ impl FileWatcher {
                 || path_str.contains("\\node_modules\\")
                 || path_str.contains("/.dx/")
                 || path_str.contains("\\.dx\\")
+                || path_str.contains("/.git/")
+                || path_str.contains("\\.git\\")
+                || path_str.contains("/dist/")
+                || path_str.contains("\\dist\\")
+                || path_str.contains("/build/")
+                || path_str.contains("\\build\\")
             {
                 return false;
             }
         }
 
         true
+    }
+    
+    /// Check if a path is ignored by gitignore
+    pub fn is_gitignored(root: &Path, path: &Path) -> bool {
+        use ignore::WalkBuilder;
+        
+        // Build a walker that respects gitignore
+        let walker = WalkBuilder::new(root)
+            .hidden(false)
+            .git_ignore(true)
+            .git_global(true)
+            .git_exclude(true)
+            .max_depth(Some(1))
+            .build();
+        
+        // Check if the path would be ignored
+        for entry in walker {
+            if let Ok(entry) = entry {
+                if entry.path() == path {
+                    return false; // Path is not ignored
+                }
+            }
+        }
+        
+        // If we didn't find it in the walk, it's likely ignored
+        // But we need a more reliable check
+        let (gitignore, _err) = ignore::gitignore::Gitignore::new(root.join(".gitignore"));
+        gitignore.matched(path, path.is_dir()).is_ignore()
     }
 }
 

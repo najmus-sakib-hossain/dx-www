@@ -373,6 +373,7 @@ impl ForgeDaemon {
     fn should_ignore(&self, path: &Path) -> bool {
         let path_str = path.to_string_lossy();
         
+        // First check hardcoded patterns
         for pattern in &self.config.ignore_patterns {
             // Simple glob matching (could use glob crate for full support)
             if pattern.contains("**") {
@@ -392,7 +393,21 @@ impl ForgeDaemon {
             }
         }
         
-        false
+        // Then check gitignore
+        self.is_gitignored(path)
+    }
+    
+    /// Check if a path is ignored by .gitignore
+    fn is_gitignored(&self, path: &Path) -> bool {
+        let gitignore_path = self.config.project_root.join(".gitignore");
+        if !gitignore_path.exists() {
+            return false;
+        }
+        
+        // Use the ignore crate for proper gitignore parsing
+        let (gitignore, _err) = ignore::gitignore::Gitignore::new(&gitignore_path);
+        let relative_path = path.strip_prefix(&self.config.project_root).unwrap_or(path);
+        gitignore.matched(relative_path, path.is_dir()).is_ignore()
     }
 
     /// Trigger tools based on file change
