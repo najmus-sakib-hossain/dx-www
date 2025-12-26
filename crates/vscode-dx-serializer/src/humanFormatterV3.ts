@@ -45,6 +45,7 @@ export const ABBREVIATIONS: Record<string, string> = {
 
     // Version & Author
     'v': 'version',
+    'vr': 'version',  // vr is also version, NOT variant
     'au': 'author',
 
     // Workspace & Editors
@@ -103,7 +104,7 @@ export const ABBREVIATIONS: Record<string, string> = {
     'th': 'themes',
     'cp': 'components',
     'pk': 'pack',
-    'vr': 'variant',
+    'vt': 'variant',  // Changed from 'vr' to 'vt' to avoid conflict with version
     'df': 'default',
     'dv': 'dev',
     'pd': 'prod',
@@ -134,9 +135,16 @@ export const SECTION_NAMES: Record<string, string> = {
     'r': 'rust',          // Added for rust.dependencies (external)
 };
 
-export const REVERSE_ABBREVIATIONS: Record<string, string> = Object.fromEntries(
-    Object.entries(ABBREVIATIONS).map(([abbrev, full]) => [full, abbrev])
-);
+export const REVERSE_ABBREVIATIONS: Record<string, string> = (() => {
+    const result: Record<string, string> = {};
+    for (const [abbrev, full] of Object.entries(ABBREVIATIONS)) {
+        // Prefer shorter abbreviations when there are duplicates
+        if (!result[full] || abbrev.length < result[full].length) {
+            result[full] = abbrev;
+        }
+    }
+    return result;
+})();
 
 export const REVERSE_SECTION_NAMES: Record<string, string> = Object.fromEntries(
     Object.entries(SECTION_NAMES).map(([id, name]) => [name, id])
