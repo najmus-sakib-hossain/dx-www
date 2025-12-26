@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode';
-import { ForgeClient, getForgeClient, TrackedFileChange } from './client';
+import { ForgeClient, getForgeClient, TrackedFileChange, GitStatusResponse, GitFileStatus } from './client';
 import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -53,6 +53,20 @@ export function registerForgeCommands(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.commands.registerCommand('dx.forge.changes', async () => {
             await showFileChanges(client);
+        })
+    );
+
+    // Show Git Status (actual uncommitted changes)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('dx.forge.gitStatus', async () => {
+            await showGitStatus(client);
+        })
+    );
+
+    // Sync with Git
+    context.subscriptions.push(
+        vscode.commands.registerCommand('dx.forge.syncGit', async () => {
+            await syncWithGit(client);
         })
     );
 }
@@ -454,5 +468,172 @@ function formatTimestamp(timestamp: string): string {
         return date.toLocaleDateString();
     } catch {
         return timestamp;
+    }
+}
+
+
+/**
+ * Show Git status (actual uncommitted changes)
+ */
+async function showGitStatus(client: ForgeClient): Promise<void> {
+    if (!client.isConnected()) {
+        vscode.window.showWarningMessage('Forge daemon is not running');
+        return;
+    }
+
+    const status = await client.getGitStatus();
+    if (!status) {
+        vscode.window.showErrorMessage('Failed to get Git status');
+        return;
+    }
+
+    if (status.is_clean) {
+        vscode.window.showInformationMessage(`Git: Working tree clean (branch: ${status.branch})`);
+        return;
+    }
+
+    const items: (vscode.QuickPickItem & { file?: GitFileStatus; filePath?: string })[] = [];
+
+    // Staged changes
+    if (status.staged.length > 0) {
+        items.push({ label: 'Staged Changes', kind: vscode.QuickPickItemKind.Separator });
+        for (const file of status.staged) {
+            const fileName = file.path.split(/[/\\]/).pop() || file.path;
+            const diffInfo = file.diff ? `+${file.diff.additions} -${file.diff.deletions}` : '';
+            items.push({
+                label: `$(diff-added) ${fileName}`,
+                description: `${file.status} ${diffInfo}`,
+                detail: file.path,
+                file,
+            });
+        }
+    }
+
+    // Unstaged changes
+    if (status.unstaged.length > 0) {
+        items.push({ label: 'Unstaged Changes', kind: vscode.QuickPickItemKind.Separator });
+        for (const file of status.unstaged) {
+            const fileName = file.path.split(/[/\\]/).pop() || file.path;
+            const diffInfo = file.diff ? `+${file.diff.additions} -${file.diff.deletions}` : '';
+            items.push({
+                label: `$(diff-modified) ${fileName}`,
+                description: `${file.status} ${diffInfo}`,
+                detail: file.path,
+                file,
+            });
+        }
+    }
+
+    // Untracked files
+    if (status.untracked.length > 0) {
+        items.push({ label: 'Untracked Files', kind: vscode.QuickPickItemKind.Separator });
+        for (const filePath of status.untracked) {
+            const fileName = filePath.split(/[/\\]/).pop() || filePath;
+            items.push({
+                label: `$(question) ${fileName}`,
+                description: 'untracked',
+                detail: filePath,
+                filePath,
+            });
+        }
+    }
+
+    // Actions
+    items.push(
+        { label: '', kind: vscode.QuickPickItemKind.Separator },
+        { label: '$(sync) Sync Forge with Git', description: 'Reset Forge counters to match Git status' }
+    );
+
+    const selected = await vscode.window.showQuickPick(items, {
+        title: `Git Status (${status.branch}) - ${status.staged.length} staged, ${status.unstaged.length} unstaged, ${status.untracked.length} untracked`,
+        placeHolder: 'Select a file to view diff'
+    });
+
+    if (selected) {
+        if (selected.label.includes('Sync Forge')) {
+            await syncWithGit(client);
+        } else if (selected.file) {
+            await showGitFileDiff(selected.file);
+        } else if (selected.filePath) {
+            // Open untracked file
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders) {
+                const fullPath = vscode.Uri.joinPath(workspaceFolders[0].uri, selected.filePath);
+                await vscode.window.showTextDocument(fullPath);
+            }
+        }
+    }
+}
+
+/**
+ * Show diff for a Git file using VS Code's built-in diff editor
+ */
+async function showGitFileDiff(file: GitFileStatus): Promise<void> {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) {
+        vscode.window.showErrorMessage('No workspace folder open');
+        return;
+    }
+
+    const workspaceRoot = workspaceFolders[0].uri;
+    const fileUri = vscode.Uri.joinPath(workspaceRoot, file.path);
+
+    // Use VS Code's built-in Git diff
+    // Create a git: URI for the HEAD version
+    const gitUri = fileUri.with({ scheme: 'git', query: JSON.stringify({ path: file.path, ref: 'HEAD' }) });
+
+    try {
+        // Try to use VS Code's diff command
+        await vscode.commands.executeCommand('vscode.diff',
+            gitUri,
+            fileUri,
+            `${file.path} (HEAD ↔ Working Tree)`
+        );
+    } catch {
+        // Fallback: show the diff content in a document
+        if (file.diff && file.diff.hunks.length > 0) {
+            let diffContent = `# Diff: ${file.path}\n`;
+            diffContent += `# Status: ${file.status}\n`;
+            diffContent += `# Additions: +${file.diff.additions} | Deletions: -${file.diff.deletions}\n\n`;
+
+            for (const hunk of file.diff.hunks) {
+                diffContent += `@@ -${hunk.old_start},${hunk.old_lines} +${hunk.new_start},${hunk.new_lines} @@\n`;
+                diffContent += hunk.content;
+                diffContent += '\n';
+            }
+
+            const doc = await vscode.workspace.openTextDocument({
+                content: diffContent,
+                language: 'diff'
+            });
+            await vscode.window.showTextDocument(doc, { preview: true });
+        } else {
+            // Just open the file
+            await vscode.window.showTextDocument(fileUri);
+        }
+    }
+}
+
+/**
+ * Sync Forge with Git status
+ */
+async function syncWithGit(client: ForgeClient): Promise<void> {
+    if (!client.isConnected()) {
+        vscode.window.showWarningMessage('Forge daemon is not running');
+        return;
+    }
+
+    const status = await client.syncWithGit();
+    if (status) {
+        const totalChanges = status.staged.length + status.unstaged.length + status.untracked.length;
+        if (status.is_clean) {
+            vscode.window.showInformationMessage('Forge synced with Git: Working tree clean');
+        } else {
+            vscode.window.showInformationMessage(
+                `Forge synced with Git: ${totalChanges} changes (${status.staged.length} staged, ${status.unstaged.length} unstaged, ${status.untracked.length} untracked)`
+            );
+        }
+    } else {
+        vscode.window.showErrorMessage('Failed to sync with Git');
     }
 }

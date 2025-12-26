@@ -3,13 +3,14 @@
  */
 
 import * as vscode from 'vscode';
-import { ForgeClient, ForgeStatus, TrackedFileChange } from './client';
+import { ForgeClient, ForgeStatus, TrackedFileChange, GitStatusResponse } from './client';
 
 export class ForgeStatusBar {
     private statusBarItem: vscode.StatusBarItem;
     private client: ForgeClient;
     private updateInterval: NodeJS.Timeout | null = null;
     private recentChanges: TrackedFileChange[] = [];
+    private gitStatus: GitStatusResponse | null = null;
 
     constructor(client: ForgeClient) {
         this.client = client;
@@ -17,7 +18,7 @@ export class ForgeStatusBar {
             vscode.StatusBarAlignment.Left,
             100
         );
-        this.statusBarItem.command = 'dx.forge.status';
+        this.statusBarItem.command = 'dx.forge.gitStatus';
         this.show();
     }
 
@@ -66,10 +67,10 @@ export class ForgeStatusBar {
     private async updateStatus(): Promise<void> {
         if (this.client.isConnected()) {
             const status = await this.client.getStatus();
-            const changes = await this.client.getFileChanges(10);
-            this.recentChanges = changes;
+            const gitStatus = await this.client.getGitStatus();
+            this.gitStatus = gitStatus;
             if (status) {
-                this.showConnected(status, changes);
+                this.showConnected(status, gitStatus);
             } else {
                 this.showConnected();
             }
@@ -81,11 +82,16 @@ export class ForgeStatusBar {
     /**
      * Show connected status
      */
-    showConnected(status?: ForgeStatus, changes?: TrackedFileChange[]): void {
-        const changeCount = changes?.length || 0;
+    showConnected(status?: ForgeStatus, gitStatus?: GitStatusResponse | null): void {
+        // Show Git-based change count (actual uncommitted changes)
+        const gitChangeCount = gitStatus
+            ? gitStatus.staged.length + gitStatus.unstaged.length + gitStatus.untracked.length
+            : 0;
 
-        if (changeCount > 0) {
-            this.statusBarItem.text = `$(check) DX Forge (${changeCount} changes)`;
+        if (gitStatus?.is_clean) {
+            this.statusBarItem.text = `$(check) DX Forge`;
+        } else if (gitChangeCount > 0) {
+            this.statusBarItem.text = `$(git-commit) DX Forge (${gitChangeCount})`;
         } else {
             this.statusBarItem.text = '$(check) DX Forge';
         }
@@ -96,28 +102,43 @@ export class ForgeStatusBar {
             let tooltipContent =
                 `**DX Forge** - Connected\n\n` +
                 `- Uptime: ${uptime}\n` +
-                `- Files changed: ${status.files_changed}\n` +
                 `- Tools executed: ${status.tools_executed}\n` +
                 `- Cache hits: ${status.cache_hits}\n` +
                 `- Errors: ${status.errors}`;
 
-            // Add recent file changes with diffs
-            if (changes && changes.length > 0) {
-                tooltipContent += `\n\n---\n\n**Recent Changes:**\n`;
-                for (const change of changes.slice(0, 5)) {
-                    const fileName = change.path.split(/[/\\]/).pop() || change.path;
-                    const diffInfo = change.diff
-                        ? ` (+${change.diff.additions} -${change.diff.deletions})`
-                        : '';
-                    const icon = this.getChangeIcon(change.change_type);
-                    tooltipContent += `\n${icon} \`${fileName}\`${diffInfo}`;
-                }
+            // Add Git status info
+            if (gitStatus) {
+                tooltipContent += `\n\n---\n\n**Git Status** (${gitStatus.branch}):\n`;
+                if (gitStatus.is_clean) {
+                    tooltipContent += `\n$(check) Working tree clean`;
+                } else {
+                    if (gitStatus.staged.length > 0) {
+                        tooltipContent += `\n$(diff-added) ${gitStatus.staged.length} staged`;
+                    }
+                    if (gitStatus.unstaged.length > 0) {
+                        tooltipContent += `\n$(diff-modified) ${gitStatus.unstaged.length} unstaged`;
+                    }
+                    if (gitStatus.untracked.length > 0) {
+                        tooltipContent += `\n$(question) ${gitStatus.untracked.length} untracked`;
+                    }
 
-                if (changes.length > 5) {
-                    tooltipContent += `\n\n_...and ${changes.length - 5} more_`;
+                    // Show first few changed files
+                    const allChanges = [...gitStatus.staged, ...gitStatus.unstaged];
+                    if (allChanges.length > 0) {
+                        tooltipContent += `\n\n**Changed Files:**`;
+                        for (const file of allChanges.slice(0, 5)) {
+                            const fileName = file.path.split(/[/\\]/).pop() || file.path;
+                            const diffInfo = file.diff ? ` (+${file.diff.additions} -${file.diff.deletions})` : '';
+                            tooltipContent += `\n- \`${fileName}\`${diffInfo}`;
+                        }
+                        if (allChanges.length > 5) {
+                            tooltipContent += `\n\n_...and ${allChanges.length - 5} more_`;
+                        }
+                    }
                 }
             }
 
+            tooltipContent += `\n\n_Click to view Git status_`;
             this.statusBarItem.tooltip = new vscode.MarkdownString(tooltipContent);
         } else {
             this.statusBarItem.tooltip = 'DX Forge - Connected';

@@ -43,6 +43,8 @@ pub enum IpcCommand {
     RejectAllPending,
     GetBranchHistory { limit: usize },
     GetFileChanges { limit: Option<usize> },
+    GetGitStatus,
+    SyncWithGit,
     ClearFileChanges,
     Shutdown { force: bool },
     Ping,
@@ -61,10 +63,27 @@ pub enum IpcResponse {
     BranchHistory { entries: Vec<BranchHistoryEntry> },
     FileChanges { changes: Vec<TrackedFileChange> },
     FileChangeEvent(TrackedFileChange),
+    GitStatus(GitStatusResponse),
     Count { count: usize },
     Success,
     Error { message: String },
     Pong,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitStatusResponse {
+    pub is_clean: bool,
+    pub branch: String,
+    pub staged: Vec<GitFileStatus>,
+    pub unstaged: Vec<GitFileStatus>,
+    pub untracked: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitFileStatus {
+    pub path: String,
+    pub status: String,
+    pub diff: Option<FileDiff>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -969,6 +988,26 @@ impl DaemonServerHandler {
                 IpcResponse::FileChanges { changes }
             }
             
+            IpcCommand::GetGitStatus => {
+                self.get_git_status()
+            }
+            
+            IpcCommand::SyncWithGit => {
+                // Reset file change counter and sync with Git
+                self.stats.write().files_changed = 0;
+                self.file_tracker.write().clear();
+                
+                // Get current Git status and populate tracker
+                match self.get_git_status() {
+                    IpcResponse::GitStatus(status) => {
+                        let total_changes = status.staged.len() + status.unstaged.len() + status.untracked.len();
+                        self.stats.write().files_changed = total_changes as u64;
+                        IpcResponse::GitStatus(status)
+                    }
+                    other => other
+                }
+            }
+            
             IpcCommand::ClearFileChanges => {
                 self.file_tracker.write().clear();
                 IpcResponse::Success
@@ -1010,4 +1049,198 @@ impl DaemonServerHandler {
             _ => None,
         }
     }
+    
+    /// Get Git status for the current working directory
+    fn get_git_status(&self) -> IpcResponse {
+        use std::process::Command;
+        
+        // Get current branch
+        let branch = Command::new("git")
+            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+            .output()
+            .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+            .unwrap_or_else(|_| "unknown".to_string());
+        
+        // Get porcelain status
+        let status_output = match Command::new("git")
+            .args(["status", "--porcelain=v1"])
+            .output()
+        {
+            Ok(output) => String::from_utf8_lossy(&output.stdout).to_string(),
+            Err(e) => {
+                return IpcResponse::Error {
+                    message: format!("Failed to get git status: {}", e),
+                };
+            }
+        };
+        
+        let mut staged: Vec<GitFileStatus> = Vec::new();
+        let mut unstaged: Vec<GitFileStatus> = Vec::new();
+        let mut untracked: Vec<String> = Vec::new();
+        
+        for line in status_output.lines() {
+            if line.len() < 3 {
+                continue;
+            }
+            
+            let index_status = line.chars().next().unwrap_or(' ');
+            let worktree_status = line.chars().nth(1).unwrap_or(' ');
+            let path = line[3..].to_string();
+            
+            // Untracked files
+            if index_status == '?' && worktree_status == '?' {
+                untracked.push(path);
+                continue;
+            }
+            
+            // Staged changes (index)
+            if index_status != ' ' && index_status != '?' {
+                let status = match index_status {
+                    'M' => "modified",
+                    'A' => "added",
+                    'D' => "deleted",
+                    'R' => "renamed",
+                    'C' => "copied",
+                    _ => "changed",
+                };
+                
+                // Get diff for staged file
+                let diff = self.get_git_diff(&path, true);
+                
+                staged.push(GitFileStatus {
+                    path: path.clone(),
+                    status: status.to_string(),
+                    diff,
+                });
+            }
+            
+            // Unstaged changes (worktree)
+            if worktree_status != ' ' && worktree_status != '?' {
+                let status = match worktree_status {
+                    'M' => "modified",
+                    'D' => "deleted",
+                    _ => "changed",
+                };
+                
+                // Get diff for unstaged file
+                let diff = self.get_git_diff(&path, false);
+                
+                unstaged.push(GitFileStatus {
+                    path,
+                    status: status.to_string(),
+                    diff,
+                });
+            }
+        }
+        
+        let is_clean = staged.is_empty() && unstaged.is_empty() && untracked.is_empty();
+        
+        IpcResponse::GitStatus(GitStatusResponse {
+            is_clean,
+            branch,
+            staged,
+            unstaged,
+            untracked,
+        })
+    }
+    
+    /// Get diff for a specific file
+    fn get_git_diff(&self, path: &str, staged: bool) -> Option<FileDiff> {
+        use std::process::Command;
+        
+        let args = if staged {
+            vec!["diff", "--cached", "--numstat", path]
+        } else {
+            vec!["diff", "--numstat", path]
+        };
+        
+        let numstat = Command::new("git")
+            .args(&args)
+            .output()
+            .ok()?;
+        
+        let numstat_str = String::from_utf8_lossy(&numstat.stdout);
+        let parts: Vec<&str> = numstat_str.trim().split('\t').collect();
+        
+        if parts.len() < 2 {
+            return None;
+        }
+        
+        let additions: u32 = parts[0].parse().unwrap_or(0);
+        let deletions: u32 = parts[1].parse().unwrap_or(0);
+        
+        // Get actual diff content (limited)
+        let diff_args = if staged {
+            vec!["diff", "--cached", "-U3", path]
+        } else {
+            vec!["diff", "-U3", path]
+        };
+        
+        let diff_output = Command::new("git")
+            .args(&diff_args)
+            .output()
+            .ok()?;
+        
+        let diff_content = String::from_utf8_lossy(&diff_output.stdout);
+        
+        // Parse hunks from diff output
+        let mut hunks = Vec::new();
+        let mut current_hunk: Option<DiffHunk> = None;
+        let mut hunk_content = String::new();
+        
+        for line in diff_content.lines() {
+            if line.starts_with("@@") {
+                // Save previous hunk
+                if let Some(mut hunk) = current_hunk.take() {
+                    hunk.content = hunk_content.clone();
+                    hunks.push(hunk);
+                    hunk_content.clear();
+                }
+                
+                // Parse hunk header: @@ -start,lines +start,lines @@
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 3 {
+                    let old_range = parts[1].trim_start_matches('-');
+                    let new_range = parts[2].trim_start_matches('+');
+                    
+                    let (old_start, old_lines) = parse_range(old_range);
+                    let (new_start, new_lines) = parse_range(new_range);
+                    
+                    current_hunk = Some(DiffHunk {
+                        old_start,
+                        old_lines,
+                        new_start,
+                        new_lines,
+                        content: String::new(),
+                    });
+                }
+            } else if current_hunk.is_some() && (line.starts_with('+') || line.starts_with('-') || line.starts_with(' ')) {
+                hunk_content.push_str(line);
+                hunk_content.push('\n');
+            }
+        }
+        
+        // Don't forget the last hunk
+        if let Some(mut hunk) = current_hunk {
+            hunk.content = hunk_content;
+            hunks.push(hunk);
+        }
+        
+        // Limit hunks
+        hunks.truncate(5);
+        
+        Some(FileDiff {
+            additions,
+            deletions,
+            hunks,
+        })
+    }
+}
+
+/// Parse a diff range like "10,5" or "10" into (start, lines)
+fn parse_range(range: &str) -> (u32, u32) {
+    let parts: Vec<&str> = range.split(',').collect();
+    let start: u32 = parts[0].parse().unwrap_or(0);
+    let lines: u32 = parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(1);
+    (start, lines)
 }

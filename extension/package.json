@@ -125,6 +125,16 @@
         "command": "dx.forge.changes",
         "title": "DX: Show File Changes",
         "icon": "$(git-compare)"
+      },
+      {
+        "command": "dx.forge.gitStatus",
+        "title": "DX: Show Git Status",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "dx.forge.syncGit",
+        "title": "DX: Sync Forge with Git",
+        "icon": "$(sync)"
       }
     ],
     "menus": {

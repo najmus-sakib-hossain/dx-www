@@ -46,6 +46,20 @@ export interface TrackedFileChange {
     diff?: FileDiff;
 }
 
+export interface GitStatusResponse {
+    is_clean: boolean;
+    branch: string;
+    staged: GitFileStatus[];
+    unstaged: GitFileStatus[];
+    untracked: string[];
+}
+
+export interface GitFileStatus {
+    path: string;
+    status: string;
+    diff?: FileDiff;
+}
+
 export interface ForgeEvent {
     type: 'file_changed' | 'tool_started' | 'tool_completed' | 'tool_failed' | 'error';
     data: any;
@@ -327,6 +341,38 @@ export class ForgeClient {
             return response.type === 'Success';
         } catch {
             return false;
+        }
+    }
+
+    /**
+     * Get Git status (actual uncommitted changes)
+     */
+    async getGitStatus(): Promise<GitStatusResponse | null> {
+        try {
+            const response = await this.send({ command: 'GetGitStatus' });
+            if (response.type === 'GitStatus') {
+                return response as GitStatusResponse;
+            }
+            return null;
+        } catch (e) {
+            console.error('[Forge] Failed to get git status:', e);
+            return null;
+        }
+    }
+
+    /**
+     * Sync Forge with Git status (reset counters to match Git)
+     */
+    async syncWithGit(): Promise<GitStatusResponse | null> {
+        try {
+            const response = await this.send({ command: 'SyncWithGit' });
+            if (response.type === 'GitStatus') {
+                return response as GitStatusResponse;
+            }
+            return null;
+        } catch (e) {
+            console.error('[Forge] Failed to sync with git:', e);
+            return null;
         }
     }
 }
