@@ -7,4 +7,4 @@ www
 
 cli+forge+serializer+py
 
-I approve that dx serilaizer is the best serializer human version - so please do playground test of dx serilaizer llm version vs with toon and dx serilaizer machine version vs with rkyv and test if dx serializer is really faster than them - If so then our dx seriliazer is the best serializer in the world!!!
+I approved that dx serilaizer is the best serializer human version - so please do playground test of dx serilaizer llm version vs with toon and dx serilaizer machine version vs with rkyv and test if dx serializer is really faster than them - If so then our dx seriliazer is the best serializer in the world!!!
