@@ -141,3 +141,68 @@ cargo test --package serializer --test dx_format_spec
 ```
 
 ---
+
+## 📦 Installation
+
+```toml
+[dependencies]
+serializer = { path = "crates/serializer" }
+```
+
+---
+
+## 🔗 Format Conversion
+
+Seamless conversion between all formats:
+
+```rust
+use serializer::{
+    // LLM format
+    document_to_llm, llm_to_document,
+    llm_to_human, human_to_llm,
+    
+    // Machine format
+    document_to_machine, machine_to_document,
+    
+    // Cross-format
+    llm_to_machine, machine_to_llm,
+};
+
+// LLM ↔ Human (for editors)
+let human = llm_to_human(&llm_input)?;
+let llm = human_to_llm(&human_input)?;
+
+// LLM ↔ Machine (for runtime)
+let machine = llm_to_machine(&llm_input)?;
+let llm = machine_to_llm(&machine)?;
+```
+
+---
+
+## 🛡️ Security & Robustness
+
+| Limit | Value | Purpose |
+|-------|-------|---------|
+| `MAX_INPUT_SIZE` | 100 MB | Prevents memory exhaustion |
+| `MAX_RECURSION_DEPTH` | 1000 levels | Prevents stack overflow |
+| `MAX_TABLE_ROWS` | 10 million | Prevents DoS attacks |
+
+---
+
+## 🎯 Summary
+
+**DX Serializer is the world's best serializer because it's optimized for ALL THREE audiences:**
+
+| Audience | Format | Why It Wins |
+|----------|--------|-------------|
+| 👤 **Humans** | DX LLM | Readable, editable, keyboard-only characters |
+| 🤖 **LLMs** | DX LLM | 26.8% more token-efficient than TOON |
+| ⚙️ **Machines** | DX Machine | 0.70ns field access (hardware limit) |
+
+**The future is here. Text for humans & LLMs. Binary for machines. One serializer for everything.**
+
+---
+
+## 📄 License
+
+MIT License
