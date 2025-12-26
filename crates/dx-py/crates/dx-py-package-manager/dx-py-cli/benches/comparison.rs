@@ -627,7 +627,7 @@ impl BenchmarkResults {
         if let Some(ref uv_ver) = self.system_info.uv_version {
             output.push_str(&format!("- **uv version**: {}\n", uv_ver));
         }
-        output.push_str("\n");
+        output.push('\n');
 
         // Results table
         output.push_str("### Benchmark Results\n\n");
@@ -635,7 +635,8 @@ impl BenchmarkResults {
         output.push_str("|-----------|----------|--------------|-----------|---------|--------------|-----------|--------|\n");
 
         // Group results by operation and scenario
-        let mut grouped: HashMap<(Operation, String), (Option<&BenchmarkResult>, Option<&BenchmarkResult>)> = HashMap::new();
+        type ResultPair<'a> = (Option<&'a BenchmarkResult>, Option<&'a BenchmarkResult>);
+        let mut grouped: HashMap<(Operation, String), ResultPair> = HashMap::new();
         
         for result in &self.results {
             let key = (result.operation, result.scenario.clone());
@@ -831,7 +832,7 @@ impl BenchmarkRunner {
             }
         }
 
-        Err(format!("dx-py executable not found. Build with: cargo build --release"))
+        Err("dx-py executable not found. Build with: cargo build --release".to_string())
     }
 
     /// Detect uv installation in PATH
@@ -1222,6 +1223,39 @@ pub fn run_comparison_benchmarks() -> BenchmarkResults {
     }
 }
 
+
+// ============================================================================
+// Benchmark Main
+// ============================================================================
+
+fn main() {
+    println!("DX-Py vs UV Comparison Benchmarks");
+    println!("==================================\n");
+
+    let results = run_comparison_benchmarks();
+    
+    // Output JSON
+    let json_output = results.to_json();
+    let json_path = "benchmark_results.json";
+    if let Err(e) = fs::write(json_path, &json_output) {
+        eprintln!("Failed to write JSON results: {}", e);
+    } else {
+        println!("\nJSON results written to: {}", json_path);
+    }
+
+    // Output Markdown
+    let markdown_output = results.to_markdown_table();
+    println!("\n{}", markdown_output);
+
+    // Summary
+    let summary = results.comparison_summary();
+    println!("\n### Summary");
+    println!("- Resolution speedup: {:.1}x", summary.resolution_speedup);
+    println!("- Installation speedup: {:.1}x", summary.installation_speedup);
+    println!("- Venv speedup: {:.1}x", summary.venv_speedup);
+    println!("- Overall speedup: {:.1}x", summary.overall_speedup);
+}
+
 #[cfg(test)]
 mod tests {
     #[allow(unused_imports)]
@@ -1297,37 +1331,4 @@ mod tests {
         // This test just verifies the detection doesn't panic
         let _uv_path = BenchmarkRunner::detect_uv();
     }
-}
-
-
-// ============================================================================
-// Benchmark Main
-// ============================================================================
-
-fn main() {
-    println!("DX-Py vs UV Comparison Benchmarks");
-    println!("==================================\n");
-
-    let results = run_comparison_benchmarks();
-    
-    // Output JSON
-    let json_output = results.to_json();
-    let json_path = "benchmark_results.json";
-    if let Err(e) = fs::write(json_path, &json_output) {
-        eprintln!("Failed to write JSON results: {}", e);
-    } else {
-        println!("\nJSON results written to: {}", json_path);
-    }
-
-    // Output Markdown
-    let markdown_output = results.to_markdown_table();
-    println!("\n{}", markdown_output);
-
-    // Summary
-    let summary = results.comparison_summary();
-    println!("\n### Summary");
-    println!("- Resolution speedup: {:.1}x", summary.resolution_speedup);
-    println!("- Installation speedup: {:.1}x", summary.installation_speedup);
-    println!("- Venv speedup: {:.1}x", summary.venv_speedup);
-    println!("- Overall speedup: {:.1}x", summary.overall_speedup);
 }

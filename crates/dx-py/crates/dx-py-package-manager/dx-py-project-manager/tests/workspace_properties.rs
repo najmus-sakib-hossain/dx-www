@@ -5,7 +5,6 @@
 
 use proptest::prelude::*;
 use std::collections::HashSet;
-use std::path::PathBuf;
 use tempfile::TempDir;
 
 /// Generate valid package names (PEP 503 normalized)

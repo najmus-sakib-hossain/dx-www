@@ -201,12 +201,12 @@ fn test_pep508_real_world() {
     ];
 
     for case in cases {
-        let spec = DependencySpec::parse(case).expect(&format!("should parse: {}", case));
+        let spec = DependencySpec::parse(case).unwrap_or_else(|_| panic!("should parse: {}", case));
         assert!(!spec.name.is_empty(), "name should not be empty for: {}", case);
 
         // Verify roundtrip
         let formatted = spec.to_string();
-        let reparsed = DependencySpec::parse(&formatted).expect(&format!("should reparse: {}", formatted));
+        let reparsed = DependencySpec::parse(&formatted).unwrap_or_else(|_| panic!("should reparse: {}", formatted));
         assert_eq!(spec.name, reparsed.name, "name mismatch for: {}", case);
     }
 }

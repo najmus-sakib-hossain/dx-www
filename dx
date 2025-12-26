@@ -1,20 +1,6 @@
-#c:au|essensefromexistence;ds|Orchestrate don't just own your code;ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio;nm|dx;tt|Enhanced Developing Experience;vr|0.0.1;ws|*@/www,@/backend
-#:js|javascript/typescript|bun|tsc|vite|bun|react
-#:rust|rs|rust|native|rustc|cargo|actix-web
-#:python|py|python|python|uv|pip|django
-#:A|en-US
-#:B|latest
-#d(pt)
-@/driven
-#i(locales_pt|locales_df|locales_dv|locales_pd|ttses_pt|ttses_df|ttses_dv|ttses_pd)
-@/locales|^A|^A|all|@/media/sounds|^A|^A|bn-BD
-#o(pt|pk|vr)
-@/icons|Lucide|Hugeicons
-#p(dependencies_django|dependencies_numpy)
-^B|^B
-#s(pt|th)
-@/style|dx
-#t(pt|df)
-@/fonts|Inter
-#u(pt|cp)
-@/components/ui|button
+#d()
+#f()
+#i()
+#p()
+#s()
+#u()

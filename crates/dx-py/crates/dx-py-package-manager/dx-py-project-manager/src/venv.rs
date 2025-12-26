@@ -441,58 +441,6 @@ impl Default for VenvManager {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::TempDir;
-
-    #[test]
-    fn test_venv_new() {
-        let venv = Venv::new(PathBuf::from("/tmp/test-venv"), "3.12.0".to_string());
-        assert_eq!(venv.python_version, "3.12.0");
-    }
-
-    #[test]
-    fn test_venv_manager_new() {
-        let manager = VenvManager::new();
-        assert!(manager.cache_dir.to_string_lossy().contains("dx-py"));
-    }
-
-    #[test]
-    fn test_venv_manager_with_cache_dir() {
-        let temp_dir = TempDir::new().unwrap();
-        let manager = VenvManager::with_cache_dir(temp_dir.path().to_path_buf());
-        assert_eq!(manager.cache_dir, temp_dir.path());
-    }
-
-    #[test]
-    fn test_is_venv() {
-        let temp_dir = TempDir::new().unwrap();
-        let manager = VenvManager::new();
-
-        // Not a venv initially
-        assert!(!manager.is_venv(temp_dir.path()));
-
-        // Create pyvenv.cfg
-        std::fs::write(temp_dir.path().join("pyvenv.cfg"), "version = 3.12.0").unwrap();
-        assert!(manager.is_venv(temp_dir.path()));
-    }
-
-    #[test]
-    fn test_remove_venv() {
-        let temp_dir = TempDir::new().unwrap();
-        let venv_path = temp_dir.path().join("test-venv");
-        std::fs::create_dir_all(&venv_path).unwrap();
-        std::fs::write(venv_path.join("pyvenv.cfg"), "version = 3.12.0").unwrap();
-
-        let manager = VenvManager::new();
-        assert!(venv_path.exists());
-
-        manager.remove(&venv_path).unwrap();
-        assert!(!venv_path.exists());
-    }
-}
-
 
 /// Real virtual environment manager with pip bootstrap support
 pub struct RealVenvManager {
@@ -611,5 +559,57 @@ impl RealVenvManager {
 impl Default for RealVenvManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_venv_new() {
+        let venv = Venv::new(PathBuf::from("/tmp/test-venv"), "3.12.0".to_string());
+        assert_eq!(venv.python_version, "3.12.0");
+    }
+
+    #[test]
+    fn test_venv_manager_new() {
+        let manager = VenvManager::new();
+        assert!(manager.cache_dir.to_string_lossy().contains("dx-py"));
+    }
+
+    #[test]
+    fn test_venv_manager_with_cache_dir() {
+        let temp_dir = TempDir::new().unwrap();
+        let manager = VenvManager::with_cache_dir(temp_dir.path().to_path_buf());
+        assert_eq!(manager.cache_dir, temp_dir.path());
+    }
+
+    #[test]
+    fn test_is_venv() {
+        let temp_dir = TempDir::new().unwrap();
+        let manager = VenvManager::new();
+
+        // Not a venv initially
+        assert!(!manager.is_venv(temp_dir.path()));
+
+        // Create pyvenv.cfg
+        std::fs::write(temp_dir.path().join("pyvenv.cfg"), "version = 3.12.0").unwrap();
+        assert!(manager.is_venv(temp_dir.path()));
+    }
+
+    #[test]
+    fn test_remove_venv() {
+        let temp_dir = TempDir::new().unwrap();
+        let venv_path = temp_dir.path().join("test-venv");
+        std::fs::create_dir_all(&venv_path).unwrap();
+        std::fs::write(venv_path.join("pyvenv.cfg"), "version = 3.12.0").unwrap();
+
+        let manager = VenvManager::new();
+        assert!(venv_path.exists());
+
+        manager.remove(&venv_path).unwrap();
+        assert!(!venv_path.exists());
     }
 }

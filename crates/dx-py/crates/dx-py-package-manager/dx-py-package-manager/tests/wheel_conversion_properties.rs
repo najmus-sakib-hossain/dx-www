@@ -4,6 +4,8 @@
 //! For any valid Python wheel file, converting to DPP format and then extracting
 //! back SHALL produce a functionally equivalent package.
 
+#![allow(dead_code)]
+
 use dx_py_core::DPP_MAGIC;
 use dx_py_package_manager::converter::{DppBuilder, inspect_dpp};
 use proptest::prelude::*;

@@ -789,10 +789,11 @@ mod tests {
 
     #[test]
     fn test_evaluate_in_operator() {
-        let env = MarkerEnvironment::current();
+        let _env = MarkerEnvironment::current();
 
         #[cfg(target_os = "linux")]
         {
+            let env = MarkerEnvironment::current();
             assert!(MarkerEvaluator::evaluate("'linux' in sys_platform", &env, &[]));
         }
     }

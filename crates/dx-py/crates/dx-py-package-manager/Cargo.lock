@@ -568,6 +568,7 @@ dependencies = [
  "bytemuck",
  "dx-py-compat",
  "dx-py-core",
+ "dx-py-project-manager",
  "futures",
  "hex",
  "md5",

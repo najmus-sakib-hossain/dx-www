@@ -463,7 +463,8 @@ build-backend = "setuptools.build_meta"
     #[test]
     fn test_binary_header_size() {
         // Ensure header is a reasonable size
-        assert!(HEADER_SIZE <= 64);
+        // Using const_assert pattern to verify at compile time
+        const _: () = assert!(HEADER_SIZE <= 64);
     }
 
     #[test]

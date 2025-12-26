@@ -295,7 +295,7 @@ fn test_wheel_parsing_specific_cases() {
     ];
 
     for (filename, expected_name, expected_version) in cases {
-        let wheel = WheelTag::parse(filename).expect(&format!("should parse {}", filename));
+        let wheel = WheelTag::parse(filename).unwrap_or_else(|_| panic!("should parse {}", filename));
         assert_eq!(wheel.name, expected_name, "name mismatch for {}", filename);
         assert_eq!(wheel.version, expected_version, "version mismatch for {}", filename);
     }

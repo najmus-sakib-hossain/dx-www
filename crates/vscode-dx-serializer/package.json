@@ -156,6 +156,48 @@
               "foreground": "#a1a1a1",
               "fontStyle": "italic"
             }
+          },
+          {
+            "scope": "string.quoted.single.dx",
+            "settings": {
+              "foreground": "#58c760"
+            }
+          },
+          {
+            "scope": "variable.other.reference.dx",
+            "settings": {
+              "foreground": "#d4a656"
+            }
+          },
+          {
+            "scope": "punctuation.separator.pipe.dx",
+            "settings": {
+              "foreground": "#808080"
+            }
+          },
+          {
+            "scope": "punctuation.separator.key-value.dx",
+            "settings": {
+              "foreground": "#808080"
+            }
+          },
+          {
+            "scope": "keyword.control.context.dx",
+            "settings": {
+              "foreground": "#c586c0"
+            }
+          },
+          {
+            "scope": "keyword.control.reference.dx",
+            "settings": {
+              "foreground": "#d4a656"
+            }
+          },
+          {
+            "scope": "keyword.control.section.dx",
+            "settings": {
+              "foreground": "#c586c0"
+            }
           }
         ]
       }

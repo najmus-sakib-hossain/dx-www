@@ -69,7 +69,7 @@ proptest! {
 
         // Parse it back
         let parsed = Pep440Version::parse(&formatted)
-            .expect(&format!("Failed to parse formatted version: {}", formatted));
+            .unwrap_or_else(|_| panic!("Failed to parse formatted version: {}", formatted));
 
         // Should be equal
         prop_assert_eq!(

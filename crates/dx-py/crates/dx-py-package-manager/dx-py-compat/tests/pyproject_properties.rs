@@ -5,7 +5,6 @@
 //! and back to TOML SHALL preserve all project metadata, dependencies, and configuration.
 
 use proptest::prelude::*;
-use std::collections::HashMap;
 
 use dx_py_compat::{
     convert_from_binary, convert_to_binary, BuildSystem, ProjectSection, PyProjectToml,

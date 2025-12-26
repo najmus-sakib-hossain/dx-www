@@ -5,6 +5,8 @@
 //! using the cached resolution SHALL produce the same installed package set
 //! as performing a fresh resolution.
 
+#![allow(dead_code)]
+
 use proptest::prelude::*;
 use std::collections::HashSet;
 

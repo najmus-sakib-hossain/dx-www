@@ -39,8 +39,8 @@ proptest! {
         // Write pyvenv.cfg
         std::fs::write(venv_path.join("pyvenv.cfg"), "version = 3.12.0").unwrap();
         
-        // Create a mock VenvManager and write activation scripts
-        let manager = dx_py_project_manager::VenvManager::new();
+        // Create a mock VenvManager (used for potential future activation script generation)
+        let _manager = dx_py_project_manager::VenvManager::new();
         
         // The VenvManager should have created activation scripts
         // We'll verify the scripts contain required elements

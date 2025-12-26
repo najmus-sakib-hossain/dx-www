@@ -48,16 +48,20 @@ impl VersionConstraint {
                 let min_part = parts[0].trim();
                 let max_part = parts[1].trim();
 
-                let min = if min_part.starts_with(">=") {
-                    PackedVersion::parse(&min_part[2..])
+                let min = if let Some(version_str) = min_part.strip_prefix(">=") {
+                    PackedVersion::parse(version_str)
                         .ok_or_else(|| Error::InvalidVersion(min_part.to_string()))?
                 } else {
                     return Err(Error::InvalidVersion(s.to_string()));
                 };
 
-                let max = if max_part.starts_with('<') && !max_part.starts_with("<=") {
-                    PackedVersion::parse(&max_part[1..])
-                        .ok_or_else(|| Error::InvalidVersion(max_part.to_string()))?
+                let max = if let Some(version_str) = max_part.strip_prefix('<') {
+                    if !max_part.starts_with("<=") {
+                        PackedVersion::parse(version_str)
+                            .ok_or_else(|| Error::InvalidVersion(max_part.to_string()))?
+                    } else {
+                        return Err(Error::InvalidVersion(s.to_string()));
+                    }
                 } else {
                     return Err(Error::InvalidVersion(s.to_string()));
                 };
@@ -67,31 +71,43 @@ impl VersionConstraint {
         }
 
         // Handle single constraints
-        if s.starts_with("==") {
-            let version = PackedVersion::parse(&s[2..])
+        if let Some(version_str) = s.strip_prefix("==") {
+            let version = PackedVersion::parse(version_str)
                 .ok_or_else(|| Error::InvalidVersion(s.to_string()))?;
             Ok(Self::Exact(version))
-        } else if s.starts_with(">=") {
-            let version = PackedVersion::parse(&s[2..])
+        } else if let Some(version_str) = s.strip_prefix(">=") {
+            let version = PackedVersion::parse(version_str)
                 .ok_or_else(|| Error::InvalidVersion(s.to_string()))?;
             Ok(Self::Gte(version))
-        } else if s.starts_with("~=") {
-            let version = PackedVersion::parse(&s[2..])
+        } else if let Some(version_str) = s.strip_prefix("~=") {
+            let version = PackedVersion::parse(version_str)
                 .ok_or_else(|| Error::InvalidVersion(s.to_string()))?;
             Ok(Self::Compatible(version))
-        } else if s.starts_with('<') && !s.starts_with("<=") {
-            let version = PackedVersion::parse(&s[1..])
-                .ok_or_else(|| Error::InvalidVersion(s.to_string()))?;
-            Ok(Self::Lt(version))
-        } else if s.starts_with('>') && !s.starts_with(">=") {
-            // >1.0.0 is treated as >=1.0.1 (next patch)
-            let version = PackedVersion::parse(&s[1..])
-                .ok_or_else(|| Error::InvalidVersion(s.to_string()))?;
-            Ok(Self::Gte(PackedVersion::new(
-                version.major,
-                version.minor,
-                version.patch + 1,
-            )))
+        } else if let Some(version_str) = s.strip_prefix('<') {
+            if !s.starts_with("<=") {
+                let version = PackedVersion::parse(version_str)
+                    .ok_or_else(|| Error::InvalidVersion(s.to_string()))?;
+                Ok(Self::Lt(version))
+            } else {
+                let version = PackedVersion::parse(s)
+                    .ok_or_else(|| Error::InvalidVersion(s.to_string()))?;
+                Ok(Self::Exact(version))
+            }
+        } else if let Some(version_str) = s.strip_prefix('>') {
+            if !s.starts_with(">=") {
+                // >1.0.0 is treated as >=1.0.1 (next patch)
+                let version = PackedVersion::parse(version_str)
+                    .ok_or_else(|| Error::InvalidVersion(s.to_string()))?;
+                Ok(Self::Gte(PackedVersion::new(
+                    version.major,
+                    version.minor,
+                    version.patch + 1,
+                )))
+            } else {
+                let version = PackedVersion::parse(s)
+                    .ok_or_else(|| Error::InvalidVersion(s.to_string()))?;
+                Ok(Self::Exact(version))
+            }
         } else {
             // Assume exact version if no operator
             let version = PackedVersion::parse(s)
@@ -644,169 +660,6 @@ impl HintCache {
 }
 
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_version_constraint_parse() {
-        assert!(matches!(
-            VersionConstraint::parse("*").unwrap(),
-            VersionConstraint::Any
-        ));
-        assert!(matches!(
-            VersionConstraint::parse("==1.2.3").unwrap(),
-            VersionConstraint::Exact(_)
-        ));
-        assert!(matches!(
-            VersionConstraint::parse(">=1.0.0").unwrap(),
-            VersionConstraint::Gte(_)
-        ));
-        assert!(matches!(
-            VersionConstraint::parse("<2.0.0").unwrap(),
-            VersionConstraint::Lt(_)
-        ));
-        assert!(matches!(
-            VersionConstraint::parse(">=1.0.0,<2.0.0").unwrap(),
-            VersionConstraint::Range { .. }
-        ));
-        assert!(matches!(
-            VersionConstraint::parse("~=1.2.3").unwrap(),
-            VersionConstraint::Compatible(_)
-        ));
-    }
-
-    #[test]
-    fn test_version_constraint_satisfies() {
-        let v1 = PackedVersion::new(1, 5, 0);
-        let v2 = PackedVersion::new(2, 0, 0);
-
-        assert!(VersionConstraint::Any.satisfies(&v1));
-        assert!(VersionConstraint::Exact(v1).satisfies(&v1));
-        assert!(!VersionConstraint::Exact(v1).satisfies(&v2));
-        assert!(VersionConstraint::Gte(v1).satisfies(&v1));
-        assert!(VersionConstraint::Gte(v1).satisfies(&v2));
-        assert!(VersionConstraint::Lt(v2).satisfies(&v1));
-        assert!(!VersionConstraint::Lt(v2).satisfies(&v2));
-
-        let range = VersionConstraint::Range {
-            min: PackedVersion::new(1, 0, 0),
-            max: PackedVersion::new(2, 0, 0),
-        };
-        assert!(range.satisfies(&v1));
-        assert!(!range.satisfies(&v2));
-    }
-
-    #[test]
-    fn test_simple_resolution() {
-        let mut provider = InMemoryProvider::new();
-        provider.add_package("requests", "2.28.0", vec![]);
-        provider.add_package("requests", "2.29.0", vec![]);
-        provider.add_package("requests", "2.30.0", vec![]);
-
-        let mut resolver = Resolver::new(provider);
-        let deps = vec![Dependency::new("requests", VersionConstraint::Gte(PackedVersion::new(2, 28, 0)))];
-
-        let resolution = resolver.resolve(&deps).unwrap();
-        assert_eq!(resolution.packages.len(), 1);
-        assert_eq!(resolution.packages[0].name, "requests");
-        // Should pick newest version
-        assert_eq!(resolution.packages[0].version, PackedVersion::new(2, 30, 0));
-    }
-
-    #[test]
-    fn test_resolution_with_dependencies() {
-        let mut provider = InMemoryProvider::new();
-        provider.add_package(
-            "requests",
-            "2.30.0",
-            vec![Dependency::new(
-                "urllib3",
-                VersionConstraint::Gte(PackedVersion::new(1, 21, 0)),
-            )],
-        );
-        provider.add_package("urllib3", "1.26.0", vec![]);
-        provider.add_package("urllib3", "2.0.0", vec![]);
-
-        let mut resolver = Resolver::new(provider);
-        let deps = vec![Dependency::new("requests", VersionConstraint::Any)];
-
-        let resolution = resolver.resolve(&deps).unwrap();
-        assert_eq!(resolution.packages.len(), 2);
-
-        let names: HashSet<_> = resolution.packages.iter().map(|p| &p.name).collect();
-        assert!(names.contains(&"requests".to_string()));
-        assert!(names.contains(&"urllib3".to_string()));
-    }
-
-    #[test]
-    fn test_resolution_conflict() {
-        let mut provider = InMemoryProvider::new();
-        provider.add_package("a", "1.0.0", vec![
-            Dependency::new("c", VersionConstraint::Exact(PackedVersion::new(1, 0, 0))),
-        ]);
-        provider.add_package("b", "1.0.0", vec![
-            Dependency::new("c", VersionConstraint::Exact(PackedVersion::new(2, 0, 0))),
-        ]);
-        provider.add_package("c", "1.0.0", vec![]);
-        provider.add_package("c", "2.0.0", vec![]);
-
-        let mut resolver = Resolver::new(provider);
-        let deps = vec![
-            Dependency::new("a", VersionConstraint::Any),
-            Dependency::new("b", VersionConstraint::Any),
-        ];
-
-        let result = resolver.resolve(&deps);
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_hint_cache_basic() {
-        let mut cache = HintCache::new();
-        assert!(cache.is_empty());
-
-        let packages = vec![ResolvedPackage::new(
-            "requests",
-            PackedVersion::new(2, 30, 0),
-            "2.30.0",
-        )];
-        let resolution = Resolution::new(packages.clone(), 10);
-
-        cache.store(12345, &resolution);
-        assert_eq!(cache.len(), 1);
-
-        let cached = cache.lookup(12345).unwrap();
-        assert_eq!(cached.packages.len(), 1);
-        assert_eq!(cached.packages[0].name, "requests");
-    }
-
-    #[test]
-    fn test_hint_cache_miss() {
-        let cache = HintCache::new();
-        assert!(cache.lookup(99999).is_none());
-    }
-
-    #[test]
-    fn test_resolver_uses_cache() {
-        let mut provider = InMemoryProvider::new();
-        provider.add_package("requests", "2.30.0", vec![]);
-
-        let mut resolver = Resolver::new(provider);
-        let deps = vec![Dependency::new("requests", VersionConstraint::Any)];
-
-        // First resolution
-        let res1 = resolver.resolve(&deps).unwrap();
-        assert!(!res1.from_cache);
-
-        // Second resolution should use cache
-        let res2 = resolver.resolve(&deps).unwrap();
-        assert!(res2.from_cache);
-        assert_eq!(res1.packages[0].name, res2.packages[0].name);
-    }
-}
-
-
 /// Async resolver that fetches from PyPI
 pub struct PyPiResolver {
     /// Async PyPI client
@@ -1039,5 +892,168 @@ impl PyPiResolver {
                 constraint: format!("{:?}", package_constraints),
             }
         })
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_version_constraint_parse() {
+        assert!(matches!(
+            VersionConstraint::parse("*").unwrap(),
+            VersionConstraint::Any
+        ));
+        assert!(matches!(
+            VersionConstraint::parse("==1.2.3").unwrap(),
+            VersionConstraint::Exact(_)
+        ));
+        assert!(matches!(
+            VersionConstraint::parse(">=1.0.0").unwrap(),
+            VersionConstraint::Gte(_)
+        ));
+        assert!(matches!(
+            VersionConstraint::parse("<2.0.0").unwrap(),
+            VersionConstraint::Lt(_)
+        ));
+        assert!(matches!(
+            VersionConstraint::parse(">=1.0.0,<2.0.0").unwrap(),
+            VersionConstraint::Range { .. }
+        ));
+        assert!(matches!(
+            VersionConstraint::parse("~=1.2.3").unwrap(),
+            VersionConstraint::Compatible(_)
+        ));
+    }
+
+    #[test]
+    fn test_version_constraint_satisfies() {
+        let v1 = PackedVersion::new(1, 5, 0);
+        let v2 = PackedVersion::new(2, 0, 0);
+
+        assert!(VersionConstraint::Any.satisfies(&v1));
+        assert!(VersionConstraint::Exact(v1).satisfies(&v1));
+        assert!(!VersionConstraint::Exact(v1).satisfies(&v2));
+        assert!(VersionConstraint::Gte(v1).satisfies(&v1));
+        assert!(VersionConstraint::Gte(v1).satisfies(&v2));
+        assert!(VersionConstraint::Lt(v2).satisfies(&v1));
+        assert!(!VersionConstraint::Lt(v2).satisfies(&v2));
+
+        let range = VersionConstraint::Range {
+            min: PackedVersion::new(1, 0, 0),
+            max: PackedVersion::new(2, 0, 0),
+        };
+        assert!(range.satisfies(&v1));
+        assert!(!range.satisfies(&v2));
+    }
+
+    #[test]
+    fn test_simple_resolution() {
+        let mut provider = InMemoryProvider::new();
+        provider.add_package("requests", "2.28.0", vec![]);
+        provider.add_package("requests", "2.29.0", vec![]);
+        provider.add_package("requests", "2.30.0", vec![]);
+
+        let mut resolver = Resolver::new(provider);
+        let deps = vec![Dependency::new("requests", VersionConstraint::Gte(PackedVersion::new(2, 28, 0)))];
+
+        let resolution = resolver.resolve(&deps).unwrap();
+        assert_eq!(resolution.packages.len(), 1);
+        assert_eq!(resolution.packages[0].name, "requests");
+        // Should pick newest version
+        assert_eq!(resolution.packages[0].version, PackedVersion::new(2, 30, 0));
+    }
+
+    #[test]
+    fn test_resolution_with_dependencies() {
+        let mut provider = InMemoryProvider::new();
+        provider.add_package(
+            "requests",
+            "2.30.0",
+            vec![Dependency::new(
+                "urllib3",
+                VersionConstraint::Gte(PackedVersion::new(1, 21, 0)),
+            )],
+        );
+        provider.add_package("urllib3", "1.26.0", vec![]);
+        provider.add_package("urllib3", "2.0.0", vec![]);
+
+        let mut resolver = Resolver::new(provider);
+        let deps = vec![Dependency::new("requests", VersionConstraint::Any)];
+
+        let resolution = resolver.resolve(&deps).unwrap();
+        assert_eq!(resolution.packages.len(), 2);
+
+        let names: HashSet<_> = resolution.packages.iter().map(|p| &p.name).collect();
+        assert!(names.contains(&"requests".to_string()));
+        assert!(names.contains(&"urllib3".to_string()));
+    }
+
+    #[test]
+    fn test_resolution_conflict() {
+        let mut provider = InMemoryProvider::new();
+        provider.add_package("a", "1.0.0", vec![
+            Dependency::new("c", VersionConstraint::Exact(PackedVersion::new(1, 0, 0))),
+        ]);
+        provider.add_package("b", "1.0.0", vec![
+            Dependency::new("c", VersionConstraint::Exact(PackedVersion::new(2, 0, 0))),
+        ]);
+        provider.add_package("c", "1.0.0", vec![]);
+        provider.add_package("c", "2.0.0", vec![]);
+
+        let mut resolver = Resolver::new(provider);
+        let deps = vec![
+            Dependency::new("a", VersionConstraint::Any),
+            Dependency::new("b", VersionConstraint::Any),
+        ];
+
+        let result = resolver.resolve(&deps);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_hint_cache_basic() {
+        let mut cache = HintCache::new();
+        assert!(cache.is_empty());
+
+        let packages = vec![ResolvedPackage::new(
+            "requests",
+            PackedVersion::new(2, 30, 0),
+            "2.30.0",
+        )];
+        let resolution = Resolution::new(packages.clone(), 10);
+
+        cache.store(12345, &resolution);
+        assert_eq!(cache.len(), 1);
+
+        let cached = cache.lookup(12345).unwrap();
+        assert_eq!(cached.packages.len(), 1);
+        assert_eq!(cached.packages[0].name, "requests");
+    }
+
+    #[test]
+    fn test_hint_cache_miss() {
+        let cache = HintCache::new();
+        assert!(cache.lookup(99999).is_none());
+    }
+
+    #[test]
+    fn test_resolver_uses_cache() {
+        let mut provider = InMemoryProvider::new();
+        provider.add_package("requests", "2.30.0", vec![]);
+
+        let mut resolver = Resolver::new(provider);
+        let deps = vec![Dependency::new("requests", VersionConstraint::Any)];
+
+        // First resolution
+        let res1 = resolver.resolve(&deps).unwrap();
+        assert!(!res1.from_cache);
+
+        // Second resolution should use cache
+        let res2 = resolver.resolve(&deps).unwrap();
+        assert!(res2.from_cache);
+        assert_eq!(res1.packages[0].name, res2.packages[0].name);
     }
 }

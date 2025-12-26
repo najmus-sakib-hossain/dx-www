@@ -50,7 +50,7 @@ proptest! {
     #[test]
     fn prop_cache_different_content_different_paths(
         data1 in arb_data(),
-        data2 in arb_data().prop_filter("different data", |d| d.len() > 0)
+        data2 in arb_data().prop_filter("different data", |d| !d.is_empty())
     ) {
         // Skip if data happens to be the same
         if data1 == data2 {
