@@ -92,7 +92,7 @@ pub fn run(path: &str, name: Option<&str>, python_version: Option<&str>) -> Resu
     }
 
     // Create source directory
-    let src_dir = project_dir.join("src").join(&project_name.replace('-', "_"));
+    let src_dir = project_dir.join("src").join(project_name.replace('-', "_"));
     if !src_dir.exists() {
         std::fs::create_dir_all(&src_dir)?;
         std::fs::write(src_dir.join("__init__.py"), "")?;

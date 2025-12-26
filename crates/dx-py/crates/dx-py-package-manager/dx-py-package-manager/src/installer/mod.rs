@@ -11,18 +11,15 @@ use crate::Result;
 
 /// Installation strategy
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum InstallStrategy {
     /// Hard links from cache - fast, deduplication
+    #[default]
     HardLink,
     /// Copy files - fallback, always works
     Copy,
 }
 
-impl Default for InstallStrategy {
-    fn default() -> Self {
-        Self::HardLink
-    }
-}
 
 /// File entry for installation
 #[derive(Debug, Clone)]
@@ -271,6 +268,7 @@ impl Installer {
     }
 
     /// Count files in a directory recursively
+    #[allow(clippy::only_used_in_recursion)]
     fn count_files(&self, dir: &Path) -> Result<u64> {
         let mut count = 0;
 
@@ -460,6 +458,7 @@ pub struct WheelInstaller {
     /// Site-packages directory
     site_packages: PathBuf,
     /// Installation strategy
+    #[allow(dead_code)]
     strategy: InstallStrategy,
 }
 
@@ -669,12 +668,11 @@ impl WheelInstaller {
         // Remove all files listed in RECORD
         for entry in &records {
             let file_path = self.site_packages.join(&entry.path);
-            if file_path.exists() {
-                if file_path.is_file() {
+            if file_path.exists()
+                && file_path.is_file() {
                     fs::remove_file(&file_path)?;
                     removed += 1;
                 }
-            }
         }
 
         // Remove the .dist-info directory
@@ -708,6 +706,7 @@ impl WheelInstaller {
     }
 
     /// Count files in a directory
+    #[allow(clippy::only_used_in_recursion)]
     fn count_files_in_dir(&self, dir: &Path) -> Result<u64> {
         let mut count = 0;
         for entry in fs::read_dir(dir)? {
@@ -722,6 +721,7 @@ impl WheelInstaller {
     }
 
     /// Clean up empty directories
+    #[allow(clippy::only_used_in_recursion)]
     fn cleanup_empty_dirs(&self, dir: &Path) -> Result<()> {
         for entry in fs::read_dir(dir)? {
             let entry = entry?;
@@ -808,7 +808,7 @@ if __name__ == '__main__':
             let py_path = scripts_dir.join(format!("{}-script.py", script_name));
             fs::write(&py_path, &wrapper)?;
             // The .exe would need to be a launcher, for now just create the .py
-            return Ok(Some(py_path));
+            Ok(Some(py_path))
         }
 
         #[cfg(not(windows))]

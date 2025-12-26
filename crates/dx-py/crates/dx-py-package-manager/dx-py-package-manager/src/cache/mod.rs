@@ -167,6 +167,7 @@ impl GlobalCache {
     }
 
     /// Recursively garbage collect directories
+    #[allow(clippy::only_used_in_recursion)]
     fn gc_recursive(&self, dir: &Path, cutoff: SystemTime, stats: &mut GcStats) -> Result<()> {
         if !dir.exists() {
             return Ok(());
@@ -210,6 +211,7 @@ impl GlobalCache {
     }
 
     /// Recursively calculate directory size
+    #[allow(clippy::only_used_in_recursion)]
     fn dir_size(&self, dir: &Path) -> Result<u64> {
         let mut total = 0;
 
@@ -239,6 +241,7 @@ impl GlobalCache {
     }
 
     /// Recursively list all package hashes
+    #[allow(clippy::only_used_in_recursion)]
     fn list_recursive(&self, dir: &Path, hashes: &mut Vec<[u8; 32]>) -> Result<()> {
         if !dir.exists() {
             return Ok(());

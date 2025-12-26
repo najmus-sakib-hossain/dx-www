@@ -129,6 +129,7 @@ pub fn uninstall(name: &str) -> Result<()> {
 }
 
 /// Upgrade a tool to the latest version
+#[allow(dead_code)]
 pub fn upgrade(name: &str) -> Result<()> {
     let tool_manager = ToolManager::new()?;
 

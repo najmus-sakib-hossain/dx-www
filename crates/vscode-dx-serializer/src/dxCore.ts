@@ -95,22 +95,36 @@ interface WasmValidationResult {
 
 /**
  * WASM-based DxCore implementation
+ * 
+ * NOTE: toHuman() uses TypeScript formatter instead of WASM because:
+ * - WASM outputs OLD format with decorative comments and Unicode tables
+ * - TypeScript outputs correct TOML-like Human Format V3
+ * - WASM is still used for toDense() and validate() (battle-hardened security limits)
  */
 class WasmDxCore implements DxCore {
     private serializer: WasmSerializer;
     readonly isWasm = true;
+    private keyPadding: number;
 
-    constructor(serializer: WasmSerializer) {
+    constructor(serializer: WasmSerializer, keyPadding: number = 20) {
         this.serializer = serializer;
+        this.keyPadding = keyPadding;
     }
 
     toHuman(dense: string): TransformResult {
-        const result = this.serializer.toHuman(dense);
-        return {
-            success: result.success,
-            content: result.content,
-            error: result.error,
-        };
+        // FIXED: Use TypeScript formatter instead of WASM
+        // WASM outputs old format with Unicode tables and decorative comments
+        // TypeScript outputs correct TOML-like Human Format V3
+        try {
+            const content = formatDx(dense, 2, this.keyPadding);
+            return { success: true, content };
+        } catch (error) {
+            return {
+                success: false,
+                content: '',
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
     }
 
     toDense(human: string): TransformResult {
@@ -680,9 +694,9 @@ export async function loadDxCore(
 
             // Create the serializer instance
             const serializer = new wasmModule.DxSerializer();
-            cachedCore = new WasmDxCore(serializer);
+            cachedCore = new WasmDxCore(serializer, keyPadding);
 
-            console.log('DX Serializer: Using WASM core (battle-hardened)');
+            console.log('DX Serializer: Using WASM core (battle-hardened) with TypeScript formatter');
             console.log(`  - Max input size: ${serializer.maxInputSize()} bytes`);
             console.log(`  - Max recursion depth: ${serializer.maxRecursionDepth()}`);
             console.log(`  - Max table rows: ${serializer.maxTableRows()}`);

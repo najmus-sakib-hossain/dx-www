@@ -55,13 +55,11 @@ pub fn run(command: &[String]) -> Result<()> {
     ];
     
     #[cfg(windows)]
-    let possible_paths = vec![
-        bin_dir.join(format!("{}.exe", cmd_name)),
+    let possible_paths = [bin_dir.join(format!("{}.exe", cmd_name)),
         bin_dir.join(format!("{}.bat", cmd_name)),
         bin_dir.join(format!("{}.cmd", cmd_name)),
         bin_dir.join(format!("{}-script.py", cmd_name)),
-        bin_dir.join(cmd_name),
-    ];
+        bin_dir.join(cmd_name)];
 
     let actual_cmd = possible_paths
         .iter()

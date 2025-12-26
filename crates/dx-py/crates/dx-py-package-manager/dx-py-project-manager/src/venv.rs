@@ -70,6 +70,7 @@ impl Venv {
 #[derive(Debug)]
 struct VenvSkeleton {
     /// Python version this skeleton is for
+    #[allow(dead_code)]
     python_version: String,
     /// Path to the skeleton
     path: PathBuf,
@@ -372,6 +373,7 @@ version = {}
     }
 
     /// Recursively copy a directory
+    #[allow(clippy::only_used_in_recursion)]
     fn copy_dir_recursive(&self, src: &Path, dest: &Path) -> Result<()> {
         std::fs::create_dir_all(dest)?;
 
@@ -550,7 +552,7 @@ impl RealVenvManager {
         }
 
         let mut args = vec!["-m", "pip", "install", "--quiet"];
-        args.extend(packages.iter().map(|s| *s));
+        args.extend(packages.iter().copied());
 
         let output = std::process::Command::new(&venv.python_path)
             .args(&args)

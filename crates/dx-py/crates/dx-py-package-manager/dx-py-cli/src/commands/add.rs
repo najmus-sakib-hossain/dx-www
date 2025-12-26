@@ -41,12 +41,12 @@ pub fn run(packages: &[String], dev: bool, optional: Option<&str>) -> Result<()>
 
         for package in packages {
             // Check if package already exists (by name, ignoring version)
-            let pkg_name = package.split(|c| c == '>' || c == '<' || c == '=' || c == '!' || c == '~')
+            let pkg_name = package.split(['>', '<', '=', '!', '~'])
                 .next()
                 .unwrap_or(package);
 
             let existing_idx = deps.iter().position(|d| {
-                d.split(|c| c == '>' || c == '<' || c == '=' || c == '!' || c == '~')
+                d.split(['>', '<', '=', '!', '~'])
                     .next()
                     .map(|n| n == pkg_name)
                     .unwrap_or(false)

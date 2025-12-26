@@ -31,7 +31,7 @@ pub fn run(packages: &[String], dev: bool) -> Result<()> {
                     let before_len = dev_deps.len();
                     dev_deps.retain(|d| {
                         let dep_name = d
-                            .split(|c| c == '>' || c == '<' || c == '=' || c == '!' || c == '~')
+                            .split(['>', '<', '=', '!', '~'])
                             .next()
                             .unwrap_or(d)
                             .to_lowercase();
@@ -51,7 +51,7 @@ pub fn run(packages: &[String], dev: bool) -> Result<()> {
                 let before_len = deps.len();
                 deps.retain(|d| {
                     let dep_name = d
-                        .split(|c| c == '>' || c == '<' || c == '=' || c == '!' || c == '~')
+                        .split(['>', '<', '=', '!', '~'])
                         .next()
                         .unwrap_or(d)
                         .to_lowercase();

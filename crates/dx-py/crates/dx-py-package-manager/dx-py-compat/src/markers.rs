@@ -626,8 +626,8 @@ impl<'a> Parser<'a> {
         let remaining = &self.input[self.pos..];
 
         // "not in"
-        if remaining.starts_with("not") {
-            let after_not = remaining[3..].trim_start();
+        if let Some(after_not) = remaining.strip_prefix("not") {
+            let after_not = after_not.trim_start();
             if after_not.starts_with("in") {
                 self.pos += 3;
                 self.skip_whitespace();
@@ -679,9 +679,8 @@ impl<'a> Parser<'a> {
 
     fn consume_keyword(&mut self, keyword: &str) -> bool {
         let remaining = &self.input[self.pos..];
-        if remaining.starts_with(keyword) {
+        if let Some(after) = remaining.strip_prefix(keyword) {
             // Make sure it's not part of a larger word
-            let after = &remaining[keyword.len()..];
             if after.is_empty() || !after.chars().next().unwrap().is_alphanumeric() {
                 self.pos += keyword.len();
                 return true;

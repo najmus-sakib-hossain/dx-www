@@ -2,7 +2,7 @@
 //!
 //! A high-performance Python package manager that is 5-50x faster than uv.
 
-use clap::{CommandFactory, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use clap_complete::Shell;
 
 mod commands;

@@ -1,60 +1,52 @@
-# ════════════════════════════════════════════════════════════════════════════════
-#                                     CONFIG
-# ════════════════════════════════════════════════════════════════════════════════
+// DX Human Format V3 Example
+// This is the clean TOML-like format displayed in the editor
+// The on-disk format uses LLM sigils (#c:, #:, #d, etc.)
 
-[config]
-    name        = DX Example
-    description = Example file demonstrating Human format
-    version     = 1.0
-    active      = true
+author              = essensefromexistence
+description         = "Orchestrate don't just own your code"
+editors             = neovim | zed | vscode | cursor | antigravity | replit | firebase-studio
+name                = dx
+title               = "Enhanced Developing Experience"
+version             = 0.0.1
+workspace           = @/www | @/backend
 
-# ════════════════════════════════════════════════════════════════════════════════
-#                                   DATA: H
-# ════════════════════════════════════════════════════════════════════════════════
+[stack]
+js                  = javascript/typescript | bun    | tsc     | vite  | bun   | react
+python              = py                    | python | python  | uv    | pip   | django
+rust                = rs                    | rust   | native  | rustc | cargo | actix-web
 
-[h]
-    # Schema: id | name | email | status | active
+[driven]
+path                = @/driven
 
-    ┌────┬─────────┬───────────────────────┬─────────┬────────┐
-    │ Id │  Name   │         Email         │ Status  │ Active │
-    ├────┼─────────┼───────────────────────┼─────────┼────────┤
-    │  1 │ Alice   │ alice@example.com     │ Premium │   ✓    │
-    │  2 │ Bob     │ bob@example.com       │ Basic   │   ✗    │
-    │  3 │ Charlie │ charlie@example.com   │ Premium │   ✓    │
-    └────┴─────────┴───────────────────────┴─────────┴────────┘
+[i18n.locales]
+path                = @/locales
+default             = en-US
+dev                 = en-US
+prod                = all
 
-    Total: 3 items | active: 2/3
+[i18n.ttses]
+path                = @/media/sounds
+default             = en-US
+dev                 = en-US
+prod                = bn-BD
 
-# ════════════════════════════════════════════════════════════════════════════════
-#                                   DATA: O
-# ════════════════════════════════════════════════════════════════════════════════
+[icon]
+path                = @/icons
+pack                = Lucide
+variant             = Hugeicons
 
-[o]
-    # Schema: id | price | quantity | total
+[python.dependencies]
+django              = latest
+numpy               = latest
 
-    ┌─────┬───────┬──────────┬────────┐
-    │ Id  │ Price │ Quantity │ Total  │
-    ├─────┼───────┼──────────┼────────┤
-    │ 101 │ 29.99 │        5 │ 149.95 │
-    │ 102 │  9.99 │       10 │  99.90 │
-    │ 103 │ 49.99 │        2 │  99.98 │
-    └─────┴───────┴──────────┴────────┘
+[style]
+path                = @/style
+themes              = dx
 
-    Total: 3 items | price total: 89.97 | quantity total: 17 | total total: 349.83
+[font]
+path                = @/fonts
+default             = Inter
 
-# ════════════════════════════════════════════════════════════════════════════════
-#                                   DATA: P
-# ════════════════════════════════════════════════════════════════════════════════
-
-[p]
-    # Schema: id | name | description | enabled
-
-    ┌────┬────────┬─────────────────────┬─────────┐
-    │ Id │  Name  │     Description     │ Enabled │
-    ├────┼────────┼─────────────────────┼─────────┤
-    │ P1 │ Widget │ A useful widget     │    ✓    │
-    │ P2 │ Gadget │ An amazing gadget   │    ✓    │
-    │ P3 │ Gizmo  │ A mysterious gizmo  │    ✗    │
-    └────┴────────┴─────────────────────┴─────────┘
-
-    Total: 3 items | enabled: 2/3
+[ui]
+path                = @/components/ui
+components          = button

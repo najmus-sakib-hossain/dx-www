@@ -61,6 +61,12 @@
           "include": "#strings"
         },
         {
+          "include": "#single-strings"
+        },
+        {
+          "include": "#references"
+        },
+        {
           "include": "#urls"
         },
         {
@@ -98,6 +104,29 @@
               "match": "\\\\."
             }
           ]
+        }
+      ]
+    },
+    "single-strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.dx",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.dx",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "references": {
+      "patterns": [
+        {
+          "name": "variable.other.reference.dx",
+          "match": "\\^[a-zA-Z0-9_]+"
         }
       ]
     },
@@ -145,7 +174,7 @@
       "patterns": [
         {
           "name": "constant.language.null.dx",
-          "match": "\\b(null|none|None|NONE|all|All|ALL)\\b|(?<=\\s)-(?=\\s|$)"
+          "match": "\\b(null|none|None|NONE|all|All|ALL|latest|Latest|LATEST)\\b|(?<=\\s)-(?=\\s|$)"
         }
       ]
     },

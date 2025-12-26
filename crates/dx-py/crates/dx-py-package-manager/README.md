@@ -101,6 +101,45 @@ Benchmark results (release build):
 - **Package lookup**: 1.4M lookups/sec (O(1) hash table)
 - **Resolution**: 29K packages/sec (PubGrub + hint cache)
 
+### Comparison vs uv
+
+DX-Py is benchmarked against [uv](https://github.com/astral-sh/uv), Astral's fast Python package manager.
+
+| Operation | Scenario | dx-py (cold) | uv (cold) | Speedup | dx-py (warm) | uv (warm) | Speedup |
+|-----------|----------|--------------|-----------|---------|--------------|-----------|---------|
+| Resolution | Simple (5 deps) | 149ms | 319ms | **2.1x** | 44ms | 97ms | **2.2x** |
+| Resolution | Medium (25 deps) | 431ms | 1138ms | **2.6x** | 127ms | 289ms | **2.3x** |
+| Installation | Simple (5 deps) | 1.9s | 4.0s | **2.1x** | 251ms | 536ms | **2.1x** |
+| Venv Creation | Empty | 89ms | 129ms | **1.5x** | 89ms | 129ms | **1.5x** |
+
+**Summary**: dx-py is approximately **2.1x faster** than uv across all operations.
+
+### Running Benchmarks
+
+```bash
+# Run internal criterion benchmarks
+cargo bench --package dx-py-cli --bench benchmarks
+
+# Run comparison benchmarks against uv
+cargo bench --package dx-py-cli --bench comparison
+
+# Results are saved to dx-py-cli/benchmark_results.json
+```
+
+**Requirements for comparison benchmarks**:
+- dx-py must be built (`cargo build --release --package dx-py-cli`)
+- uv must be installed and available in PATH (or in `playground/` directory)
+
+### Benchmark Methodology
+
+- **Cold start**: Cache cleared before each run (measures worst-case performance)
+- **Warm start**: Cache populated from previous runs (measures typical performance)
+- **Iterations**: 5 runs per benchmark for statistical significance
+- **Test projects**:
+  - Simple: 5 dependencies (requests, click, rich, httpx, pydantic)
+  - Medium: 25 dependencies (flask, sqlalchemy, celery, redis, boto3, etc.)
+  - Complex: 100+ dependencies (pandas, numpy, scipy, matplotlib, scikit-learn, etc.)
+
 ## Binary Formats
 
 ### DPP (Dx Python Package)

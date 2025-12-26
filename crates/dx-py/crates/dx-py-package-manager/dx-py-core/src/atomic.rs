@@ -110,14 +110,14 @@ impl Write for AtomicFile {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.file
             .as_mut()
-            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "File already closed"))?
+            .ok_or_else(|| io::Error::other("File already closed"))?
             .write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
         self.file
             .as_mut()
-            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "File already closed"))?
+            .ok_or_else(|| io::Error::other("File already closed"))?
             .flush()
     }
 }

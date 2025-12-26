@@ -331,7 +331,7 @@ fn parse_modifiers(version: &mut Pep440Version, s: &str) -> Result<(), ParseErro
     let normalized = s.replace(['-', '_'], ".");
     let normalized = normalized.trim_start_matches('.');
 
-    let mut remaining: &str = normalized.as_ref();
+    let mut remaining: &str = normalized;
 
     while !remaining.is_empty() {
         remaining = remaining.trim_start_matches('.');

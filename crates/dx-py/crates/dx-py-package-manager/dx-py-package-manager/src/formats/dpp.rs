@@ -85,7 +85,7 @@ impl DppPackage {
         let computed = blake3::hash(content);
         let computed_truncated = &computed.as_bytes()[..20];
 
-        if computed_truncated != &header.blake3_hash {
+        if computed_truncated != header.blake3_hash {
             return Err(Error::IntegrityError);
         }
 

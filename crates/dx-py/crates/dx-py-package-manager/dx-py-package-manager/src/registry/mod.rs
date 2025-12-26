@@ -189,7 +189,7 @@ impl PyPiClient {
         for file in files {
             if file.packagetype == "bdist_wheel" {
                 // Check if this is a better match
-                let dominated = best_wheel.as_ref().map_or(false, |best| {
+                let dominated = best_wheel.as_ref().is_some_and(|best| {
                     // Prefer more specific wheels
                     file.filename.contains("any") && !best.filename.contains("any")
                 });
@@ -670,7 +670,7 @@ impl AsyncPyPiClient {
             if let Ok(tag) = dx_py_core::wheel::WheelTag::parse(&file.filename) {
                 if tag.is_compatible(env) {
                     let score = tag.specificity_score(env);
-                    if best_wheel.as_ref().map_or(true, |(_, best_score)| score > *best_score) {
+                    if best_wheel.as_ref().is_none_or(|(_, best_score)| score > *best_score) {
                         best_wheel = Some((file, score));
                     }
                 }

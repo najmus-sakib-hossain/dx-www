@@ -526,6 +526,7 @@ dependencies = [
  "dx-py-package-manager",
  "dx-py-project-manager",
  "serde",
+ "serde_json",
  "sha2",
  "tempfile",
  "thiserror",

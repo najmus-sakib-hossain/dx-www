@@ -52,6 +52,7 @@ pub struct PythonManager {
     /// Directory where managed Python versions are installed
     install_dir: PathBuf,
     /// URL for pre-built Python binaries
+    #[allow(dead_code)]
     builds_url: String,
     /// Cache of discovered Python installations
     discovered: HashMap<String, PythonInstall>,
@@ -87,6 +88,7 @@ impl PythonManager {
     }
 
     /// Discover system Python installations
+    #[allow(clippy::map_entry)]
     pub fn discover(&mut self) -> Vec<PythonInstall> {
         let mut found = Vec::new();
 
@@ -272,7 +274,7 @@ impl PythonManager {
     pub fn pin(&self, project_dir: &Path, version: &str) -> Result<()> {
         let pin_file = project_dir.join(".python-version");
         std::fs::write(&pin_file, format!("{}\n", version))
-            .map_err(|e| Error::Io(e))?;
+            .map_err(Error::Io)?;
         Ok(())
     }
 
@@ -284,7 +286,7 @@ impl PythonManager {
         }
 
         let content = std::fs::read_to_string(&pin_file)
-            .map_err(|e| Error::Io(e))?;
+            .map_err(Error::Io)?;
         Ok(Some(content.trim().to_string()))
     }
 
@@ -675,6 +677,7 @@ impl Default for RealPythonManager {
 /// GitHub release response
 #[derive(Debug, Deserialize)]
 struct GitHubRelease {
+    #[allow(dead_code)]
     tag_name: String,
     assets: Vec<GitHubAsset>,
 }
