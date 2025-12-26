@@ -12,6 +12,8 @@ pub mod pytuple;
 pub mod pyfunction;
 pub mod pyframe;
 pub mod builtins;
+pub mod stdlib;
+pub mod debug;
 
 pub use header::PyObjectHeader;
 pub use types::PyType;
@@ -22,6 +24,7 @@ pub use pydict::PyDict;
 pub use pytuple::PyTuple;
 pub use pyfunction::PyFunction;
 pub use pyframe::PyFrame;
+pub use debug::{Traceback, TracebackFrame, ExceptionInfo, LineTable, Debugger};
 
 /// Core error types
 #[derive(Debug, thiserror::Error)]

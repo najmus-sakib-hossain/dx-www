@@ -61,6 +61,10 @@ pub struct PyFunction {
     pub qualname: String,
     /// Module name
     pub module: Option<String>,
+    /// Source filename (for debugging)
+    pub filename: Option<String>,
+    /// First line number (for debugging)
+    pub firstlineno: u32,
     /// Docstring
     pub doc: Option<String>,
     /// Parameters
@@ -94,6 +98,8 @@ impl PyFunction {
             qualname: name.clone(),
             name,
             module: None,
+            filename: None,
+            firstlineno: 0,
             doc: None,
             params,
             return_annotation: None,
@@ -109,6 +115,18 @@ impl PyFunction {
     /// Set the module
     pub fn with_module(mut self, module: impl Into<String>) -> Self {
         self.module = Some(module.into());
+        self
+    }
+    
+    /// Set the filename
+    pub fn with_filename(mut self, filename: impl Into<String>) -> Self {
+        self.filename = Some(filename.into());
+        self
+    }
+    
+    /// Set the first line number
+    pub fn with_firstlineno(mut self, lineno: u32) -> Self {
+        self.firstlineno = lineno;
         self
     }
     

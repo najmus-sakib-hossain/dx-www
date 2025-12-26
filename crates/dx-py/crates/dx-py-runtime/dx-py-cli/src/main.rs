@@ -1,5 +1,7 @@
 //! DX-Py CLI - Command-line interface for the DX-Py runtime
 
+mod bench;
+
 use clap::{Parser, Subcommand};
 use dx_py_interpreter::VirtualMachine;
 use dx_py_core::pylist::PyValue;
@@ -126,8 +128,36 @@ fn handle_subcommand(cmd: Commands, verbose: bool) -> Result<(), Box<dyn std::er
                 println!("Running benchmark: {}", name);
             }
             
-            // TODO: Implement benchmarks
-            println!("Benchmarks not yet implemented");
+            match name.as_str() {
+                "all" => {
+                    let results = bench::run_all_benchmarks();
+                    bench::validate_targets(&results);
+                }
+                "startup" => {
+                    let result = bench::bench_startup();
+                    println!("{}: {:?}", result.name, result.mean_time);
+                }
+                "eval" => {
+                    let result = bench::bench_eval_int();
+                    println!("{}: {:?}", result.name, result.mean_time);
+                }
+                "list" => {
+                    let result = bench::bench_list_ops();
+                    println!("{}: {:?}", result.name, result.mean_time);
+                }
+                "dict" => {
+                    let result = bench::bench_dict_ops();
+                    println!("{}: {:?}", result.name, result.mean_time);
+                }
+                "string" => {
+                    let result = bench::bench_string_ops();
+                    println!("{}: {:?}", result.name, result.mean_time);
+                }
+                _ => {
+                    println!("Unknown benchmark: {}", name);
+                    println!("Available: all, startup, eval, list, dict, string");
+                }
+            }
             Ok(())
         }
     }

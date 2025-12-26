@@ -66,7 +66,8 @@ export class ForgeClient {
 
         return new Promise((resolve) => {
             try {
-                const url = `ws://127.0.0.1:${this.port}/ws`;
+                // Connect directly to the WebSocket port (no path needed)
+                const url = `ws://127.0.0.1:${this.port}`;
                 console.log(`[Forge] Connecting to ${url}...`);
                 this.ws = new WebSocket(url);
 
@@ -203,8 +204,8 @@ export class ForgeClient {
      */
     async getStatus(): Promise<ForgeStatus | null> {
         try {
-            const response = await this.send({ type: 'status' });
-            if (response.type === 'status') {
+            const response = await this.send({ command: 'GetStatus' });
+            if (response.type === 'Status') {
                 return {
                     state: response.state,
                     uptime_seconds: response.uptime_seconds,
@@ -226,10 +227,10 @@ export class ForgeClient {
      */
     async listTools(): Promise<ToolInfo[]> {
         try {
-            const response = await this.send({ type: 'tools' });
-            if (response.type === 'tools' && response.tools) {
+            const response = await this.send({ command: 'ListTools' });
+            if (response.type === 'ToolList' && response.tools) {
                 return response.tools.map((t: any) => ({
-                    id: t.name,
+                    id: t.id || t.name,
                     name: t.name,
                     version: t.version,
                     status: t.status,
@@ -250,8 +251,8 @@ export class ForgeClient {
      */
     async runTool(name: string): Promise<boolean> {
         try {
-            const response = await this.send({ type: 'run', name });
-            return response.type === 'tool_result' && response.success;
+            const response = await this.send({ command: 'RunTool', name, args: [] });
+            return response.type === 'ToolResult' && response.success;
         } catch {
             return false;
         }
@@ -263,7 +264,7 @@ export class ForgeClient {
     async notifyFileChange(filePath: string, changeType: 'created' | 'modified' | 'deleted'): Promise<void> {
         try {
             await this.send({
-                type: 'file_changed',
+                command: 'FileChanged',
                 path: filePath,
                 change_type: changeType
             });
