@@ -71,6 +71,11 @@
     ],
     "commands": [
       {
+        "command": "dx.setColorTheme",
+        "title": "DX: Set Color Theme",
+        "icon": "$(symbol-color)"
+      },
+      {
         "command": "dx.refreshFromDisk",
         "title": "DX: Refresh from Disk",
         "icon": "$(refresh)"

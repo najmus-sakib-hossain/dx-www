@@ -221,6 +221,14 @@ function registerCommands(
         })
     );
 
+    // DX: Set Color Theme
+    context.subscriptions.push(
+        vscode.commands.registerCommand('dx.setColorTheme', async () => {
+            // Open the theme picker with DX themes pre-filtered
+            await vscode.commands.executeCommand('workbench.action.selectTheme');
+        })
+    );
+
     // DX: Show Dense View
     context.subscriptions.push(
         vscode.commands.registerCommand('dx.showDenseView', async () => {
