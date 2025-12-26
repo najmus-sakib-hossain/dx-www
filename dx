@@ -9,7 +9,6 @@ ed|*neovim,zed,vscode,cursor,antigravity,replit,firebase-studio
 https://dx.vercel.app/essensefromexistence/dx|none|none|none|*cli,docs,examples,packages,scripts,style,tests
 #:js|javascript/typescript|bun-runtime|tsc|vite|bun-package-manager|react
 #:python|py|python|cpython|python|uv|django
-#:rust|rs|rust|native|rustc|cargo|actix-web
 #y(pt|th)
 @/style|dx
 #u(pt|cp)
@@ -33,6 +32,4 @@ www dev|dx forge status|dx workspace build
 #j(dependencies_react|dependencies_next)
 19.0.1|16.0.1
 #p(dependencies_django|dependencies_numpy)
-latest|latest
-#r(dependencies_actix-web|dependencies_rust-crypto)
 latest|latest
