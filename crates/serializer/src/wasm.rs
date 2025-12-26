@@ -5,6 +5,7 @@
 //! - `to_dense`: Transform human-readable format to dense format
 //! - `validate`: Validate content syntax with detailed error info
 //! - `is_saveable`: Check if content is complete enough to save
+//! - Security limits: max_input_size, max_recursion_depth, max_table_rows
 //!
 //! ## Usage from JavaScript
 //!
@@ -16,13 +17,13 @@
 //! const serializer = new DxSerializer();
 //!
 //! // Transform dense to human (for editor display)
-//! const result = serializer.to_human('server#host:localhost#port:5432');
+//! const result = serializer.toHuman('server#host:localhost#port:5432');
 //! if (result.success) {
 //!     console.log(result.content);
 //! }
 //!
 //! // Transform human to dense (for disk storage)
-//! const denseResult = serializer.to_dense(humanContent);
+//! const denseResult = serializer.toDense(humanContent);
 //!
 //! // Validate content
 //! const validation = serializer.validate(content);
@@ -30,11 +31,17 @@
 //!     console.log(`Error at line ${validation.line}: ${validation.error}`);
 //!     console.log(`Hint: ${validation.hint}`);
 //! }
+//!
+//! // Get security limits
+//! console.log(`Max input size: ${serializer.maxInputSize()} bytes`);
+//! console.log(`Max recursion depth: ${serializer.maxRecursionDepth()}`);
+//! console.log(`Max table rows: ${serializer.maxTableRows()}`);
 //! ```
 
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
+use crate::error::{MAX_INPUT_SIZE, MAX_RECURSION_DEPTH, MAX_TABLE_ROWS};
 use crate::llm::{human_to_llm, llm_to_human};
 
 /// Result of a transformation operation
@@ -393,6 +400,30 @@ impl DxSerializer {
     pub fn is_saveable(&self, content: &str) -> bool {
         self.validate(content).success
     }
+
+    /// Get the maximum input size limit (100 MB)
+    ///
+    /// Files larger than this will be rejected to prevent memory exhaustion.
+    #[cfg_attr(feature = "wasm", wasm_bindgen(js_name = maxInputSize))]
+    pub fn max_input_size(&self) -> usize {
+        MAX_INPUT_SIZE
+    }
+
+    /// Get the maximum recursion depth limit (1000 levels)
+    ///
+    /// Structures nested deeper than this will be rejected to prevent stack overflow.
+    #[cfg_attr(feature = "wasm", wasm_bindgen(js_name = maxRecursionDepth))]
+    pub fn max_recursion_depth(&self) -> usize {
+        MAX_RECURSION_DEPTH
+    }
+
+    /// Get the maximum table rows limit (10 million rows)
+    ///
+    /// Tables with more rows than this will be rejected to prevent memory exhaustion.
+    #[cfg_attr(feature = "wasm", wasm_bindgen(js_name = maxTableRows))]
+    pub fn max_table_rows(&self) -> usize {
+        MAX_TABLE_ROWS
+    }
 }
 
 impl Default for DxSerializer {
@@ -458,8 +489,8 @@ pub fn init_wasm() {
 
 /// Get version information
 #[cfg(feature = "wasm")]
-#[wasm_bindgen]
-pub fn version() -> String {
+#[wasm_bindgen(js_name = "serializerVersion")]
+pub fn serializer_version() -> String {
     format!(
         "dx-serializer v{} ({})",
         env!("CARGO_PKG_VERSION"),

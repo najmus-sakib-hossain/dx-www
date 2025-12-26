@@ -526,8 +526,10 @@ dependencies = [
  "dx-py-package-manager",
  "dx-py-project-manager",
  "serde",
+ "sha2",
  "tempfile",
  "thiserror",
+ "tokio",
  "toml",
 ]
 

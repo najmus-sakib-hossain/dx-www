@@ -31,13 +31,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(feature = "wasm")]
 use super::{Deflater, HologramConfig, Inflater};
 
-/// Initialize the WASM module
+/// Initialize the hologram WASM module (called by main init)
 #[cfg(feature = "wasm")]
-#[wasm_bindgen(start)]
-pub fn init() {
-    // Set up panic hook for better error messages
-    #[cfg(feature = "console_error_panic_hook")]
-    console_error_panic_hook::set_once();
+pub fn init_hologram() {
+    // Hologram-specific initialization (if any)
+    // Panic hook is set up by the main init_wasm() function
 }
 
 /// Inflate LLM-dense format to human-pretty format
@@ -256,8 +254,8 @@ impl DeflaterJs {
 
 /// Get version information
 #[cfg(feature = "wasm")]
-#[wasm_bindgen]
-pub fn version() -> String {
+#[wasm_bindgen(js_name = "hologramVersion")]
+pub fn hologram_version() -> String {
     format!(
         "dx-serializer-hologram v{} ({})",
         env!("CARGO_PKG_VERSION"),

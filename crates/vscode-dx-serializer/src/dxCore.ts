@@ -64,6 +64,7 @@ export interface DxCore {
  * WASM module interface (matches wasm-bindgen output)
  */
 interface WasmModule {
+    default: (input?: Buffer | ArrayBuffer | Uint8Array) => Promise<void>;
     DxSerializer: new () => WasmSerializer;
 }
 
@@ -72,6 +73,9 @@ interface WasmSerializer {
     toDense(human: string): WasmTransformResult;
     validate(content: string): WasmValidationResult;
     isSaveable(content: string): boolean;
+    maxInputSize(): number;
+    maxRecursionDepth(): number;
+    maxTableRows(): number;
 }
 
 
@@ -639,9 +643,12 @@ class FallbackDxCore implements DxCore {
 let cachedCore: DxCore | null = null;
 
 /**
- * Load the DxCore, using TypeScript implementation
+ * Load the DxCore, attempting WASM first with TypeScript fallback
  * 
- * Note: WASM is disabled to use the updated TypeScript formatter (V3 format)
+ * The WASM module provides the battle-hardened Rust serializer with:
+ * - Security limits (100 MB input, 1000 recursion depth, 10M table rows)
+ * - 38 property-based tests for correctness
+ * - Performance optimizations
  * 
  * @param extensionPath - Path to the extension directory
  * @param indentSize - Indent size for formatting (default: 2)
@@ -658,9 +665,37 @@ export async function loadDxCore(
         return cachedCore;
     }
 
-    // Use TypeScript implementation (WASM disabled for V3 format)
+    // Try to load WASM module first
+    try {
+        const wasmJsPath = path.join(extensionPath, 'wasm', 'dx_serializer.js');
+        const wasmBinaryPath = path.join(extensionPath, 'wasm', 'dx_serializer_bg.wasm');
+
+        if (fs.existsSync(wasmJsPath) && fs.existsSync(wasmBinaryPath)) {
+            // Dynamic import of the WASM module
+            const wasmModule = await import(wasmJsPath) as WasmModule;
+
+            // Read the WASM binary and initialize
+            const wasmBinary = fs.readFileSync(wasmBinaryPath);
+            await wasmModule.default(wasmBinary);
+
+            // Create the serializer instance
+            const serializer = new wasmModule.DxSerializer();
+            cachedCore = new WasmDxCore(serializer);
+
+            console.log('DX Serializer: Using WASM core (battle-hardened)');
+            console.log(`  - Max input size: ${serializer.maxInputSize()} bytes`);
+            console.log(`  - Max recursion depth: ${serializer.maxRecursionDepth()}`);
+            console.log(`  - Max table rows: ${serializer.maxTableRows()}`);
+
+            return cachedCore;
+        }
+    } catch (error) {
+        console.warn('DX Serializer: WASM load failed, using TypeScript fallback', error);
+    }
+
+    // Fallback to TypeScript implementation
     cachedCore = new FallbackDxCore(indentSize, keyPadding);
-    console.log('DX Serializer: Using TypeScript core (V3 format)');
+    console.log('DX Serializer: Using TypeScript core (fallback)');
     return cachedCore;
 }
 

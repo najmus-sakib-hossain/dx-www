@@ -33,6 +33,37 @@ The DX Serializer VS Code extension provides a revolutionary approach to configu
 - **File Support**: Handles both `.dx` extension files AND files named exactly `dx` (no extension)
 - **Real-time Validation**: Immediate syntax error feedback with actionable hints
 - **Auto-Save Compatible**: Saves work seamlessly with VS Code's auto-save
+- **WASM-Powered**: Uses battle-hardened Rust serializer via WebAssembly for performance and security
+
+## 🦀 WASM Integration
+
+The extension uses the battle-hardened Rust serializer crate via WebAssembly (WASM) for parsing and formatting. This provides:
+
+- **Performance**: Native-speed parsing and formatting
+- **Security**: Input validation with strict limits
+- **Reliability**: 38 property-based tests ensure correctness
+- **Fallback**: TypeScript implementation used if WASM fails to load
+
+### Security Limits
+
+The WASM module enforces these limits to prevent resource exhaustion:
+
+| Limit | Value | Purpose |
+|-------|-------|---------|
+| **MAX_INPUT_SIZE** | 100 MB | Prevents memory exhaustion from large files |
+| **MAX_RECURSION_DEPTH** | 1000 levels | Prevents stack overflow from deeply nested structures |
+| **MAX_TABLE_ROWS** | 10 million rows | Prevents memory exhaustion from large tables |
+
+### Fallback Behavior
+
+If the WASM module fails to load (e.g., in restricted environments), the extension automatically falls back to the TypeScript implementation:
+
+```
+DX Serializer: Using WASM core (battle-hardened)  ← Normal operation
+DX Serializer: Using TypeScript core (fallback)   ← Fallback mode
+```
+
+Both implementations produce equivalent results, so the extension works seamlessly in either mode.
 
 ## 🎯 How It Works
 
@@ -277,16 +308,49 @@ node out/dxCore.test.js
 node out/converters/converters.test.js
 ```
 
+### Building the WASM Module
+
+The WASM module is pre-built and included in the `wasm/` directory. To rebuild it:
+
+#### Prerequisites
+```bash
+# Install Rust WASM target
+rustup target add wasm32-unknown-unknown
+
+# Install wasm-pack
+cargo install wasm-pack
+```
+
+#### Build Commands
+```bash
+# From repository root
+
+# Build WASM (debug)
+./scripts/build-wasm.sh        # Unix
+./scripts/build-wasm.ps1       # Windows
+
+# Build WASM (release/optimized)
+./scripts/build-wasm.sh --release    # Unix
+./scripts/build-wasm.ps1 -Release    # Windows
+```
+
+#### Output Files
+After building, `crates/vscode-dx-serializer/wasm/` will contain:
+- `dx_serializer.js` - JavaScript bindings
+- `dx_serializer.d.ts` - TypeScript type definitions
+- `dx_serializer_bg.wasm` - WebAssembly binary
+- `dx_serializer_bg.wasm.d.ts` - WASM type definitions
+
 ## 🏗️ Architecture
 
 ```
 src/
 ├── extension.ts          # Entry point, activation, auto-redirect
-├── dxCore.ts             # TypeScript transformation core
+├── dxCore.ts             # WASM wrapper with TypeScript fallback
 ├── dxDocumentManager.ts  # Document state and validation
 ├── dxLensFileSystem.ts   # Virtual file system provider (dxlens://)
-├── humanFormatterV3.ts   # Human Format V3 formatter
-├── humanParserV3.ts      # Human Format V3 parser + LLM serializer
+├── humanFormatterV3.ts   # Human Format V3 formatter (fallback)
+├── humanParserV3.ts      # Human Format V3 parser + LLM serializer (fallback)
 ├── llmParser.ts          # LLM format parser with section order tracking
 ├── machineFormat.ts      # Binary machine format serializer
 ├── formatDetector.ts     # Multi-format detection (JSON/YAML/TOML/CSV/LLM)
@@ -298,6 +362,12 @@ src/
 │   ├── tomlConverter.ts  # TOML → DxDocument
 │   └── csvConverter.ts   # CSV → DxDocument
 └── utils.ts              # Helper functions
+
+wasm/
+├── dx_serializer.js      # WASM JavaScript bindings
+├── dx_serializer.d.ts    # TypeScript type definitions
+├── dx_serializer_bg.wasm # WebAssembly binary (Rust serializer)
+└── dx_serializer_bg.wasm.d.ts  # WASM type definitions
 ```
 
 ## 🔧 Technical Implementation

@@ -331,78 +331,78 @@ This implementation plan transforms dx-py from a functional prototype into a bat
     - **Property 8: Cleanup on Failure**
     - **Validates: Requirements 5.6**
 
-- [ ] 21. Implement Enhanced Workspace Support (dx-py-project-manager)
-  - [ ] 21.1 Implement workspace member enumeration
+- [x] 21. Implement Enhanced Workspace Support (dx-py-project-manager)
+  - [x] 21.1 Implement workspace member enumeration
     - Parse workspace.members glob patterns
     - Enumerate matching directories
     - _Requirements: 12.1, 12.2_
 
-  - [ ] 21.2 Implement path dependency resolution
+  - [x] 21.2 Implement path dependency resolution
     - Detect path dependencies
     - Resolve relative paths
     - Install in editable mode
     - _Requirements: 12.4, 12.5_
 
-  - [ ]* 21.3 Write property test for workspace enumeration
+  - [x]* 21.3 Write property test for workspace enumeration
     - **Property 10: Workspace Member Enumeration**
     - **Validates: Requirements 12.1, 12.2**
 
-- [ ] 22. Update CLI Commands (dx-py-cli)
-  - [ ] 22.1 Update lock command
+- [x] 22. Update CLI Commands (dx-py-cli)
+  - [x] 22.1 Update lock command
     - Use real PyPiResolver
     - Write real lock file with hashes
     - _Requirements: 1.1_
 
-  - [ ] 22.2 Update sync command
+  - [x] 22.2 Update sync command
     - Use real WheelInstaller
     - Download from cache or PyPI
     - _Requirements: 1.4_
 
-  - [ ] 22.3 Update run command
+  - [x] 22.3 Update run command
     - Properly activate venv
     - Handle PATH correctly
     - _Requirements: 7.5_
 
-  - [ ] 22.4 Update python commands
+  - [x] 22.4 Update python commands
     - Use real PythonManager
     - Actually download Python
     - _Requirements: 8.1, 8.2, 8.3_
 
-  - [ ] 22.5 Update tool commands
+  - [x] 22.5 Update tool commands
     - Use real ToolManager
     - Actually install tools
     - _Requirements: 10.1, 10.2, 10.5_
 
-  - [ ] 22.6 Update build command
+  - [x] 22.6 Update build command
     - Use real BuildSystem
     - Actually build packages
     - _Requirements: 9.1, 9.2_
 
-  - [ ] 22.7 Update publish command
+  - [x] 22.7 Update publish command
     - Use real PublishClient
     - Actually upload packages
     - _Requirements: 9.4_
 
-- [ ] 23. Checkpoint - CLI integration complete
+- [x] 23. Checkpoint - CLI integration complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 24. Integration Tests
-  - [ ] 24.1 Add integration test for real PyPI resolution
+- [x] 24. Integration Tests
+  - [x] 24.1 Add integration test for real PyPI resolution
     - Resolve requests package
     - Verify transitive dependencies
     - _Requirements: 13.1_
 
-  - [ ] 24.2 Add integration test for wheel installation
+  - [x] 24.2 Add integration test for wheel installation
     - Download and install a real package
     - Verify files in site-packages
     - _Requirements: 13.1_
 
-  - [ ] 24.3 Add integration test for venv creation
+  - [x] 24.3 Add integration test for venv creation
     - Create venv with real Python
     - Run Python in venv
     - _Requirements: 13.2_
 
-- [ ] 25. Final Checkpoint - Production Ready
+- [x] 25. Final Checkpoint - Production Ready
   - All tests pass
   - All property tests pass
   - Integration tests pass

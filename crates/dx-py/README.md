@@ -75,10 +75,43 @@ DX-Py consists of 5 crates:
 ```
 crates/dx-py-package-manager/
 ├── dx-py-core/           # Core types, binary formats, SIMD operations
-├── dx-py-package-manager/ # Cache, installer, resolver, registry client
+├── dx-py-package-manager/ # Cache, installer, resolver, PyPI client
 ├── dx-py-project-manager/ # Python/venv/workspace management
-├── dx-py-compat/         # pyproject.toml compatibility layer
+├── dx-py-compat/         # pyproject.toml, markers, configuration
 └── dx-py-cli/            # Command-line interface
+```
+
+### Workspace Support
+
+DX-Py supports Cargo-style monorepo workspaces:
+
+```toml
+# pyproject.toml
+[tool.dx-py.workspace]
+members = ["packages/*", "libs/*"]
+exclude = ["packages/deprecated"]
+shared_dependencies = { requests = ">=2.28" }
+```
+
+Features:
+- Glob pattern matching for workspace members
+- Path dependency resolution between members
+- Shared dependency management across workspace
+- Topological sorting for build order
+- Editable/development mode installation
+
+### Path Dependencies
+
+Reference local packages using PEP 508 syntax or tool.dx-py configuration:
+
+```toml
+# PEP 508 style
+[project]
+dependencies = ["my-lib @ file://../my-lib"]
+
+# Or dx-py style
+[tool.dx-py.dependencies]
+my-lib = { path = "../my-lib", editable = true }
 ```
 
 ### Binary Formats
@@ -100,6 +133,30 @@ crates/dx-py-package-manager/
 - **Workspace Support**: Cargo-style monorepo management
 - **Cached Venv Skeletons**: Fast virtual environment creation
 - **PyPI Integration**: Parallel downloads with connection pooling
+- **Environment Markers**: Full PEP 508 marker evaluation
+- **Path Dependencies**: Local package references with editable mode
+- **Configuration Layering**: env > project > global > default precedence
+
+## Configuration
+
+DX-Py supports layered configuration:
+
+```toml
+# ~/.config/dx-py/config.toml (global)
+# or pyproject.toml [tool.dx-py] (project)
+
+[tool.dx-py]
+python_version = "3.12"
+index_url = "https://pypi.org/simple"
+extra_index_urls = ["https://my-private-pypi.com/simple"]
+cache_dir = "~/.cache/dx-py"
+max_concurrent_downloads = 8
+```
+
+Environment variables override config files:
+- `DX_PY_PYTHON_VERSION`
+- `DX_PY_INDEX_URL`
+- `DX_PY_CACHE_DIR`
 
 ## Testing
 
@@ -115,15 +172,31 @@ cargo bench --package dx-py-cli
 
 DX-Py includes comprehensive property-based tests using proptest:
 
-1. **DPP Format Structure Validity** - Header and metadata integrity
-2. **DPP Wheel Conversion Round-Trip** - Lossless wheel conversion
-3. **DPL Format Structure Validity** - Lock file format correctness
-4. **DPL Round-Trip Consistency** - Build/read cycle integrity
-5. **SIMD/Scalar Equivalence** - Version comparison correctness
-6. **Hash Table O(1) Lookup** - Constant-time lookup verification
-7. **Content-Addressable Deduplication** - Cache correctness
-8. **pyproject.toml Round-Trip** - TOML/binary conversion
-9. **Resolution Hint Cache** - Cache correctness and eviction
+1. **PEP 440 Version Round-Trip** - Version parsing and formatting
+2. **PEP 440 Version Ordering** - Correct version comparison
+3. **PEP 508 Dependency Parsing** - Dependency spec round-trip
+4. **Marker Evaluation Consistency** - Environment marker evaluation
+5. **Wheel Tag Parsing** - Wheel filename parsing
+6. **Wheel Selection Priority** - Platform-specific wheel selection
+7. **SHA256 Verification** - Download integrity verification
+8. **Cleanup on Failure** - Atomic operations and rollback
+9. **Configuration Layering** - Config precedence (env > project > global)
+10. **Workspace Member Enumeration** - Glob pattern matching
+11. **Activation Script Validity** - Shell script generation
+
+### Integration Tests
+
+Integration tests verify real-world functionality (require network):
+
+```bash
+# Run integration tests
+cargo test --test integration_tests -- --ignored
+```
+
+- PyPI package resolution (requests, flask, numpy)
+- Wheel download and installation
+- Virtual environment creation
+- Package uninstallation
 
 ## Comparison with uv
 

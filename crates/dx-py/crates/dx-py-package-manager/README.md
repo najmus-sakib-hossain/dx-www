@@ -6,10 +6,10 @@ Ultra-fast Python package manager workspace containing 5 crates.
 
 | Crate | Description |
 |-------|-------------|
-| `dx-py-core` | Core types, binary formats (DPP/DPL), SIMD version comparison |
-| `dx-py-package-manager` | Cache, installer, resolver, PyPI registry client |
-| `dx-py-project-manager` | Python version, venv, and workspace management |
-| `dx-py-compat` | pyproject.toml parser and binary conversion |
+| `dx-py-core` | Core types, PEP 440 versions, wheel tags, binary formats |
+| `dx-py-package-manager` | Cache, installer, resolver, async PyPI client |
+| `dx-py-project-manager` | Python version, venv, workspace, and tool management |
+| `dx-py-compat` | pyproject.toml, environment markers, configuration |
 | `dx-py-cli` | Command-line interface |
 
 ## Building
@@ -28,12 +28,69 @@ cargo build --release --package dx-py-cli
 ## Testing
 
 ```bash
-# Run all tests (113 total)
+# Run all unit tests
 cargo test --workspace
+
+# Run property-based tests
+cargo test --workspace -- --include-ignored proptest
+
+# Run integration tests (requires network)
+cargo test --test integration_tests -- --ignored
 
 # Run benchmarks
 cargo bench --package dx-py-cli
 ```
+
+## Key Features
+
+### PEP 440 Version Support
+- Full version parsing (epoch, release, pre/post/dev, local)
+- Correct version ordering per PEP 440 spec
+- Version constraint evaluation
+
+### Environment Markers (PEP 508)
+- Platform detection (os, arch, Python version)
+- Marker expression parsing and evaluation
+- Conditional dependency filtering
+
+### Wheel Support
+- Wheel tag parsing and compatibility checking
+- Platform-specific wheel selection
+- Priority scoring for best wheel match
+
+### Workspace Support
+- Cargo-style monorepo management
+- Glob pattern matching for members
+- Path dependency resolution
+- Shared dependency management
+- Topological sorting for build order
+
+### Real PyPI Integration
+- Async HTTP client with connection pooling
+- Package metadata and version fetching
+- Wheel download with SHA256 verification
+- Retry with exponential backoff
+
+### Virtual Environment Management
+- Real venv creation using Python's venv module
+- Activation script generation (bash, zsh, fish, PowerShell)
+- pip/setuptools bootstrapping
+
+### Python Version Management
+- python-build-standalone integration
+- Cross-platform support (Windows, macOS, Linux)
+- Version pinning per project
+
+### Tool Management
+- Isolated tool installation (pipx replacement)
+- Ephemeral tool execution
+- Tool upgrade support
+
+### Configuration System
+- Environment variable support
+- Global config (~/.config/dx-py/config.toml)
+- Project config (pyproject.toml [tool.dx-py])
+- Layered precedence (env > project > global > default)
 
 ## Performance
 
@@ -57,6 +114,31 @@ Benchmark results (release build):
 - 128-byte fixed entries
 - Content hash for integrity
 - Memory-mapped for instant access
+
+## Property-Based Tests
+
+Using proptest for comprehensive validation:
+
+1. PEP 440 Version Round-Trip
+2. PEP 440 Version Ordering
+3. PEP 508 Dependency Parsing
+4. Marker Evaluation Consistency
+5. Wheel Tag Parsing
+6. Wheel Selection Priority
+7. SHA256 Verification
+8. Cleanup on Failure
+9. Configuration Layering
+10. Workspace Member Enumeration
+11. Activation Script Validity
+
+## Integration Tests
+
+Real-world tests against PyPI (run with `--ignored`):
+
+- Package resolution (requests, flask, numpy)
+- Wheel download and installation
+- Virtual environment creation
+- Package uninstallation
 
 ## License
 

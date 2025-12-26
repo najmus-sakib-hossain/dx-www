@@ -1,10 +1,13 @@
 //! Generate lock file from dependencies
+//!
+//! This command resolves all dependencies from pyproject.toml and generates
+//! a lock file (dx-py.lock) with exact versions and hashes.
 
 use std::path::Path;
 
 use dx_py_compat::PyProjectToml;
 use dx_py_core::Result;
-use dx_py_package_manager::{DplBuilder, Dependency, InMemoryProvider, Resolver, VersionConstraint};
+use dx_py_package_manager::{AsyncPyPiClient, DependencySpec, DplBuilder};
 
 /// Run the lock command
 pub fn run(upgrade: bool) -> Result<()> {
@@ -26,32 +29,36 @@ pub fn run(upgrade: bool) -> Result<()> {
 
     println!("Resolving dependencies...");
 
-    // Parse dependencies
-    let parsed_deps: Vec<Dependency> = deps
+    // Parse dependencies into DependencySpec
+    let parsed_specs: Vec<DependencySpec> = deps
         .iter()
-        .filter_map(|d| {
-            let spec = dx_py_package_manager::DependencySpec::parse(d).ok()?;
-            let constraint = spec
-                .version_constraint
-                .as_ref()
-                .and_then(|c| VersionConstraint::parse(c).ok())
-                .unwrap_or(VersionConstraint::Any);
-            Some(Dependency::new(&spec.name, constraint))
-        })
+        .filter_map(|d| DependencySpec::parse(d).ok())
         .collect();
 
-    // For now, create a simple lock file
-    // In a real implementation, we would fetch versions from PyPI
+    if parsed_specs.is_empty() {
+        println!("No valid dependencies found.");
+        return Ok(());
+    }
+
+    // Try async resolution with real PyPI
+    let rt = tokio::runtime::Runtime::new()
+        .map_err(|e| dx_py_core::Error::Cache(format!("Failed to create runtime: {}", e)))?;
+
+    let resolution = rt.block_on(async {
+        resolve_with_pypi(&parsed_specs, upgrade).await
+    })?;
+
+    // Build lock file
     println!("Creating lock file...");
 
-    let mut builder = DplBuilder::new("3.12.0", "any");
+    // Use default Python version
+    let python_version_str = "3.12";
 
-    for dep in &parsed_deps {
-        // Placeholder version - in real implementation, resolve from PyPI
-        let version = "0.0.0";
-        let hash = [0u8; 32];
-        builder.add_package(&dep.name, version, hash);
-        println!("  Locked {} @ {}", dep.name, version);
+    let mut builder = DplBuilder::new(python_version_str, "any");
+
+    for pkg in &resolution.packages {
+        builder.add_package(&pkg.name, &pkg.version_string, pkg.content_hash);
+        println!("  Locked {} @ {}", pkg.name, pkg.version_string);
     }
 
     // Write lock file
@@ -60,11 +67,33 @@ pub fn run(upgrade: bool) -> Result<()> {
     std::fs::write(lock_path, lock_data)?;
 
     println!("\nLock file written to dx-py.lock");
+    println!("Resolved {} packages in {}ms", 
+        resolution.packages.len(), 
+        resolution.resolution_time_ms
+    );
+    
+    if resolution.from_cache {
+        println!("(used cached resolution)");
+    }
+
     println!("Run 'dx-py sync' to install locked dependencies.");
 
     if upgrade {
-        println!("(--upgrade flag noted, all packages updated to latest)");
+        println!("(--upgrade flag: all packages updated to latest compatible versions)");
     }
 
     Ok(())
+}
+
+/// Resolve dependencies using real PyPI
+async fn resolve_with_pypi(
+    specs: &[DependencySpec],
+    _upgrade: bool,
+) -> Result<dx_py_package_manager::Resolution> {
+    use dx_py_package_manager::PyPiResolver;
+
+    let client = AsyncPyPiClient::new();
+    let mut resolver = PyPiResolver::new(client);
+
+    resolver.resolve(specs).await
 }

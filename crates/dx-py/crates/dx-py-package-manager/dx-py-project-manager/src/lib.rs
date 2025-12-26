@@ -15,4 +15,4 @@ pub use dx_py_core::{Error, Result};
 pub use python::{PythonManager, RealPythonManager, PythonInstall, PythonRelease};
 pub use tool::{ToolManager, InstalledTool};
 pub use venv::{VenvManager, RealVenvManager, Venv};
-pub use workspace::WorkspaceManager;
+pub use workspace::{WorkspaceManager, WorkspaceConfig, WorkspaceMember, PathDependency};
