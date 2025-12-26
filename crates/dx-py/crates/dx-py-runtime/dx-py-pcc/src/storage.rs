@@ -19,8 +19,10 @@ const MAX_SIZE: usize = 256 * 1024 * 1024;
 
 /// Code storage with memory-mapped pages
 pub struct CodeStorage {
-    /// Memory-mapped code cache
+    /// Memory-mapped code cache (or in-memory buffer)
     mmap: RwLock<Option<MmapMut>>,
+    /// In-memory buffer (for testing)
+    memory: RwLock<Option<Vec<u8>>>,
     /// Current allocation offset
     offset: AtomicU64,
     /// Current capacity
@@ -34,10 +36,12 @@ pub struct CodeStorage {
 impl CodeStorage {
     /// Create a new in-memory code storage
     pub fn new() -> Self {
+        let initial_buffer = vec![0u8; INITIAL_SIZE];
         Self {
             mmap: RwLock::new(None),
-            offset: AtomicU64::new(0),
-            capacity: AtomicU64::new(0),
+            memory: RwLock::new(Some(initial_buffer)),
+            offset: AtomicU64::new(8), // Start after header
+            capacity: AtomicU64::new(INITIAL_SIZE as u64),
             file: RwLock::new(None),
             path: None,
         }
@@ -73,6 +77,7 @@ impl CodeStorage {
         
         Ok(Self {
             mmap: RwLock::new(Some(mmap)),
+            memory: RwLock::new(None),
             offset: AtomicU64::new(offset.max(8)),
             capacity: AtomicU64::new(size as u64),
             file: RwLock::new(Some(file)),
@@ -107,9 +112,6 @@ impl CodeStorage {
     
     /// Grow the code cache
     fn grow(&self, min_size: usize) -> Result<(), PccError> {
-        let mut mmap_guard = self.mmap.write();
-        let mut file_guard = self.file.write();
-        
         let current_capacity = self.capacity.load(Ordering::Acquire) as usize;
         if min_size <= current_capacity {
             return Ok(());
@@ -120,20 +122,20 @@ impl CodeStorage {
             return Err(PccError::CacheFull);
         }
         
+        // Check if we're using mmap or in-memory
+        let mut mmap_guard = self.mmap.write();
+        let mut memory_guard = self.memory.write();
+        let mut file_guard = self.file.write();
+        
         if let Some(ref file) = *file_guard {
             file.set_len(new_capacity as u64)?;
             
             // Remap
             let new_mmap = unsafe { MmapOptions::new().map_mut(file)? };
             *mmap_guard = Some(new_mmap);
-        } else {
-            // In-memory: create new buffer
-            let mut new_data = vec![0u8; new_capacity];
-            if let Some(ref old_mmap) = *mmap_guard {
-                new_data[..current_capacity].copy_from_slice(&old_mmap[..current_capacity]);
-            }
-            // For in-memory, we'd need a different approach
-            // This is simplified for the file-backed case
+        } else if let Some(ref mut memory) = *memory_guard {
+            // In-memory: resize buffer
+            memory.resize(new_capacity, 0);
         }
         
         self.capacity.store(new_capacity as u64, Ordering::Release);
@@ -142,9 +144,11 @@ impl CodeStorage {
     
     /// Write code at the given offset
     pub fn write(&self, offset: u64, data: &[u8]) -> Result<(), PccError> {
+        let offset = offset as usize;
+        
+        // Try mmap first
         let mmap_guard = self.mmap.read();
         if let Some(ref mmap) = *mmap_guard {
-            let offset = offset as usize;
             if offset + data.len() > mmap.len() {
                 return Err(PccError::CacheFull);
             }
@@ -158,39 +162,71 @@ impl CodeStorage {
                     data.len(),
                 );
             }
-            Ok(())
-        } else {
-            Err(PccError::NotFound)
+            return Ok(());
         }
+        drop(mmap_guard);
+        
+        // Try in-memory buffer
+        let mut memory_guard = self.memory.write();
+        if let Some(ref mut memory) = *memory_guard {
+            if offset + data.len() > memory.len() {
+                return Err(PccError::CacheFull);
+            }
+            memory[offset..offset + data.len()].copy_from_slice(data);
+            return Ok(());
+        }
+        
+        Err(PccError::NotFound)
     }
     
     /// Read code at the given offset
     pub fn read(&self, offset: u64, size: usize) -> Result<Vec<u8>, PccError> {
+        let offset = offset as usize;
+        
+        // Try mmap first
         let mmap_guard = self.mmap.read();
         if let Some(ref mmap) = *mmap_guard {
-            let offset = offset as usize;
             if offset + size > mmap.len() {
                 return Err(PccError::NotFound);
             }
-            Ok(mmap[offset..offset + size].to_vec())
-        } else {
-            Err(PccError::NotFound)
+            return Ok(mmap[offset..offset + size].to_vec());
         }
+        drop(mmap_guard);
+        
+        // Try in-memory buffer
+        let memory_guard = self.memory.read();
+        if let Some(ref memory) = *memory_guard {
+            if offset + size > memory.len() {
+                return Err(PccError::NotFound);
+            }
+            return Ok(memory[offset..offset + size].to_vec());
+        }
+        
+        Err(PccError::NotFound)
     }
     
     /// Get a pointer to code at the given offset
     pub fn get_ptr(&self, offset: u64) -> Option<*const u8> {
+        let offset = offset as usize;
+        
+        // Try mmap first
         let mmap_guard = self.mmap.read();
         if let Some(ref mmap) = *mmap_guard {
-            let offset = offset as usize;
             if offset < mmap.len() {
-                Some(unsafe { mmap.as_ptr().add(offset) })
-            } else {
-                None
+                return Some(unsafe { mmap.as_ptr().add(offset) });
             }
-        } else {
-            None
         }
+        drop(mmap_guard);
+        
+        // Try in-memory buffer
+        let memory_guard = self.memory.read();
+        if let Some(ref memory) = *memory_guard {
+            if offset < memory.len() {
+                return Some(unsafe { memory.as_ptr().add(offset) });
+            }
+        }
+        
+        None
     }
     
     /// Flush changes to disk
@@ -203,6 +239,7 @@ impl CodeStorage {
         if let Some(ref mmap) = *mmap_guard {
             mmap.flush()?;
         }
+        // In-memory storage doesn't need flushing
         Ok(())
     }
     

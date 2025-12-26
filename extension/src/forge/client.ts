@@ -3,6 +3,7 @@
  */
 
 import * as vscode from 'vscode';
+import WebSocket from 'ws';
 
 // Types for Forge communication
 export interface ForgeStatus {
@@ -52,7 +53,7 @@ export class ForgeClient {
      * Check if connected to daemon
      */
     isConnected(): boolean {
-        return this.connected && this.ws !== null;
+        return this.connected && this.ws !== null && this.ws.readyState === WebSocket.OPEN;
     }
 
     /**
@@ -65,35 +66,37 @@ export class ForgeClient {
 
         return new Promise((resolve) => {
             try {
-                const url = `ws://127.0.0.1:${this.port}`;
+                const url = `ws://127.0.0.1:${this.port}/ws`;
+                console.log(`[Forge] Connecting to ${url}...`);
                 this.ws = new WebSocket(url);
 
-                this.ws.onopen = () => {
+                this.ws.on('open', () => {
                     this.connected = true;
                     this.reconnectAttempts = 0;
                     console.log('[Forge] Connected to daemon');
                     resolve(true);
-                };
+                });
 
-                this.ws.onclose = () => {
+                this.ws.on('close', () => {
                     this.connected = false;
                     console.log('[Forge] Disconnected from daemon');
                     this.attemptReconnect();
-                };
+                });
 
-                this.ws.onerror = (error) => {
-                    console.error('[Forge] WebSocket error:', error);
+                this.ws.on('error', (error) => {
+                    console.error('[Forge] WebSocket error:', error.message);
+                    this.connected = false;
                     resolve(false);
-                };
+                });
 
-                this.ws.onmessage = (event) => {
+                this.ws.on('message', (data) => {
                     try {
-                        const data = JSON.parse(event.data);
-                        this.handleMessage(data);
+                        const parsed = JSON.parse(data.toString());
+                        this.handleMessage(parsed);
                     } catch (e) {
                         console.error('[Forge] Failed to parse message:', e);
                     }
-                };
+                });
             } catch (error) {
                 console.error('[Forge] Failed to connect:', error);
                 resolve(false);
@@ -157,20 +160,39 @@ export class ForgeClient {
     }
 
     /**
-     * Send a command to the daemon
+     * Send a command to the daemon and wait for response
      */
     private send(command: any): Promise<any> {
         return new Promise((resolve, reject) => {
-            if (!this.isConnected()) {
+            if (!this.isConnected() || !this.ws) {
                 reject(new Error('Not connected to Forge daemon'));
                 return;
             }
 
+            // Set up a one-time message handler for the response
+            const timeout = setTimeout(() => {
+                this.ws?.off('message', responseHandler);
+                reject(new Error('Request timeout'));
+            }, 5000);
+
+            const responseHandler = (data: WebSocket.Data) => {
+                clearTimeout(timeout);
+                this.ws?.off('message', responseHandler);
+                try {
+                    const parsed = JSON.parse(data.toString());
+                    resolve(parsed);
+                } catch (e) {
+                    reject(e);
+                }
+            };
+
+            this.ws.on('message', responseHandler);
+
             try {
-                this.ws!.send(JSON.stringify(command));
-                // For now, resolve immediately - real impl would wait for response
-                resolve({ success: true });
+                this.ws.send(JSON.stringify(command));
             } catch (error) {
+                clearTimeout(timeout);
+                this.ws.off('message', responseHandler);
                 reject(error);
             }
         });
@@ -181,9 +203,20 @@ export class ForgeClient {
      */
     async getStatus(): Promise<ForgeStatus | null> {
         try {
-            const response = await this.send({ command: 'GetStatus' });
-            return response.status || null;
-        } catch {
+            const response = await this.send({ type: 'status' });
+            if (response.type === 'status') {
+                return {
+                    state: response.state,
+                    uptime_seconds: response.uptime_seconds,
+                    files_changed: response.files_changed,
+                    tools_executed: response.tools_executed,
+                    cache_hits: response.cache_hits,
+                    errors: response.errors,
+                };
+            }
+            return null;
+        } catch (e) {
+            console.error('[Forge] Failed to get status:', e);
             return null;
         }
     }
@@ -193,9 +226,21 @@ export class ForgeClient {
      */
     async listTools(): Promise<ToolInfo[]> {
         try {
-            const response = await this.send({ command: 'ListTools' });
-            return response.tools || [];
-        } catch {
+            const response = await this.send({ type: 'tools' });
+            if (response.type === 'tools' && response.tools) {
+                return response.tools.map((t: any) => ({
+                    id: t.name,
+                    name: t.name,
+                    version: t.version,
+                    status: t.status,
+                    is_dummy: t.is_dummy,
+                    run_count: t.run_count,
+                    error_count: t.error_count,
+                }));
+            }
+            return [];
+        } catch (e) {
+            console.error('[Forge] Failed to list tools:', e);
             return [];
         }
     }
@@ -205,8 +250,8 @@ export class ForgeClient {
      */
     async runTool(name: string): Promise<boolean> {
         try {
-            await this.send({ command: 'RunTool', name });
-            return true;
+            const response = await this.send({ type: 'run', name });
+            return response.type === 'tool_result' && response.success;
         } catch {
             return false;
         }
@@ -215,12 +260,12 @@ export class ForgeClient {
     /**
      * Notify daemon of file change
      */
-    async notifyFileChange(path: string, type: 'created' | 'modified' | 'deleted'): Promise<void> {
+    async notifyFileChange(filePath: string, changeType: 'created' | 'modified' | 'deleted'): Promise<void> {
         try {
             await this.send({
-                command: 'FileChanged',
-                path,
-                type
+                type: 'file_changed',
+                path: filePath,
+                change_type: changeType
             });
         } catch (e) {
             console.error('[Forge] Failed to notify file change:', e);

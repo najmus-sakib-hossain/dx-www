@@ -189,18 +189,36 @@ async fn handle_socket(socket: WebSocket, state: LspServerState) {
 
     let (mut sender, mut receiver) = socket.split();
     let mut event_rx = state.event_tx.subscribe();
+    
+    // Channel for sending responses back to client
+    let (response_tx, mut response_rx) = tokio::sync::mpsc::channel::<String>(100);
 
-    // Spawn task to forward events to client
-    let event_task = tokio::spawn(async move {
-        while let Ok(event) = event_rx.recv().await {
-            let response = LspResponse::Event {
-                event_type: format!("{:?}", event),
-                data: String::new(),
-            };
-            if let Ok(json) = serde_json::to_string(&response) {
-                if sender.send(Message::Text(json.into())).await.is_err() {
-                    break;
+    // Spawn task to forward events and responses to client
+    let send_task = tokio::spawn(async move {
+        loop {
+            tokio::select! {
+                // Handle daemon events
+                Ok(event) = event_rx.recv() => {
+                    // Only forward actual events, not response messages
+                    if let DaemonEvent::FileChanged(_) | DaemonEvent::ToolStarted(_) | DaemonEvent::ToolCompleted(..) = &event {
+                        let response = LspResponse::Event {
+                            event_type: format!("{:?}", event),
+                            data: String::new(),
+                        };
+                        if let Ok(json) = serde_json::to_string(&response) {
+                            if sender.send(Message::Text(json.into())).await.is_err() {
+                                break;
+                            }
+                        }
+                    }
                 }
+                // Handle response messages
+                Some(json) = response_rx.recv() => {
+                    if sender.send(Message::Text(json.into())).await.is_err() {
+                        break;
+                    }
+                }
+                else => break,
             }
         }
     });
@@ -211,9 +229,7 @@ async fn handle_socket(socket: WebSocket, state: LspServerState) {
             Ok(Message::Text(text)) => {
                 let response = handle_message(&text, &state);
                 if let Ok(json) = serde_json::to_string(&response) {
-                    // Note: We can't send here directly since sender is moved
-                    // In a real impl, we'd use channels
-                    let _ = state.event_tx.send(DaemonEvent::Error(json));
+                    let _ = response_tx.send(json).await;
                 }
             }
             Ok(Message::Close(_)) => break,
@@ -222,7 +238,7 @@ async fn handle_socket(socket: WebSocket, state: LspServerState) {
         }
     }
 
-    event_task.abort();
+    send_task.abort();
     state.connection_count.fetch_sub(1, Ordering::SeqCst);
     println!("🔌 Extension disconnected (total: {})", state.connection_count.load(Ordering::SeqCst));
 }
