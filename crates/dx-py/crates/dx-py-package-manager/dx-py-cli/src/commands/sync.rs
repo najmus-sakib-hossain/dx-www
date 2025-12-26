@@ -4,14 +4,19 @@
 //! virtual environment, using the cache when available.
 
 use std::path::Path;
+use std::sync::Arc;
+use std::time::Instant;
 
 use dx_py_core::Result;
+use dx_py_layout::{LayoutCache, ResolvedPackage};
 use dx_py_package_manager::{
     AsyncPyPiClient, DplLockFile, GlobalCache, WheelInstaller,
 };
+use dx_py_store::PackageStore;
 
 /// Run the sync command
-pub fn run(dev: bool, extras: &[String]) -> Result<()> {
+pub fn run(dev: bool, extras: &[String], verbose: bool) -> Result<()> {
+    let start_time = Instant::now();
     let lock_path = Path::new("dx-py.lock");
 
     if !lock_path.exists() {
@@ -37,14 +42,17 @@ pub fn run(dev: bool, extras: &[String]) -> Result<()> {
         return Ok(());
     }
 
-    println!("Installing {} packages...", package_count);
-
-    // Set up cache and installer
+    // Set up cache directories
     let cache_dir = dirs::cache_dir()
         .map(|p| p.join("dx-py"))
         .unwrap_or_else(|| Path::new(".dx-py-cache").to_path_buf());
     
     let cache = GlobalCache::new(&cache_dir)?;
+    let store = Arc::new(
+        PackageStore::open(cache_dir.join("store"))
+            .map_err(|e| dx_py_core::Error::Cache(e.to_string()))?
+    );
+    let layouts_path = cache_dir.join("layouts");
 
     // Determine site-packages path
     #[cfg(unix)]
@@ -53,6 +61,58 @@ pub fn run(dev: bool, extras: &[String]) -> Result<()> {
     let site_packages = venv_path.join("Lib/site-packages");
 
     std::fs::create_dir_all(&site_packages)?;
+
+    // Collect resolved packages for layout cache
+    let resolved_packages: Vec<ResolvedPackage> = lock_file
+        .iter()
+        .map(|entry| ResolvedPackage {
+            name: entry.name_str().to_string(),
+            version: entry.version_str().to_string(),
+            hash: entry.source_hash,
+        })
+        .collect();
+
+    // Try to use layout cache for instant install
+    let mut layout_cache = LayoutCache::open(&layouts_path, Arc::clone(&store))
+        .map_err(|e| dx_py_core::Error::Cache(e.to_string()))?;
+    let project_hash = LayoutCache::compute_project_hash(&resolved_packages);
+
+    if layout_cache.contains(&project_hash) {
+        // Warm install path - use cached layout
+        let install_start = Instant::now();
+        
+        if verbose {
+            println!("  Layout cache hit!");
+        }
+
+        match layout_cache.install_cached(&project_hash, &site_packages.parent().unwrap()) {
+            Ok(result) => {
+                let install_time = install_start.elapsed();
+                println!("\n✓ Installed {} packages from cache", package_count);
+                
+                if verbose {
+                    println!("\nCache Statistics:");
+                    println!("  Layout cache: HIT");
+                    println!("  Files linked: {}", result.symlinks);
+                    println!("  Install time: {:.2}ms", install_time.as_secs_f64() * 1000.0);
+                    println!("  Total time: {:.2}ms", start_time.elapsed().as_secs_f64() * 1000.0);
+                }
+                
+                return Ok(());
+            }
+            Err(e) => {
+                if verbose {
+                    println!("  Layout cache error: {}, falling back to standard install", e);
+                }
+                // Fall through to standard install
+            }
+        }
+    } else if verbose {
+        println!("  Layout cache miss, performing standard install");
+    }
+
+    // Standard install path
+    println!("Installing {} packages...", package_count);
 
     let installer = WheelInstaller::new(GlobalCache::new(&cache_dir)?, site_packages.clone());
 
@@ -114,6 +174,29 @@ pub fn run(dev: bool, extras: &[String]) -> Result<()> {
         }
     }
 
+    // Build layout cache for future installs
+    if installed_count > 0 {
+        // Store packages in the package store for layout cache
+        for entry in lock_file.iter() {
+            let hash = entry.source_hash;
+            if !store.contains(&hash) {
+                // Package data should be in global cache, copy to store
+                if let Ok(data) = cache.get(&hash) {
+                    let _ = store.store(&hash, &data);
+                }
+            }
+        }
+
+        // Build layout for future warm installs
+        if let Err(e) = layout_cache.build_layout(&project_hash, &resolved_packages) {
+            if verbose {
+                println!("  Warning: Failed to cache layout: {}", e);
+            }
+        } else if verbose {
+            println!("  Layout cached for future installs");
+        }
+    }
+
     if dev {
         println!("\n  (including dev dependencies)");
     }
@@ -122,9 +205,18 @@ pub fn run(dev: bool, extras: &[String]) -> Result<()> {
         println!("  (including extras: {})", extras.join(", "));
     }
 
+    let total_time = start_time.elapsed();
     println!("\nInstallation complete!");
     println!("  {} packages installed", installed_count);
     println!("  {} from cache, {} downloaded", cached_count, download_count);
+
+    if verbose {
+        println!("\nCache Statistics:");
+        println!("  Layout cache: MISS (now cached)");
+        println!("  Package cache hits: {}", cached_count);
+        println!("  Package downloads: {}", download_count);
+        println!("  Total time: {:.2}ms", total_time.as_secs_f64() * 1000.0);
+    }
 
     Ok(())
 }

@@ -11,7 +11,7 @@ mod cache;
 pub use error::{LayoutError, LayoutResult};
 pub use headers::{LayoutEntry, LayoutIndexHeader};
 pub use index::LayoutIndex;
-pub use cache::LayoutCache;
+pub use cache::{LayoutCache, ResolvedPackage};
 
 /// Magic number for DX-Py Layout Cache format
 pub const DXLC_MAGIC: &[u8; 4] = b"DXLC";

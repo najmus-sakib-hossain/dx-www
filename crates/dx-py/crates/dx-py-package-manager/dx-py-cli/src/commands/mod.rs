@@ -2,6 +2,7 @@
 
 pub mod add;
 pub mod build;
+pub mod cache;
 pub mod completions;
 pub mod init;
 pub mod install;

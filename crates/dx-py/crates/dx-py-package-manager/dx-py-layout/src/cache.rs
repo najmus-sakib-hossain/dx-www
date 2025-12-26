@@ -83,7 +83,8 @@ impl LayoutCache {
 
     /// Get the layout directory path
     pub fn get_layout_path(&self, project_hash: &[u8; 32]) -> PathBuf {
-        let hex = hex::encode(project_hash);
+        // Use first 16 bytes of hash for layout name (32 hex chars)
+        let hex = hex::encode(&project_hash[..16]);
         self.root.join(&hex)
     }
 
@@ -128,7 +129,9 @@ impl LayoutCache {
         project_hash: &[u8; 32],
         packages: &[ResolvedPackage],
     ) -> LayoutResult<PathBuf> {
-        let layout_name = hex::encode(project_hash);
+        // Use first 16 bytes of hash for layout name (32 hex chars)
+        // This fits in the 63-char limit while being unique enough
+        let layout_name = hex::encode(&project_hash[..16]);
         let layout_path = self.root.join(&layout_name);
         let site_packages = layout_path.join("site-packages");
 
@@ -166,13 +169,8 @@ impl LayoutCache {
         let site_packages = layout_path.join("site-packages");
 
         // Check if directory exists
-        if !site_packages.exists() {
-            return Ok(false);
-        }
-
-        // Basic verification: check directory is not empty
-        let entries = fs::read_dir(&site_packages)?;
-        Ok(entries.count() > 0)
+        // Note: An empty site-packages is valid for projects with no packages
+        Ok(site_packages.exists())
     }
 
     /// Rebuild a corrupted layout

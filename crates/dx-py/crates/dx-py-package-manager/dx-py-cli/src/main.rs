@@ -8,7 +8,7 @@ use clap_complete::Shell;
 mod commands;
 
 use commands::{
-    add, build, completions, init, install, lock, publish, python, remove, run, sync, tool,
+    add, build, cache, completions, init, install, lock, publish, python, remove, run, sync, tool,
 };
 
 /// Ultra-fast Python package manager
@@ -72,6 +72,9 @@ enum Commands {
         /// Install optional dependency groups
         #[arg(long)]
         extras: Vec<String>,
+        /// Show verbose output with cache statistics
+        #[arg(short, long)]
+        verbose: bool,
     },
 
     /// Lock and sync (convenience command)
@@ -82,6 +85,9 @@ enum Commands {
         /// Install optional dependency groups
         #[arg(long)]
         extras: Vec<String>,
+        /// Show verbose output with cache statistics
+        #[arg(short, long)]
+        verbose: bool,
     },
 
     /// Run a command in the virtual environment
@@ -135,6 +141,12 @@ enum Commands {
         #[arg(value_enum)]
         shell: Shell,
     },
+
+    /// Cache management
+    Cache {
+        #[command(subcommand)]
+        command: CacheCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -182,6 +194,24 @@ enum ToolCommands {
     },
 }
 
+#[derive(Subcommand)]
+enum CacheCommands {
+    /// Clean cached data
+    Clean {
+        /// Clear layout cache
+        #[arg(long)]
+        layouts: bool,
+        /// Clear package store
+        #[arg(long)]
+        store: bool,
+        /// Clear all caches
+        #[arg(long)]
+        all: bool,
+    },
+    /// Show cache statistics
+    Stats,
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -190,8 +220,8 @@ fn main() {
         Commands::Add { packages, dev, optional } => add::run(&packages, dev, optional.as_deref()),
         Commands::Remove { packages, dev } => remove::run(&packages, dev),
         Commands::Lock { upgrade } => lock::run(upgrade),
-        Commands::Sync { dev, extras } => sync::run(dev, &extras),
-        Commands::Install { dev, extras } => install::run(dev, &extras),
+        Commands::Sync { dev, extras, verbose } => sync::run(dev, &extras, verbose),
+        Commands::Install { dev, extras, verbose } => install::run(dev, &extras, verbose),
         Commands::Run { command } => run::run(&command),
         Commands::Python { command } => match command {
             PythonCommands::Install { version } => python::install(&version),
@@ -210,6 +240,10 @@ fn main() {
             publish::run(repository.as_deref(), token.as_deref(), &files)
         }
         Commands::Completions { shell } => completions::run(shell),
+        Commands::Cache { command } => match command {
+            CacheCommands::Clean { layouts, store, all } => cache::clean(layouts, store, all),
+            CacheCommands::Stats => cache::stats(),
+        },
     };
 
     if let Err(e) = result {
