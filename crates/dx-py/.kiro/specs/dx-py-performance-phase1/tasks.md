@@ -1,0 +1,255 @@
+# Implementation Plan: dx-py Performance Phase 1
+
+## Overview
+
+This implementation plan covers the Phase 1 performance optimizations for dx-py-package-manager: O(1) Layout Cache, Binary Lock File enhancements, and Memory-Mapped Package Store. The implementation builds on existing crates and follows an incremental approach with property-based testing at each stage.
+
+## Tasks
+
+- [ ] 1. Set up new crate structure and dependencies
+  - Create `dx-py-layout` crate for layout cache
+  - Create `dx-py-store` crate for package store
+  - Add dependencies: `memmap2`, `dashmap`, `proptest`, `junction` (Windows)
+  - Update workspace Cargo.toml
+  - _Requirements: 1.3, 3.1_
+
+- [ ] 2. Implement Package Store core functionality
+  - [ ] 2.1 Implement PackageStore struct and path computation
+    - Create `PackageStore` with root directory management
+    - Implement `get_path()` using `{hash[0:2]}/{hash[2:4]}/{hash}.dxpkg` format
+    - Implement `contains()` for existence checks
+    - _Requirements: 3.1, 3.6_
+
+  - [ ] 2.2 Write property test for package store path format
+    - **Property 9: Package Store Path Format**
+    - **Validates: Requirements 3.6**
+
+  - [ ] 2.3 Implement package storage with integrity verification
+    - Implement `store()` for storing package data
+    - Implement `store_verified()` with Blake3 hash verification
+    - Use atomic writes (temp file + rename)
+    - _Requirements: 3.9_
+
+  - [ ] 2.4 Write property test for integrity verification
+    - **Property 12: Package Store Integrity Verification**
+    - **Validates: Requirements 3.9**
+
+  - [ ] 2.5 Implement memory-mapped package access
+    - Implement `MappedPackage` struct with `Mmap`
+    - Implement lazy loading in `get()` method
+    - Add `DashMap` for concurrent package cache
+    - _Requirements: 3.2, 3.3_
+
+  - [ ] 2.6 Implement package file index and lookup
+    - Define `PackageIndex` and `PackageFileEntry` structs
+    - Implement `get_file()` for O(1) file lookup
+    - Build index when storing packages
+    - _Requirements: 3.4_
+
+  - [ ] 2.7 Write property test for file lookup
+    - **Property 10: Package Store File Lookup**
+    - **Validates: Requirements 3.4**
+
+  - [ ] 2.8 Implement symlink-based installation
+    - Implement `install_to_venv()` using symlinks
+    - Use junctions on Windows via `junction` crate
+    - Fall back to copy if symlinks fail
+    - _Requirements: 3.5_
+
+  - [ ] 2.9 Write property test for symlink installation
+    - **Property 11: Package Store Symlink Installation**
+    - **Validates: Requirements 3.5**
+
+  - [ ] 2.10 Implement error handling for missing packages
+    - Return `PackageNotFound` error for missing hashes
+    - Implement proper error types
+    - _Requirements: 3.7_
+
+  - [ ] 2.11 Write property test for error handling
+    - **Property 15: Package Store Error Handling**
+    - **Validates: Requirements 3.7**
+
+- [ ] 3. Checkpoint - Package Store complete
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 4. Implement concurrent access for Package Store
+  - [ ] 4.1 Add thread-safe access patterns
+    - Use `DashMap` for concurrent package cache
+    - Implement proper locking for writes
+    - Test with multiple threads
+    - _Requirements: 3.8_
+
+  - [ ] 4.2 Write property test for concurrent access
+    - **Property 13: Package Store Concurrent Access**
+    - **Validates: Requirements 3.8**
+
+  - [ ] 4.3 Implement package deduplication
+    - Verify same hash returns same path
+    - Test with multiple projects
+    - _Requirements: 3.10_
+
+  - [ ] 4.4 Write property test for deduplication
+    - **Property 14: Package Store Deduplication**
+    - **Validates: Requirements 3.10**
+
+- [ ] 5. Enhance DPL Lock File format
+  - [ ] 5.1 Extend DplEntry with version fields and extras bitmap
+    - Add `version_major`, `version_minor`, `version_patch` fields
+    - Add `extras_bitmap` field (u64)
+    - Update `DplBuilder` to populate new fields
+    - _Requirements: 2.5, 2.6_
+
+  - [ ] 5.2 Implement extras bitmap encoding/decoding
+    - Create extras-to-bitmap mapping
+    - Implement `has_extra()` method
+    - _Requirements: 2.6_
+
+  - [ ] 5.3 Write property test for DPL entry fields
+    - **Property 6: DPL Entry Fields Correctness**
+    - **Validates: Requirements 2.4, 2.5, 2.6, 2.7**
+
+  - [ ] 5.4 Verify magic bytes in DPL files
+    - Ensure builder writes correct magic
+    - Ensure reader validates magic
+    - _Requirements: 2.1_
+
+  - [ ] 5.5 Write property test for magic bytes
+    - **Property 7: DPL Magic Bytes**
+    - **Validates: Requirements 2.1**
+
+  - [ ] 5.6 Write property test for DPL round-trip
+    - **Property 5: DPL Round-Trip Consistency**
+    - **Validates: Requirements 2.8, 2.9, 2.10**
+
+  - [ ] 5.7 Implement corruption handling
+    - Handle truncated files
+    - Handle invalid magic bytes
+    - Handle malformed entries
+    - _Requirements: 2.11_
+
+  - [ ] 5.8 Write property test for corruption handling
+    - **Property 8: DPL Corruption Handling**
+    - **Validates: Requirements 2.11**
+
+- [ ] 6. Checkpoint - DPL enhancements complete
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 7. Implement Layout Cache
+  - [ ] 7.1 Define layout index binary format
+    - Create `LayoutIndexHeader` struct (64 bytes)
+    - Create `LayoutEntry` struct (128 bytes)
+    - Define magic bytes "DXLC"
+    - _Requirements: 1.3_
+
+  - [ ] 7.2 Implement LayoutIndex with memory mapping
+    - Create `LayoutIndex` struct with `Mmap`
+    - Implement hash table for O(1) lookup
+    - Implement `get()` method
+    - _Requirements: 1.3, 1.4_
+
+  - [ ] 7.3 Implement LayoutCache struct
+    - Create `LayoutCache` with root directory
+    - Integrate with `PackageStore`
+    - Implement `open()` method
+    - _Requirements: 1.1, 1.2_
+
+  - [ ] 7.4 Implement project hash computation
+    - Compute Blake3 hash from sorted package list
+    - Include package names, versions, and hashes
+    - _Requirements: 1.5_
+
+  - [ ] 7.5 Write property test for hash determinism
+    - **Property 1: Layout Cache Hash Determinism**
+    - **Validates: Requirements 1.5**
+
+  - [ ] 7.6 Implement layout building and caching
+    - Implement `build_layout()` method
+    - Create layout directory with site-packages structure
+    - Update index file
+    - _Requirements: 1.2_
+
+  - [ ] 7.7 Write property test for cold-to-warm transition
+    - **Property 2: Layout Cache Cold-to-Warm Transition**
+    - **Validates: Requirements 1.2**
+
+  - [ ] 7.8 Implement cached installation with symlinks
+    - Implement `install_cached()` method
+    - Create single symlink/junction to layout
+    - Use platform-appropriate linking
+    - _Requirements: 1.1, 1.6_
+
+  - [ ] 7.9 Implement layout verification and rebuild
+    - Implement `verify_layout()` method
+    - Implement `rebuild_layout()` for corrupted layouts
+    - _Requirements: 1.7_
+
+  - [ ] 7.10 Write property test for corruption recovery
+    - **Property 3: Layout Cache Corruption Recovery**
+    - **Validates: Requirements 1.7**
+
+- [ ] 8. Checkpoint - Layout Cache core complete
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 9. Implement concurrent access for Layout Cache
+  - [ ] 9.1 Add thread-safe index updates
+    - Use file locking for index writes
+    - Implement atomic index updates
+    - _Requirements: 1.8_
+
+  - [ ] 9.2 Write property test for concurrent access
+    - **Property 4: Layout Cache Concurrent Access**
+    - **Validates: Requirements 1.8**
+
+- [ ] 10. Integrate with CLI
+  - [ ] 10.1 Update install command to use Layout Cache
+    - Check for cached layout first
+    - Fall back to standard install if not cached
+    - Build and cache layout after install
+    - _Requirements: 4.1, 4.4_
+
+  - [ ] 10.2 Update lock command to generate DPL files
+    - Generate binary DPL instead of/alongside TOML
+    - Use `.dpl` extension
+    - _Requirements: 4.2_
+
+  - [ ] 10.3 Update install to read DPL files
+    - Detect and read DPL lock files
+    - Use O(1) lookup for package info
+    - _Requirements: 4.3_
+
+  - [ ] 10.4 Implement cache clean command
+    - Add `--layouts` flag to clear layout cache
+    - Add `--store` flag to clear package store
+    - Add `--all` flag to clear both
+    - _Requirements: 4.5_
+
+  - [ ] 10.5 Add verbose cache statistics
+    - Display cache hit/miss on install
+    - Show timing information
+    - _Requirements: 4.6_
+
+- [ ] 11. Final checkpoint - All features complete
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 12. Performance benchmarks
+  - [ ] 12.1 Create benchmark suite with criterion
+    - Benchmark warm install time
+    - Benchmark cold install time
+    - Benchmark DPL lookup time
+    - Benchmark package store access
+    - _Requirements: 1.1, 4.7_
+
+  - [ ] 12.2 Verify performance targets
+    - Warm install: <10ms
+    - DPL lookup: <0.01ms
+    - Document results in README
+    - _Requirements: 1.1, 4.7_
+
+## Notes
+
+- All property-based tests are required for comprehensive correctness validation
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation
+- Property tests validate universal correctness properties
+- Unit tests validate specific examples and edge cases
+- The implementation builds on existing `dx-py-core` and `dx-py-package-manager` crates

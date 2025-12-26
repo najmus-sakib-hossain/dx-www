@@ -128,12 +128,19 @@ class WasmDxCore implements DxCore {
     }
 
     toDense(human: string): TransformResult {
-        const result = this.serializer.toDense(human);
-        return {
-            success: result.success,
-            content: result.content,
-            error: result.error,
-        };
+        // FIXED: Use TypeScript minifyDx instead of WASM
+        // WASM uses old HumanParser that expects [config] headers
+        // TypeScript uses parseHumanV3 that handles Human Format V3 (no [config] header)
+        try {
+            const content = minifyDx(human);
+            return { success: true, content };
+        } catch (error) {
+            return {
+                success: false,
+                content: '',
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
     }
 
     validate(content: string): ValidationResult {

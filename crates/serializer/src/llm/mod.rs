@@ -14,8 +14,10 @@ pub mod convert;
 pub mod human_formatter;
 pub mod human_formatter_v2;
 pub mod human_parser;
+pub mod human_v3_parser;
 pub mod parser;
 pub mod pretty_printer;
+pub mod section_names;
 pub mod serializer;
 pub mod table_wrapper;
 pub mod types;
@@ -26,6 +28,8 @@ mod abbrev_props;
 mod convert_props;
 #[cfg(test)]
 mod human_props;
+#[cfg(test)]
+mod human_v3_props;
 #[cfg(test)]
 mod llm_props;
 #[cfg(test)]
@@ -45,8 +49,10 @@ pub use convert::{
 pub use human_formatter::{HumanFormatConfig, HumanFormatter, TableStyle};
 pub use human_formatter_v2::{box_chars, HumanFormatV2Config, HumanFormatterV2};
 pub use human_parser::{HumanParseError, HumanParser};
+pub use human_v3_parser::{HumanV3ParseError, HumanV3Parser, SectionHeader};
 pub use parser::{LlmParser, ParseError};
 pub use pretty_printer::{PrettyPrinter, PrettyPrinterConfig, PrettyPrintError};
+pub use section_names::SectionNameDict;
 pub use serializer::LlmSerializer;
 pub use table_wrapper::{TableWrapper, TableWrapperConfig};
 pub use types::{DxDocument, DxLlmValue, DxSection};
