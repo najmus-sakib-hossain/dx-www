@@ -125,6 +125,9 @@ pub mod sovereign;
 // Forge Daemon - Binary Dawn Edition (v2.0.0)
 pub mod daemon;
 
+// DX Tools - Dummy and Registry
+pub mod tools;
+
 // Platform-native I/O abstraction layer
 pub mod platform_io;
 
@@ -215,6 +218,17 @@ pub use daemon::{
     LspBridge, LspMessage, LspNotification,
     DaemonStateManager, ToolState as DaemonToolState, ProjectState,
     WorkerPool, WorkerTask, TaskPriority,
+    DaemonServer, IpcCommand, IpcResponse,
+    LspServer, LspServerState, LspRequest, LspResponse as LspServerResponse,
+};
+
+// ========================================================================
+// DX Tools exports - Dummy and Registry
+// ========================================================================
+
+pub use tools::{
+    create_dummy_tools, DummyTool,
+    ToolRegistry as DxToolRegistry, ToolInfo as RegistryToolInfo, ToolStatus as RegistryToolStatus,
 };
 
 // ========================================================================

@@ -1,13 +1,15 @@
 /**
- * DX Serializer VS Code Extension - Entry Point
+ * DX VS Code Extension - Entry Point
  * 
- * Provides seamless editing of .dx files by displaying human-readable format
- * in the editor while storing dense, token-efficient format on disk.
+ * The unified DX ecosystem extension providing:
+ * - Serializer: Seamless editing of .dx files with human-readable display
+ * - Forge Integration: Connection to Forge daemon for tool orchestration
  * 
  * Features:
  * - Human Format V3: Clean vertical key-value layout
  * - Multi-format input: Auto-convert JSON, YAML, TOML, CSV to DX
  * - Cache generation: .dx/cache/{filename}.human and .machine files
+ * - Forge daemon status bar and commands
  * 
  * Requirements: 1.1-1.7, 3.2-3.4, 6.1
  */
@@ -21,6 +23,7 @@ import { detectFormat, isSourceFormat, DetectedFormat } from './formatDetector';
 import { convertJsonToDocument, convertYamlToDocument, convertTomlToDocument, convertCsvToDocument } from './converters';
 import { serializeToLlmV3, parseHumanV3 } from './humanParserV3';
 import { formatDocumentV3, DEFAULT_CONFIG } from './humanFormatterV3';
+import { getForgeClient, ForgeStatusBar, registerForgeCommands } from './forge';
 
 /**
  * Extension context holding all components
@@ -30,6 +33,7 @@ interface ExtensionContext {
     documentManager: DxDocumentManager;
     lensFileSystem: DxLensFileSystem;
     statusBarItem: vscode.StatusBarItem;
+    forgeStatusBar?: ForgeStatusBar;
 }
 
 let extensionContext: ExtensionContext | undefined;
@@ -98,7 +102,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         // 12. Register DocumentFormattingEditProvider for safe format-on-save
         registerFormattingProvider(context, dxCore);
 
-        console.log('DX Serializer: Extension activated successfully (V3 format)');
+        // 13. Initialize Forge integration
+        await initializeForgeIntegration(context);
+
+        console.log('DX: Extension activated successfully (V3 format + Forge)');
 
     } catch (error) {
         console.error('DX Serializer: Activation failed:', error);
@@ -110,7 +117,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
  * Deactivate the extension
  */
 export function deactivate(): void {
-    console.log('DX Serializer: Deactivating extension...');
+    console.log('DX: Deactivating extension...');
+
+    // Disconnect from Forge daemon
+    const forgeClient = getForgeClient();
+    forgeClient.disconnect();
+
     extensionContext = undefined;
 }
 
@@ -653,4 +665,88 @@ function registerFormattingProvider(
     );
 
     console.log('DX Serializer: Formatting provider registered (with auto-save support)');
+}
+
+
+/**
+ * Initialize Forge daemon integration
+ */
+async function initializeForgeIntegration(context: vscode.ExtensionContext): Promise<void> {
+    try {
+        // Register Forge commands
+        registerForgeCommands(context);
+
+        // Get Forge client
+        const forgeClient = getForgeClient();
+
+        // Create status bar
+        const forgeStatusBar = new ForgeStatusBar(forgeClient);
+        context.subscriptions.push({ dispose: () => forgeStatusBar.dispose() });
+
+        // Store in extension context
+        if (extensionContext) {
+            extensionContext.forgeStatusBar = forgeStatusBar;
+        }
+
+        // Auto-connect if enabled
+        const config = vscode.workspace.getConfiguration('dx.forge');
+        if (config.get('autoConnect', true)) {
+            forgeStatusBar.showConnecting();
+            const connected = await forgeClient.connect();
+
+            if (connected) {
+                console.log('DX: Connected to Forge daemon');
+            } else {
+                console.log('DX: Forge daemon not running (will show in status bar)');
+            }
+        }
+
+        // Set up file change notifications to Forge
+        setupForgeFileNotifications(context, forgeClient);
+
+        console.log('DX: Forge integration initialized');
+    } catch (error) {
+        console.error('DX: Failed to initialize Forge integration:', error);
+    }
+}
+
+/**
+ * Set up file change notifications to Forge daemon
+ */
+function setupForgeFileNotifications(
+    context: vscode.ExtensionContext,
+    forgeClient: import('./forge').ForgeClient
+): void {
+    // Watch for file saves
+    context.subscriptions.push(
+        vscode.workspace.onDidSaveTextDocument(async (document) => {
+            if (forgeClient.isConnected()) {
+                const relativePath = vscode.workspace.asRelativePath(document.uri);
+                await forgeClient.notifyFileChange(relativePath, 'modified');
+            }
+        })
+    );
+
+    // Watch for file creates
+    const watcher = vscode.workspace.createFileSystemWatcher('**/*');
+
+    context.subscriptions.push(
+        watcher.onDidCreate(async (uri) => {
+            if (forgeClient.isConnected()) {
+                const relativePath = vscode.workspace.asRelativePath(uri);
+                await forgeClient.notifyFileChange(relativePath, 'created');
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        watcher.onDidDelete(async (uri) => {
+            if (forgeClient.isConnected()) {
+                const relativePath = vscode.workspace.asRelativePath(uri);
+                await forgeClient.notifyFileChange(relativePath, 'deleted');
+            }
+        })
+    );
+
+    context.subscriptions.push(watcher);
 }

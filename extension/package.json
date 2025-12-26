@@ -1,8 +1,8 @@
 {
-  "name": "vscode-dx-serializer",
-  "displayName": "DX Serializer",
-  "description": "Seamless editing of .dx files with human-readable display and dense storage",
-  "version": "0.1.0",
+  "name": "vscode-dx",
+  "displayName": "DX",
+  "description": "The unified DX ecosystem extension - Serializer, Forge daemon integration, and tool orchestration",
+  "version": "0.2.0",
   "repository": "https://github.com/manfromexistence/dx",
   "license": "MIT",
   "publisher": "dx-runtime",
@@ -12,11 +12,15 @@
   "categories": [
     "Programming Languages",
     "Formatters",
-    "Themes"
+    "Themes",
+    "Other"
   ],
   "keywords": [
     "dx",
     "serializer",
+    "forge",
+    "tools",
+    "orchestration",
     "format",
     "llm",
     "token-efficient"
@@ -91,6 +95,31 @@
       {
         "command": "dx.formatDocument",
         "title": "DX: Format Document"
+      },
+      {
+        "command": "dx.forge.start",
+        "title": "DX: Start Forge Daemon",
+        "icon": "$(play)"
+      },
+      {
+        "command": "dx.forge.stop",
+        "title": "DX: Stop Forge Daemon",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "dx.forge.restart",
+        "title": "DX: Restart Forge Daemon",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "dx.forge.status",
+        "title": "DX: Show Forge Status",
+        "icon": "$(info)"
+      },
+      {
+        "command": "dx.tools.list",
+        "title": "DX: Show Tool List",
+        "icon": "$(tools)"
       }
     ],
     "menus": {
@@ -221,7 +250,7 @@
       }
     },
     "configuration": {
-      "title": "DX Serializer",
+      "title": "DX",
       "properties": {
         "dx.validateBeforeSave": {
           "type": "boolean",
@@ -249,7 +278,7 @@
           "default": 20,
           "minimum": 10,
           "maximum": 50,
-          "description": "Minimum padding width for keys in formatted output (default: 20)"
+          "description": "Minimum padding width for keys in formatted output"
         },
         "dx.formatOnSave": {
           "type": "boolean",
@@ -260,6 +289,21 @@
           "type": "boolean",
           "default": false,
           "description": "Show dense format preview on hover"
+        },
+        "dx.forge.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically connect to Forge daemon on startup"
+        },
+        "dx.forge.port": {
+          "type": "number",
+          "default": 9876,
+          "description": "Port for Forge daemon WebSocket connection"
+        },
+        "dx.forge.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Forge daemon status in status bar"
         }
       }
     }
@@ -282,5 +326,7 @@
     "fast-check": "^3.14.0",
     "typescript": "^5.3.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "ws": "^8.14.0"
+  }
 }

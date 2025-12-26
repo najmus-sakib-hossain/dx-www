@@ -45,8 +45,12 @@ pub mod core;
 pub mod lsp;
 pub mod state;
 pub mod worker;
+pub mod server;
+pub mod lsp_server;
 
 pub use core::{ForgeDaemon, DaemonConfig, DaemonState, DaemonEvent};
 pub use lsp::{LspBridge, LspMessage, LspNotification};
 pub use state::{DaemonStateManager, ToolState, ProjectState};
 pub use worker::{WorkerPool, WorkerTask, TaskPriority};
+pub use server::{DaemonServer, IpcCommand, IpcResponse};
+pub use lsp_server::{LspServer, LspServerState, LspRequest, LspResponse};

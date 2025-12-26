@@ -1,39 +1,35 @@
-# DX Serializer VS Code Extension ✅ COMPLETE
+# DX VS Code Extension
 
-> **Status: Fully Working** - The DX Serializer VS Code extension is complete and production-ready!
+> **The unified DX ecosystem extension** - Serializer, Forge daemon integration, and tool orchestration.
 
+## 🎯 What's Included
+
+### Serializer
 Seamless editing of `.dx` files and files named exactly `dx` with human-readable display and dense storage.
 
-## 🎯 What We Achieved
-
-The DX Serializer VS Code extension provides a revolutionary approach to configuration files:
-
-1. **Triple Format System**: One source file, three representations
-   - **LLM Format** (on disk): Token-efficient sigil-based format (4.8× smaller than JSON)
-   - **Human Format V3** (in editor): Beautiful vertical key-value layout with aligned equals signs
-   - **Machine Format** (binary cache): Fast binary format for compilers and tools
-
-2. **Universal Converter**: Automatically converts JSON, YAML, TOML, CSV to DX format
-   - Drop any supported format into a `.dx` file
-   - Extension auto-detects and converts to LLM format
-   - No manual conversion needed
-
-3. **Section Order Preservation**: Reorder sections in the editor and the order is preserved on save
-
-4. **Professional Syntax Highlighting**: Color-coded syntax for easy reading
+### Forge Integration
+Connect to the Forge daemon for:
+- Real-time file watching and tool orchestration
+- Traffic branch system (Green/Yellow/Red)
+- Tool status monitoring
+- Background task management
 
 ## ✨ Features
 
+### Serializer Features
 - **Dual Format**: Edit human-readable format while storing token-efficient LLM format on disk
 - **Human Format V3**: Clean vertical key-value layout with aligned equals signs
 - **Syntax Highlighting**: Professional color-coded syntax highlighting for DX files
 - **Multi-Format Input**: Auto-convert JSON, YAML, TOML, CSV to DX format
 - **Section Order Preservation**: Reorder sections in editor and preserve order on save
-- **Cache Generation**: Automatic `.dx/cache/{filename}.human` (text) and `.machine` (binary) files
-- **File Support**: Handles both `.dx` extension files AND files named exactly `dx` (no extension)
-- **Real-time Validation**: Immediate syntax error feedback with actionable hints
-- **Auto-Save Compatible**: Saves work seamlessly with VS Code's auto-save
-- **WASM-Powered**: Uses battle-hardened Rust serializer via WebAssembly for performance and security
+- **Cache Generation**: Automatic `.dx/cache/{filename}.human` and `.machine` files
+
+### Forge Features
+- **Status Bar**: Shows Forge daemon connection status
+- **Commands**: Start/Stop/Restart daemon from VS Code
+- **Tool List**: View and run registered tools
+- **File Notifications**: Automatic file change notifications to daemon
+- **Auto-Connect**: Connects to daemon on startup (configurable)
 
 ## 🦀 WASM Integration
 

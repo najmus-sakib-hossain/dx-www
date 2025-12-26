@@ -2136,8 +2136,13 @@ dependencies = [
  "anyhow",
  "clap",
  "console",
+ "dirs",
  "dx-www",
  "forge",
+ "num_cpus",
+ "serde",
+ "serde_json",
+ "serializer",
  "style",
  "tokio",
 ]
