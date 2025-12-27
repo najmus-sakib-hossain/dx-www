@@ -1,5 +1,6 @@
 # Rust
 /target/
+**/target/
 **/*.rs.bk
 *.pdb
 
@@ -26,8 +27,7 @@ crates/*/Cargo.lock
 **/PLANNING.md
 
 # WASM Build Outputs
-examples/**/pkg/
-pkg/
+**/pkg/
 pkg_*/
 *.wasm
 *_bg.wasm
@@ -41,6 +41,16 @@ wasm-pack.log
 *.dx
 **/generated/
 
+# Property-based testing regressions
+**/proptest-regressions/
+
+# Logs
+**/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # IDE
 .vscode/*
 !.vscode/settings.json
@@ -50,17 +60,13 @@ wasm-pack.log
 *.swp
 *.swo
 *~
+**/.idx/
+**/.gitpod.yml
 
 # OS
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Dependencies
 node_modules/
@@ -71,6 +77,7 @@ tmp/
 temp/
 *.tmp
 *.bak
+error.log
 
 # Debug
 debug/
@@ -83,6 +90,7 @@ __pycache__/
 .Python
 venv/
 env/
+**/.venv/
 
 # Benchmarks
 benchmarks/node_modules/
@@ -96,29 +104,3 @@ benchmarks/*.json
 playground/benchmark-test/node_modules/
 playground/package-manager/*/node_modules/
 playground/package-manager/*/bun.lockb
-
-# Build artifacts
-dist/
-build/
-
-*/*/target/
-*/target/
-crates/*/target/
-
-# Temporary files
-tmp/
-temp/
-error.log
-
-*/*/*/*/*/target/
-*/*/*/*/target/
-*/*/*/target/
-*/*/target/
-*/target/
-
-# Rust
-**/*.rs.bk
-*.pdb
-
-# DX Cache Layer (Human-Pretty files)
-**/.dx/

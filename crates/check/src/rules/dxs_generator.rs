@@ -179,20 +179,21 @@ mod tests {
     #[test]
     fn test_rule_to_dxs() {
         let rule = DxRule {
-            name: "test-rule".to_string(),
-            id: "js/test-rule".to_string(),
-            description: "Test description".to_string(),
-            category: DxCategory::Correctness,
-            severity: DxSeverity::Error,
+            rule_id: 1,
             language: Language::JavaScript,
-            source: "test".to_string(),
+            category: DxCategory::Correctness,
+            source: RuleSource::DxCheck,
+            default_severity: DxSeverity::Error,
+            name: "test-rule".to_string(),
+            prefixed_name: "js/test-rule".to_string(),
+            description: "Test description".to_string(),
             fixable: true,
             recommended: true,
-            deprecated: false,
-            tags: vec!["test".to_string()],
-            examples: vec![],
+            is_formatter: false,
             docs_url: Some("https://example.com".to_string()),
-            replacement: None,
+            options_schema: None,
+            related_rules: vec![],
+            deprecated_by: None,
         };
 
         let dxs = rule_to_dxs(&rule);

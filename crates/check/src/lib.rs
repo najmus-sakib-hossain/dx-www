@@ -63,13 +63,17 @@
 #![allow(clippy::module_name_repetitions)]
 
 pub mod cache;
+pub mod ci;
 pub mod cli;
+pub mod cloud;
 pub mod config;
 pub mod diagnostics;
 pub mod engine;
 pub mod fix;
 #[cfg(feature = "lsp")]
 pub mod lsp;
+pub mod marketplace;
+pub mod plugin;
 pub mod project;
 pub mod reactor;
 pub mod rules;
@@ -78,12 +82,16 @@ pub mod watch;
 
 // Re-exports
 pub use cache::AstCache;
+pub use ci::{CiConfigGenerator, CiContext, CiFormatter, CiPlatform};
+pub use cloud::{CloudClient, CloudConfig, SyncStatusInfo, TeamConfig};
 pub use config::CheckerConfig;
 pub use diagnostics::{Diagnostic, DiagnosticSeverity, Fix, Span};
 pub use engine::{Checker, CheckResult};
 pub use fix::FixEngine;
 #[cfg(feature = "lsp")]
 pub use lsp::{start_lsp_server, DxCheckLanguageServer, LspConfig};
+pub use marketplace::{RegistryClient, RegistryConfig};
+pub use plugin::{Plugin, PluginLoader, PluginMeta};
 pub use project::ProjectProfile;
 pub use reactor::LintReactor;
 pub use rules::{Rule, RuleId, RuleRegistry};

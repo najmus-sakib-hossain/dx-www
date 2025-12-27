@@ -79,6 +79,9 @@ miette = { version = "7.4", features = ["fancy"] }
 # Timestamps
 chrono = "0.4"
 
+# Directory paths
+dirs = "5.0"
+
 # Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

@@ -118,6 +118,103 @@ pub enum Commands {
 
     /// Start LSP server
     Lsp,
+
+    /// Manage plugins
+    Plugin {
+        #[command(subcommand)]
+        command: PluginCommands,
+    },
+
+    /// Cloud team configuration
+    Cloud {
+        #[command(subcommand)]
+        command: CloudCommands,
+    },
+
+    /// Generate CI configuration
+    Ci {
+        /// CI platform
+        #[arg(short, long, value_enum)]
+        platform: Option<CiPlatformArg>,
+
+        /// Output file path
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum PluginCommands {
+    /// List installed plugins
+    List,
+
+    /// Install a plugin
+    Install {
+        /// Plugin name or path
+        name: String,
+
+        /// Plugin version
+        #[arg(short, long)]
+        version: Option<String>,
+    },
+
+    /// Uninstall a plugin
+    Uninstall {
+        /// Plugin name
+        name: String,
+    },
+
+    /// Update plugins
+    Update {
+        /// Specific plugin to update (updates all if not specified)
+        name: Option<String>,
+    },
+
+    /// Search for plugins
+    Search {
+        /// Search query
+        query: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum CloudCommands {
+    /// Login to DX Cloud
+    Login,
+
+    /// Logout from DX Cloud
+    Logout,
+
+    /// Sync configuration with cloud
+    Sync,
+
+    /// Pull remote configuration
+    Pull,
+
+    /// Push local configuration
+    Push,
+
+    /// Show sync status
+    Status,
+
+    /// Initialize team configuration
+    Init {
+        /// Team name
+        #[arg(short, long)]
+        name: String,
+    },
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum CiPlatformArg {
+    /// GitHub Actions
+    Github,
+    /// GitLab CI
+    Gitlab,
+    /// Azure DevOps Pipelines
+    Azure,
+    /// CircleCI
+    Circleci,
 }
 
 #[derive(Subcommand, Debug)]

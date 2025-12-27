@@ -2,12 +2,16 @@
 //!
 //! 10x faster than Biome, 100x faster than ESLint
 
-use dx_check::cli::{output, Cli, Commands, OutputFormat, CacheCommands, RuleCommands};
+use dx_check::cli::{output, Cli, Commands, OutputFormat, CacheCommands, RuleCommands, PluginCommands, CloudCommands, CiPlatformArg};
 use dx_check::config::CheckerConfig;
 use dx_check::engine::Checker;
 use dx_check::fix::FixEngine;
 use dx_check::project::ProjectProfile;
 use dx_check::cache::AstCache;
+use dx_check::plugin::PluginLoader;
+use dx_check::marketplace::RegistryClient;
+use dx_check::cloud::{CloudClient, CloudConfig};
+use dx_check::ci::{CiPlatform, CiConfigGenerator};
 use std::path::Path;
 use std::process::ExitCode;
 
@@ -59,6 +63,15 @@ fn run(cli: Cli) -> Result<bool, Box<dyn std::error::Error>> {
         }
         Some(Commands::Lsp) => {
             run_lsp()
+        }
+        Some(Commands::Plugin { command }) => {
+            run_plugin_command(command)
+        }
+        Some(Commands::Cloud { command }) => {
+            run_cloud_command(command)
+        }
+        Some(Commands::Ci { platform, output }) => {
+            run_ci_command(platform.as_ref(), output.as_ref())
         }
         None => {
             // Default: check paths
@@ -463,5 +476,290 @@ fn run_lsp() -> Result<bool, Box<dyn std::error::Error>> {
         eprintln!("LSP server not enabled. Rebuild with --features lsp");
         Ok(true)
     }
+}
+
+fn run_plugin_command(command: &PluginCommands) -> Result<bool, Box<dyn std::error::Error>> {
+    match command {
+        PluginCommands::List => {
+            let mut loader = PluginLoader::new();
+            let plugins = loader.discover();
+            
+            if plugins.is_empty() {
+                println!("No plugins installed.");
+                println!("\nInstall plugins with: dx-check plugin install <name>");
+            } else {
+                println!("Installed Plugins:\n");
+                println!("{:<25} {:<10} {:<12} {}", "NAME", "VERSION", "TYPE", "DESCRIPTION");
+                println!("{}", "-".repeat(70));
+                
+                for plugin in &plugins {
+                    println!(
+                        "{:<25} {:<10} {:<12} {}",
+                        plugin.name,
+                        plugin.version,
+                        format!("{:?}", plugin.plugin_type),
+                        plugin.description
+                    );
+                }
+                println!("\nTotal: {} plugins", plugins.len());
+            }
+        }
+        PluginCommands::Install { name, version } => {
+            println!("Installing plugin: {}...", name);
+            
+            let client = RegistryClient::new(Default::default());
+            match client.install(name, version.as_deref()) {
+                Ok(pkg) => {
+                    println!("✅ Successfully installed {} v{}", pkg.name, pkg.version);
+                }
+                Err(e) => {
+                    eprintln!("❌ Failed to install plugin: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+        PluginCommands::Uninstall { name } => {
+            println!("Uninstalling plugin: {}...", name);
+            
+            let client = RegistryClient::new(Default::default());
+            match client.uninstall(name) {
+                Ok(_) => {
+                    println!("✅ Successfully uninstalled {}", name);
+                }
+                Err(e) => {
+                    eprintln!("❌ Failed to uninstall plugin: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+        PluginCommands::Update { name } => {
+            let client = RegistryClient::new(Default::default());
+            
+            match name {
+                Some(pkg_name) => {
+                    println!("Updating {}...", pkg_name);
+                    match client.update(pkg_name) {
+                        Ok(Some(pkg)) => {
+                            println!("✅ Updated to {} v{}", pkg.name, pkg.version);
+                        }
+                        Ok(None) => {
+                            println!("Already at latest version");
+                        }
+                        Err(e) => {
+                            eprintln!("❌ Failed to update: {}", e);
+                            return Ok(true);
+                        }
+                    }
+                }
+                None => {
+                    println!("Updating all plugins...");
+                    match client.update_all() {
+                        Ok(updated) => {
+                            if updated.is_empty() {
+                                println!("All plugins are up to date");
+                            } else {
+                                for pkg in &updated {
+                                    println!("✅ Updated {} to v{}", pkg.name, pkg.version);
+                                }
+                                println!("\nUpdated {} plugins", updated.len());
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("❌ Failed to update plugins: {}", e);
+                            return Ok(true);
+                        }
+                    }
+                }
+            }
+        }
+        PluginCommands::Search { query } => {
+            println!("Searching for '{}'...\n", query);
+            
+            let client = RegistryClient::new(Default::default());
+            match client.search(query) {
+                Ok(results) => {
+                    if results.is_empty() {
+                        println!("No plugins found matching '{}'", query);
+                    } else {
+                        println!("{:<25} {:<10} {:<10} {}", "NAME", "VERSION", "DOWNLOADS", "DESCRIPTION");
+                        println!("{}", "-".repeat(70));
+                        
+                        for pkg in &results {
+                            println!(
+                                "{:<25} {:<10} {:<10} {}",
+                                pkg.name,
+                                pkg.version,
+                                pkg.downloads,
+                                pkg.description
+                            );
+                        }
+                        println!("\nFound {} plugins", results.len());
+                    }
+                }
+                Err(e) => {
+                    eprintln!("❌ Search failed: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+    }
+    
+    Ok(false)
+}
+
+fn run_cloud_command(command: &CloudCommands) -> Result<bool, Box<dyn std::error::Error>> {
+    let config = CloudConfig::default();
+    let mut client = CloudClient::new(config);
+    
+    match command {
+        CloudCommands::Login => {
+            println!("Logging in to DX Cloud...");
+            println!("\nOpen this URL in your browser:");
+            println!("  https://cloud.dx.dev/cli/login\n");
+            
+            match client.login() {
+                Ok(_) => {
+                    println!("✅ Successfully logged in!");
+                }
+                Err(e) => {
+                    eprintln!("❌ Login failed: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+        CloudCommands::Logout => {
+            client.logout();
+            println!("✅ Logged out successfully");
+        }
+        CloudCommands::Sync => {
+            println!("Syncing configuration...");
+            
+            match client.sync() {
+                Ok(status) => {
+                    println!("✅ Sync complete");
+                    println!("   Local version: {}", status.local_version);
+                    println!("   Remote version: {}", status.remote_version);
+                    println!("   Last synced: {}", status.last_synced
+                        .map(|t| t.format("%Y-%m-%d %H:%M:%S").to_string())
+                        .unwrap_or_else(|| "Never".to_string()));
+                }
+                Err(e) => {
+                    eprintln!("❌ Sync failed: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+        CloudCommands::Pull => {
+            println!("Pulling remote configuration...");
+            
+            match client.pull() {
+                Ok(_) => {
+                    println!("✅ Configuration pulled successfully");
+                }
+                Err(e) => {
+                    eprintln!("❌ Pull failed: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+        CloudCommands::Push => {
+            println!("Pushing local configuration...");
+            
+            match client.push() {
+                Ok(_) => {
+                    println!("✅ Configuration pushed successfully");
+                }
+                Err(e) => {
+                    eprintln!("❌ Push failed: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+        CloudCommands::Status => {
+            match client.status() {
+                Ok(status) => {
+                    println!("Cloud Sync Status:\n");
+                    println!("  Authenticated: {}", if client.is_authenticated() { "Yes" } else { "No" });
+                    println!("  Local version: {}", status.local_version);
+                    println!("  Remote version: {}", status.remote_version);
+                    println!("  Has conflicts: {}", if status.has_conflicts { "Yes" } else { "No" });
+                    println!("  Last synced: {}", status.last_synced
+                        .map(|t| t.format("%Y-%m-%d %H:%M:%S").to_string())
+                        .unwrap_or_else(|| "Never".to_string()));
+                    
+                    if status.pending_changes > 0 {
+                        println!("  Pending changes: {}", status.pending_changes);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("❌ Failed to get status: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+        CloudCommands::Init { name } => {
+            println!("Initializing team configuration for '{}'...", name);
+            
+            let _config = client.init_team(name);
+            println!("✅ Team configuration initialized");
+            println!("\nShare this team ID with your team members:");
+            println!("  dx-check cloud join <team-id>");
+        }
+    }
+    
+    Ok(false)
+}
+
+fn run_ci_command(
+    platform: Option<&CiPlatformArg>,
+    output: Option<&std::path::PathBuf>,
+) -> Result<bool, Box<dyn std::error::Error>> {
+    // Auto-detect or use specified platform
+    let ci_platform = match platform {
+        Some(CiPlatformArg::Github) => CiPlatform::GitHubActions,
+        Some(CiPlatformArg::Gitlab) => CiPlatform::GitLabCi,
+        Some(CiPlatformArg::Azure) => CiPlatform::AzureDevOps,
+        Some(CiPlatformArg::Circleci) => CiPlatform::CircleCi,
+        None => {
+            // Try to detect
+            if let Some(detected) = CiPlatform::detect() {
+                println!("Detected CI platform: {:?}", detected);
+                detected
+            } else {
+                println!("No CI platform detected. Generating GitHub Actions config...");
+                CiPlatform::GitHubActions
+            }
+        }
+    };
+    
+    let generator = CiConfigGenerator::new(ci_platform.clone());
+    let config = generator.generate()?;
+    
+    match output {
+        Some(path) => {
+            // Create parent directories if needed
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            std::fs::write(path, &config)?;
+            println!("✅ Generated CI configuration: {}", path.display());
+        }
+        None => {
+            // Print to stdout
+            let default_path = match ci_platform {
+                CiPlatform::GitHubActions => ".github/workflows/dx-check.yml",
+                CiPlatform::GitLabCi => ".gitlab-ci.yml",
+                CiPlatform::AzureDevOps => "azure-pipelines.yml",
+                CiPlatform::CircleCi => ".circleci/config.yml",
+                _ => "dx-check-ci.yml",
+            };
+            
+            println!("Generated configuration for {:?}:\n", ci_platform);
+            println!("{}", config);
+            println!("\nSave to: {}", default_path);
+        }
+    }
+    
+    Ok(false)
 }
 
