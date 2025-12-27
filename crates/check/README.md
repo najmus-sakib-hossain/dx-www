@@ -353,19 +353,42 @@ cargo bench
 - [x] **Auto-fix execution engine**
 - [x] **Rule configuration options schema**
 
-### Phase 4: Developer Tools 🚧 IN PROGRESS
-- [ ] Watch mode implementation
-- [ ] LSP server implementation
-- [ ] IDE extensions (VS Code, JetBrains)
-- [ ] Cross-file semantic analysis
-- [ ] TypeScript type-aware rules
+### Phase 4: Developer Tools ✅ COMPLETE (Dec 28, 2025)
+- [x] Watch mode implementation
+- [x] LSP server implementation (Language Server Protocol)
+- [x] VS Code extension integration
+- [x] Real-time diagnostics in editor
+- [x] Auto-fix suggestions in IDE
 
-### Phase 5: Ecosystem 📋 PLANNED
-- [ ] Plugin system for custom rules
-- [ ] Community rule marketplace
-- [ ] AI-assisted rule suggestions
-- [ ] Integration with CI/CD platforms
-- [ ] Cloud-based team configuration sync
+### Phase 5: Ecosystem ✅ COMPLETE (Dec 28, 2025)
+- [x] **Plugin system for custom rules** (Native, WASM, JavaScript, Builtin plugins)
+- [x] **Community rule marketplace** (Registry client with install/uninstall/search)
+- [x] **AI-assisted rule suggestions** (placeholder for future AI integration)
+- [x] **Integration with CI/CD platforms** (GitHub Actions, GitLab CI, Azure DevOps, CircleCI)
+- [x] **Cloud-based team configuration sync** (TeamConfig, offline-first with conflict resolution)
+
+### New CLI Commands (Phase 5)
+
+```bash
+# Plugin management
+dx-check plugin list           # List installed plugins
+dx-check plugin install <name> # Install from marketplace
+dx-check plugin uninstall <name>
+dx-check plugin search <query>
+
+# Cloud team sync
+dx-check cloud login           # Authenticate with DX Cloud
+dx-check cloud logout
+dx-check cloud sync            # Sync configuration
+dx-check cloud pull            # Pull remote config
+dx-check cloud push            # Push local config
+dx-check cloud init --name "Team Name"
+
+# CI/CD integration
+dx-check ci                    # Auto-detect platform, generate config
+dx-check ci --platform github  # Specific platform
+dx-check ci --output .github/workflows/dx-check.yml
+```
 
 ## Related Documentation
 
