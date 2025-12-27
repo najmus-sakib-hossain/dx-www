@@ -30,9 +30,6 @@ DX has achieved complete victory over traditional JavaScript tooling:
 
 ## Core Components
 
-### DX Stack
-Unified development tooling across languages. [Learn more →](./api/stack.md)
-
 ### DX Serializer
 Three-format serialization system optimized for humans, LLMs, and machines:
 - [Human Format](./api/serializer/human-format.md) - Beautiful, readable display

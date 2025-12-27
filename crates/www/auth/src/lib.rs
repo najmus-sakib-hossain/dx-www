@@ -165,7 +165,7 @@ impl TokenGenerator {
         // Sign payload
         let payload = token.payload_bytes();
         let signature = self.signing_key.sign(&payload);
-        token.signature[0..32].copy_from_slice(&signature.to_bytes());
+        token.signature.copy_from_slice(&signature.to_bytes());
 
         token
     }
@@ -209,7 +209,7 @@ impl TokenVerifier {
 
         // Verify signature
         let payload = token.payload_bytes();
-        let signature = Signature::from_bytes(&token.signature[0..32].try_into().unwrap());
+        let signature = Signature::from_bytes(&token.signature);
 
         self.verifying_key
             .verify(&payload, &signature)
@@ -319,10 +319,10 @@ mod tests {
     #[test]
     fn test_password_hashing() {
         let password = "super_secret_password";
-        let hash = PasswordHasher::hash(password).unwrap();
+        let hash = DxPasswordHasher::hash(password).unwrap();
 
-        assert!(PasswordHasher::verify(password, &hash).unwrap());
-        assert!(!PasswordHasher::verify("wrong_password", &hash).unwrap());
+        assert!(DxPasswordHasher::verify(password, &hash).unwrap());
+        assert!(!DxPasswordHasher::verify("wrong_password", &hash).unwrap());
     }
 
     #[test]

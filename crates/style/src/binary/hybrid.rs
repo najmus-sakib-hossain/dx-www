@@ -305,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_invalid_macro() {
-        let css = get_macro_csstext(99999);
+        let css = get_macro_csstext(65535);
         assert!(css.is_none());
     }
 

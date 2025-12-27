@@ -261,6 +261,13 @@ pub fn categorize_error(error: &anyhow::Error) -> ErrorCategory {
         ErrorCategory::Network
     } else if error_str.contains("timeout") || error_str.contains("timed out") {
         ErrorCategory::Timeout
+    } else if error_str.contains("config") || error_str.contains("invalid") {
+        // Check config before file system since "config file" should be Configuration
+        ErrorCategory::Configuration
+    } else if error_str.contains("validation") || error_str.contains("required") {
+        ErrorCategory::Validation
+    } else if error_str.contains("dependency") || error_str.contains("version") {
+        ErrorCategory::Dependency
     } else if error_str.contains("file")
         || error_str.contains("directory")
         || error_str.contains("permission")
@@ -268,12 +275,6 @@ pub fn categorize_error(error: &anyhow::Error) -> ErrorCategory {
         || error_str.contains("not found")
     {
         ErrorCategory::FileSystem
-    } else if error_str.contains("config") || error_str.contains("invalid") {
-        ErrorCategory::Configuration
-    } else if error_str.contains("validation") || error_str.contains("required") {
-        ErrorCategory::Validation
-    } else if error_str.contains("dependency") || error_str.contains("version") {
-        ErrorCategory::Dependency
     } else {
         ErrorCategory::Unknown
     }

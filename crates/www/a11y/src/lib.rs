@@ -112,10 +112,10 @@ impl ASTAnalyzer {
         for (idx, _) in source.match_indices("<button") {
             let rest = &source[idx..];
             let end = rest.find('>').unwrap_or(rest.len());
-            let tag = &rest[..end];
+            let tag = &rest[..=end.min(rest.len() - 1)]; // Include the '>'
 
-            // Check for aria-label or inner text
-            if !tag.contains("aria-label=") && tag.ends_with("/>") {
+            // Check for aria-label or inner text (self-closing buttons)
+            if !tag.contains("aria-label=") && tag.contains("/>") {
                 self.issues.push(
                     A11yIssue::new(
                         "button-label",

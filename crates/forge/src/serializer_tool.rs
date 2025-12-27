@@ -243,7 +243,9 @@ mod tests {
         let source = PathBuf::from("/project/config.dx");
         let output = get_binary_path(&source, &project);
 
-        assert!(output.to_string_lossy().contains(".dx/serializer"));
-        assert!(output.to_string_lossy().ends_with(".dxs"));
+        // Check path components in a platform-independent way
+        let output_str = output.to_string_lossy();
+        assert!(output_str.contains(".dx") && output_str.contains("serializer"));
+        assert!(output_str.ends_with(".dxs"));
     }
 }

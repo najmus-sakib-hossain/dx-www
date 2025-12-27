@@ -146,6 +146,24 @@ pub enum RuleCommands {
         /// Rule name
         rule: String,
     },
+
+    /// Compile rules to binary format
+    Compile {
+        /// Output directory for compiled rules
+        #[arg(short, long, default_value = "rules")]
+        output: PathBuf,
+
+        /// Verify the compiled rules after generation
+        #[arg(short, long)]
+        verify: bool,
+    },
+
+    /// Verify compiled rules file
+    Verify {
+        /// Path to compiled rules file
+        #[arg(default_value = "rules/rules.dxm")]
+        path: PathBuf,
+    },
 }
 
 #[derive(Subcommand, Debug)]

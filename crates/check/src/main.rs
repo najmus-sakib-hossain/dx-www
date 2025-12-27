@@ -323,6 +323,41 @@ fn run_rule_command(command: &RuleCommands) -> Result<bool, Box<dyn std::error::
             println!("Rule '{}' disabled", rule);
             // Would modify config file
         }
+        RuleCommands::Compile { output, verify } => {
+            use dx_check::rules::compiler;
+            
+            println!("Compiling rules to binary format...\n");
+            match compiler::compile_rules(output) {
+                Ok(compiled) => {
+                    println!("\n✅ Successfully compiled {} rules", compiled.count);
+                    println!("   Binary size: {} KB", compiled.binary_size / 1024);
+                    
+                    if *verify {
+                        let rules_path = output.join("rules.dxm");
+                        println!("\nVerifying compiled rules...");
+                        if let Err(e) = compiler::verify_compiled_rules(&rules_path) {
+                            eprintln!("❌ Verification failed: {}", e);
+                            return Ok(true);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("❌ Compilation failed: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+        RuleCommands::Verify { path } => {
+            use dx_check::rules::compiler;
+            
+            match compiler::verify_compiled_rules(path) {
+                Ok(_) => {},
+                Err(e) => {
+                    eprintln!("❌ Verification failed: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
     }
     
     Ok(false)

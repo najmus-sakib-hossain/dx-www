@@ -92,8 +92,9 @@ mod tests {
 
     #[test]
     fn test_direct_application() {
-        // flex items-center p-4 = IDs [4, 26, 35]
-        let ids = vec![4, 26, 35];
+        // flex items-center p-4 = IDs [4, 26, 36]
+        // Note: ID 36 = padding:1rem (p-4), ID 35 = padding:0.75rem (p-3)
+        let ids = vec![4, 26, 36];
         let result = apply_styles_direct(&ids);
 
         assert_eq!(result, "display:flex;align-items:center;padding:1rem");
@@ -115,14 +116,14 @@ mod tests {
 
     #[test]
     fn test_capacity_optimization() {
-        let ids = vec![4, 26, 35];
+        let ids = vec![4, 26, 36];
         let result = apply_styles_direct_with_capacity(&ids, 100);
         assert_eq!(result, "display:flex;align-items:center;padding:1rem");
     }
 
     #[test]
     fn test_checked_version() {
-        let ids = vec![4, 26, 35];
+        let ids = vec![4, 26, 36];
         let result = apply_styles_direct_checked(&ids);
         assert!(result.is_some());
         assert_eq!(result.unwrap(), "display:flex;align-items:center;padding:1rem");
@@ -130,7 +131,7 @@ mod tests {
 
     #[test]
     fn test_invalid_id() {
-        let ids = vec![4, 9999, 35]; // 9999 is invalid
+        let ids = vec![4, 9999, 36]; // 9999 is invalid
         let result = apply_styles_direct_checked(&ids);
         assert!(result.is_none());
     }
@@ -141,7 +142,7 @@ mod tests {
         // Traditional: 3 classList.add() calls = 3 DOM writes
         // Direct cssText: 1 cssText write = 1 DOM write
 
-        let ids = vec![4, 26, 35, 173, 191]; // 5 styles
+        let ids = vec![4, 26, 36, 173, 191]; // 5 styles
         let start = std::time::Instant::now();
 
         for _ in 0..1000 {

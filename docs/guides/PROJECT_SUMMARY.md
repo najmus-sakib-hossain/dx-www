@@ -26,7 +26,7 @@
 - **Capability Manifest**: Security layer with magic number validation
 - **Zero-copy memory operations** using `bytemuck`
 - Atomic operations for thread-safe dirty bits
-- Location: [crates/dx-core/src/lib.rs](crates/dx-core/src/lib.rs)
+- Location: `crates/www/framework-core/src/lib.rs`
 
 #### **dx-dom** - HTIP Renderer ✓
 - **Template Cache**: HashMap of pre-parsed `HtmlTemplateElement`

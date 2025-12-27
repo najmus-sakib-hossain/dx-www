@@ -4,7 +4,10 @@
 //! All rules compile to binary opcodes and execute in a single AST traversal.
 
 pub mod builtin;
+pub mod compiler;
+pub mod extractor;
 pub mod registry;
+pub mod schema;
 
 use crate::diagnostics::{Diagnostic, Span};
 use oxc_ast::AstKind;

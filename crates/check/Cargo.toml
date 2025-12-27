@@ -37,7 +37,7 @@ parking_lot = "0.12"
 # Memory
 memmap2 = "0.9"
 bumpalo = { version = "3.16", features = ["collections"] }
-bytemuck = { version = "1.14", features = ["derive"] }
+bytemuck = { version = "1.18", features = ["derive"] }
 
 # Hashing
 blake3 = "1.5"
@@ -48,6 +48,12 @@ bincode = "2.0.0-rc.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
+
+# DX Serializer - World's fastest serializer for binary rule loading
+serializer = { path = "../serializer", features = ["converters", "compression"] }
+
+# Compression
+lz4_flex = { version = "0.11", optional = true }
 
 # CLI
 clap = { version = "4.5", features = ["derive", "env"] }
@@ -70,6 +76,9 @@ thiserror = "2.0"
 anyhow = "1.0"
 miette = { version = "7.4", features = ["fancy"] }
 
+# Timestamps
+chrono = "0.4"
+
 # Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
@@ -91,9 +100,10 @@ name = "lint_benchmark"
 harness = false
 
 [features]
-default = ["simd"]
+default = ["simd", "compression"]
 simd = []
 lsp = []
+compression = ["serializer/compression", "lz4_flex"]
 
 [profile.release]
 lto = "fat"

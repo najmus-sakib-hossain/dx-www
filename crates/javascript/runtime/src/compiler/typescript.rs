@@ -239,8 +239,11 @@ mod tests {
         let f64_type = Type::Primitive(PrimitiveType::F64);
         let bool_type = Type::Primitive(PrimitiveType::Bool);
 
-        assert!(analyzer.is_assignable(&i32_type, &f64_type));
-        assert!(analyzer.is_assignable(&f64_type, &i32_type));
+        // Strict type checking: primitives must match exactly
+        assert!(analyzer.is_assignable(&i32_type, &i32_type));
+        assert!(analyzer.is_assignable(&f64_type, &f64_type));
+        assert!(!analyzer.is_assignable(&i32_type, &f64_type));
+        assert!(!analyzer.is_assignable(&f64_type, &i32_type));
         assert!(!analyzer.is_assignable(&bool_type, &i32_type));
     }
 

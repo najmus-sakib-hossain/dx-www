@@ -12,7 +12,7 @@ Or from source:
 ```bash
 git clone https://github.com/yourusername/dx-www-runtime
 cd dx-www-runtime
-cargo install --path crates/dx-cli
+cargo install --path crates/cli
 ```
 
 ## Quick Start
@@ -130,7 +130,7 @@ cargo build -p dx-cli
 cargo run -p dx-cli -- new test-app
 
 # Install locally
-cargo install --path crates/dx-cli
+cargo install --path crates/cli
 ```
 
 ## License

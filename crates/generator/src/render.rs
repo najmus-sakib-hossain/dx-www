@@ -541,7 +541,7 @@ impl Renderer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::binary::BinaryTemplate;
+    use crate::binary::{BinaryTemplate, PlaceholderEntry};
 
     #[test]
     fn test_render_mode_selection() {

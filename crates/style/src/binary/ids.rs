@@ -295,14 +295,17 @@ pub static CLASS_TO_ID: Lazy<HashMap<&'static str, StyleId>> = Lazy::new(|| {
     map.insert("items-stretch", 28);
 
     // Padding
-    map.insert("p-0", 31);
-    map.insert("p-1", 32);
-    map.insert("p-2", 33);
-    map.insert("p-3", 34);
-    map.insert("p-4", 35);
-    map.insert("p-5", 36);
-    map.insert("p-6", 37);
-    map.insert("p-8", 39);
+    // Note: STYLE_DICT indices for padding:
+    // 32 = padding:0, 33 = padding:0.25rem, 34 = padding:0.5rem,
+    // 35 = padding:0.75rem, 36 = padding:1rem, 37 = padding:1.25rem, etc.
+    map.insert("p-0", 32);
+    map.insert("p-1", 33);
+    map.insert("p-2", 34);
+    map.insert("p-3", 35);
+    map.insert("p-4", 36);  // padding:1rem is at index 36
+    map.insert("p-5", 37);
+    map.insert("p-6", 38);
+    map.insert("p-8", 40);
 
     // Colors
     map.insert("text-black", 171);
