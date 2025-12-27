@@ -1,0 +1,657 @@
+# JavaScript Rules
+# Generated: 2025-12-27
+
+@meta
+language: "JavaScript"
+source: "dx-check"
+version: "0.1.0"
+total_rules: 64
+
+@rule
+name: "no-console"
+prefixed_name: "js/no-console"
+category: "suspicious"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow the use of console"
+docs_url: "https://dx.dev/rules/no-console"
+
+@rule
+name: "no-debugger"
+prefixed_name: "js/no-debugger"
+category: "suspicious"
+severity: "error"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow the use of debugger"
+docs_url: "https://dx.dev/rules/no-debugger"
+
+@rule
+name: "no-unused-vars"
+prefixed_name: "js/no-unused-vars"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unused variables"
+docs_url: "https://dx.dev/rules/no-unused-vars"
+
+@rule
+name: "eqeqeq"
+prefixed_name: "js/eqeqeq"
+category: "suspicious"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Require the use of === and !=="
+docs_url: "https://dx.dev/rules/eqeqeq"
+
+@rule
+name: "prefer-const"
+prefixed_name: "js/prefer-const"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Require const declarations for variables that are never reassigned"
+docs_url: "https://dx.dev/rules/prefer-const"
+
+@rule
+name: "no-var"
+prefixed_name: "js/no-var"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Require let or const instead of var"
+docs_url: "https://dx.dev/rules/no-var"
+
+@rule
+name: "no-eval"
+prefixed_name: "js/no-eval"
+category: "security"
+severity: "error"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow the use of eval()"
+docs_url: "https://dx.dev/rules/no-eval"
+
+@rule
+name: "no-with"
+prefixed_name: "js/no-with"
+category: "suspicious"
+severity: "error"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow with statements"
+docs_url: "https://dx.dev/rules/no-with"
+
+@rule
+name: "noAccumulatingSpread"
+prefixed_name: "js/noAccumulatingSpread"
+category: "performance"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow spreading objects that may have large number of properties"
+
+@rule
+name: "noAssignInExpressions"
+prefixed_name: "js/noAssignInExpressions"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow assignments in expressions"
+
+@rule
+name: "noAsyncPromiseExecutor"
+prefixed_name: "js/noAsyncPromiseExecutor"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow async Promise executors"
+
+@rule
+name: "noCatchAssign"
+prefixed_name: "js/noCatchAssign"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow reassigning exceptions in catch clauses"
+
+@rule
+name: "noClassAssign"
+prefixed_name: "js/noClassAssign"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow reassigning class members"
+
+@rule
+name: "noCommentText"
+prefixed_name: "js/noCommentText"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Prevent comments from being inserted as text nodes"
+
+@rule
+name: "noCompareNegZero"
+prefixed_name: "js/noCompareNegZero"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow comparing against -0"
+
+@rule
+name: "noConstAssign"
+prefixed_name: "js/noConstAssign"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow reassigning const variables"
+
+@rule
+name: "noConstantCondition"
+prefixed_name: "js/noConstantCondition"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow constant conditions"
+
+@rule
+name: "noControlCharactersInRegex"
+prefixed_name: "js/noControlCharactersInRegex"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow control characters in regex"
+
+@rule
+name: "noDebugger"
+prefixed_name: "js/noDebugger"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow debugger statements"
+
+@rule
+name: "noDoubleEquals"
+prefixed_name: "js/noDoubleEquals"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Require === and !=="
+
+@rule
+name: "noDuplicateCase"
+prefixed_name: "js/noDuplicateCase"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate case labels"
+
+@rule
+name: "noDuplicateClassMembers"
+prefixed_name: "js/noDuplicateClassMembers"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate class members"
+
+@rule
+name: "noDuplicateObjectKeys"
+prefixed_name: "js/noDuplicateObjectKeys"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate keys in object literals"
+
+@rule
+name: "noDuplicateParameters"
+prefixed_name: "js/noDuplicateParameters"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate parameters"
+
+@rule
+name: "noEmptyCharacterClassInRegex"
+prefixed_name: "js/noEmptyCharacterClassInRegex"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow empty character classes in regex"
+
+@rule
+name: "noEmptyPattern"
+prefixed_name: "js/noEmptyPattern"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow empty destructuring patterns"
+
+@rule
+name: "noExtraNonNullAssertion"
+prefixed_name: "js/noExtraNonNullAssertion"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow extra non-null assertions"
+
+@rule
+name: "noFallthroughSwitchClause"
+prefixed_name: "js/noFallthroughSwitchClause"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow fallthrough switch cases"
+
+@rule
+name: "noGlobalObjectCalls"
+prefixed_name: "js/noGlobalObjectCalls"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow calling global objects as functions"
+
+@rule
+name: "noInnerDeclarations"
+prefixed_name: "js/noInnerDeclarations"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow variable or function declarations in nested blocks"
+
+@rule
+name: "noInvalidConstructorSuper"
+prefixed_name: "js/noInvalidConstructorSuper"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow invalid super() calls"
+
+@rule
+name: "noNonoctalDecimalEscape"
+prefixed_name: "js/noNonoctalDecimalEscape"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow \\8 and \\9 escape sequences"
+
+@rule
+name: "noPrecisionLoss"
+prefixed_name: "js/noPrecisionLoss"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow number literals that lose precision"
+
+@rule
+name: "noPrototypeBuiltins"
+prefixed_name: "js/noPrototypeBuiltins"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow direct use of Object.prototype builtins"
+
+@rule
+name: "noRedeclare"
+prefixed_name: "js/noRedeclare"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow variable redeclaration"
+
+@rule
+name: "noSelfAssign"
+prefixed_name: "js/noSelfAssign"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow assignments where both sides are exactly the same"
+
+@rule
+name: "noShadowRestrictedNames"
+prefixed_name: "js/noShadowRestrictedNames"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow shadowing of restricted names"
+
+@rule
+name: "noSparseArray"
+prefixed_name: "js/noSparseArray"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow sparse arrays"
+
+@rule
+name: "noUnsafeFinally"
+prefixed_name: "js/noUnsafeFinally"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow control flow statements in finally blocks"
+
+@rule
+name: "noUnsafeOptionalChaining"
+prefixed_name: "js/noUnsafeOptionalChaining"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unsafe optional chaining"
+
+@rule
+name: "noUnusedLabels"
+prefixed_name: "js/noUnusedLabels"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unused labels"
+
+@rule
+name: "noUnusedVariables"
+prefixed_name: "js/noUnusedVariables"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unused variables"
+
+@rule
+name: "useValidForDirection"
+prefixed_name: "js/useValidForDirection"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Enforce for loop update clause moving the counter in the right direction"
+
+@rule
+name: "useYield"
+prefixed_name: "js/useYield"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Require generator functions to contain yield"
+
+@rule
+name: "for-direction"
+prefixed_name: "js/for-direction"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Enforce for loop update clause moving the counter in the right direction"
+
+@rule
+name: "getter-return"
+prefixed_name: "js/getter-return"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Enforce return statements in getters"
+
+@rule
+name: "no-async-promise-executor"
+prefixed_name: "js/no-async-promise-executor"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow async Promise executors"
+
+@rule
+name: "no-compare-neg-zero"
+prefixed_name: "js/no-compare-neg-zero"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow comparing against -0"
+
+@rule
+name: "no-cond-assign"
+prefixed_name: "js/no-cond-assign"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow assignment operators in conditional expressions"
+
+@rule
+name: "no-const-assign"
+prefixed_name: "js/no-const-assign"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow reassigning const variables"
+
+@rule
+name: "no-constant-binary-expression"
+prefixed_name: "js/no-constant-binary-expression"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow expressions where the operation doesn't affect the value"
+
+@rule
+name: "no-dupe-else-if"
+prefixed_name: "js/no-dupe-else-if"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate conditions in if-else-if chains"
+
+@rule
+name: "no-duplicate-case"
+prefixed_name: "js/no-duplicate-case"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate case labels"
+
+@rule
+name: "no-empty-character-class"
+prefixed_name: "js/no-empty-character-class"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow empty character classes in regex"
+
+@rule
+name: "no-ex-assign"
+prefixed_name: "js/no-ex-assign"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow reassigning exceptions in catch clauses"
+
+@rule
+name: "no-fallthrough"
+prefixed_name: "js/no-fallthrough"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow fallthrough of case statements"
+
+@rule
+name: "no-func-assign"
+prefixed_name: "js/no-func-assign"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow reassigning function declarations"
+
+@rule
+name: "no-import-assign"
+prefixed_name: "js/no-import-assign"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow assigning to imported bindings"
+
+@rule
+name: "no-inner-declarations"
+prefixed_name: "js/no-inner-declarations"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow variable or function declarations in nested blocks"
+
+@rule
+name: "no-irregular-whitespace"
+prefixed_name: "js/no-irregular-whitespace"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow irregular whitespace"
+
+@rule
+name: "no-self-assign"
+prefixed_name: "js/no-self-assign"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow assignments where both sides are exactly the same"
+
+@rule
+name: "no-sparse-arrays"
+prefixed_name: "js/no-sparse-arrays"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow sparse arrays"
+
+@rule
+name: "no-unreachable"
+prefixed_name: "js/no-unreachable"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unreachable code after return, throw, continue, and break"
+
+@rule
+name: "no-unsafe-negation"
+prefixed_name: "js/no-unsafe-negation"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow negating the left operand of relational operators"
+

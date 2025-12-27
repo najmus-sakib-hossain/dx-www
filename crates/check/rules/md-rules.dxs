@@ -1,0 +1,389 @@
+# Markdown Rules
+# Generated: 2025-12-27
+
+@meta
+language: "Markdown"
+source: "rumdl"
+version: "0.1.0"
+total_rules: 38
+
+@rule
+name: "MD001"
+prefixed_name: "md/MD001"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Header levels should only increment by one level at a time"
+
+@rule
+name: "MD003"
+prefixed_name: "md/MD003"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Header style"
+
+@rule
+name: "MD004"
+prefixed_name: "md/MD004"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Unordered list style"
+
+@rule
+name: "MD005"
+prefixed_name: "md/MD005"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Inconsistent indentation for list items"
+
+@rule
+name: "MD007"
+prefixed_name: "md/MD007"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Unordered list indentation"
+
+@rule
+name: "MD009"
+prefixed_name: "md/MD009"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: false
+is_formatter: false
+description: "Trailing spaces"
+
+@rule
+name: "MD010"
+prefixed_name: "md/MD010"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: false
+is_formatter: false
+description: "Hard tabs"
+
+@rule
+name: "MD011"
+prefixed_name: "md/MD011"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Reversed link syntax"
+
+@rule
+name: "MD012"
+prefixed_name: "md/MD012"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: false
+is_formatter: false
+description: "Multiple consecutive blank lines"
+
+@rule
+name: "MD013"
+prefixed_name: "md/MD013"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Line length"
+
+@rule
+name: "MD014"
+prefixed_name: "md/MD014"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Dollar signs used before commands"
+
+@rule
+name: "MD018"
+prefixed_name: "md/MD018"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "No space after hash on atx style header"
+
+@rule
+name: "MD019"
+prefixed_name: "md/MD019"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Multiple spaces after hash on atx style header"
+
+@rule
+name: "MD022"
+prefixed_name: "md/MD022"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: false
+is_formatter: false
+description: "Headers should be surrounded by blank lines"
+
+@rule
+name: "MD023"
+prefixed_name: "md/MD023"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Headers must start at the beginning of the line"
+
+@rule
+name: "MD024"
+prefixed_name: "md/MD024"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Multiple headers with the same content"
+
+@rule
+name: "MD025"
+prefixed_name: "md/MD025"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Multiple top level headers in the same document"
+
+@rule
+name: "MD026"
+prefixed_name: "md/MD026"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Trailing punctuation in header"
+
+@rule
+name: "MD027"
+prefixed_name: "md/MD027"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Multiple spaces after blockquote symbol"
+
+@rule
+name: "MD028"
+prefixed_name: "md/MD028"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Blank line inside blockquote"
+
+@rule
+name: "MD029"
+prefixed_name: "md/MD029"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Ordered list item prefix"
+
+@rule
+name: "MD030"
+prefixed_name: "md/MD030"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Spaces after list markers"
+
+@rule
+name: "MD031"
+prefixed_name: "md/MD031"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: false
+is_formatter: false
+description: "Fenced code blocks should be surrounded by blank lines"
+
+@rule
+name: "MD032"
+prefixed_name: "md/MD032"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: false
+is_formatter: false
+description: "Lists should be surrounded by blank lines"
+
+@rule
+name: "MD033"
+prefixed_name: "md/MD033"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Inline HTML"
+
+@rule
+name: "MD034"
+prefixed_name: "md/MD034"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Bare URL used"
+
+@rule
+name: "MD037"
+prefixed_name: "md/MD037"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Spaces inside emphasis markers"
+
+@rule
+name: "MD038"
+prefixed_name: "md/MD038"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Spaces inside code span elements"
+
+@rule
+name: "MD039"
+prefixed_name: "md/MD039"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Spaces inside link text"
+
+@rule
+name: "MD040"
+prefixed_name: "md/MD040"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Fenced code blocks should have a language specified"
+
+@rule
+name: "MD041"
+prefixed_name: "md/MD041"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "First line in file should be a top level header"
+
+@rule
+name: "MD042"
+prefixed_name: "md/MD042"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "No empty links"
+
+@rule
+name: "MD043"
+prefixed_name: "md/MD043"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Required header structure"
+
+@rule
+name: "MD044"
+prefixed_name: "md/MD044"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Proper names should have the correct capitalization"
+
+@rule
+name: "MD045"
+prefixed_name: "md/MD045"
+category: "a11y"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Images should have alternate text"
+
+@rule
+name: "MD046"
+prefixed_name: "md/MD046"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Code block style"
+
+@rule
+name: "MD047"
+prefixed_name: "md/MD047"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: false
+is_formatter: false
+description: "Files should end with a single newline character"
+
+@rule
+name: "MD048"
+prefixed_name: "md/MD048"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Code fence style"
+

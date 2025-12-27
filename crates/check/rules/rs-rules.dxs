@@ -1,0 +1,169 @@
+# Rust Rules
+# Generated: 2025-12-27
+
+@meta
+language: "Rust"
+source: "rustfmt"
+version: "0.1.0"
+total_rules: 16
+
+@rule
+name: "fmt"
+prefixed_name: "rs/fmt"
+category: "format"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: true
+description: "Format Rust code using rustfmt"
+
+@rule
+name: "clippy::unwrap_used"
+prefixed_name: "rs/clippy::unwrap_used"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unwrap()"
+
+@rule
+name: "clippy::expect_used"
+prefixed_name: "rs/clippy::expect_used"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow expect()"
+
+@rule
+name: "clippy::panic"
+prefixed_name: "rs/clippy::panic"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow panic!()"
+
+@rule
+name: "clippy::todo"
+prefixed_name: "rs/clippy::todo"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow todo!()"
+
+@rule
+name: "clippy::unimplemented"
+prefixed_name: "rs/clippy::unimplemented"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unimplemented!()"
+
+@rule
+name: "clippy::missing_errors_doc"
+prefixed_name: "rs/clippy::missing_errors_doc"
+category: "docs"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Missing errors documentation"
+
+@rule
+name: "clippy::missing_panics_doc"
+prefixed_name: "rs/clippy::missing_panics_doc"
+category: "docs"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Missing panics documentation"
+
+@rule
+name: "clippy::cognitive_complexity"
+prefixed_name: "rs/clippy::cognitive_complexity"
+category: "complexity"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Function is too complex"
+
+@rule
+name: "clippy::too_many_arguments"
+prefixed_name: "rs/clippy::too_many_arguments"
+category: "complexity"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Too many arguments"
+
+@rule
+name: "clippy::type_complexity"
+prefixed_name: "rs/clippy::type_complexity"
+category: "complexity"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Type is too complex"
+
+@rule
+name: "clippy::needless_return"
+prefixed_name: "rs/clippy::needless_return"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Needless return statement"
+
+@rule
+name: "clippy::redundant_closure"
+prefixed_name: "rs/clippy::redundant_closure"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Redundant closure"
+
+@rule
+name: "clippy::clone_on_copy"
+prefixed_name: "rs/clippy::clone_on_copy"
+category: "performance"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Cloning a copy type"
+
+@rule
+name: "clippy::unnecessary_unwrap"
+prefixed_name: "rs/clippy::unnecessary_unwrap"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Unnecessary unwrap"
+
+@rule
+name: "clippy::match_wildcard_for_single_variants"
+prefixed_name: "rs/clippy::match_wildcard_for_single_variants"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Match wildcard for single variants"
+

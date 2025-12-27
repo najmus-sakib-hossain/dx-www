@@ -1,0 +1,72 @@
+# JSON Rules
+# Generated: 2025-12-27
+
+@meta
+language: "JSON"
+source: "biome"
+version: "0.1.0"
+total_rules: 6
+
+@rule
+name: "noDuplicateKeys"
+prefixed_name: "json/noDuplicateKeys"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate keys"
+
+@rule
+name: "noTrailingCommas"
+prefixed_name: "json/noTrailingCommas"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow trailing commas"
+
+@rule
+name: "noComments"
+prefixed_name: "json/noComments"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow comments in JSON"
+
+@rule
+name: "noComments"
+prefixed_name: "json/noComments"
+category: "correctness"
+severity: "error"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow comments in JSON files"
+docs_url: "https://biomejs.dev/linter/rules/no-comments"
+
+@rule
+name: "noDuplicateKeys"
+prefixed_name: "json/noDuplicateKeys"
+category: "correctness"
+severity: "error"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate keys in JSON objects"
+docs_url: "https://biomejs.dev/linter/rules/no-duplicate-keys"
+
+@rule
+name: "noTrailingCommas"
+prefixed_name: "json/noTrailingCommas"
+category: "correctness"
+severity: "error"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow trailing commas in JSON"
+docs_url: "https://biomejs.dev/linter/rules/no-trailing-commas"
+

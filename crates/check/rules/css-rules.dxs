@@ -1,0 +1,79 @@
+# CSS Rules
+# Generated: 2025-12-27
+
+@meta
+language: "CSS"
+source: "biome"
+version: "0.1.0"
+total_rules: 7
+
+@rule
+name: "noDuplicateSelectors"
+prefixed_name: "css/noDuplicateSelectors"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate selectors"
+
+@rule
+name: "noEmptyBlock"
+prefixed_name: "css/noEmptyBlock"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow empty blocks"
+
+@rule
+name: "noInvalidPositionAtImportRule"
+prefixed_name: "css/noInvalidPositionAtImportRule"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow invalid position for @import"
+
+@rule
+name: "noDuplicateSelectors"
+prefixed_name: "css/noDuplicateSelectors"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate selectors"
+
+@rule
+name: "noInvalidPositionAtImportRule"
+prefixed_name: "css/noInvalidPositionAtImportRule"
+category: "correctness"
+severity: "error"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow invalid position for @import rules"
+
+@rule
+name: "noUnknownUnit"
+prefixed_name: "css/noUnknownUnit"
+category: "correctness"
+severity: "error"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unknown CSS units"
+
+@rule
+name: "noShorthandPropertyOverrides"
+prefixed_name: "css/noShorthandPropertyOverrides"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow shorthand properties that override related longhand properties"
+

@@ -1,0 +1,40 @@
+# HTML Rules
+# Generated: 2025-12-27
+
+@meta
+language: "HTML"
+source: "biome"
+version: "0.1.0"
+total_rules: 3
+
+@rule
+name: "noBlankTarget"
+prefixed_name: "html/noBlankTarget"
+category: "security"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow target='_blank' without rel='noopener noreferrer'"
+docs_url: "https://biomejs.dev/linter/rules/no-blank-target"
+
+@rule
+name: "useValidAnchor"
+prefixed_name: "html/useValidAnchor"
+category: "a11y"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Enforce valid anchor elements"
+
+@rule
+name: "useButtonType"
+prefixed_name: "html/useButtonType"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Enforce explicit type attribute for button elements"
+

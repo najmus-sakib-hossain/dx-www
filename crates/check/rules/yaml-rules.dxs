@@ -1,0 +1,39 @@
+# YAML Rules
+# Generated: 2025-12-27
+
+@meta
+language: "YAML"
+source: "dx-check"
+version: "0.1.0"
+total_rules: 3
+
+@rule
+name: "noDuplicateKeys"
+prefixed_name: "yaml/noDuplicateKeys"
+category: "correctness"
+severity: "error"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate keys in YAML mappings"
+
+@rule
+name: "noTabs"
+prefixed_name: "yaml/noTabs"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow tabs in YAML files"
+
+@rule
+name: "noTrailingSpaces"
+prefixed_name: "yaml/noTrailingSpaces"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow trailing spaces"
+

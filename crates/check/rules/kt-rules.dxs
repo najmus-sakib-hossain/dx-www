@@ -1,0 +1,159 @@
+# Kotlin Rules
+# Generated: 2025-12-27
+
+@meta
+language: "Kotlin"
+source: "ktlint"
+version: "0.1.0"
+total_rules: 15
+
+@rule
+name: "no-wildcard-imports"
+prefixed_name: "kt/no-wildcard-imports"
+category: "imports"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow wildcard imports"
+
+@rule
+name: "no-unused-imports"
+prefixed_name: "kt/no-unused-imports"
+category: "imports"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow unused imports"
+
+@rule
+name: "no-consecutive-blank-lines"
+prefixed_name: "kt/no-consecutive-blank-lines"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow consecutive blank lines"
+
+@rule
+name: "no-trailing-spaces"
+prefixed_name: "kt/no-trailing-spaces"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow trailing spaces"
+
+@rule
+name: "indent"
+prefixed_name: "kt/indent"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Enforce consistent indentation"
+
+@rule
+name: "final-newline"
+prefixed_name: "kt/final-newline"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Require newline at end of file"
+
+@rule
+name: "no-unit-return"
+prefixed_name: "kt/no-unit-return"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow explicit Unit return"
+
+@rule
+name: "chain-wrapping"
+prefixed_name: "kt/chain-wrapping"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Enforce chain wrapping"
+
+@rule
+name: "comment-spacing"
+prefixed_name: "kt/comment-spacing"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Enforce spacing in comments"
+
+@rule
+name: "filename"
+prefixed_name: "kt/filename"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Enforce filename conventions"
+
+@rule
+name: "import-ordering"
+prefixed_name: "kt/import-ordering"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Enforce import ordering"
+
+@rule
+name: "max-line-length"
+prefixed_name: "kt/max-line-length"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Enforce maximum line length"
+
+@rule
+name: "modifier-order"
+prefixed_name: "kt/modifier-order"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Enforce modifier ordering"
+
+@rule
+name: "no-empty-class-body"
+prefixed_name: "kt/no-empty-class-body"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow empty class bodies"
+
+@rule
+name: "no-semicolons"
+prefixed_name: "kt/no-semicolons"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: false
+description: "Disallow unnecessary semicolons"
+

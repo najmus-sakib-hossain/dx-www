@@ -1,0 +1,429 @@
+# Python Rules
+# Generated: 2025-12-27
+
+@meta
+language: "Python"
+source: "ruff"
+version: "0.1.0"
+total_rules: 42
+
+@rule
+name: "F401"
+prefixed_name: "py/F401"
+category: "imports"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Unused import"
+
+@rule
+name: "F402"
+prefixed_name: "py/F402"
+category: "imports"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Import shadowed by loop variable"
+
+@rule
+name: "F403"
+prefixed_name: "py/F403"
+category: "imports"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Star imports used; unable to detect undefined names"
+
+@rule
+name: "F404"
+prefixed_name: "py/F404"
+category: "imports"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Late future import"
+
+@rule
+name: "F405"
+prefixed_name: "py/F405"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Name may be undefined, or defined from star imports"
+
+@rule
+name: "F406"
+prefixed_name: "py/F406"
+category: "imports"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "from __future__ imports must occur at the beginning of the file"
+
+@rule
+name: "F407"
+prefixed_name: "py/F407"
+category: "imports"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Future feature not defined"
+
+@rule
+name: "F501"
+prefixed_name: "py/F501"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Invalid % format string"
+
+@rule
+name: "F502"
+prefixed_name: "py/F502"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "% format expected mapping but got sequence"
+
+@rule
+name: "F503"
+prefixed_name: "py/F503"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "% format expected sequence but got mapping"
+
+@rule
+name: "F504"
+prefixed_name: "py/F504"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "% format unused named arguments"
+
+@rule
+name: "F505"
+prefixed_name: "py/F505"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "% format missing named arguments"
+
+@rule
+name: "F506"
+prefixed_name: "py/F506"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "% format mixed positional and named arguments"
+
+@rule
+name: "F507"
+prefixed_name: "py/F507"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "% format mismatch of placeholder and argument count"
+
+@rule
+name: "F508"
+prefixed_name: "py/F508"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "% format with * specifier requires a sequence"
+
+@rule
+name: "F509"
+prefixed_name: "py/F509"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "% format with unsupported format character"
+
+@rule
+name: "F521"
+prefixed_name: "py/F521"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: ".format(...) invalid format string"
+
+@rule
+name: "F522"
+prefixed_name: "py/F522"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: ".format(...) unused named arguments"
+
+@rule
+name: "F523"
+prefixed_name: "py/F523"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: ".format(...) unused positional arguments"
+
+@rule
+name: "F524"
+prefixed_name: "py/F524"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: ".format(...) missing argument"
+
+@rule
+name: "F525"
+prefixed_name: "py/F525"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: ".format(...) mixing automatic and manual numbering"
+
+@rule
+name: "F541"
+prefixed_name: "py/F541"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "f-string without any placeholders"
+
+@rule
+name: "F601"
+prefixed_name: "py/F601"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Multi-value repeated key in dictionary"
+
+@rule
+name: "F602"
+prefixed_name: "py/F602"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Multi-value repeated key in dictionary"
+
+@rule
+name: "F621"
+prefixed_name: "py/F621"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Too many expressions in star-unpacking assignment"
+
+@rule
+name: "F622"
+prefixed_name: "py/F622"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Two starred expressions in assignment"
+
+@rule
+name: "F631"
+prefixed_name: "py/F631"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Assert test is a tuple"
+
+@rule
+name: "F632"
+prefixed_name: "py/F632"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Use == to compare constant literals"
+
+@rule
+name: "F633"
+prefixed_name: "py/F633"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Use of >> is invalid with print function"
+
+@rule
+name: "F634"
+prefixed_name: "py/F634"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "If test is a tuple"
+
+@rule
+name: "F701"
+prefixed_name: "py/F701"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Break outside loop"
+
+@rule
+name: "F702"
+prefixed_name: "py/F702"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Continue outside loop"
+
+@rule
+name: "F704"
+prefixed_name: "py/F704"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Yield outside function"
+
+@rule
+name: "F706"
+prefixed_name: "py/F706"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Return outside function"
+
+@rule
+name: "F707"
+prefixed_name: "py/F707"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Except block not the last exception handler"
+
+@rule
+name: "F811"
+prefixed_name: "py/F811"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Redefinition of unused name"
+
+@rule
+name: "F821"
+prefixed_name: "py/F821"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Undefined name"
+
+@rule
+name: "F822"
+prefixed_name: "py/F822"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Undefined name in __all__"
+
+@rule
+name: "F823"
+prefixed_name: "py/F823"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Local variable referenced before assignment"
+
+@rule
+name: "F841"
+prefixed_name: "py/F841"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Local variable is assigned to but never used"
+
+@rule
+name: "F842"
+prefixed_name: "py/F842"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Local variable is annotated but never used"
+
+@rule
+name: "F901"
+prefixed_name: "py/F901"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Raise with no exception"
+

@@ -1,0 +1,149 @@
+# C++ Rules
+# Generated: 2025-12-27
+
+@meta
+language: "C++"
+source: "cpp-linter-rs"
+version: "0.1.0"
+total_rules: 14
+
+@rule
+name: "bugprone-assert-side-effect"
+prefixed_name: "cpp/bugprone-assert-side-effect"
+category: "suspicious"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Assert has side effects"
+
+@rule
+name: "bugprone-dangling-handle"
+prefixed_name: "cpp/bugprone-dangling-handle"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Dangling handle detected"
+
+@rule
+name: "bugprone-infinite-loop"
+prefixed_name: "cpp/bugprone-infinite-loop"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Infinite loop detected"
+
+@rule
+name: "bugprone-unused-return-value"
+prefixed_name: "cpp/bugprone-unused-return-value"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Unused return value"
+
+@rule
+name: "cert-err58-cpp"
+prefixed_name: "cpp/cert-err58-cpp"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Do not throw in constructor of non-local variable"
+
+@rule
+name: "cppcoreguidelines-avoid-goto"
+prefixed_name: "cpp/cppcoreguidelines-avoid-goto"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Avoid goto"
+
+@rule
+name: "cppcoreguidelines-no-malloc"
+prefixed_name: "cpp/cppcoreguidelines-no-malloc"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Avoid malloc/free"
+
+@rule
+name: "modernize-use-nullptr"
+prefixed_name: "cpp/modernize-use-nullptr"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: false
+is_formatter: false
+description: "Use nullptr"
+
+@rule
+name: "modernize-use-override"
+prefixed_name: "cpp/modernize-use-override"
+category: "style"
+severity: "warn"
+fixable: true
+recommended: false
+is_formatter: false
+description: "Use override keyword"
+
+@rule
+name: "performance-unnecessary-copy-initialization"
+prefixed_name: "cpp/performance-unnecessary-copy-initialization"
+category: "performance"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Unnecessary copy initialization"
+
+@rule
+name: "readability-const-return-type"
+prefixed_name: "cpp/readability-const-return-type"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Const return type is unnecessary"
+
+@rule
+name: "readability-identifier-naming"
+prefixed_name: "cpp/readability-identifier-naming"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Identifier naming convention"
+
+@rule
+name: "readability-implicit-bool-conversion"
+prefixed_name: "cpp/readability-implicit-bool-conversion"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: false
+is_formatter: false
+description: "Implicit bool conversion"
+
+@rule
+name: "clang-format"
+prefixed_name: "cpp/clang-format"
+category: "format"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: true
+description: "Format C/C++ code using clang-format"
+

@@ -1,0 +1,49 @@
+# TOML Rules
+# Generated: 2025-12-27
+
+@meta
+language: "TOML"
+source: "taplo"
+version: "0.1.0"
+total_rules: 4
+
+@rule
+name: "fmt"
+prefixed_name: "toml/fmt"
+category: "format"
+severity: "warn"
+fixable: true
+recommended: true
+is_formatter: true
+description: "Format TOML files"
+
+@rule
+name: "no-duplicate-keys"
+prefixed_name: "toml/no-duplicate-keys"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate keys"
+
+@rule
+name: "no-invalid-datetime"
+prefixed_name: "toml/no-invalid-datetime"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow invalid datetime"
+
+@rule
+name: "no-trailing-comma"
+prefixed_name: "toml/no-trailing-comma"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow trailing commas"
+

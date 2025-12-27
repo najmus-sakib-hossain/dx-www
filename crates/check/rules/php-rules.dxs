@@ -1,0 +1,79 @@
+# PHP Rules
+# Generated: 2025-12-27
+
+@meta
+language: "PHP"
+source: "mago"
+version: "0.1.0"
+total_rules: 7
+
+@rule
+name: "no-unused-variable"
+prefixed_name: "php/no-unused-variable"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unused variables"
+
+@rule
+name: "no-undefined-variable"
+prefixed_name: "php/no-undefined-variable"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow undefined variables"
+
+@rule
+name: "no-unused-import"
+prefixed_name: "php/no-unused-import"
+category: "imports"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow unused imports"
+
+@rule
+name: "no-duplicate-property"
+prefixed_name: "php/no-duplicate-property"
+category: "correctness"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow duplicate class properties"
+
+@rule
+name: "no-empty-block"
+prefixed_name: "php/no-empty-block"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow empty blocks"
+
+@rule
+name: "prefer-null-coalesce"
+prefixed_name: "php/prefer-null-coalesce"
+category: "style"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Prefer null coalesce operator"
+
+@rule
+name: "no-deprecated-function"
+prefixed_name: "php/no-deprecated-function"
+category: "deprecated"
+severity: "warn"
+fixable: false
+recommended: true
+is_formatter: false
+description: "Disallow deprecated functions"
+
