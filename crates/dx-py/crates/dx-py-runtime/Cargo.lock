@@ -570,6 +570,7 @@ dependencies = [
 name = "dx-py-core"
 version = "0.1.0"
 dependencies = [
+ "criterion",
  "dashmap",
  "dx-py-bytecode",
  "dx-py-collections",
