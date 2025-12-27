@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Print stylesheet generator"
+keywords = ["wasm", "web", "css", "dx", "print"]
+categories = ["wasm", "web-programming"]
 
 [lib]
 path = "src/lib.rs"

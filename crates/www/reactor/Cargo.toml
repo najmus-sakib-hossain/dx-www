@@ -7,6 +7,7 @@ license.workspace = true
 description = "Binary Dawn - Cross-platform I/O reactor with thread-per-core architecture"
 repository.workspace = true
 keywords = ["reactor", "io_uring", "kqueue", "iocp", "async"]
+categories = ["asynchronous", "network-programming"]
 
 [lib]
 crate-type = ["rlib"]

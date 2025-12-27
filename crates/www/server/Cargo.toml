@@ -7,13 +7,19 @@ license.workspace = true
 description = "The Holographic Server - SSR, Binary Streaming, and Delta Patching"
 repository.workspace = true
 keywords = ["server", "ssr", "binary", "edge", "htip"]
+categories = ["web-programming", "network-programming"]
 
 [dependencies]
 # HTTP Core
 axum = { version = "0.7", features = ["http2", "ws"] }
 tokio = { version = "1.36", features = ["full"] }
 tower = "0.4"
-tower-http = { version = "0.5", features = ["compression-br", "fs", "cors", "trace"] }
+tower-http = { version = "0.5", features = [
+    "compression-br",
+    "fs",
+    "cors",
+    "trace",
+] }
 hyper = { version = "1.0", features = ["full"] }
 
 # Binary Handling
@@ -42,8 +48,8 @@ blake3 = "1.8"
 rand = "0.8"
 
 # Performance
-dashmap = "5.5"          # Concurrent State Cache
-mimalloc = "0.1"         # Fast allocator
+dashmap = "5.5"  # Concurrent State Cache
+mimalloc = "0.1" # Fast allocator
 
 # Logging
 tracing = "0.1"
@@ -64,4 +70,3 @@ fallback = ["dx-www-fallback"]
 
 [dev-dependencies]
 reqwest = { version = "0.11", features = ["blocking"] }
-

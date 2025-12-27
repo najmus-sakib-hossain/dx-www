@@ -40,7 +40,7 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 // FFI: JavaScript Host Functions
 // ============================================================================
 
-extern "C" {
+unsafe extern "C" {
     // Template operations
     fn host_clone_template(id: u32) -> u32;
     fn host_cache_template(id: u32, html_ptr: *const u8, html_len: u32);
@@ -97,7 +97,7 @@ static mut RUNTIME: Runtime = Runtime {
 // ============================================================================
 
 /// Initialize runtime
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn init() -> u32 {
     unsafe {
         RUNTIME.node_count = 0;
@@ -107,7 +107,7 @@ pub extern "C" fn init() -> u32 {
 }
 
 /// Render HTIP stream
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn render_stream(ptr: *const u8, len: u32) -> u32 {
     if ptr.is_null() || len < 4 {
         return 1;
@@ -121,148 +121,148 @@ pub extern "C" fn render_stream(ptr: *const u8, len: u32) -> u32 {
 
 /// Process HTIP stream bytes
 unsafe fn process_htip_stream(data: &[u8]) -> u32 {
-    let mut offset = 4; // Skip header
+    unsafe {
+        let mut offset = 4; // Skip header
 
-    while offset < data.len() {
-        let op = data[offset];
-        offset += 1;
+        while offset < data.len() {
+            let op = data[offset];
+            offset += 1;
 
-        match op {
-            OP_CLONE => {
-                if offset >= data.len() {
+            match op {
+                OP_CLONE => {
+                    if offset >= data.len() {
+                        break;
+                    }
+                    let template_id = data[offset] as u32;
+                    offset += 1;
+
+                    let node = host_clone_template(template_id);
+                    host_append(0, node);
+                    RUNTIME.node_count += 1;
+                }
+
+                OP_TEMPLATE_DEF => {
+                    if offset + 3 >= data.len() {
+                        break;
+                    }
+                    let id = data[offset] as u32;
+                    offset += 1;
+                    let len = read_u16(&data, offset) as usize;
+                    offset += 2;
+
+                    if offset + len > data.len() {
+                        break;
+                    }
+                    let html = &data[offset..offset + len];
+                    offset += len;
+
+                    host_cache_template(id, html.as_ptr(), len as u32);
+                    RUNTIME.template_count += 1;
+                }
+
+                OP_PATCH_TEXT => {
+                    if offset + 4 >= data.len() {
+                        break;
+                    }
+                    let node_id = read_u16(&data, offset) as u32;
+                    offset += 2;
+                    let text_len = read_u16(&data, offset) as usize;
+                    offset += 2;
+
+                    if offset + text_len > data.len() {
+                        break;
+                    }
+                    let text = &data[offset..offset + text_len];
+                    offset += text_len;
+
+                    host_set_text(node_id, text.as_ptr(), text_len as u32);
+                }
+
+                OP_PATCH_ATTR => {
+                    if offset + 6 >= data.len() {
+                        break;
+                    }
+                    let node_id = read_u16(&data, offset) as u32;
+                    offset += 2;
+                    let key_len = read_u16(&data, offset) as usize;
+                    offset += 2;
+
+                    if offset + key_len >= data.len() {
+                        break;
+                    }
+                    let key = &data[offset..offset + key_len];
+                    offset += key_len;
+
+                    let val_len = read_u16(&data, offset) as usize;
+                    offset += 2;
+
+                    if offset + val_len > data.len() {
+                        break;
+                    }
+                    let val = &data[offset..offset + val_len];
+                    offset += val_len;
+
+                    host_set_attr(node_id, key.as_ptr(), key_len as u32, val.as_ptr(), val_len as u32);
+                }
+
+                OP_CLASS_TOGGLE => {
+                    if offset + 5 >= data.len() {
+                        break;
+                    }
+                    let node_id = read_u16(&data, offset) as u32;
+                    offset += 2;
+                    let class_len = read_u16(&data, offset) as usize;
+                    offset += 2;
+
+                    if offset + class_len >= data.len() {
+                        break;
+                    }
+                    let class = &data[offset..offset + class_len];
+                    offset += class_len;
+
+                    let enable = data[offset] as u32;
+                    offset += 1;
+
+                    host_toggle_class(node_id, class.as_ptr(), class_len as u32, enable);
+                }
+
+                OP_REMOVE => {
+                    if offset + 2 > data.len() {
+                        break;
+                    }
+                    let node_id = read_u16(&data, offset) as u32;
+                    offset += 2;
+
+                    host_remove(node_id);
+                }
+
+                OP_EVENT => {
+                    if offset + 5 > data.len() {
+                        break;
+                    }
+                    let node_id = read_u16(&data, offset) as u32;
+                    offset += 2;
+                    let event_type = data[offset] as u32;
+                    offset += 1;
+                    let handler_id = read_u16(&data, offset) as u32;
+                    offset += 2;
+
+                    host_listen(node_id, event_type, handler_id);
+                }
+
+                OP_EOF => break,
+
+                _ => {
+                    // Unknown opcode, stop processing
                     break;
                 }
-                let template_id = data[offset] as u32;
-                offset += 1;
-
-                let node = host_clone_template(template_id);
-                host_append(0, node);
-                RUNTIME.node_count += 1;
-            }
-
-            OP_TEMPLATE_DEF => {
-                if offset + 3 >= data.len() {
-                    break;
-                }
-                let id = data[offset] as u32;
-                offset += 1;
-                let len = read_u16(&data, offset) as usize;
-                offset += 2;
-
-                if offset + len > data.len() {
-                    break;
-                }
-                let html = &data[offset..offset + len];
-                offset += len;
-
-                host_cache_template(id, html.as_ptr(), len as u32);
-                RUNTIME.template_count += 1;
-            }
-
-            OP_PATCH_TEXT => {
-                if offset + 4 >= data.len() {
-                    break;
-                }
-                let node_id = read_u16(&data, offset) as u32;
-                offset += 2;
-                let text_len = read_u16(&data, offset) as usize;
-                offset += 2;
-
-                if offset + text_len > data.len() {
-                    break;
-                }
-                let text = &data[offset..offset + text_len];
-                offset += text_len;
-
-                host_set_text(node_id, text.as_ptr(), text_len as u32);
-            }
-
-            OP_PATCH_ATTR => {
-                if offset + 6 >= data.len() {
-                    break;
-                }
-                let node_id = read_u16(&data, offset) as u32;
-                offset += 2;
-                let key_len = read_u16(&data, offset) as usize;
-                offset += 2;
-
-                if offset + key_len >= data.len() {
-                    break;
-                }
-                let key = &data[offset..offset + key_len];
-                offset += key_len;
-
-                let val_len = read_u16(&data, offset) as usize;
-                offset += 2;
-
-                if offset + val_len > data.len() {
-                    break;
-                }
-                let val = &data[offset..offset + val_len];
-                offset += val_len;
-
-                host_set_attr(node_id, key.as_ptr(), key_len as u32, val.as_ptr(), val_len as u32);
-            }
-
-            OP_CLASS_TOGGLE => {
-                if offset + 5 >= data.len() {
-                    break;
-                }
-                let node_id = read_u16(&data, offset) as u32;
-                offset += 2;
-                let class_len = read_u16(&data, offset) as usize;
-                offset += 2;
-
-                if offset + class_len >= data.len() {
-                    break;
-                }
-                let class = &data[offset..offset + class_len];
-                offset += class_len;
-
-                let enable = data[offset] as u32;
-                offset += 1;
-
-                host_toggle_class(node_id, class.as_ptr(), class_len as u32, enable);
-            }
-
-            OP_REMOVE => {
-                if offset + 2 > data.len() {
-                    break;
-                }
-                let node_id = read_u16(&data, offset) as u32;
-                offset += 2;
-
-                host_remove(node_id);
-            }
-
-            OP_EVENT => {
-                if offset + 5 > data.len() {
-                    break;
-                }
-                let node_id = read_u16(&data, offset) as u32;
-                offset += 2;
-                let event_type = data[offset] as u32;
-                offset += 1;
-                let handler_id = read_u16(&data, offset) as u32;
-                offset += 2;
-
-                host_listen(node_id, event_type, handler_id);
-            }
-
-            OP_EOF => break,
-
-            _ => {
-                // Unknown opcode, stop processing
-                break;
             }
         }
-    }
-
-    0
+    }    0
 }
 
 /// Event dispatcher (called by JS)
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn on_event(handler_id: u32) {
     // Dispatch to registered handler
     unsafe {
@@ -271,19 +271,19 @@ pub extern "C" fn on_event(handler_id: u32) {
 }
 
 /// Get node count
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn get_node_count() -> u32 {
     unsafe { RUNTIME.node_count }
 }
 
 /// Get template count
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn get_template_count() -> u32 {
     unsafe { RUNTIME.template_count }
 }
 
 /// Reset runtime
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn reset() {
     unsafe {
         RUNTIME.node_count = 0;

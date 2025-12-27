@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "DOM integrity protection"
+keywords = ["wasm", "web", "security", "dx", "dom"]
+categories = ["wasm", "web-programming"]
 
 [lib]
 path = "src/lib.rs"

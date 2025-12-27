@@ -3,8 +3,11 @@ name = "dx-www"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-description = "The Transpiler-to-Binary Pipeline - Converts .tsx to .dxb and .wasm"
 license.workspace = true
+repository.workspace = true
+description = "The Transpiler-to-Binary Pipeline - Converts .tsx to .dxb and .wasm"
+keywords = ["wasm", "web", "compiler", "dx", "transpiler"]
+categories = ["wasm", "compilers", "web-programming"]
 
 [lib]
 name = "dx_compiler"

@@ -2,8 +2,12 @@
 name = "dx-www-client"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Sub-20KB WASM runtime for dx-www - pure FFI, no wasm-bindgen"
+keywords = ["wasm", "web", "client", "dx", "runtime"]
+categories = ["wasm", "web-programming"]
 
 [lib]
 crate-type = ["cdylib"]

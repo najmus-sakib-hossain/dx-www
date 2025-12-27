@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Priority-based task scheduler for WASM runtime"
+keywords = ["wasm", "web", "scheduler", "dx", "async"]
+categories = ["wasm", "web-programming", "asynchronous"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

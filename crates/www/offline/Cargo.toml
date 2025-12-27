@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "CRDT offline engine"
+keywords = ["wasm", "web", "crdt", "dx", "offline"]
+categories = ["wasm", "data-structures"]
 
 [lib]
 path = "src/lib.rs"

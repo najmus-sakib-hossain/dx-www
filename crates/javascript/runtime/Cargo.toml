@@ -2,9 +2,10 @@
 name = "dx-js-runtime"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
-description = "The fastest JavaScript/TypeScript runtime - targeting 10x faster than Bun"
 repository.workspace = true
+description = "The fastest JavaScript/TypeScript runtime - targeting 10x faster than Bun"
 keywords = ["javascript", "typescript", "runtime", "jit", "compiler"]
 categories = ["compilers", "development-tools"]
 
@@ -55,7 +56,12 @@ parking_lot = "0.12"
 crossbeam = "0.8"
 
 # Async (optional io_uring)
-tokio = { version = "1.43", features = ["rt-multi-thread", "fs", "io-util", "macros"] }
+tokio = { version = "1.43", features = [
+    "rt-multi-thread",
+    "fs",
+    "io-util",
+    "macros",
+] }
 io-uring = { version = "0.7", optional = true }
 
 # GPU (optional)

@@ -6,6 +6,7 @@ license.workspace = true
 description = "The binary protocol that killed JSON and HTML"
 repository.workspace = true
 keywords = ["binary", "wasm", "dx", "protocol", "htip"]
+categories = ["wasm", "encoding"]
 authors.workspace = true
 
 [dependencies]

@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Realtime binary WebSocket protocol"
+keywords = ["wasm", "web", "websocket", "dx", "realtime"]
+categories = ["wasm", "web-programming", "network-programming"]
 
 [lib]
 path = "src/lib.rs"
@@ -28,4 +31,3 @@ client = []
 
 [dev-dependencies]
 tokio = { version = "1.35", features = ["full", "test-util"] }
-

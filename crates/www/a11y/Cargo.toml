@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Compile-time accessibility auditor"
+keywords = ["wasm", "web", "accessibility", "dx", "a11y"]
+categories = ["wasm", "web-programming", "accessibility"]
 
 [lib]
 path = "src/lib.rs"

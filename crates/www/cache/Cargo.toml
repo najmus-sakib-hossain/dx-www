@@ -7,6 +7,7 @@ license.workspace = true
 description = "The Eternal Binary Cache Engine - 0ms second-visit LCP"
 repository.workspace = true
 keywords = ["cache", "indexeddb", "wasm", "performance", "eternal"]
+categories = ["wasm", "caching"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -65,4 +66,3 @@ console_error_panic_hook = "0.1"
 
 [dev-dependencies]
 rand = "0.8"
-

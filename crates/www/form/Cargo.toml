@@ -6,6 +6,8 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Binary validation engine - compile-time schema validation with zero runtime overhead"
+keywords = ["wasm", "web", "validation", "dx", "form"]
+categories = ["wasm", "web-programming"]
 
 [lib]
 name = "dx_www_form"

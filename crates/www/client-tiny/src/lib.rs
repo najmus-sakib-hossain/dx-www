@@ -17,7 +17,7 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 // FFI: Minimal host imports (only what we need)
 // ============================================================================
 
-extern "C" {
+unsafe extern "C" {
     fn host_clone_template(id: u32) -> u32;
     fn host_append(parent: u32, child: u32);
     fn host_set_text(node: u32, ptr: *const u8, len: u32);
@@ -28,13 +28,13 @@ extern "C" {
 // ============================================================================
 
 /// Initialize - returns 0 for success
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn init() -> u32 {
     0
 }
 
 /// Render template by ID to body (id=0)
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn render(template_id: u32) -> u32 {
     unsafe {
         let node = host_clone_template(template_id);
@@ -44,5 +44,5 @@ pub extern "C" fn render(template_id: u32) -> u32 {
 }
 
 /// Handle event by ID
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn on_event(_id: u32) {}

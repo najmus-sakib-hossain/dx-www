@@ -14,19 +14,21 @@ static mut PTR: usize = 0;
 
 unsafe impl GlobalAlloc for BumpAlloc {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let align = layout.align();
-        let start = (PTR + align - 1) & !(align - 1);
-        let end = start + layout.size();
+        unsafe {
+            let align = layout.align();
+            let start = (PTR + align - 1) & !(align - 1);
+            let end = start + layout.size();
 
-        if end > HEAP_SIZE {
-            #[cfg(target_arch = "wasm32")]
-            core::arch::wasm32::unreachable();
-            #[cfg(not(target_arch = "wasm32"))]
-            return core::ptr::null_mut();
+            if end > HEAP_SIZE {
+                #[cfg(target_arch = "wasm32")]
+                core::arch::wasm32::unreachable();
+                #[cfg(not(target_arch = "wasm32"))]
+                return core::ptr::null_mut();
+            }
+
+            PTR = end;
+            HEAP.as_mut_ptr().add(start)
         }
-
-        PTR = end;
-        HEAP.as_mut_ptr().add(start)
     }
 
     unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {
@@ -35,7 +37,9 @@ unsafe impl GlobalAlloc for BumpAlloc {
 }
 
 /// Reset heap pointer
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe fn reset_heap() {
-    PTR = 0;
+    unsafe {
+        PTR = 0;
+    }
 }

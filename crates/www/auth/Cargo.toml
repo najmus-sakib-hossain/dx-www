@@ -6,6 +6,8 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Binary authentication - Ed25519 tokens with passkey support"
+keywords = ["auth", "ed25519", "passkey", "dx", "security"]
+categories = ["authentication", "cryptography"]
 
 [lib]
 name = "dx_www_auth"

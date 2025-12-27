@@ -6,6 +6,8 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Binary RPC data fetching - zero-parse request/response with cache"
+keywords = ["wasm", "web", "rpc", "dx", "query"]
+categories = ["wasm", "web-programming"]
 
 [lib]
 name = "dx_www_query"
@@ -33,7 +35,14 @@ gloo-net = { version = "0.6", optional = true }
 wasm-bindgen = { version = "0.2", optional = true }
 wasm-bindgen-futures = { version = "0.4", optional = true }
 js-sys = { version = "0.3", optional = true }
-web-sys = { version = "0.3", features = ["Headers", "Request", "RequestInit", "RequestMode", "Response", "Window"], optional = true }
+web-sys = { version = "0.3", features = [
+    "Headers",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+    "Window",
+], optional = true }
 
 # Internal dependencies
 dx-www-packet = { workspace = true, features = ["std"], optional = true }

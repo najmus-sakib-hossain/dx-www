@@ -1,8 +1,7 @@
 [package]
 name = "dx-js-monorepo"
 version.workspace = true
-edition = "2021"
-rust-version = "1.75"
+edition.workspace = true
 authors.workspace = true
 description = "Binary-first monorepo management system with 30-100x performance improvements"
 repository.workspace = true
