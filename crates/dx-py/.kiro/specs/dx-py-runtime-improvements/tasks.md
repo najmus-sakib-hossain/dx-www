@@ -338,23 +338,23 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
   - [ ] 9.7 Checkpoint - Real async I/O complete
 
 - [-] 10. Python Parser (Priority: Low)
-  - [-] 10.1 Create dx-py-parser crate
+  - [x] 10.1 Create dx-py-parser crate
     - Create Cargo.toml
     - Define module structure
     - _Requirements: 10.1_
 
-  - [ ] 10.2 Implement lexer
+  - [x] 10.2 Implement lexer
     - Tokenize Python source
     - Handle indentation
     - Handle string literals
     - _Requirements: 10.1_
 
-  - [ ] 10.3 Implement AST types
+  - [x] 10.3 Implement AST types
     - Define Module, Statement, Expression
     - Define all Python constructs
     - _Requirements: 10.2_
 
-  - [ ] 10.4 Implement parser
+  - [x] 10.4 Implement parser
     - Parse expressions
     - Parse statements
     - Parse function/class definitions

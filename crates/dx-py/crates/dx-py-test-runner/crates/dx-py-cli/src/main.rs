@@ -7,6 +7,8 @@ use std::time::Instant;
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;
+use dx_py_discovery::TestScanner;
+use dx_py_executor::{WorkStealingExecutor, ExecutorConfig, ExecutionSummary};
 
 mod filter;
 mod junit;
@@ -143,28 +145,116 @@ fn run_tests(
         println!();
     }
 
-    // TODO: Integrate with discovery, executor, etc.
-    // For now, show placeholder output
+    // Discover tests using tree-sitter
+    let discovery_start = Instant::now();
+    let mut scanner = match TestScanner::new() {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("{}: {}", "Discovery error".red(), e);
+            return;
+        }
+    };
+
+    let mut all_tests = Vec::new();
+    
+    // Scan for Python test files
+    if let Ok(entries) = walkdir(root) {
+        for entry in entries {
+            if entry.extension().map_or(false, |e| e == "py") {
+                if let Ok(tests) = scanner.scan_file(&entry) {
+                    for test in tests {
+                        if filter.matches(&test.name) {
+                            all_tests.push(test);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    let discovery_time = discovery_start.elapsed();
+
+    if verbose {
+        println!("Discovery: {:.2}ms ({} tests found)", 
+            discovery_time.as_secs_f64() * 1000.0, 
+            all_tests.len());
+    }
 
     if watch {
         println!("{}", "Watch mode enabled - press Ctrl+C to exit".yellow());
         println!("Watching for changes in: {}", root.display());
-        // watch::run_watch_mode(root, &filter);
+        return;
     }
 
-    // Simulated test results for demonstration
-    let passed = 10;
-    let failed = 0;
-    let skipped = 2;
-    let total = passed + failed + skipped;
-    let duration = start.elapsed();
+    // Execute tests using work-stealing executor
+    let execution_start = Instant::now();
+    let config = ExecutorConfig::default()
+        .with_workers(workers.unwrap_or(num_cpus::get()));
+    let executor = WorkStealingExecutor::new(config);
+    
+    if let Err(e) = executor.submit_all(all_tests.clone()) {
+        eprintln!("{}: {}", "Execution error".red(), e);
+        return;
+    }
+    
+    let results = executor.execute();
+    let execution_time = execution_start.elapsed();
+    let total_time = start.elapsed();
 
+    // Print individual test results
+    for result in &results {
+        let test = all_tests.iter().find(|t| t.id == result.test_id);
+        let name = test.map(|t| t.full_name()).unwrap_or_else(|| "unknown".to_string());
+        
+        match &result.status {
+            dx_py_core::TestStatus::Pass => {
+                println!("  {} {} ({:.2}ms)", 
+                    "✓".green(), 
+                    name, 
+                    result.duration.as_secs_f64() * 1000.0);
+            }
+            dx_py_core::TestStatus::Fail => {
+                println!("  {} {} ({:.2}ms)", 
+                    "✗".red(), 
+                    name, 
+                    result.duration.as_secs_f64() * 1000.0);
+                if let Some(tb) = &result.traceback {
+                    println!("    {}", tb.red());
+                }
+            }
+            dx_py_core::TestStatus::Skip { reason } => {
+                println!("  {} {} (skipped: {})", 
+                    "○".yellow(), 
+                    name, 
+                    reason);
+            }
+            dx_py_core::TestStatus::Error { message } => {
+                println!("  {} {} (error: {})", 
+                    "!".red().bold(), 
+                    name, 
+                    message);
+            }
+        }
+    }
+
+    // Calculate summary
+    let summary = ExecutionSummary::from_results(&results, executor.panics());
+    
     println!();
-    print_summary(passed, failed, skipped, duration);
+    if verbose {
+        println!("Discovery: {:.2}ms", discovery_time.as_secs_f64() * 1000.0);
+        println!("Execution: {:.2}ms", execution_time.as_secs_f64() * 1000.0);
+    }
+    print_summary(summary.passed, summary.failed, summary.skipped, total_time);
 
     if ci {
         // Generate JUnit XML
-        let report = JUnitReport::new("dx-py-tests");
+        let mut report = JUnitReport::new("dx-py-tests");
+        for result in &results {
+            let test = all_tests.iter().find(|t| t.id == result.test_id);
+            let name = test.map(|t| t.full_name()).unwrap_or_else(|| "unknown".to_string());
+            report.add_result(&name, result.clone());
+        }
         if let Err(e) = report.write_to_file(junit_output) {
             eprintln!("{}: {}", "Error writing JUnit XML".red(), e);
         } else if verbose {
@@ -177,14 +267,89 @@ fn run_tests(
     }
 }
 
+/// Walk directory recursively and collect Python files
+fn walkdir(root: &PathBuf) -> std::io::Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    walk_recursive(root, &mut files)?;
+    Ok(files)
+}
+
+fn walk_recursive(dir: &PathBuf, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
+    if dir.is_dir() {
+        for entry in std::fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                // Skip hidden directories and common non-test directories
+                let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                if !name.starts_with('.') && name != "__pycache__" && name != "node_modules" {
+                    walk_recursive(&path, files)?;
+                }
+            } else if path.extension().map_or(false, |e| e == "py") {
+                // Only include test files
+                let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                if name.starts_with("test_") || name.ends_with("_test.py") {
+                    files.push(path);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 fn discover_tests(root: &PathBuf, pattern: &str) {
     println!("{}", "Discovering tests...".cyan());
     println!("Root: {}", root.display());
     println!("Pattern: {}", pattern);
     println!();
 
-    // TODO: Integrate with dx-py-discovery
-    println!("{}", "No tests discovered (integration pending)".yellow());
+    let start = Instant::now();
+    let filter = TestFilter::new(pattern);
+
+    // Discover tests using tree-sitter
+    let mut scanner = match TestScanner::new() {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("{}: {}", "Discovery error".red(), e);
+            return;
+        }
+    };
+
+    let mut all_tests = Vec::new();
+    
+    // Scan for Python test files
+    if let Ok(entries) = walkdir(root) {
+        for entry in entries {
+            if let Ok(tests) = scanner.scan_file(&entry) {
+                for test in tests {
+                    if filter.matches(&test.name) {
+                        all_tests.push((entry.clone(), test));
+                    }
+                }
+            }
+        }
+    }
+    
+    let discovery_time = start.elapsed();
+
+    // Print discovered tests
+    let mut current_file: Option<PathBuf> = None;
+    for (file, test) in &all_tests {
+        if current_file.as_ref() != Some(file) {
+            println!("\n{}", file.display().to_string().cyan());
+            current_file = Some(file.clone());
+        }
+        println!("  {} (line {})", test.full_name().green(), test.line_number);
+    }
+
+    println!();
+    println!("{}", "─".repeat(50));
+    println!(
+        "Discovered {} tests in {:.2}ms",
+        all_tests.len().to_string().green(),
+        discovery_time.as_secs_f64() * 1000.0
+    );
+    println!("{}", "─".repeat(50));
 }
 
 fn show_graph(root: &PathBuf, file: &PathBuf) {

@@ -1,4 +1,9 @@
-//! Parser error types
+//! Parser error types with helpful suggestions
+//!
+//! This module provides detailed error messages with:
+//! - Precise line/column information
+//! - Helpful suggestions for common mistakes
+//! - Context about what was expected
 
 use thiserror::Error;
 
@@ -29,6 +34,15 @@ impl std::fmt::Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "line {}, column {}", self.line, self.column)
     }
+}
+
+/// Suggestion for fixing an error
+#[derive(Debug, Clone)]
+pub struct Suggestion {
+    /// Description of the fix
+    pub message: String,
+    /// Optional replacement text
+    pub replacement: Option<String>,
 }
 
 /// Parse error with location information

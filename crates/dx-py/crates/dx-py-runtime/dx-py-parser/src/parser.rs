@@ -677,3 +677,889 @@ impl<'a> Parser<'a> {
             location,
         })
     }
+
+    /// Parse a block of statements
+    fn parse_block(&mut self) -> ParseResult<Vec<Statement>> {
+        self.expect(&TokenKind::Newline)?;
+        self.expect(&TokenKind::Indent)?;
+
+        let mut body = Vec::new();
+        while !self.check(&TokenKind::Dedent)? && !self.check(&TokenKind::Eof)? {
+            // Skip blank lines
+            while self.consume(&TokenKind::Newline)? {}
+            
+            if self.check(&TokenKind::Dedent)? || self.check(&TokenKind::Eof)? {
+                break;
+            }
+            
+            body.push(self.parse_statement()?);
+        }
+
+        self.consume(&TokenKind::Dedent)?;
+        Ok(body)
+    }
+
+    /// Parse function arguments
+    fn parse_arguments(&mut self) -> ParseResult<Arguments> {
+        let mut args = Arguments::default();
+
+        if self.check(&TokenKind::RightParen)? {
+            return Ok(args);
+        }
+
+        loop {
+            if self.check(&TokenKind::RightParen)? {
+                break;
+            }
+
+            // Check for *args or **kwargs
+            if self.consume(&TokenKind::DoubleStar)? {
+                let name = self.parse_identifier()?;
+                args.kwarg = Some(Box::new(Arg {
+                    arg: name,
+                    annotation: None,
+                    location: self.location(),
+                }));
+                break;
+            }
+
+            if self.consume(&TokenKind::Star)? {
+                if self.check(&TokenKind::Comma)? || self.check(&TokenKind::RightParen)? {
+                    // Bare * for keyword-only args
+                } else {
+                    let name = self.parse_identifier()?;
+                    args.vararg = Some(Box::new(Arg {
+                        arg: name,
+                        annotation: None,
+                        location: self.location(),
+                    }));
+                }
+                if !self.consume(&TokenKind::Comma)? {
+                    break;
+                }
+                continue;
+            }
+
+            let name = self.parse_identifier()?;
+            let annotation = if self.consume(&TokenKind::Colon)? {
+                Some(Box::new(self.parse_expression()?))
+            } else {
+                None
+            };
+
+            let has_default = if self.consume(&TokenKind::Assign)? {
+                args.defaults.push(self.parse_expression()?);
+                true
+            } else {
+                false
+            };
+
+            let arg = Arg {
+                arg: name,
+                annotation,
+                location: self.location(),
+            };
+
+            if args.vararg.is_some() {
+                args.kwonlyargs.push(arg);
+                if !has_default {
+                    args.kw_defaults.push(None);
+                }
+            } else {
+                args.args.push(arg);
+            }
+
+            if !self.consume(&TokenKind::Comma)? {
+                break;
+            }
+        }
+
+        Ok(args)
+    }
+
+    /// Parse call arguments
+    fn parse_call_args(&mut self) -> ParseResult<(Vec<Expression>, Vec<Keyword>)> {
+        let mut args = Vec::new();
+        let mut keywords = Vec::new();
+
+        if self.check(&TokenKind::RightParen)? {
+            return Ok((args, keywords));
+        }
+
+        loop {
+            if self.check(&TokenKind::RightParen)? {
+                break;
+            }
+
+            // Check for **kwargs
+            if self.consume(&TokenKind::DoubleStar)? {
+                let value = self.parse_expression()?;
+                keywords.push(Keyword {
+                    arg: None,
+                    value,
+                    location: self.location(),
+                });
+            } else if self.consume(&TokenKind::Star)? {
+                // *args
+                let value = self.parse_expression()?;
+                args.push(Expression::Starred {
+                    value: Box::new(value),
+                    location: self.location(),
+                });
+            } else {
+                let expr = self.parse_expression()?;
+                
+                // Check for keyword argument
+                if let Expression::Name { id, location } = &expr {
+                    if self.consume(&TokenKind::Assign)? {
+                        let value = self.parse_expression()?;
+                        keywords.push(Keyword {
+                            arg: Some(id.clone()),
+                            value,
+                            location: *location,
+                        });
+                    } else {
+                        args.push(expr);
+                    }
+                } else {
+                    args.push(expr);
+                }
+            }
+
+            if !self.consume(&TokenKind::Comma)? {
+                break;
+            }
+        }
+
+        Ok((args, keywords))
+    }
+
+    /// Parse an identifier
+    fn parse_identifier(&mut self) -> ParseResult<String> {
+        let token = self.advance()?;
+        match token.kind {
+            TokenKind::Identifier(name) => Ok(name),
+            _ => Err(ParseError::unexpected_token(
+                token.location,
+                "identifier",
+                &token.kind.to_string(),
+            )),
+        }
+    }
+
+    /// Parse a target for assignment or comprehension (name or tuple of names)
+    fn parse_target(&mut self) -> ParseResult<Expression> {
+        let location = self.location();
+        
+        // Check for tuple unpacking
+        if self.consume(&TokenKind::LeftParen)? {
+            let mut elts = Vec::new();
+            if !self.check(&TokenKind::RightParen)? {
+                elts.push(self.parse_target()?);
+                while self.consume(&TokenKind::Comma)? {
+                    if self.check(&TokenKind::RightParen)? {
+                        break;
+                    }
+                    elts.push(self.parse_target()?);
+                }
+            }
+            self.expect(&TokenKind::RightParen)?;
+            return Ok(Expression::Tuple { elts, location });
+        }
+        
+        // Simple name
+        let name = self.parse_identifier()?;
+        Ok(Expression::Name { id: name, location })
+    }
+
+    /// Parse an expression
+    pub fn parse_expression(&mut self) -> ParseResult<Expression> {
+        self.parse_or_expr()
+    }
+
+    /// Parse a test expression (stops at 'for' keyword for comprehensions)
+    fn parse_test_expr(&mut self) -> ParseResult<Expression> {
+        // For comprehensions, we need to parse conditional expressions
+        // but stop at 'for' keyword
+        let expr = self.parse_or_expr()?;
+        
+        // Handle conditional expression: x if cond else y
+        if self.consume(&TokenKind::If)? {
+            let location = self.location();
+            let test = self.parse_or_expr()?;
+            self.expect(&TokenKind::Else)?;
+            let orelse = self.parse_test_expr()?;
+            return Ok(Expression::IfExp {
+                test: Box::new(test),
+                body: Box::new(expr),
+                orelse: Box::new(orelse),
+                location,
+            });
+        }
+        
+        Ok(expr)
+    }
+
+    fn parse_or_expr(&mut self) -> ParseResult<Expression> {
+        let mut left = self.parse_and_expr()?;
+
+        while self.consume(&TokenKind::Or)? {
+            let right = self.parse_and_expr()?;
+            let location = self.location();
+            left = Expression::BoolOp {
+                op: BoolOp::Or,
+                values: vec![left, right],
+                location,
+            };
+        }
+
+        Ok(left)
+    }
+
+    fn parse_and_expr(&mut self) -> ParseResult<Expression> {
+        let mut left = self.parse_not_expr()?;
+
+        while self.consume(&TokenKind::And)? {
+            let right = self.parse_not_expr()?;
+            let location = self.location();
+            left = Expression::BoolOp {
+                op: BoolOp::And,
+                values: vec![left, right],
+                location,
+            };
+        }
+
+        Ok(left)
+    }
+
+    fn parse_not_expr(&mut self) -> ParseResult<Expression> {
+        if self.consume(&TokenKind::Not)? {
+            let location = self.location();
+            let operand = self.parse_not_expr()?;
+            return Ok(Expression::UnaryOp {
+                op: UnaryOp::Not,
+                operand: Box::new(operand),
+                location,
+            });
+        }
+        self.parse_comparison()
+    }
+
+    fn parse_comparison(&mut self) -> ParseResult<Expression> {
+        let left = self.parse_bitor_expr()?;
+        let location = self.location();
+
+        let mut ops = Vec::new();
+        let mut comparators = Vec::new();
+
+        loop {
+            let op = if self.consume(&TokenKind::Less)? {
+                CmpOp::Lt
+            } else if self.consume(&TokenKind::Greater)? {
+                CmpOp::Gt
+            } else if self.consume(&TokenKind::LessEqual)? {
+                CmpOp::LtE
+            } else if self.consume(&TokenKind::GreaterEqual)? {
+                CmpOp::GtE
+            } else if self.consume(&TokenKind::Equal)? {
+                CmpOp::Eq
+            } else if self.consume(&TokenKind::NotEqual)? {
+                CmpOp::NotEq
+            } else if self.consume(&TokenKind::In)? {
+                CmpOp::In
+            } else if self.consume(&TokenKind::Is)? {
+                if self.consume(&TokenKind::Not)? {
+                    CmpOp::IsNot
+                } else {
+                    CmpOp::Is
+                }
+            } else if self.consume(&TokenKind::Not)? {
+                self.expect(&TokenKind::In)?;
+                CmpOp::NotIn
+            } else {
+                break;
+            };
+
+            ops.push(op);
+            comparators.push(self.parse_bitor_expr()?);
+        }
+
+        if ops.is_empty() {
+            Ok(left)
+        } else {
+            Ok(Expression::Compare {
+                left: Box::new(left),
+                ops,
+                comparators,
+                location,
+            })
+        }
+    }
+
+    fn parse_bitor_expr(&mut self) -> ParseResult<Expression> {
+        let mut left = self.parse_bitxor_expr()?;
+
+        while self.consume(&TokenKind::Pipe)? {
+            let location = self.location();
+            let right = self.parse_bitxor_expr()?;
+            left = Expression::BinOp {
+                left: Box::new(left),
+                op: BinOp::BitOr,
+                right: Box::new(right),
+                location,
+            };
+        }
+
+        Ok(left)
+    }
+
+    fn parse_bitxor_expr(&mut self) -> ParseResult<Expression> {
+        let mut left = self.parse_bitand_expr()?;
+
+        while self.consume(&TokenKind::Caret)? {
+            let location = self.location();
+            let right = self.parse_bitand_expr()?;
+            left = Expression::BinOp {
+                left: Box::new(left),
+                op: BinOp::BitXor,
+                right: Box::new(right),
+                location,
+            };
+        }
+
+        Ok(left)
+    }
+
+    fn parse_bitand_expr(&mut self) -> ParseResult<Expression> {
+        let mut left = self.parse_shift_expr()?;
+
+        while self.consume(&TokenKind::Ampersand)? {
+            let location = self.location();
+            let right = self.parse_shift_expr()?;
+            left = Expression::BinOp {
+                left: Box::new(left),
+                op: BinOp::BitAnd,
+                right: Box::new(right),
+                location,
+            };
+        }
+
+        Ok(left)
+    }
+
+    fn parse_shift_expr(&mut self) -> ParseResult<Expression> {
+        let mut left = self.parse_arith_expr()?;
+
+        loop {
+            let op = if self.consume(&TokenKind::LeftShift)? {
+                BinOp::LShift
+            } else if self.consume(&TokenKind::RightShift)? {
+                BinOp::RShift
+            } else {
+                break;
+            };
+
+            let location = self.location();
+            let right = self.parse_arith_expr()?;
+            left = Expression::BinOp {
+                left: Box::new(left),
+                op,
+                right: Box::new(right),
+                location,
+            };
+        }
+
+        Ok(left)
+    }
+
+    fn parse_arith_expr(&mut self) -> ParseResult<Expression> {
+        let mut left = self.parse_term()?;
+
+        loop {
+            let op = if self.consume(&TokenKind::Plus)? {
+                BinOp::Add
+            } else if self.consume(&TokenKind::Minus)? {
+                BinOp::Sub
+            } else {
+                break;
+            };
+
+            let location = self.location();
+            let right = self.parse_term()?;
+            left = Expression::BinOp {
+                left: Box::new(left),
+                op,
+                right: Box::new(right),
+                location,
+            };
+        }
+
+        Ok(left)
+    }
+
+    fn parse_term(&mut self) -> ParseResult<Expression> {
+        let mut left = self.parse_factor()?;
+
+        loop {
+            let op = if self.consume(&TokenKind::Star)? {
+                BinOp::Mult
+            } else if self.consume(&TokenKind::Slash)? {
+                BinOp::Div
+            } else if self.consume(&TokenKind::DoubleSlash)? {
+                BinOp::FloorDiv
+            } else if self.consume(&TokenKind::Percent)? {
+                BinOp::Mod
+            } else if self.consume(&TokenKind::At)? {
+                BinOp::MatMult
+            } else {
+                break;
+            };
+
+            let location = self.location();
+            let right = self.parse_factor()?;
+            left = Expression::BinOp {
+                left: Box::new(left),
+                op,
+                right: Box::new(right),
+                location,
+            };
+        }
+
+        Ok(left)
+    }
+
+    fn parse_factor(&mut self) -> ParseResult<Expression> {
+        let location = self.location();
+
+        if self.consume(&TokenKind::Plus)? {
+            let operand = self.parse_factor()?;
+            return Ok(Expression::UnaryOp {
+                op: UnaryOp::UAdd,
+                operand: Box::new(operand),
+                location,
+            });
+        }
+
+        if self.consume(&TokenKind::Minus)? {
+            let operand = self.parse_factor()?;
+            return Ok(Expression::UnaryOp {
+                op: UnaryOp::USub,
+                operand: Box::new(operand),
+                location,
+            });
+        }
+
+        if self.consume(&TokenKind::Tilde)? {
+            let operand = self.parse_factor()?;
+            return Ok(Expression::UnaryOp {
+                op: UnaryOp::Invert,
+                operand: Box::new(operand),
+                location,
+            });
+        }
+
+        self.parse_power()
+    }
+
+    fn parse_power(&mut self) -> ParseResult<Expression> {
+        let base = self.parse_await_expr()?;
+
+        if self.consume(&TokenKind::DoubleStar)? {
+            let location = self.location();
+            let exp = self.parse_factor()?;
+            return Ok(Expression::BinOp {
+                left: Box::new(base),
+                op: BinOp::Pow,
+                right: Box::new(exp),
+                location,
+            });
+        }
+
+        Ok(base)
+    }
+
+    fn parse_await_expr(&mut self) -> ParseResult<Expression> {
+        if self.consume(&TokenKind::Await)? {
+            let location = self.location();
+            let value = self.parse_primary()?;
+            return Ok(Expression::Await {
+                value: Box::new(value),
+                location,
+            });
+        }
+        self.parse_primary()
+    }
+
+    fn parse_primary(&mut self) -> ParseResult<Expression> {
+        let mut expr = self.parse_atom()?;
+
+        loop {
+            if self.consume(&TokenKind::Dot)? {
+                let location = self.location();
+                let attr = self.parse_identifier()?;
+                expr = Expression::Attribute {
+                    value: Box::new(expr),
+                    attr,
+                    location,
+                };
+            } else if self.consume(&TokenKind::LeftParen)? {
+                let location = self.location();
+                let (args, keywords) = self.parse_call_args()?;
+                self.expect(&TokenKind::RightParen)?;
+                expr = Expression::Call {
+                    func: Box::new(expr),
+                    args,
+                    keywords,
+                    location,
+                };
+            } else if self.consume(&TokenKind::LeftBracket)? {
+                let location = self.location();
+                let slice = self.parse_slice()?;
+                self.expect(&TokenKind::RightBracket)?;
+                expr = Expression::Subscript {
+                    value: Box::new(expr),
+                    slice: Box::new(slice),
+                    location,
+                };
+            } else {
+                break;
+            }
+        }
+
+        Ok(expr)
+    }
+
+    fn parse_slice(&mut self) -> ParseResult<Expression> {
+        let location = self.location();
+
+        // Check for simple index vs slice
+        if self.check(&TokenKind::Colon)? {
+            // Slice starting with :
+            self.advance()?;
+            let upper = if !self.check(&TokenKind::Colon)? && !self.check(&TokenKind::RightBracket)? {
+                Some(Box::new(self.parse_expression()?))
+            } else {
+                None
+            };
+            let step = if self.consume(&TokenKind::Colon)? {
+                if !self.check(&TokenKind::RightBracket)? {
+                    Some(Box::new(self.parse_expression()?))
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            return Ok(Expression::Slice {
+                lower: None,
+                upper,
+                step,
+                location,
+            });
+        }
+
+        let lower = self.parse_expression()?;
+
+        if self.consume(&TokenKind::Colon)? {
+            let upper = if !self.check(&TokenKind::Colon)? && !self.check(&TokenKind::RightBracket)? {
+                Some(Box::new(self.parse_expression()?))
+            } else {
+                None
+            };
+            let step = if self.consume(&TokenKind::Colon)? {
+                if !self.check(&TokenKind::RightBracket)? {
+                    Some(Box::new(self.parse_expression()?))
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            return Ok(Expression::Slice {
+                lower: Some(Box::new(lower)),
+                upper,
+                step,
+                location,
+            });
+        }
+
+        Ok(lower)
+    }
+
+    fn parse_atom(&mut self) -> ParseResult<Expression> {
+        let token = self.peek()?.clone();
+        let location = token.location;
+
+        match &token.kind {
+            TokenKind::Integer(n) => {
+                let n = *n;
+                self.advance()?;
+                Ok(Expression::Constant {
+                    value: Constant::Int(n),
+                    location,
+                })
+            }
+            TokenKind::Float(n) => {
+                let n = *n;
+                self.advance()?;
+                Ok(Expression::Constant {
+                    value: Constant::Float(n),
+                    location,
+                })
+            }
+            TokenKind::String(s) => {
+                let s = s.clone();
+                self.advance()?;
+                Ok(Expression::Constant {
+                    value: Constant::Str(s),
+                    location,
+                })
+            }
+            TokenKind::FString(s) => {
+                let s = s.clone();
+                self.advance()?;
+                // For now, treat f-strings as regular strings
+                Ok(Expression::Constant {
+                    value: Constant::Str(s),
+                    location,
+                })
+            }
+            TokenKind::Bytes(b) => {
+                let b = b.clone();
+                self.advance()?;
+                Ok(Expression::Constant {
+                    value: Constant::Bytes(b),
+                    location,
+                })
+            }
+            TokenKind::True => {
+                self.advance()?;
+                Ok(Expression::Constant {
+                    value: Constant::Bool(true),
+                    location,
+                })
+            }
+            TokenKind::False => {
+                self.advance()?;
+                Ok(Expression::Constant {
+                    value: Constant::Bool(false),
+                    location,
+                })
+            }
+            TokenKind::None => {
+                self.advance()?;
+                Ok(Expression::Constant {
+                    value: Constant::None,
+                    location,
+                })
+            }
+            TokenKind::Ellipsis => {
+                self.advance()?;
+                Ok(Expression::Constant {
+                    value: Constant::Ellipsis,
+                    location,
+                })
+            }
+            TokenKind::Identifier(name) => {
+                let name = name.clone();
+                self.advance()?;
+                Ok(Expression::Name { id: name, location })
+            }
+            TokenKind::LeftParen => {
+                self.advance()?;
+                if self.check(&TokenKind::RightParen)? {
+                    self.advance()?;
+                    return Ok(Expression::Tuple {
+                        elts: Vec::new(),
+                        location,
+                    });
+                }
+                let expr = self.parse_expression()?;
+                if self.consume(&TokenKind::Comma)? {
+                    // Tuple
+                    let mut elts = vec![expr];
+                    while !self.check(&TokenKind::RightParen)? {
+                        elts.push(self.parse_expression()?);
+                        if !self.consume(&TokenKind::Comma)? {
+                            break;
+                        }
+                    }
+                    self.expect(&TokenKind::RightParen)?;
+                    Ok(Expression::Tuple { elts, location })
+                } else {
+                    self.expect(&TokenKind::RightParen)?;
+                    Ok(expr)
+                }
+            }
+            TokenKind::LeftBracket => {
+                self.advance()?;
+                if self.check(&TokenKind::RightBracket)? {
+                    self.advance()?;
+                    return Ok(Expression::List {
+                        elts: Vec::new(),
+                        location,
+                    });
+                }
+                // For list comprehension, we need to parse the element expression
+                // but stop before 'for' keyword
+                let first = self.parse_test_expr()?;
+                if self.check(&TokenKind::For)? {
+                    // List comprehension
+                    let generators = self.parse_comprehension()?;
+                    self.expect(&TokenKind::RightBracket)?;
+                    Ok(Expression::ListComp {
+                        elt: Box::new(first),
+                        generators,
+                        location,
+                    })
+                } else {
+                    let mut elts = vec![first];
+                    while self.consume(&TokenKind::Comma)? {
+                        if self.check(&TokenKind::RightBracket)? {
+                            break;
+                        }
+                        elts.push(self.parse_expression()?);
+                    }
+                    self.expect(&TokenKind::RightBracket)?;
+                    Ok(Expression::List { elts, location })
+                }
+            }
+            TokenKind::LeftBrace => {
+                self.advance()?;
+                if self.check(&TokenKind::RightBrace)? {
+                    self.advance()?;
+                    return Ok(Expression::Dict {
+                        keys: Vec::new(),
+                        values: Vec::new(),
+                        location,
+                    });
+                }
+                let first = self.parse_expression()?;
+                if self.consume(&TokenKind::Colon)? {
+                    // Dict
+                    let first_value = self.parse_expression()?;
+                    let mut keys = vec![Some(first)];
+                    let mut values = vec![first_value];
+                    while self.consume(&TokenKind::Comma)? {
+                        if self.check(&TokenKind::RightBrace)? {
+                            break;
+                        }
+                        if self.consume(&TokenKind::DoubleStar)? {
+                            keys.push(None);
+                            values.push(self.parse_expression()?);
+                        } else {
+                            keys.push(Some(self.parse_expression()?));
+                            self.expect(&TokenKind::Colon)?;
+                            values.push(self.parse_expression()?);
+                        }
+                    }
+                    self.expect(&TokenKind::RightBrace)?;
+                    Ok(Expression::Dict { keys, values, location })
+                } else {
+                    // Set
+                    let mut elts = vec![first];
+                    while self.consume(&TokenKind::Comma)? {
+                        if self.check(&TokenKind::RightBrace)? {
+                            break;
+                        }
+                        elts.push(self.parse_expression()?);
+                    }
+                    self.expect(&TokenKind::RightBrace)?;
+                    Ok(Expression::Set { elts, location })
+                }
+            }
+            TokenKind::Lambda => {
+                self.advance()?;
+                let args = if self.check(&TokenKind::Colon)? {
+                    Arguments::default()
+                } else {
+                    self.parse_arguments()?
+                };
+                self.expect(&TokenKind::Colon)?;
+                let body = self.parse_expression()?;
+                Ok(Expression::Lambda {
+                    args,
+                    body: Box::new(body),
+                    location,
+                })
+            }
+            _ => Err(ParseError::unexpected_token(
+                location,
+                "expression",
+                &token.kind.to_string(),
+            )),
+        }
+    }
+
+    fn parse_comprehension(&mut self) -> ParseResult<Vec<Comprehension>> {
+        let mut generators = Vec::new();
+
+        while self.consume(&TokenKind::For)? {
+            let is_async = false; // TODO: handle async for
+            // Parse target - should be a simple name or tuple, not a full expression
+            let target = self.parse_target()?;
+            self.expect(&TokenKind::In)?;
+            let iter = self.parse_or_expr()?;
+
+            let mut ifs = Vec::new();
+            while self.consume(&TokenKind::If)? {
+                ifs.push(self.parse_or_expr()?);
+            }
+
+            generators.push(Comprehension {
+                target,
+                iter,
+                ifs,
+                is_async,
+            });
+        }
+
+        Ok(generators)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_simple_expression() {
+        let mut parser = Parser::new("1 + 2 * 3");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::BinOp { op: BinOp::Add, .. }));
+    }
+
+    #[test]
+    fn test_parse_function_def() {
+        let source = "def foo(x, y):\n    return x + y\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::FunctionDef { .. }));
+    }
+
+    #[test]
+    fn test_parse_if_statement() {
+        let source = "if x > 0:\n    y = 1\nelse:\n    y = 2\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::If { .. }));
+    }
+
+    #[test]
+    fn test_parse_class_def() {
+        let source = "class Foo:\n    pass\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::ClassDef { .. }));
+    }
+
+    #[test]
+    fn test_parse_list_comprehension() {
+        let mut parser = Parser::new("[x * 2 for x in items]");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::ListComp { .. }));
+    }
+}

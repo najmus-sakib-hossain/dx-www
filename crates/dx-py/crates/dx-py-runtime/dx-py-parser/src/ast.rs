@@ -431,10 +431,10 @@ pub enum Constant {
 pub struct Arguments {
     pub posonlyargs: Vec<Arg>,
     pub args: Vec<Arg>,
-    pub vararg: Option<Arg>,
+    pub vararg: Option<Box<Arg>>,
     pub kwonlyargs: Vec<Arg>,
     pub kw_defaults: Vec<Option<Expression>>,
-    pub kwarg: Option<Arg>,
+    pub kwarg: Option<Box<Arg>>,
     pub defaults: Vec<Expression>,
 }
 
@@ -442,7 +442,7 @@ pub struct Arguments {
 #[derive(Debug, Clone)]
 pub struct Arg {
     pub arg: String,
-    pub annotation: Option<Expression>,
+    pub annotation: Option<Box<Expression>>,
     pub location: Location,
 }
 
