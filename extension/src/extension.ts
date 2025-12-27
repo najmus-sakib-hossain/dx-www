@@ -24,6 +24,7 @@ import { convertJsonToDocument, convertYamlToDocument, convertTomlToDocument, co
 import { serializeToLlmV3, parseHumanV3 } from './humanParserV3';
 import { formatDocumentV3, DEFAULT_CONFIG } from './humanFormatterV3';
 import { getForgeClient, ForgeStatusBar, registerForgeCommands } from './forge';
+import { initializeDxCheck, disposeDxCheck } from './check';
 
 /**
  * Extension context holding all components
@@ -105,7 +106,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         // 13. Initialize Forge integration
         await initializeForgeIntegration(context);
 
-        console.log('DX: Extension activated successfully (V3 format + Forge)');
+        // 14. Initialize dx-check linting
+        await initializeDxCheck(context);
+
+        console.log('DX: Extension activated successfully (V3 format + Forge + Check)');
 
     } catch (error) {
         console.error('DX Serializer: Activation failed:', error);
@@ -116,8 +120,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 /**
  * Deactivate the extension
  */
-export function deactivate(): void {
+export async function deactivate(): Promise<void> {
     console.log('DX: Deactivating extension...');
+
+    // Stop dx-check language server
+    await disposeDxCheck();
 
     // Disconnect from Forge daemon
     const forgeClient = getForgeClient();

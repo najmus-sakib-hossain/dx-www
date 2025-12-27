@@ -68,6 +68,8 @@ pub mod config;
 pub mod diagnostics;
 pub mod engine;
 pub mod fix;
+#[cfg(feature = "lsp")]
+pub mod lsp;
 pub mod project;
 pub mod reactor;
 pub mod rules;
@@ -80,6 +82,8 @@ pub use config::CheckerConfig;
 pub use diagnostics::{Diagnostic, DiagnosticSeverity, Fix, Span};
 pub use engine::{Checker, CheckResult};
 pub use fix::FixEngine;
+#[cfg(feature = "lsp")]
+pub use lsp::{start_lsp_server, DxCheckLanguageServer, LspConfig};
 pub use project::ProjectProfile;
 pub use reactor::LintReactor;
 pub use rules::{Rule, RuleId, RuleRegistry};

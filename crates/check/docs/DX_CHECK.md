@@ -320,9 +320,10 @@ cargo run -- check .
 - [x] Binary AST Cache
 - [x] Zero-Config Project Intelligence
 - [x] Core lint rules
+- [x] LSP Server (tower-lsp based)
+- [x] VS Code Extension Integration
 
 ### In Progress 🚧
-- [ ] Binary LSP Protocol
 - [ ] Incremental Binary Diagnostics
 - [ ] Cross-File Semantic Graph
 - [ ] Architecture Boundary Enforcement
@@ -333,6 +334,43 @@ cargo run -- check .
 - [ ] Speculative Pre-Computation
 - [ ] XOR Differential Fixes
 - [ ] Real-Time Health Dashboard
+
+## LSP Server
+
+dx-check includes a Language Server Protocol implementation for IDE integration.
+
+### Building with LSP Support
+
+```bash
+cargo build --release --features lsp
+```
+
+### Running the LSP Server
+
+```bash
+dx-check lsp
+```
+
+The LSP server communicates via stdin/stdout and supports:
+- `textDocument/publishDiagnostics` - Real-time linting as you type
+- `textDocument/codeAction` - Quick fixes for auto-fixable rules
+- `textDocument/hover` - Rule documentation on hover
+- `textDocument/formatting` - Format on save
+
+### VS Code Integration
+
+The dx-check LSP is integrated into the `vscode-dx` extension:
+
+1. Install the vscode-dx extension
+2. Configure `dx.check.enable: true` (default)
+3. The extension will automatically start the LSP server
+
+Configuration options:
+- `dx.check.enable` - Enable/disable linting
+- `dx.check.executablePath` - Custom path to dx-check binary
+- `dx.check.lintOnSave` - Lint when files are saved
+- `dx.check.lintOnType` - Lint as you type
+- `dx.check.autoFix` - Auto-apply fixes on save
 
 ## License
 

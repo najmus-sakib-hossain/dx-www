@@ -1,8 +1,8 @@
 {
   "name": "vscode-dx",
   "displayName": "DX",
-  "description": "The unified DX ecosystem extension - Serializer, Forge daemon integration, and tool orchestration",
-  "version": "0.2.0",
+  "description": "The unified DX ecosystem extension - Serializer, Forge daemon integration, dx-check linting, and tool orchestration",
+  "version": "0.3.0",
   "repository": "https://github.com/manfromexistence/dx",
   "license": "MIT",
   "publisher": "dx-runtime",
@@ -11,12 +11,15 @@
   },
   "categories": [
     "Programming Languages",
+    "Linters",
     "Formatters",
     "Themes",
     "Other"
   ],
   "keywords": [
     "dx",
+    "linter",
+    "check",
     "serializer",
     "forge",
     "tools",
@@ -29,6 +32,10 @@
   "activationEvents": [
     "onFileSystem:dxlens",
     "onLanguage:dx",
+    "onLanguage:typescript",
+    "onLanguage:javascript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascriptreact",
     "workspaceContains:**/*.dx",
     "workspaceContains:dx"
   ],
@@ -135,6 +142,36 @@
         "command": "dx.forge.syncGit",
         "title": "DX: Sync Forge with Git",
         "icon": "$(sync)"
+      },
+      {
+        "command": "dx.check.lint",
+        "title": "DX Check: Lint Current File",
+        "icon": "$(check)"
+      },
+      {
+        "command": "dx.check.lintWorkspace",
+        "title": "DX Check: Lint Workspace",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "dx.check.fix",
+        "title": "DX Check: Fix Current File",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "dx.check.fixWorkspace",
+        "title": "DX Check: Fix All Files in Workspace",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "dx.check.showRules",
+        "title": "DX Check: Show Rules",
+        "icon": "$(list-unordered)"
+      },
+      {
+        "command": "dx.check.restart",
+        "title": "DX Check: Restart Language Server",
+        "icon": "$(debug-restart)"
       }
     ],
     "menus": {
@@ -324,6 +361,48 @@
           "type": "string",
           "default": "",
           "description": "Path to the forge-cli executable. Leave empty to auto-detect from workspace or PATH."
+        },
+        "dx.check.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable dx-check linting"
+        },
+        "dx.check.executablePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the dx-check executable. Leave empty to auto-detect from workspace or PATH."
+        },
+        "dx.check.lintOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run linting when files are saved"
+        },
+        "dx.check.lintOnType": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run linting as you type (with debounce)"
+        },
+        "dx.check.lintDelay": {
+          "type": "number",
+          "default": 300,
+          "minimum": 100,
+          "maximum": 2000,
+          "description": "Delay in milliseconds before linting after typing stops"
+        },
+        "dx.check.autoFix": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically apply safe fixes on save"
+        },
+        "dx.check.showDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show linting diagnostics in the Problems panel"
+        },
+        "dx.check.rulesDir": {
+          "type": "string",
+          "default": "",
+          "description": "Path to custom rules directory. Leave empty to use default."
         }
       }
     }
@@ -348,6 +427,7 @@
     "typescript": "^5.3.2"
   },
   "dependencies": {
-    "ws": "^8.14.0"
+    "ws": "^8.14.0",
+    "vscode-languageclient": "^9.0.1"
   }
 }

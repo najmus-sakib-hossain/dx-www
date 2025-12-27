@@ -447,7 +447,21 @@ fn run_watch_mode(
 }
 
 fn run_lsp() -> Result<bool, Box<dyn std::error::Error>> {
-    println!("LSP server not yet implemented");
-    Ok(false)
+    #[cfg(feature = "lsp")]
+    {
+        use tokio::runtime::Runtime;
+        
+        let rt = Runtime::new()?;
+        rt.block_on(async {
+            dx_check::lsp::start_lsp_server().await
+        }).map_err(|e| -> Box<dyn std::error::Error> { e })?;
+        Ok(false)
+    }
+    
+    #[cfg(not(feature = "lsp"))]
+    {
+        eprintln!("LSP server not enabled. Rebuild with --features lsp");
+        Ok(true)
+    }
 }
 

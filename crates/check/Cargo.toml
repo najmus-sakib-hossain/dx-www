@@ -83,6 +83,10 @@ chrono = "0.4"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
+# LSP (Language Server Protocol)
+tower-lsp = { version = "0.20", optional = true }
+lsp-types = { version = "0.95", optional = true }
+
 # SIMD (optional, for pattern scanning)
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 # Uses std::arch for SIMD
@@ -102,7 +106,7 @@ harness = false
 [features]
 default = ["simd", "compression"]
 simd = []
-lsp = []
+lsp = ["tower-lsp", "lsp-types"]
 compression = ["serializer/compression", "lz4_flex"]
 
 [profile.release]
