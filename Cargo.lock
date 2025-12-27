@@ -7622,6 +7622,7 @@ dependencies = [
  "io-uring 0.7.11",
  "lz4_flex",
  "memchr",
+ "notify 6.1.1",
  "proptest",
  "rustc-hash 1.1.0",
  "serde",

@@ -103,9 +103,17 @@ pub enum Commands {
 
     /// Run in watch mode
     Watch {
-        /// Files or directories to watch
-        #[arg(default_value = ".")]
-        paths: Vec<PathBuf>,
+        /// Directory containing .dxs files
+        #[arg(long, default_value = "rules")]
+        rules_dir: PathBuf,
+
+        /// Output directory for compiled rules
+        #[arg(long, default_value = "rules")]
+        output_dir: PathBuf,
+
+        /// Debounce delay in milliseconds
+        #[arg(long, default_value = "250")]
+        debounce: u64,
     },
 
     /// Start LSP server
@@ -163,6 +171,24 @@ pub enum RuleCommands {
         /// Path to compiled rules file
         #[arg(default_value = "rules/rules.dxm")]
         path: PathBuf,
+    },
+
+    /// Generate .dxs files from extracted rules
+    Generate {
+        /// Output directory for .dxs files
+        #[arg(short, long, default_value = "rules")]
+        output: PathBuf,
+    },
+
+    /// Compile from .dxs files
+    CompileFromDxs {
+        /// Directory containing .dxs files
+        #[arg(short, long, default_value = "rules")]
+        input: PathBuf,
+
+        /// Output directory for compiled rules
+        #[arg(short, long, default_value = "rules")]
+        output: PathBuf,
     },
 }
 

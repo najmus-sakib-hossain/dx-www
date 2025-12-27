@@ -34,6 +34,9 @@ toml = { version = "0.8", optional = true }
 # LZ4 compression
 lz4_flex = { version = "0.11", optional = true }
 
+# File watching
+notify = { version = "6.1", optional = true }
+
 # WASM bindings
 wasm-bindgen = { version = "0.2", optional = true }
 console_error_panic_hook = { version = "0.1", optional = true }
@@ -60,8 +63,9 @@ default = ["converters"]
 converters = ["serde", "serde_json", "serde_yaml", "toml"]
 wasm = ["wasm-bindgen", "console_error_panic_hook", "converters"]
 compression = ["lz4_flex"]
+watch = ["notify"]
 async-io = ["io-uring", "windows-sys"]
-full = ["converters", "compression", "async-io"]
+full = ["converters", "compression", "async-io", "watch"]
 
 [[bench]]
 name = "dx_vs_toon"

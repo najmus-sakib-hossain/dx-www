@@ -12,8 +12,8 @@ members = [
     "crates/generator",
     "crates/workspace",
     "crates/driven",
-    "crates/debug",
-    "crates/error",
+    "crates/www/debug",
+    "crates/www/error",
     "crates/i18n",
     "crates/serializer",
 
@@ -177,8 +177,8 @@ font = { path = "crates/font" }
 generator = { path = "crates/generator" }
 workspace = { path = "crates/workspace" }
 driven = { path = "crates/driven" }
-debug = { path = "crates/debug" }
-error = { path = "crates/error" }
+debug = { path = "crates/www/debug" }
+error = { path = "crates/www/error" }
 i18n = { path = "crates/i18n" }
 serializer = { path = "crates/serializer" }
 

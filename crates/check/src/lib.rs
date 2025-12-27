@@ -72,6 +72,7 @@ pub mod project;
 pub mod reactor;
 pub mod rules;
 pub mod scanner;
+pub mod watch;
 
 // Re-exports
 pub use cache::AstCache;

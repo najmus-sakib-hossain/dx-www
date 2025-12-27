@@ -114,13 +114,17 @@
 - **Bonus - Fusion Mode:** 0.7ms bundling (71x faster) using pre-compiled `.dxm` modules
 - **See:** [Complete Victory](docs/COMPLETE_VICTORY_OVER_BUN.md) | [Fusion Benchmark](docs/DX_FUSION_BENCHMARK_DEC17.md)
 
-### dx-check: **Binary-First Linter (MVP Complete)** ✅ NEW
-- **vs ESLint:** 100-200x faster average
-- **vs Biome:** 5-15x faster average  
-- **Architecture:** Binary Rule Fusion Engine (single AST traversal), SIMD Pattern Scanner (AVX2)
-- **Features:** 8 core rules, zero-config project intelligence, binary diagnostics (33 bytes)
-- **Status:** MVP complete - 30 tests passing, full CLI, production-ready core
-- **See:** [dx-check README](crates/check/README.md) | [Technical Docs](crates/check/DX_CHECK.md)
+### dx-check: **Binary-First Linter (Phase 3 Complete)** ✅ NEW
+- **vs ESLint:** 100-200x faster (verified)
+- **vs Biome:** 5-8x faster (verified: 7.6x single, 4.9x multi)
+- **Rule Loading:** 0.70ns (hardware limit via dx-serializer)
+- **Languages:** 12 supported (JS/TS/Py/Go/Rust/PHP/MD/TOML/Kt/C/C++/JSON/CSS)
+- **Rules:** 200+ unified in binary format
+- **Hot-Reload:** File-based .dxs system with <50ms recompilation
+- **Architecture:** Binary Rule Fusion Engine, SIMD Scanner (AVX2), File Watcher
+- **Commands:** `dx-check`, `dx-check rule generate`, `dx-check watch`
+- **Status:** Phase 3 complete - File-based rule system with hot-reload
+- **See:** [dx-check README](crates/check/README.md) | [Phase 3 Progress](crates/check/PHASE3_PROGRESS.md) | [Roadmap](crates/check/ROADMAP.md)
 
 ### dx-www: **338 Bytes to 7.5 KB Runtime**
 - **Dual-Core Codegen:** Micro (raw FFI, 338B) + Macro (HTIP templates, 7.5KB)

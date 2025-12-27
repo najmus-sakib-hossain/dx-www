@@ -5,6 +5,8 @@
 
 pub mod builtin;
 pub mod compiler;
+pub mod dxs_generator;
+pub mod dxs_parser;
 pub mod extractor;
 pub mod registry;
 pub mod schema;

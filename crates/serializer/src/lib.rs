@@ -74,6 +74,7 @@ pub mod utf8;
 #[cfg(test)]
 mod utf8_props;
 pub mod wasm;
+pub mod watch;
 pub mod zero;
 
 pub use base62::{decode_base62, encode_base62};

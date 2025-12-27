@@ -55,6 +55,7 @@ temp/
 
 # Debug
 debug/
+!crates/www/debug/
 *.dSYM/
 
 # Python (for serve scripts)

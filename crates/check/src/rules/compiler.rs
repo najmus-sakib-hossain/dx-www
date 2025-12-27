@@ -4,7 +4,12 @@
 //! Generates both:
 //! - `rules.dxm` (machine format) - 0.70ns field access
 //! - `rules.dx` (LLM format) - human-readable for contributors
+//!
+//! Can load rules from either:
+//! - Direct extraction from submodules (extract_all_rules)
+//! - .dxs files (load_from_dxs_files)
 
+use super::dxs_parser::load_dxs_directory;
 use super::extractor::extract_all_rules;
 use super::schema::{DxRuleDatabase, Language};
 use anyhow::{Context, Result};
@@ -29,13 +34,46 @@ pub struct CompiledRules {
 
 /// Compile all rules to binary format
 pub fn compile_rules<P: AsRef<Path>>(output_dir: P) -> Result<CompiledRules> {
+    compile_rules_with_source(output_dir, RuleSource::Extraction)
+}
+
+/// Compile rules from .dxs files
+pub fn compile_from_dxs<P: AsRef<Path>, Q: AsRef<Path>>(dxs_dir: P, output_dir: Q) -> Result<CompiledRules> {
+    compile_rules_with_source_path(dxs_dir, output_dir, RuleSource::DxsFiles)
+}
+
+/// Rule loading source
+enum RuleSource {
+    Extraction,
+    DxsFiles,
+}
+
+fn compile_rules_with_source<P: AsRef<Path>>(output_dir: P, source: RuleSource) -> Result<CompiledRules> {
+    compile_rules_with_source_path(&output_dir, &output_dir, source)
+}
+
+fn compile_rules_with_source_path<P: AsRef<Path>, Q: AsRef<Path>>(
+    source_dir: P,
+    output_dir: Q,
+    source: RuleSource,
+) -> Result<CompiledRules> {
+    let source_dir = source_dir.as_ref();
     let output_dir = output_dir.as_ref();
     fs::create_dir_all(output_dir).context("Failed to create output directory")?;
 
     println!("🔨 Compiling dx-check rules...\n");
 
-    // Step 1: Extract all rules
-    let mut database = extract_all_rules();
+    // Step 1: Load rules based on source
+    let mut database = match source {
+        RuleSource::Extraction => {
+            println!("📦 Extracting rules from submodules...\n");
+            extract_all_rules()
+        }
+        RuleSource::DxsFiles => {
+            println!("📂 Loading rules from .dxs files...\n");
+            load_dxs_directory(source_dir)?
+        }
+    };
 
     // Step 2: Update metadata
     database.stats.compiled_at = Some(chrono::Utc::now().to_rfc3339());

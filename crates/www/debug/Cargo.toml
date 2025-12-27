@@ -1,0 +1,15 @@
+[package]
+name = "debug"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "DevTools bridge for binary debugging"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+chrono = "0.4"

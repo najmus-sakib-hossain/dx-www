@@ -54,8 +54,8 @@ fn run(cli: Cli) -> Result<bool, Box<dyn std::error::Error>> {
         Some(Commands::Cache { command }) => {
             run_cache_command(command)
         }
-        Some(Commands::Watch { paths }) => {
-            run_watch(paths, &cli)
+        Some(Commands::Watch { rules_dir, output_dir, debounce }) => {
+            run_watch_mode(rules_dir, output_dir, *debounce)
         }
         Some(Commands::Lsp) => {
             run_lsp()
@@ -358,6 +358,35 @@ fn run_rule_command(command: &RuleCommands) -> Result<bool, Box<dyn std::error::
                 }
             }
         }
+        RuleCommands::Generate { output } => {
+            use dx_check::rules::dxs_generator;
+            
+            println!("Generating .dxs files...\n");
+            match dxs_generator::generate_all_dxs_files(output) {
+                Ok(_) => {
+                    println!("\n✨ Successfully generated .dxs files in {:?}", output);
+                }
+                Err(e) => {
+                    eprintln!("❌ Generation failed: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
+        RuleCommands::CompileFromDxs { input, output } => {
+            use dx_check::rules::compiler;
+            
+            println!("Compiling from .dxs files...\n");
+            match compiler::compile_from_dxs(input, output) {
+                Ok(compiled) => {
+                    println!("\n✅ Successfully compiled {} rules", compiled.count);
+                    println!("   Binary size: {} KB", compiled.binary_size / 1024);
+                }
+                Err(e) => {
+                    eprintln!("❌ Compilation failed: {}", e);
+                    return Ok(true);
+                }
+            }
+        }
     }
     
     Ok(false)
@@ -396,11 +425,24 @@ fn run_cache_command(command: &CacheCommands) -> Result<bool, Box<dyn std::error
     Ok(false)
 }
 
-fn run_watch(
-    _paths: &[std::path::PathBuf],
-    _cli: &Cli,
+fn run_watch_mode(
+    rules_dir: &std::path::PathBuf,
+    output_dir: &std::path::PathBuf,
+    debounce: u64,
 ) -> Result<bool, Box<dyn std::error::Error>> {
-    println!("Watch mode not yet implemented");
+    use dx_check::watch::{watch_rules, WatchConfig};
+    
+    let config = WatchConfig {
+        rules_dir: rules_dir.clone(),
+        output_dir: output_dir.clone(),
+        debounce_ms: debounce,
+    };
+    
+    if let Err(e) = watch_rules(config) {
+        eprintln!("Watch mode error: {}", e);
+        return Err(e.into());
+    }
+    
     Ok(false)
 }
 
