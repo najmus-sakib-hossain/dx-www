@@ -32,9 +32,19 @@ pub struct CompiledRules {
     pub database: DxRuleDatabase,
 }
 
-/// Compile all rules to binary format
+/// Compile all rules to binary format (from .dxs files)
 pub fn compile_rules<P: AsRef<Path>>(output_dir: P) -> Result<CompiledRules> {
-    compile_rules_with_source(output_dir, RuleSource::Extraction)
+    // Default to .dxs files - no submodules needed
+    let dxs_dir = Path::new("rules");
+    if dxs_dir.exists() {
+        compile_from_dxs(dxs_dir, output_dir)
+    } else {
+        anyhow::bail!(
+            "No .dxs rules found. Expected rules directory at: {:?}\n\
+             Run: dx-check rule generate --output rules",
+            dxs_dir.canonicalize().unwrap_or_else(|_| dxs_dir.to_path_buf())
+        )
+    }
 }
 
 /// Compile rules from .dxs files

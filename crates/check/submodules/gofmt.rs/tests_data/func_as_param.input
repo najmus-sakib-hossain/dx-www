@@ -1,3 +1,0 @@
-func f(f func(int) int){}
-==================
-func f(func(int) int){}

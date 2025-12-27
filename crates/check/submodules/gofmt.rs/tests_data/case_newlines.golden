@@ -1,7 +1,0 @@
-switch {
-case a && b,
-	cccccccccccccccc,
-	ccccccccccccccccd,
-	cccccccccccccccce,
-	ccccccccccccccccf:
-}

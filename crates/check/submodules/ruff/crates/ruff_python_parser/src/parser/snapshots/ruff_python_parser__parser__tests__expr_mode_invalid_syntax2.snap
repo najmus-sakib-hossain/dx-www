@@ -1,9 +1,0 @@
----
-source: crates/ruff_python_parser/src/parser/tests.rs
-expression: error
-snapshot_kind: text
----
-ParseError {
-    error: UnexpectedExpressionToken,
-    location: 7..13,
-}

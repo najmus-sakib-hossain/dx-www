@@ -1,5 +1,0 @@
-func f() {switch {
-                case 1:
-                    // x
-                case 2:
-            }}
