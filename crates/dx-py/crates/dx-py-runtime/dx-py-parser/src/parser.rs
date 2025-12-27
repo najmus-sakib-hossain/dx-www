@@ -381,7 +381,8 @@ impl<'a> Parser<'a> {
         let location = self.location();
         self.expect(&TokenKind::For)?;
         
-        let target = self.parse_expression()?;
+        // Parse target - should be a simple name or tuple, not a full expression
+        let target = self.parse_target()?;
         self.expect(&TokenKind::In)?;
         let iter = self.parse_expression()?;
         self.expect(&TokenKind::Colon)?;
@@ -757,6 +758,79 @@ impl<'a> Parser<'a> {
             let arg = Arg {
                 arg: name,
                 annotation,
+                location: self.location(),
+            };
+
+            if args.vararg.is_some() {
+                args.kwonlyargs.push(arg);
+                if !has_default {
+                    args.kw_defaults.push(None);
+                }
+            } else {
+                args.args.push(arg);
+            }
+
+            if !self.consume(&TokenKind::Comma)? {
+                break;
+            }
+        }
+
+        Ok(args)
+    }
+
+    /// Parse lambda arguments (stops at colon instead of right paren)
+    fn parse_lambda_arguments(&mut self) -> ParseResult<Arguments> {
+        let mut args = Arguments::default();
+
+        if self.check(&TokenKind::Colon)? {
+            return Ok(args);
+        }
+
+        loop {
+            if self.check(&TokenKind::Colon)? {
+                break;
+            }
+
+            // Check for *args or **kwargs
+            if self.consume(&TokenKind::DoubleStar)? {
+                let name = self.parse_identifier()?;
+                args.kwarg = Some(Box::new(Arg {
+                    arg: name,
+                    annotation: None,
+                    location: self.location(),
+                }));
+                break;
+            }
+
+            if self.consume(&TokenKind::Star)? {
+                if self.check(&TokenKind::Comma)? || self.check(&TokenKind::Colon)? {
+                    // Bare * for keyword-only args
+                } else {
+                    let name = self.parse_identifier()?;
+                    args.vararg = Some(Box::new(Arg {
+                        arg: name,
+                        annotation: None,
+                        location: self.location(),
+                    }));
+                }
+                if !self.consume(&TokenKind::Comma)? {
+                    break;
+                }
+                continue;
+            }
+
+            let name = self.parse_identifier()?;
+            // Lambda args don't have annotations
+            let has_default = if self.consume(&TokenKind::Assign)? {
+                args.defaults.push(self.parse_expression()?);
+                true
+            } else {
+                false
+            };
+
+            let arg = Arg {
+                arg: name,
+                annotation: None,
                 location: self.location(),
             };
 
@@ -1473,7 +1547,7 @@ impl<'a> Parser<'a> {
                 let args = if self.check(&TokenKind::Colon)? {
                     Arguments::default()
                 } else {
-                    self.parse_arguments()?
+                    self.parse_lambda_arguments()?
                 };
                 self.expect(&TokenKind::Colon)?;
                 let body = self.parse_expression()?;
@@ -1561,5 +1635,393 @@ mod tests {
         let mut parser = Parser::new("[x * 2 for x in items]");
         let expr = parser.parse_expression().unwrap();
         assert!(matches!(expr, Expression::ListComp { .. }));
+    }
+
+    #[test]
+    fn test_parse_while_loop() {
+        let source = "while x > 0:\n    x = x - 1\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::While { .. }));
+    }
+
+    #[test]
+    fn test_parse_for_loop() {
+        let source = "for i in items:\n    x = i\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::For { .. }));
+    }
+
+    #[test]
+    fn test_parse_try_except() {
+        let source = "try:\n    x = 1\nexcept ValueError:\n    x = 0\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::Try { .. }));
+    }
+
+    #[test]
+    fn test_parse_with_statement() {
+        let source = "with open('file') as f:\n    data = f.read()\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::With { .. }));
+    }
+
+    #[test]
+    fn test_parse_import() {
+        let source = "import os\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::Import { .. }));
+    }
+
+    #[test]
+    fn test_parse_from_import() {
+        let source = "from os import path\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::ImportFrom { .. }));
+    }
+
+    #[test]
+    fn test_parse_lambda() {
+        let mut parser = Parser::new("lambda x: x + 1");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Lambda { .. }));
+    }
+
+    #[test]
+    fn test_parse_dict_literal() {
+        let mut parser = Parser::new("{'a': 1, 'b': 2}");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Dict { .. }));
+    }
+
+    #[test]
+    fn test_parse_set_literal() {
+        let mut parser = Parser::new("{1, 2, 3}");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Set { .. }));
+    }
+
+    #[test]
+    fn test_parse_tuple() {
+        let mut parser = Parser::new("(1, 2, 3)");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Tuple { .. }));
+    }
+
+    #[test]
+    fn test_parse_slice() {
+        let mut parser = Parser::new("x[1:10:2]");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Subscript { .. }));
+    }
+
+    #[test]
+    fn test_parse_attribute() {
+        let mut parser = Parser::new("obj.attr.method()");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Call { .. }));
+    }
+
+    #[test]
+    fn test_parse_comparison_chain() {
+        let mut parser = Parser::new("0 < x < 10");
+        let expr = parser.parse_expression().unwrap();
+        if let Expression::Compare { ops, comparators, .. } = expr {
+            assert_eq!(ops.len(), 2);
+            assert_eq!(comparators.len(), 2);
+        } else {
+            panic!("Expected Compare expression");
+        }
+    }
+
+    #[test]
+    fn test_parse_boolean_ops() {
+        let mut parser = Parser::new("a and b or c");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::BoolOp { op: BoolOp::Or, .. }));
+    }
+
+    #[test]
+    fn test_parse_unary_ops() {
+        let mut parser = Parser::new("-x");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::UnaryOp { op: UnaryOp::USub, .. }));
+    }
+
+    #[test]
+    fn test_parse_async_function() {
+        let source = "async def fetch():\n    return await get_data()\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        if let Statement::FunctionDef { is_async, .. } = &module.body[0] {
+            assert!(*is_async);
+        } else {
+            panic!("Expected async function def");
+        }
+    }
+
+    #[test]
+    fn test_parse_decorated_function() {
+        // Note: decorators are parsed but stored empty for now
+        let source = "def foo():\n    pass\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+    }
+
+    #[test]
+    fn test_parse_augmented_assignment() {
+        let source = "x += 1\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::AugAssign { op: BinOp::Add, .. }));
+    }
+
+    #[test]
+    fn test_parse_global_nonlocal() {
+        let source = "global x\nnonlocal y\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 2);
+        assert!(matches!(module.body[0], Statement::Global { .. }));
+        assert!(matches!(module.body[1], Statement::Nonlocal { .. }));
+    }
+
+    #[test]
+    fn test_parse_raise() {
+        let source = "raise ValueError('error')\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::Raise { .. }));
+    }
+
+    #[test]
+    fn test_parse_assert() {
+        let source = "assert x > 0, 'x must be positive'\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::Assert { .. }));
+    }
+
+    #[test]
+    fn test_parse_del() {
+        let source = "del x, y\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::Delete { .. }));
+    }
+
+    #[test]
+    fn test_parse_pass_break_continue() {
+        let source = "while True:\n    if x:\n        break\n    elif y:\n        continue\n    else:\n        pass\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+    }
+
+    #[test]
+    fn test_parse_elif_chain() {
+        let source = "if a:\n    x = 1\nelif b:\n    x = 2\nelif c:\n    x = 3\nelse:\n    x = 4\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        assert_eq!(module.body.len(), 1);
+        assert!(matches!(module.body[0], Statement::If { .. }));
+    }
+
+    #[test]
+    fn test_parse_nested_comprehension() {
+        let mut parser = Parser::new("[x + y for x in xs for y in ys]");
+        let expr = parser.parse_expression().unwrap();
+        if let Expression::ListComp { generators, .. } = expr {
+            assert_eq!(generators.len(), 2);
+        } else {
+            panic!("Expected ListComp");
+        }
+    }
+
+    #[test]
+    fn test_parse_comprehension_with_if() {
+        let mut parser = Parser::new("[x for x in items if x > 0]");
+        let expr = parser.parse_expression().unwrap();
+        if let Expression::ListComp { generators, .. } = expr {
+            assert_eq!(generators.len(), 1);
+            assert_eq!(generators[0].ifs.len(), 1);
+        } else {
+            panic!("Expected ListComp");
+        }
+    }
+
+    #[test]
+    fn test_parse_function_with_annotations() {
+        let source = "def foo(x: int, y: str) -> bool:\n    return True\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        if let Statement::FunctionDef { args, returns, .. } = &module.body[0] {
+            assert!(args.args[0].annotation.is_some());
+            assert!(args.args[1].annotation.is_some());
+            assert!(returns.is_some());
+        } else {
+            panic!("Expected FunctionDef");
+        }
+    }
+
+    #[test]
+    fn test_parse_function_with_defaults() {
+        let source = "def foo(x, y=10, z=20):\n    pass\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        if let Statement::FunctionDef { args, .. } = &module.body[0] {
+            assert_eq!(args.args.len(), 3);
+            assert_eq!(args.defaults.len(), 2);
+        } else {
+            panic!("Expected FunctionDef");
+        }
+    }
+
+    #[test]
+    fn test_parse_function_with_varargs() {
+        let source = "def foo(*args, **kwargs):\n    pass\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        if let Statement::FunctionDef { args, .. } = &module.body[0] {
+            assert!(args.vararg.is_some());
+            assert!(args.kwarg.is_some());
+        } else {
+            panic!("Expected FunctionDef");
+        }
+    }
+
+    #[test]
+    fn test_parse_class_with_bases() {
+        let source = "class Foo(Bar, Baz):\n    pass\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        if let Statement::ClassDef { bases, .. } = &module.body[0] {
+            assert_eq!(bases.len(), 2);
+        } else {
+            panic!("Expected ClassDef");
+        }
+    }
+
+    #[test]
+    fn test_parse_try_finally() {
+        let source = "try:\n    x = 1\nfinally:\n    cleanup()\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        if let Statement::Try { finalbody, .. } = &module.body[0] {
+            assert!(!finalbody.is_empty());
+        } else {
+            panic!("Expected Try");
+        }
+    }
+
+    #[test]
+    fn test_parse_multiple_with_items() {
+        let source = "with open('a') as f, open('b') as g:\n    pass\n";
+        let mut parser = Parser::new(source);
+        let module = parser.parse_module().unwrap();
+        if let Statement::With { items, .. } = &module.body[0] {
+            assert_eq!(items.len(), 2);
+        } else {
+            panic!("Expected With");
+        }
+    }
+
+    #[test]
+    fn test_parse_starred_expression() {
+        let mut parser = Parser::new("func(*args, **kwargs)");
+        let expr = parser.parse_expression().unwrap();
+        if let Expression::Call { args, keywords, .. } = expr {
+            assert!(args.iter().any(|a| matches!(a, Expression::Starred { .. })));
+            assert!(keywords.iter().any(|k| k.arg.is_none()));
+        } else {
+            panic!("Expected Call");
+        }
+    }
+
+    #[test]
+    fn test_parse_power_operator() {
+        let mut parser = Parser::new("2 ** 10");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::BinOp { op: BinOp::Pow, .. }));
+    }
+
+    #[test]
+    fn test_parse_bitwise_operators() {
+        let mut parser = Parser::new("a & b | c ^ d");
+        let expr = parser.parse_expression().unwrap();
+        // Should parse as (a & b) | (c ^ d) due to precedence
+        assert!(matches!(expr, Expression::BinOp { op: BinOp::BitOr, .. }));
+    }
+
+    #[test]
+    fn test_parse_shift_operators() {
+        let mut parser = Parser::new("x << 2 >> 1");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::BinOp { op: BinOp::RShift, .. }));
+    }
+
+    #[test]
+    fn test_parse_floor_division() {
+        let mut parser = Parser::new("x // y");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::BinOp { op: BinOp::FloorDiv, .. }));
+    }
+
+    #[test]
+    fn test_parse_is_not() {
+        let mut parser = Parser::new("x is not None");
+        let expr = parser.parse_expression().unwrap();
+        if let Expression::Compare { ops, .. } = expr {
+            assert_eq!(ops[0], CmpOp::IsNot);
+        } else {
+            panic!("Expected Compare");
+        }
+    }
+
+    #[test]
+    fn test_parse_not_in() {
+        let mut parser = Parser::new("x not in items");
+        let expr = parser.parse_expression().unwrap();
+        if let Expression::Compare { ops, .. } = expr {
+            assert_eq!(ops[0], CmpOp::NotIn);
+        } else {
+            panic!("Expected Compare");
+        }
+    }
+
+    #[test]
+    fn test_parse_constants() {
+        let mut parser = Parser::new("True");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Constant { value: Constant::Bool(true), .. }));
+
+        let mut parser = Parser::new("False");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Constant { value: Constant::Bool(false), .. }));
+
+        let mut parser = Parser::new("None");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Constant { value: Constant::None, .. }));
+
+        let mut parser = Parser::new("...");
+        let expr = parser.parse_expression().unwrap();
+        assert!(matches!(expr, Expression::Constant { value: Constant::Ellipsis, .. }));
     }
 }

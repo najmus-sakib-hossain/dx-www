@@ -360,7 +360,7 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
     - Parse function/class definitions
     - _Requirements: 10.2_
 
-  - [ ] 10.5 Implement error messages
+  - [x] 10.5 Implement error messages
     - Provide line/column information
     - Provide helpful suggestions
     - _Requirements: 10.4_
@@ -369,7 +369,7 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
     - Convert AST to DPB
     - _Requirements: 10.3_
 
-  - [ ] 10.7 Write parser tests
+  - [x] 10.7 Write parser tests
     - Test all Python constructs
     - Test error messages
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
@@ -387,6 +387,8 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
 - Task 6.1-6.5: Integration tests - Core, SIMD, Collections, GC, JIT, Async tests
 - Task 7.1-7.4: Benchmarks - SIMD, Collections, GC, JIT benchmarks
 - Task 8.1-8.6: Documentation - rustdoc for simd, collections, gc, jit, core, reactor
+- Task 9.3: Real IOCP file I/O - Windows async I/O with ReadFile/WriteFile
+- Task 10.1-10.5, 10.7: Python Parser - Full lexer, AST, parser with 54 tests and error suggestions
 
 ### In Progress
 - Task 4: Error handling - Need to update core types to use RuntimeResult
@@ -394,10 +396,8 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
 - Task 6: Integration tests - Need FFI tests
 - Task 7: Benchmarks - Need core benchmarks and comparison script
 - Task 8: Documentation - Need main README and crate READMEs
-
-### Not Started
-- Task 9: Real Async I/O
-- Task 10: Python Parser
+- Task 9: Real Async I/O - Need io_uring (Linux), kqueue (macOS), network I/O
+- Task 10: Python Parser - Need to wire parser to DPB compiler
 
 ## Notes
 
