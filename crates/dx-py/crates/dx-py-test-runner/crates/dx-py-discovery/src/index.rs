@@ -1,6 +1,6 @@
 //! Binary test index (.dxti) format for fast test discovery caching
 
-use dx_py_core::{DiscoveryError, TestCase, TestId, Marker, FixtureId};
+use dx_py_core::{DiscoveryError, TestCase, Marker, FixtureId};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;

@@ -7,7 +7,7 @@ mod version;
 mod capabilities;
 
 pub use detector::{RuntimeDetector, DetectionError};
-pub use version::PythonVersion;
+pub use version::{PythonVersion, PreRelease, VersionParseError};
 pub use capabilities::RuntimeCapabilities;
 
 use std::path::PathBuf;

@@ -3,7 +3,7 @@
 use crate::parser::PythonParser;
 use dx_py_core::{DiscoveryError, Marker, TestCase};
 use std::path::Path;
-use tree_sitter::{Node, Tree};
+use tree_sitter::Node;
 
 /// A discovered test before full TestCase construction
 #[derive(Debug, Clone)]

@@ -2,7 +2,6 @@
 
 use super::*;
 use proptest::prelude::*;
-use std::io::Write;
 use tempfile::TempDir;
 
 // Property 1: Test Function Detection
@@ -65,7 +64,7 @@ proptest! {
 
         if should_be_detected {
             prop_assert!(!tests.is_empty(), "Expected test to be detected: {}", func_name);
-            prop_assert_eq!(tests[0].name, func_name);
+            prop_assert_eq!(&tests[0].name, &func_name);
         } else {
             prop_assert!(tests.is_empty(), "Expected no test to be detected: {}", func_name);
         }
@@ -144,9 +143,9 @@ proptest! {
 
         prop_assert_eq!(original_tests.len(), loaded_tests.len());
         for (orig, loaded) in original_tests.iter().zip(loaded_tests.iter()) {
-            prop_assert_eq!(orig.name, loaded.name);
+            prop_assert_eq!(&orig.name, &loaded.name);
             prop_assert_eq!(orig.line_number, loaded.line_number);
-            prop_assert_eq!(orig.class_name, loaded.class_name);
+            prop_assert_eq!(&orig.class_name, &loaded.class_name);
         }
     }
 }
@@ -218,8 +217,10 @@ def my_fixture():
     let mut scanner = TestScanner::new().unwrap();
     let tests = scanner.scan_source(source).unwrap();
 
-    // Fixtures should be detected but filtered out from test list
-    assert!(tests.is_empty() || tests.iter().all(|t| !t.is_fixture));
+    // Fixtures should be detected and marked as fixtures
+    assert_eq!(tests.len(), 1);
+    assert!(tests[0].is_fixture);
+    assert_eq!(tests[0].name, "my_fixture");
 }
 
 #[test]

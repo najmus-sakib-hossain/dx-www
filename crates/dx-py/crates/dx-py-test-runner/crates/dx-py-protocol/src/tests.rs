@@ -1,9 +1,8 @@
 //! Tests for dx-py-protocol
 
 use super::*;
-use dx_py_core::{TestCase, TestId, TestResult, TestStatus, AssertionStats};
+use dx_py_core::TestCase;
 use proptest::prelude::*;
-use std::time::Duration;
 
 // Property 4: Binary Message Header Size
 // Validates that headers are exactly the specified sizes

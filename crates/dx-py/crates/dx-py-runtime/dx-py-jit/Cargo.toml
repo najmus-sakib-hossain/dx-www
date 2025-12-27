@@ -21,3 +21,7 @@ dx-py-bytecode = { path = "../dx-py-bytecode" }
 [dev-dependencies]
 proptest.workspace = true
 criterion.workspace = true
+
+[[bench]]
+name = "jit_benchmarks"
+harness = false

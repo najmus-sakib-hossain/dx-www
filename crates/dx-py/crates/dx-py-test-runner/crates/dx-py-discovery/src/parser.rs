@@ -1,11 +1,7 @@
 //! Tree-sitter Python parser wrapper
 
-use tree_sitter::{Language, Parser, Tree};
+use tree_sitter::{Parser, Tree};
 use dx_py_core::DiscoveryError;
-
-extern "C" {
-    fn tree_sitter_python() -> Language;
-}
 
 /// Wrapper around tree-sitter Python parser
 pub struct PythonParser {
@@ -16,7 +12,7 @@ impl PythonParser {
     /// Create a new Python parser
     pub fn new() -> Result<Self, DiscoveryError> {
         let mut parser = Parser::new();
-        let language = unsafe { tree_sitter_python() };
+        let language = tree_sitter_python::language();
         parser
             .set_language(language)
             .map_err(|e| DiscoveryError::ParseError(e.to_string()))?;

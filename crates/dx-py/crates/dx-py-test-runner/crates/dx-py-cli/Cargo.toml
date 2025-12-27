@@ -23,6 +23,8 @@ notify = { workspace = true }
 glob = { workspace = true }
 quick-xml = { workspace = true }
 thiserror = { workspace = true }
+regex = { workspace = true }
+num_cpus = "1.17"
 
 [dev-dependencies]
 proptest = { workspace = true }

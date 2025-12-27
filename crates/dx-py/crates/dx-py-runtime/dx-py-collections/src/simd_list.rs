@@ -1,6 +1,12 @@
 //! SIMD-accelerated list implementation
+//!
+//! Provides SIMD-accelerated operations for homogeneous lists:
+//! - x86_64: AVX2/AVX-512 acceleration
+//! - aarch64: NEON acceleration
+//! - Other: Scalar fallback
 
 use crate::simd_storage::{SimdStorage, PyObjectRef};
+use crate::neon_ops;
 
 /// A list with SIMD-accelerated operations for homogeneous data
 #[derive(Debug, Clone)]
@@ -163,13 +169,27 @@ impl Default for SimdList {
 
 /// SIMD-accelerated integer sum
 fn sum_ints_simd(values: &[i64]) -> i64 {
-    // Use auto-vectorization friendly loop
-    values.iter().sum()
+    // Use NEON on aarch64, auto-vectorization on other platforms
+    #[cfg(target_arch = "aarch64")]
+    {
+        neon_ops::sum_i64_neon(values)
+    }
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        values.iter().sum()
+    }
 }
 
 /// SIMD-accelerated float sum
 fn sum_floats_simd(values: &[f64]) -> f64 {
-    values.iter().sum()
+    #[cfg(target_arch = "aarch64")]
+    {
+        neon_ops::sum_f64_neon(values)
+    }
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        values.iter().sum()
+    }
 }
 
 /// SIMD-accelerated filter greater than
@@ -218,7 +238,12 @@ fn filter_gt_int_simd(values: &[i64], threshold: i64) -> Vec<usize> {
         .collect()
 }
 
-#[cfg(not(target_arch = "x86_64"))]
+#[cfg(target_arch = "aarch64")]
+fn filter_gt_int_simd(values: &[i64], threshold: i64) -> Vec<usize> {
+    neon_ops::filter_gt_i64_neon(values, threshold)
+}
+
+#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
 fn filter_gt_int_simd(values: &[i64], threshold: i64) -> Vec<usize> {
     values.iter()
         .enumerate()
@@ -229,8 +254,15 @@ fn filter_gt_int_simd(values: &[i64], threshold: i64) -> Vec<usize> {
 
 /// SIMD-accelerated multiply by 2
 fn map_mul2_int_simd(values: &[i64]) -> Vec<i64> {
-    // Use auto-vectorization friendly loop
-    values.iter().map(|&v| v * 2).collect()
+    #[cfg(target_arch = "aarch64")]
+    {
+        neon_ops::map_mul2_i64_neon(values)
+    }
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        // Use auto-vectorization friendly loop
+        values.iter().map(|&v| v * 2).collect()
+    }
 }
 
 /// SIMD-accelerated index search
@@ -276,7 +308,12 @@ fn index_int_simd(values: &[i64], target: i64) -> Option<usize> {
     values.iter().position(|&v| v == target)
 }
 
-#[cfg(not(target_arch = "x86_64"))]
+#[cfg(target_arch = "aarch64")]
+fn index_int_simd(values: &[i64], target: i64) -> Option<usize> {
+    neon_ops::index_i64_neon(values, target)
+}
+
+#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
 fn index_int_simd(values: &[i64], target: i64) -> Option<usize> {
     values.iter().position(|&v| v == target)
 }
@@ -318,7 +355,12 @@ fn count_int_simd(values: &[i64], target: i64) -> usize {
     values.iter().filter(|&&v| v == target).count()
 }
 
-#[cfg(not(target_arch = "x86_64"))]
+#[cfg(target_arch = "aarch64")]
+fn count_int_simd(values: &[i64], target: i64) -> usize {
+    neon_ops::count_i64_neon(values, target)
+}
+
+#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
 fn count_int_simd(values: &[i64], target: i64) -> usize {
     values.iter().filter(|&&v| v == target).count()
 }

@@ -52,68 +52,68 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
   - [x] 1.9 Checkpoint - NEON complete
     - All 28 SIMD tests pass including 9 NEON tests
 
-- [ ] 2. AVX-512 String Engine (Priority: Medium)
-  - [ ] 2.1 Create avx512.rs module structure
+- [x] 2. AVX-512 String Engine (Priority: Medium)
+  - [x] 2.1 Create avx512.rs module structure
     - Create crates/dx-py-runtime/dx-py-simd/src/avx512.rs
     - Add conditional compilation for x86_64 with avx512f
     - _Requirements: 2.1_
 
-  - [ ] 2.2 Implement AVX-512 find operation
+  - [x] 2.2 Implement AVX-512 find operation
     - Implement find_avx512() processing 64 bytes per iteration
     - Use _mm512_cmpeq_epi8_mask for comparison
     - _Requirements: 2.3_
 
-  - [ ] 2.3 Implement AVX-512 eq operation
+  - [x] 2.3 Implement AVX-512 eq operation
     - Implement eq_avx512() comparing 64 bytes at a time
     - _Requirements: 2.2_
 
-  - [ ] 2.4 Implement remaining AVX-512 operations
+  - [x] 2.4 Implement remaining AVX-512 operations
     - Implement to_lowercase_avx512()
     - Implement to_uppercase_avx512()
     - Implement split/join/replace
     - _Requirements: 2.2_
 
-  - [ ] 2.5 Update dispatcher for AVX-512
+  - [x] 2.5 Update dispatcher for AVX-512
     - Update SimdDispatcher to prefer AVX-512 over AVX2
     - _Requirements: 2.4_
 
-  - [ ] 2.6 Write AVX-512 property tests
+  - [x] 2.6 Write AVX-512 property tests
     - Test AVX512-scalar equivalence
     - _Requirements: 2.5_
 
-  - [ ] 2.7 Checkpoint - AVX-512 complete
+  - [x] 2.7 Checkpoint - AVX-512 complete
 
-- [ ] 3. NEON Collections (Priority: Medium)
-  - [ ] 3.1 Create neon_ops.rs module
+- [x] 3. NEON Collections (Priority: Medium)
+  - [x] 3.1 Create neon_ops.rs module
     - Create crates/dx-py-runtime/dx-py-collections/src/neon_ops.rs
     - _Requirements: 3.1_
 
-  - [ ] 3.2 Implement NEON sum operations
+  - [x] 3.2 Implement NEON sum operations
     - Implement sum_i64() with vaddq_s64
     - Implement sum_f64() with vaddq_f64
     - _Requirements: 3.1_
 
-  - [ ] 3.3 Implement NEON filter operations
+  - [x] 3.3 Implement NEON filter operations
     - Implement filter_gt_i64() with vcgtq_s64
     - _Requirements: 3.1_
 
-  - [ ] 3.4 Implement NEON map operations
+  - [x] 3.4 Implement NEON map operations
     - Implement map_mul2_i64() with vshlq_n_s64
     - _Requirements: 3.1_
 
-  - [ ] 3.5 Update SimdList for NEON dispatch
+  - [x] 3.5 Update SimdList for NEON dispatch
     - Add platform detection
     - Call NEON ops on aarch64
     - _Requirements: 3.2_
 
-  - [ ] 3.6 Update SwissDict for NEON probe
+  - [x] 3.6 Update SwissDict for NEON probe
     - Implement NEON-accelerated probe
     - _Requirements: 3.2_
 
-  - [ ] 3.7 Write NEON collections property tests
+  - [x] 3.7 Write NEON collections property tests
     - _Requirements: 3.4_
 
-  - [ ] 3.8 Checkpoint - NEON collections complete
+  - [x] 3.8 Checkpoint - NEON collections complete
 
 - [x] 4. Error Handling Improvements (Priority: High)
   - [x] 4.1 Create error.rs in dx-py-core
@@ -160,13 +160,13 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
 
   - [ ] 4.9 Checkpoint - Error handling complete
 
-- [ ] 5. Cross-Crate Integration (Priority: High)
-  - [ ] 5.1 Create jit_integration.rs in interpreter
+- [x] 5. Cross-Crate Integration (Priority: High)
+  - [x] 5.1 Create jit_integration.rs in interpreter
     - Implement JitIntegration struct
     - Wire interpreter to JIT
     - _Requirements: 5.1_
 
-  - [ ] 5.2 Create async_integration.rs in interpreter
+  - [x] 5.2 Create async_integration.rs in interpreter
     - Implement AsyncRuntime struct
     - Wire interpreter to reactor
     - _Requirements: 5.2_
@@ -202,13 +202,13 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
     - Test list/dict operations
     - _Requirements: 6.1_
 
-  - [ ] 6.3 Write JIT compilation tests
+  - [x] 6.3 Write JIT compilation tests
     - Test tier promotion
     - Test deoptimization
     - Test OSR
     - _Requirements: 6.2_
 
-  - [ ] 6.4 Write async I/O tests
+  - [x] 6.4 Write async I/O tests
     - Test file read/write
     - Test network operations
     - Test DNS resolution
@@ -233,17 +233,17 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
     - Compare SIMD vs scalar
     - _Requirements: 7.1_
 
-  - [ ] 7.2 Add benchmarks to dx-py-collections
+  - [x] 7.2 Add benchmarks to dx-py-collections
     - Benchmark sum, filter, map
     - Benchmark SwissDict operations
     - _Requirements: 7.1_
 
-  - [ ] 7.3 Add benchmarks to dx-py-gc
+  - [x] 7.3 Add benchmarks to dx-py-gc
     - Benchmark allocation rate
     - Benchmark collection time
     - _Requirements: 7.1_
 
-  - [ ] 7.4 Add benchmarks to dx-py-jit
+  - [x] 7.4 Add benchmarks to dx-py-jit
     - Benchmark compilation time
     - Benchmark execution time
     - _Requirements: 7.1_
@@ -266,17 +266,17 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
     - Add usage examples
     - _Requirements: 8.1_
 
-  - [ ] 8.2 Add rustdoc to dx-py-collections
+  - [x] 8.2 Add rustdoc to dx-py-collections
     - Document SimdList, SwissDict
     - Add usage examples
     - _Requirements: 8.1_
 
-  - [ ] 8.3 Add rustdoc to dx-py-gc
+  - [x] 8.3 Add rustdoc to dx-py-gc
     - Document GC configuration
     - Document memory management
     - _Requirements: 8.1_
 
-  - [ ] 8.4 Add rustdoc to dx-py-jit
+  - [x] 8.4 Add rustdoc to dx-py-jit
     - Document tier system
     - Document profiling
     - _Requirements: 8.1_
@@ -286,7 +286,7 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
     - Document built-in types
     - _Requirements: 8.1_
 
-  - [ ] 8.6 Add rustdoc to dx-py-reactor
+  - [x] 8.6 Add rustdoc to dx-py-reactor
     - Document reactor API
     - Document platform differences
     - _Requirements: 8.1_
@@ -303,7 +303,7 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
 
   - [ ] 8.9 Checkpoint - Documentation complete
 
-- [ ] 9. Real Async I/O (Priority: High)
+- [-] 9. Real Async I/O (Priority: High)
   - [ ] 9.1 Implement real io_uring file I/O
     - Implement read_file() with actual io_uring
     - Implement write_file() with actual io_uring
@@ -314,7 +314,7 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
     - Implement write_file() with kqueue
     - _Requirements: 9.2_
 
-  - [ ] 9.3 Implement real IOCP file I/O
+  - [x] 9.3 Implement real IOCP file I/O
     - Implement read_file() with IOCP
     - Implement write_file() with IOCP
     - _Requirements: 9.3_
@@ -337,8 +337,8 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
 
   - [ ] 9.7 Checkpoint - Real async I/O complete
 
-- [ ] 10. Python Parser (Priority: Low)
-  - [ ] 10.1 Create dx-py-parser crate
+- [-] 10. Python Parser (Priority: Low)
+  - [-] 10.1 Create dx-py-parser crate
     - Create Cargo.toml
     - Define module structure
     - _Requirements: 10.1_
@@ -380,21 +380,22 @@ This implementation plan addresses all identified weaknesses in dx-py-runtime. T
 
 ### Completed
 - Task 1: ARM NEON String Engine - Full implementation with 9 tests
+- Task 2: AVX-512 String Engine - Full implementation
+- Task 3: NEON Collections - neon_ops.rs with sum, filter, map, index, count operations
 - Task 4.1, 4.6, 4.8: Error handling foundation - RuntimeError enum with From traits
-- Task 6.1, 6.2, 6.5: Integration tests - Core, SIMD, Collections, GC tests
-- Task 7.1: SIMD benchmarks - Criterion benchmarks for all string operations
-- Task 8.1, 8.5: Documentation - dx-py-simd and dx-py-core rustdoc
+- Task 5.1, 5.2: Cross-crate integration - JIT and async integration modules
+- Task 6.1-6.5: Integration tests - Core, SIMD, Collections, GC, JIT, Async tests
+- Task 7.1-7.4: Benchmarks - SIMD, Collections, GC, JIT benchmarks
+- Task 8.1-8.6: Documentation - rustdoc for simd, collections, gc, jit, core, reactor
 
 ### In Progress
 - Task 4: Error handling - Need to update core types to use RuntimeResult
-- Task 6: Integration tests - Need JIT, async, FFI tests
-- Task 7: Benchmarks - Need benchmarks for other crates
-- Task 8: Documentation - Need docs for remaining crates
+- Task 5: Cross-crate integration - Need GC/FFI integration and CLI updates
+- Task 6: Integration tests - Need FFI tests
+- Task 7: Benchmarks - Need core benchmarks and comparison script
+- Task 8: Documentation - Need main README and crate READMEs
 
 ### Not Started
-- Task 2: AVX-512 String Engine
-- Task 3: NEON Collections
-- Task 5: Cross-Crate Integration
 - Task 9: Real Async I/O
 - Task 10: Python Parser
 

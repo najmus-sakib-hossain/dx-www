@@ -51,8 +51,9 @@ impl FromStr for ManylinuxTag {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = s.to_lowercase();
         
-        // Remove architecture suffix if present
-        let tag_part = s.split('_').take_while(|p| !is_arch(p)).collect::<Vec<_>>().join("_");
+        // Remove architecture suffix if present (e.g., _x86_64, _aarch64)
+        // Architecture suffixes are at the end and follow a pattern like _arch
+        let tag_part = strip_arch_suffix(&s);
         
         if tag_part == "manylinux1" {
             Ok(ManylinuxTag::Manylinux1)
@@ -134,9 +135,22 @@ pub enum ManylinuxParseError {
     InvalidVersion,
 }
 
-/// Check if a string is an architecture identifier
-fn is_arch(s: &str) -> bool {
-    matches!(s, "x86_64" | "i686" | "aarch64" | "armv7l" | "ppc64le" | "s390x")
+/// Strip architecture suffix from a tag string
+/// e.g., "manylinux1_x86_64" -> "manylinux1"
+/// e.g., "manylinux_2_28_x86_64" -> "manylinux_2_28"
+fn strip_arch_suffix(s: &str) -> &str {
+    // Known architecture suffixes
+    const ARCH_SUFFIXES: &[&str] = &[
+        "_x86_64", "_i686", "_aarch64", "_armv7l", "_ppc64le", "_s390x",
+        "_arm64", "_universal2",
+    ];
+    
+    for suffix in ARCH_SUFFIXES {
+        if s.ends_with(suffix) {
+            return &s[..s.len() - suffix.len()];
+        }
+    }
+    s
 }
 
 #[cfg(test)]

@@ -7,18 +7,13 @@ pub use dx_py_core::{GraphError, TestId};
 
 use dx_py_core::TestCase;
 use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::visit::Bfs;
 use petgraph::Direction;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
-use tree_sitter::{Language, Node, Parser, Tree};
-
-extern "C" {
-    fn tree_sitter_python() -> Language;
-}
+use tree_sitter::{Node, Parser};
 
 /// Magic bytes for graph cache files
 const GRAPH_MAGIC: &[u8; 4] = b"DXGR";
@@ -258,7 +253,7 @@ impl ImportExtractor {
     /// Create a new import extractor
     pub fn new() -> Result<Self, GraphError> {
         let mut parser = Parser::new();
-        let language = unsafe { tree_sitter_python() };
+        let language = tree_sitter_python::language();
         parser
             .set_language(language)
             .map_err(|e| GraphError::ParseError(e.to_string()))?;
@@ -313,20 +308,35 @@ impl ImportExtractor {
     fn parse_import_from(&self, node: Node, source: &[u8]) -> Option<ImportInfo> {
         let mut module = String::new();
         let mut level = 0;
+        let mut found_module = false;
 
         for child in node.children(&mut node.walk()) {
             match child.kind() {
-                "relative_import" => {
-                    for dot in child.children(&mut child.walk()) {
-                        if dot.kind() == "." {
-                            level += 1;
-                        } else if dot.kind() == "dotted_name" {
-                            module = self.node_text(dot, source);
-                        }
-                    }
+                "import_prefix" => {
+                    // Count dots for relative imports
+                    let text = self.node_text(child, source);
+                    level = text.chars().filter(|c| *c == '.').count();
                 }
                 "dotted_name" => {
-                    module = self.node_text(child, source);
+                    if !found_module {
+                        module = self.node_text(child, source);
+                        found_module = true;
+                    }
+                }
+                "relative_import" => {
+                    // Handle relative imports
+                    for subchild in child.children(&mut child.walk()) {
+                        match subchild.kind() {
+                            "import_prefix" => {
+                                let text = self.node_text(subchild, source);
+                                level = text.chars().filter(|c| *c == '.').count();
+                            }
+                            "dotted_name" => {
+                                module = self.node_text(subchild, source);
+                            }
+                            _ => {}
+                        }
+                    }
                 }
                 _ => {}
             }

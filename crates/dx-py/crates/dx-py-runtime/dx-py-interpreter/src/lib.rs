@@ -1,13 +1,24 @@
 //! Bytecode interpreter for DX-Py runtime
 //!
 //! Implements the dispatch loop for DPB bytecode execution.
+//!
+//! ## Features
+//!
+//! - Bytecode dispatch with computed goto optimization
+//! - JIT integration for tiered compilation
+//! - Async integration for async/await support
+//! - Error propagation with Python exception semantics
 
 pub mod dispatch;
 pub mod vm;
 pub mod opcodes;
+pub mod jit_integration;
+pub mod async_integration;
 
 pub use dispatch::Dispatcher;
 pub use vm::VirtualMachine;
+pub use jit_integration::{JitIntegration, JitError, JitStats};
+pub use async_integration::{AsyncRuntime, AsyncError, FutureResult};
 
 /// Interpreter error types
 #[derive(Debug, thiserror::Error)]

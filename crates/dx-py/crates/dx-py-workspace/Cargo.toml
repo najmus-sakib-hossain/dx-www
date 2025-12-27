@@ -1,14 +1,16 @@
+[workspace]
+
 [package]
 name = "dx-py-workspace"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
 description = "Python project lifecycle and workspace management"
 
 [dependencies]
 dx-py-core = { path = "../dx-py-package-manager/dx-py-core" }
 dx-py-package-manager = { path = "../dx-py-package-manager/dx-py-package-manager" }
-thiserror.workspace = true
+thiserror = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
 glob = "0.3"
@@ -22,4 +24,4 @@ zip = "0.6"
 tempfile = "3.10"
 
 [dev-dependencies]
-proptest.workspace = true
+proptest = "1.4"

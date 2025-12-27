@@ -6,6 +6,9 @@ use crate::scalar::ScalarStringEngine;
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
 use crate::avx2::Avx2StringEngine;
 
+#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+use crate::avx512::Avx512StringEngine;
+
 #[cfg(target_arch = "aarch64")]
 use crate::neon::NeonStringEngine;
 
@@ -32,11 +35,7 @@ impl SimdDispatcher {
         #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
         {
             if self.has_avx512 {
-                // TODO: Implement AVX-512 engine
-                // For now, fall back to AVX2
-                if self.has_avx2 {
-                    return Box::new(unsafe { Avx2StringEngine::new() });
-                }
+                return Box::new(unsafe { Avx512StringEngine::new() });
             }
             
             if self.has_avx2 {

@@ -1,15 +1,62 @@
 //! Platform-Native Async I/O Reactor for DX-Py-Runtime
 //!
-//! This crate provides high-performance async I/O using platform-native APIs:
-//! - Linux: io_uring with SQPOLL mode for zero-syscall submissions
-//! - macOS: kqueue for efficient event notification
-//! - Windows: IOCP (I/O Completion Ports) for async I/O
+//! This crate provides high-performance async I/O using platform-native APIs
+//! for the DX-Py runtime.
 //!
-//! # Performance Targets
+//! ## Platform Support
+//!
+//! | Platform | Backend | Features |
+//! |----------|---------|----------|
+//! | Linux | io_uring | SQPOLL mode, zero-syscall submissions |
+//! | macOS | kqueue | Efficient event notification |
+//! | Windows | IOCP | I/O Completion Ports |
+//!
+//! ## Performance Targets
+//!
 //! - Single file read: <2μs (vs 50μs for asyncio)
 //! - 100 parallel file reads: <100μs (vs 5ms for asyncio)
 //! - Accept throughput: 2M+ connections/sec
 //! - HTTP throughput: 500K+ requests/sec
+//!
+//! ## Features
+//!
+//! - [`Reactor`]: Platform-specific async I/O reactor trait
+//! - [`ReactorPool`]: Pool of reactors for multi-core scaling
+//! - [`PyFuture`]: Python-compatible future for async/await
+//! - [`IoBuffer`]: Efficient I/O buffer management
+//! - [`IoOperation`]: Async I/O operation types
+//!
+//! ## Usage
+//!
+//! ```rust,ignore
+//! use dx_py_reactor::{create_reactor, IoOperation, IoBuffer};
+//!
+//! // Create a platform-appropriate reactor
+//! let reactor = create_reactor(0)?;
+//!
+//! // Submit an async read operation
+//! let buffer = IoBuffer::new(4096);
+//! let op = IoOperation::Read {
+//!     fd: file_fd,
+//!     buffer,
+//!     offset: 0,
+//! };
+//! reactor.submit(op)?;
+//!
+//! // Poll for completions
+//! let completions = reactor.poll()?;
+//! ```
+//!
+//! ## Async Operations
+//!
+//! High-level async operations are provided for common use cases:
+//!
+//! - [`async_read_file`]: Read a file asynchronously
+//! - [`async_write_file`]: Write a file asynchronously
+//! - [`async_read_files_batch`]: Read multiple files in parallel
+//! - [`async_accept`]: Accept incoming connections
+//! - [`async_connect`]: Connect to a remote host
+//! - [`async_resolve`]: DNS resolution
 
 pub mod completion;
 pub mod error;

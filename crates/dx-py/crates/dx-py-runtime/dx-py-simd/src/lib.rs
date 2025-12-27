@@ -5,6 +5,7 @@
 //!
 //! ## Features
 //!
+//! - AVX-512 acceleration on x86_64 (64 bytes/iteration) - highest throughput
 //! - AVX2 acceleration on x86_64 (32 bytes/iteration)
 //! - NEON acceleration on ARM64 (16 bytes/iteration)
 //! - Automatic CPU detection and dispatch
@@ -22,6 +23,7 @@
 
 pub mod engine;
 pub mod avx2;
+pub mod avx512;
 pub mod scalar;
 pub mod dispatcher;
 pub mod neon;
@@ -29,6 +31,7 @@ pub mod neon;
 pub use engine::SimdStringEngine;
 pub use dispatcher::SimdDispatcher;
 pub use neon::NeonStringEngine;
+pub use avx512::Avx512StringEngine;
 
 /// Get the best available SIMD engine for the current CPU
 pub fn get_engine() -> Box<dyn SimdStringEngine> {
