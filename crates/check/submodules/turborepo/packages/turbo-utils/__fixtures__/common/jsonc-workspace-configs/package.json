@@ -1,7 +1,0 @@
-{
-  "name": "jsonc-workspace-configs",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
-}
