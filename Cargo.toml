@@ -75,7 +75,7 @@ members = [
     "crates/www/core",
 
     # Binary Dawn - Cross-platform I/O reactor
-    "crates/reactor",
+    "crates/www/reactor",
     "crates/www/db-teleport",
 ]
 
@@ -211,7 +211,7 @@ dx-www-print = { path = "crates/www/print" }
 dx-www-rtl = { path = "crates/www/rtl" }
 
 # Binary Dawn
-dx-reactor = { path = "crates/reactor" }
+dx-reactor = { path = "crates/www/reactor" }
 dx-db-teleport = { path = "crates/www/db-teleport" }
 
 

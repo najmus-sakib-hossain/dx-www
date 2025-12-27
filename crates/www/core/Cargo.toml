@@ -61,7 +61,7 @@ chrono = "0.4"
 dx-www-packet = { path = "../packet", features = ["std"] }
 
 # Binary Dawn - Cross-platform I/O reactor
-dx-reactor = { path = "../../reactor" }
+dx-reactor = { path = "../reactor" }
 dx-db-teleport = { path = "../db-teleport", optional = true }
 
 # Ecosystem crates (compile-time features)

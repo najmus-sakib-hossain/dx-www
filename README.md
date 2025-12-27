@@ -118,8 +118,8 @@
 - **vs ESLint:** 100-200x faster (verified)
 - **vs Biome:** 5-8x faster (verified: 7.6x single, 4.9x multi)
 - **Rule Loading:** 0.70ns (hardware limit via dx-serializer)
-- **Languages:** 12 supported (JS/TS/Py/Go/Rust/PHP/MD/TOML/Kt/C/C++/JSON/CSS)
-- **Rules:** 200+ unified in binary format
+- **Languages:** 15 supported (JS/TS/Py/Go/Rust/PHP/MD/TOML/Kt/C/C++/JSON/CSS/HTML/YAML)
+- **Rules:** 270+ unified in binary format
 - **Hot-Reload:** File-based .dxs system with <50ms recompilation
 - **Architecture:** Binary Rule Fusion Engine, SIMD Scanner (AVX2), File Watcher
 - **Commands:** `dx-check`, `dx-check rule generate`, `dx-check watch`

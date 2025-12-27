@@ -5,7 +5,7 @@
 [![Rust](https://img.shields.io/badge/Rust-2024_Edition-orange.svg)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Phase%203%20Complete-brightgreen.svg)]()
-[![Rules](https://img.shields.io/badge/Rules-200%2B%20Across%2012%20Languages-blue.svg)]()
+[![Rules](https://img.shields.io/badge/Rules-270%2B%20Across%2015%20Languages-blue.svg)]()
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -76,13 +76,13 @@ dx-check rule list
 
 ## Binary Rule System Architecture 🚀
 
-dx-check now uses **dx-serializer** (the world's fastest serializer) to manage lint rules across 12 languages:
+dx-check now uses **dx-serializer** (the world's fastest serializer) to manage lint rules across 15 languages:
 
 ```
 Rule Extraction → LLM Format (.dx) → Binary Compilation (.dxm) → Zero-Copy Loading
      ↓                  ↓                      ↓                         ↓
-  12 sources      Human-readable       0.70ns access          Runtime execution
-  200+ rules    Contributor-friendly    Hardware limit        Sub-nanosecond
+  15 sources      Human-readable       0.70ns access          Runtime execution
+  270+ rules    Contributor-friendly    Hardware limit        Sub-nanosecond
 ```
 
 ### Supported Languages (via Binary Rules)
@@ -99,10 +99,11 @@ Rule Extraction → LLM Format (.dx) → Binary Compilation (.dxm) → Zero-Copy
 | **Kotlin** | ktlint | 15 | ✅ | Official linter |
 | **C/C++** | cpp-linter-rs | 14 | ✅ | clang-tidy + clang-format |
 | **JSON** | biome | 3 | ✅ | Strict JSON |
-| **CSS** | biome | 3 | ✅ | Modern CSS |
-| **HTML** | - | - | 🔜 | Coming soon |
+| **CSS** | biome | 4 | ✅ | Modern CSS |
+| **HTML** | biome | 3 | ✅ | Accessibility + Security |
+| **YAML** | dx-check | 3 | ❌ | Config files |
 
-**Total: 200+ rules across 12 languages, unified in binary format**
+**Total: 270+ rules across 15 languages, unified in binary format**
 
 ### Binary Rule Format Benefits
 
