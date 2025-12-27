@@ -639,6 +639,7 @@ dependencies = [
  "dx-py-jit",
  "dx-py-modules",
  "dx-py-pcc",
+ "dx-py-reactor",
  "dx-py-simd",
  "parking_lot",
  "proptest",

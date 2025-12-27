@@ -11,6 +11,7 @@ dx-py-bytecode = { path = "../dx-py-bytecode" }
 dx-py-core = { path = "../dx-py-core" }
 dx-py-gc = { path = "../dx-py-gc" }
 dx-py-jit = { path = "../dx-py-jit" }
+dx-py-reactor = { path = "../dx-py-reactor" }
 dx-py-simd = { path = "../dx-py-simd" }
 dx-py-modules = { path = "../dx-py-modules" }
 dx-py-cache = { path = "../dx-py-cache" }
