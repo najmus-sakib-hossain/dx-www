@@ -154,7 +154,15 @@ This implementation plan creates a `dx-crate-lint` validation tool and migration
     - Applied workspace inheritance to all crates (version, authors, license, repository)
     - Edition inheritance skipped for crates with rust-version constraints
     - Fixed scanner to properly detect src/ directories (reduced false positives)
-    - Critical violations reduced from 161 to 118
+    - Renamed 12 packages to follow dx-{name} pattern:
+      - style → dx-style, forge → dx-forge, media → dx-media
+      - icon → dx-icon, font → dx-font, generator → dx-generator
+      - workspace → dx-workspace, driven → dx-driven
+      - debug → dx-www-debug, error → dx-www-error
+      - i18n → dx-i18n, serializer → dx-serializer
+    - Updated all internal dependencies to use new package names
+    - Added keywords and categories to renamed crates
+    - Critical violations reduced from 161 to 75
     - _Requirements: 1.1-1.9, 2.1-2.5_
   - [-] 15.3 Add missing documentation files
     - CHANGELOG.md and LICENSE files already exist in most crates
@@ -169,11 +177,11 @@ This implementation plan creates a `dx-crate-lint` validation tool and migration
 - [x] 16. Final checkpoint - Full compliance
   - All 89 dx-crate-lint unit tests pass
   - All property-based tests pass (naming, metadata, structure, etc.)
-  - Critical violations reduced from 161 to 118 (43 false positives fixed)
+  - Critical violations reduced from 161 to 75 (significant progress)
   - Remaining violations require manual intervention:
-    - Package naming (26) - require coordinated renames across workspace
-    - Missing keywords/categories (66) - auto-fixer disabled, manual addition needed
-    - Some workspace inheritance fields (edition skipped for rust-version conflicts)
+    - Package naming (4) - special cases: dx, dx-www, dx-reactor, dx-db-teleport
+    - Missing keywords/categories (66) - need manual addition to www crates
+    - Workspace inheritance issues (some crates missing repository.workspace, etc.)
     - Dependency version conflicts (52 warnings) - require coordination
 
 ## Notes

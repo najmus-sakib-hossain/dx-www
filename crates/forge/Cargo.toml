@@ -1,8 +1,8 @@
 [package]
-name = "forge"
+name = "dx-forge"
 version.workspace = true
-edition = "2021"
-rust-version = "1.91.1"
+edition.workspace = true
+rust-version = "1.85"
 authors.workspace = true
 description = "Production-ready VCS and orchestration engine for DX tools with Git-like versioning, dual-watcher architecture, traffic branch system, and component injection"
 license.workspace = true
@@ -129,7 +129,7 @@ serde_cbor = "0.11.2"
 toml = "0.8"
 
 # DX Serializer integration
-dx_serializer = { path = "../serializer", package = "serializer" }
+dx_serializer = { path = "../serializer", package = "dx-serializer" }
 
 # Text processing
 ropey = "1.6.1"

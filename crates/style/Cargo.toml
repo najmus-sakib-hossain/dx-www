@@ -1,11 +1,13 @@
 [package]
-name = "style"
+name = "dx-style"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 description = "Binary-first CSS engine with zero-copy parsing and FlatBuffers output"
 license.workspace = true
 repository.workspace = true
+keywords = ["css", "styling", "binary", "zero-copy", "flatbuffers"]
+categories = ["development-tools", "web-programming", "parser-implementations"]
 
 [lib]
 name = "style"

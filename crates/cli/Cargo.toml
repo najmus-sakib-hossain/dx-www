@@ -18,6 +18,6 @@ num_cpus = "1.16"
 
 # Internal
 dx-www = { path = "../www/core" }
-forge = { path = "../forge" }
-style = { path = "../style" }
-dx_serializer = { path = "../serializer", package = "serializer" }
+dx-forge = { path = "../forge" }
+dx-style = { path = "../style" }
+dx-serializer = { path = "../serializer" }

@@ -136,7 +136,7 @@ impl TableWrapper {
         let shrinkable: Vec<(usize, usize)> = widths
             .iter()
             .enumerate()
-            .filter(|(_, &w)| w > self.config.min_col_width)
+            .filter(|&(_, &w)| w > self.config.min_col_width)
             .map(|(i, &w)| (i, w - self.config.min_col_width))
             .collect();
 

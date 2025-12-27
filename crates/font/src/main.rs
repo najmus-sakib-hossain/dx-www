@@ -7,10 +7,10 @@ use clap::Parser;
 use console::style;
 use std::path::PathBuf;
 
-use font::cli::{Cli, Commands, OutputFormat};
-use font::download::FontDownloader;
-use font::models::FontProvider;
-use font::search::FontSearch;
+use dx_font::cli::{Cli, Commands, OutputFormat};
+use dx_font::download::FontDownloader;
+use dx_font::models::FontProvider;
+use dx_font::search::FontSearch;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -165,7 +165,7 @@ async fn cmd_download(
                 .download_font(
                     &provider_enum,
                     font_id,
-                    &font::models::DownloadOptions {
+                    &dx_font::models::DownloadOptions {
                         output_dir: output.clone(),
                         formats: formats.to_vec(),
                         ..Default::default()
@@ -293,8 +293,8 @@ async fn cmd_info(font_id: &str, provider: &str, format: &OutputFormat) -> Resul
             println!("\n{}", style("Variants:").bold());
             for variant in &family.variants {
                 let style_str = match variant.style {
-                    font::FontStyle::Normal => "Normal",
-                    font::FontStyle::Italic => "Italic",
+                    dx_font::FontStyle::Normal => "Normal",
+                    dx_font::FontStyle::Italic => "Italic",
                 };
                 println!(
                     "  {} {} ({})",

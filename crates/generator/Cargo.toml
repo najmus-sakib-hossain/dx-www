@@ -1,13 +1,19 @@
 [package]
-name = "generator"
+name = "dx-generator"
 version.workspace = true
-edition = "2024"
+edition.workspace = true
 rust-version = "1.85"
 authors.workspace = true
 description = "Binary Dawn Code Generator - The world's fastest template engine built on Dx principles"
 repository.workspace = true
 documentation = "https://docs.rs/dx-generator"
-keywords = ["code-generation", "template-engine", "binary", "zero-copy", "performance"]
+keywords = [
+    "code-generation",
+    "template-engine",
+    "binary",
+    "zero-copy",
+    "performance",
+]
 categories = ["development-tools", "template-engine", "code-generators"]
 readme = "README.md"
 license.workspace = true
@@ -51,8 +57,8 @@ rand = "0.8"
 
 [features]
 default = ["simd"]
-simd = []                                    # AVX2 SIMD placeholder scanning
-serde-compat = ["serde", "serde_json"]       # JSON parameter compatibility
+simd = []                              # AVX2 SIMD placeholder scanning
+serde-compat = ["serde", "serde_json"] # JSON parameter compatibility
 
 [[bench]]
 name = "template_render"

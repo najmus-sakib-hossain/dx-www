@@ -1,10 +1,13 @@
 [package]
-name = "error"
+name = "dx-www-error"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Binary error boundaries"
+keywords = ["error", "boundaries", "binary", "handling", "recovery"]
+categories = ["rust-patterns"]
 
 [lib]
 path = "src/lib.rs"

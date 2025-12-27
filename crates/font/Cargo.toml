@@ -1,11 +1,13 @@
 [package]
-name = "font"
+name = "dx-font"
 version.workspace = true
 edition.workspace = true
 description = "A comprehensive font search and download tool with access to 50k+ commercial-free fonts"
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+keywords = ["fonts", "typography", "download", "cli", "assets"]
+categories = ["command-line-utilities", "multimedia", "web-programming"]
 
 [dependencies]
 # Async runtime

@@ -11,9 +11,9 @@ crate-type = ["cdylib"]
 [dependencies]
 # Core runtime - zero external deps for minimal size
 # Ecosystem features (conditional compilation)
-error = { path = "../error", optional = true }
-debug = { path = "../debug", optional = true }
+dx-www-error = { path = "../error", optional = true }
+dx-www-debug = { path = "../debug", optional = true }
 
 [features]
 default = []
-dev = ["error", "debug"]
+dev = ["dx-www-error", "dx-www-debug"]

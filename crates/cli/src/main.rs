@@ -20,8 +20,8 @@ use commands::{
 };
 
 // Internal crate imports
-use dx_compiler as www;
-use style;
+use dx_www as www;
+use dx_style;
 
 #[derive(Parser)]
 #[command(name = "dx")]
@@ -125,7 +125,7 @@ async fn main() -> Result<()> {
 
         // Existing commands
         Commands::New { name, template } => {
-            forge::init(&name, &template)?;
+            dx_forge::init(&name, &template)?;
             Ok(())
         }
         Commands::Build {
@@ -146,7 +146,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Style { input, output } => {
-            style::compile(input, output).map_err(|e| anyhow::anyhow!("{}", e))?;
+            dx_style::compile(input, output).map_err(|e| anyhow::anyhow!("{}", e))?;
             Ok(())
         }
         Commands::Version => {
@@ -167,7 +167,7 @@ fn print_version() {
     );
     println!();
     println!("  Components:");
-    println!("    Forge:      {}", forge::VERSION);
+    println!("    Forge:      {}", dx_forge::VERSION);
     println!("    Serializer: {}", dx_serializer::zero::VERSION);
     println!();
 }

@@ -1,8 +1,8 @@
 [package]
-name = "serializer"
+name = "dx-serializer"
 version.workspace = true
-edition = "2021"
-rust-version = "1.75"
+edition.workspace = true
+rust-version = "1.85"
 authors.workspace = true
 description = "The world's most token-efficient serialization format"
 repository.workspace = true

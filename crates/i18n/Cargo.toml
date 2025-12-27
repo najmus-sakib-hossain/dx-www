@@ -1,11 +1,19 @@
 [package]
-name = "i18n"
+name = "dx-i18n"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 description = "Multi-provider translation engine with support for Google, DeepL, and other translation APIs"
 license.workspace = true
 repository.workspace = true
+keywords = [
+    "i18n",
+    "translation",
+    "localization",
+    "internationalization",
+    "api",
+]
+categories = ["internationalization", "localization", "web-programming"]
 
 [dependencies]
 reqwest = { version = "0.11", default-features = false, features = [

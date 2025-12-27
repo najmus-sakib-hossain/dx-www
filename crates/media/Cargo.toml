@@ -1,7 +1,7 @@
 [package]
-name = "media"
+name = "dx-media"
 version.workspace = true
-edition = "2024"
+edition.workspace = true
 rust-version = "1.85"
 authors.workspace = true
 description = "Universal digital asset acquisition engine - One command, any media, from anywhere"

@@ -1,11 +1,13 @@
 [package]
-name = "icon"
+name = "dx-icon"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 description = "High-performance icon library with FlatBuffers-based binary format"
 license.workspace = true
 repository.workspace = true
+keywords = ["icons", "svg", "flatbuffers", "binary", "assets"]
+categories = ["development-tools", "multimedia", "encoding"]
 
 [dependencies]
 flatbuffers = "24.3.25"

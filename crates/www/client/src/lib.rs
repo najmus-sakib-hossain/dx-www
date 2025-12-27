@@ -18,7 +18,7 @@ extern crate alloc;
 mod allocator;
 
 // Ecosystem integration (optional features)
-#[cfg(any(feature = "dev", feature = "error", feature = "debug"))]
+#[cfg(any(feature = "dev", feature = "dx-www-error", feature = "dx-www-debug"))]
 pub mod ecosystem;
 
 use core::slice;

@@ -1,10 +1,13 @@
 [package]
-name = "debug"
+name = "dx-www-debug"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "DevTools bridge for binary debugging"
+keywords = ["debug", "devtools", "binary", "diagnostics", "tracing"]
+categories = ["development-tools"]
 
 [lib]
 path = "src/lib.rs"

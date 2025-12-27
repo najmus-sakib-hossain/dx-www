@@ -140,7 +140,7 @@ async fn start_daemon(detach: bool, port: u16, verbose: bool) -> Result<()> {
 
 /// Run daemon in foreground (non-detached mode)
 async fn run_daemon_foreground(port: u16, verbose: bool) -> Result<()> {
-    use forge::{DaemonConfig, ForgeDaemon};
+    use dx_forge::{DaemonConfig, ForgeDaemon};
 
     let config = DaemonConfig {
         project_root: std::env::current_dir()?,

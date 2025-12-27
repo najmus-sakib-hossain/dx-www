@@ -1,12 +1,12 @@
 [package]
-name = "driven"
+name = "dx-driven"
 version.workspace = true
-edition = "2024"
+edition.workspace = true
 rust-version = "1.85"
 authors.workspace = true
 description = "Professional AI-assisted development orchestrator with binary-first architecture"
 repository.workspace = true
-documentation = "https://docs.rs/driven"
+documentation = "https://docs.rs/dx-driven"
 keywords = ["ai", "development", "orchestrator", "rules", "binary"]
 categories = ["development-tools", "command-line-utilities"]
 readme = "README.md"
@@ -61,7 +61,12 @@ miette = { version = "7.4", features = ["fancy"] }
 memmap2 = "0.9"
 
 # Async runtime (for file watching)
-tokio = { version = "1.42", features = ["rt-multi-thread", "fs", "sync", "macros"] }
+tokio = { version = "1.42", features = [
+    "rt-multi-thread",
+    "fs",
+    "sync",
+    "macros",
+] }
 
 # SIMD-accelerated operations
 simdutf8 = "0.1"

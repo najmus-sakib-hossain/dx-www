@@ -1833,15 +1833,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "debug"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "deflate64"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2031,43 +2022,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
-name = "driven"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "blake3",
- "bytemuck",
- "bytes",
- "clap",
- "console",
- "criterion",
- "dialoguer",
- "globset",
- "ignore",
- "indicatif",
- "insta",
- "memchr",
- "memmap2",
- "miette",
- "notify 7.0.0",
- "pretty_assertions",
- "regex",
- "serde",
- "serde_json",
- "serde_yaml",
- "simdutf8",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
- "toml 0.8.23",
- "tracing",
- "tracing-subscriber",
- "walkdir",
- "xxhash-rust",
- "zerocopy 0.8.31",
-]
-
-[[package]]
 name = "dtoa"
 version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2136,13 +2090,13 @@ dependencies = [
  "clap",
  "console",
  "dirs",
+ "dx-forge",
+ "dx-serializer",
+ "dx-style",
  "dx-www",
- "forge",
  "num_cpus",
  "serde",
  "serde_json",
- "serializer",
- "style",
  "tokio",
 ]
 
@@ -2178,6 +2132,198 @@ dependencies = [
  "tokio-postgres",
  "tracing",
  "xxhash-rust",
+]
+
+[[package]]
+name = "dx-driven"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "bytemuck",
+ "bytes",
+ "clap",
+ "console",
+ "criterion",
+ "dialoguer",
+ "globset",
+ "ignore",
+ "indicatif",
+ "insta",
+ "memchr",
+ "memmap2",
+ "miette",
+ "notify 7.0.0",
+ "pretty_assertions",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "simdutf8",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+ "toml 0.8.23",
+ "tracing",
+ "tracing-subscriber",
+ "walkdir",
+ "xxhash-rust",
+ "zerocopy 0.8.31",
+]
+
+[[package]]
+name = "dx-font"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "console",
+ "dirs",
+ "futures",
+ "indicatif",
+ "rayon",
+ "regex",
+ "reqwest 0.12.25",
+ "scraper 0.18.1",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
+name = "dx-forge"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.12",
+ "anyhow",
+ "async-trait",
+ "automerge",
+ "axum 0.8.7",
+ "base64 0.22.1",
+ "bincode 1.3.3",
+ "blake3",
+ "bytes",
+ "chrono",
+ "clap",
+ "colored 3.0.0",
+ "crossbeam",
+ "dashmap 6.1.0",
+ "dirs",
+ "dotenvy",
+ "dx-serializer",
+ "futures",
+ "git2",
+ "hex",
+ "hmac",
+ "ignore",
+ "io-uring 0.7.11",
+ "jwalk",
+ "log",
+ "lz4",
+ "md5",
+ "memchr",
+ "memmap2",
+ "notify 8.2.0",
+ "notify-debouncer-full",
+ "num_cpus",
+ "once_cell",
+ "parking_lot",
+ "proptest",
+ "rayon",
+ "regex",
+ "reqwest 0.12.25",
+ "ropey",
+ "rusqlite",
+ "serde",
+ "serde_cbor",
+ "serde_json",
+ "sha2 0.10.9",
+ "similar",
+ "tempfile",
+ "tokio",
+ "tokio-test",
+ "tokio-tungstenite 0.28.0",
+ "toml 0.8.23",
+ "tower 0.5.2",
+ "tower-http 0.6.8",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "tree-sitter",
+ "tree-sitter-rust",
+ "url",
+ "uuid",
+ "walkdir",
+ "whoami",
+ "windows-sys 0.59.0",
+ "yrs 0.21.3",
+ "zip",
+]
+
+[[package]]
+name = "dx-generator"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "bumpalo",
+ "bytemuck",
+ "bytes",
+ "criterion",
+ "ed25519-dalek",
+ "memmap2",
+ "parking_lot",
+ "rand 0.8.5",
+ "rayon",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.17",
+ "xxhash-rust",
+]
+
+[[package]]
+name = "dx-i18n"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64 0.21.7",
+ "chrono",
+ "futures",
+ "futures-util",
+ "html-escape",
+ "lazy_static",
+ "regex",
+ "reqwest 0.11.27",
+ "scraper 0.18.1",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-tungstenite 0.21.0",
+ "url",
+ "urlencoding",
+ "uuid",
+]
+
+[[package]]
+name = "dx-icon"
+version = "0.1.0"
+dependencies = [
+ "flatbuffers 24.12.23",
+ "flatc-rust",
+ "quick-xml",
+ "regex",
+ "serde",
+ "serde_json",
+ "walkdir",
 ]
 
 [[package]]
@@ -2246,6 +2392,54 @@ dependencies = [
 ]
 
 [[package]]
+name = "dx-media"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "clap",
+ "colored 2.2.0",
+ "console",
+ "directories",
+ "dotenvy",
+ "flate2",
+ "futures",
+ "hound",
+ "image",
+ "imageproc",
+ "indicatif",
+ "lofty",
+ "lopdf",
+ "once_cell",
+ "oxipng",
+ "pretty_assertions",
+ "pulldown-cmark",
+ "qrcode",
+ "rayon",
+ "regex",
+ "reqwest 0.12.25",
+ "sanitize-filename",
+ "scraper 0.22.0",
+ "serde",
+ "serde_json",
+ "strum",
+ "symphonia",
+ "tar",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid",
+ "walkdir",
+ "wiremock",
+ "zip",
+]
+
+[[package]]
 name = "dx-reactor"
 version = "0.1.0"
 dependencies = [
@@ -2260,6 +2454,87 @@ dependencies = [
  "thiserror 2.0.17",
  "tracing",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "dx-serializer"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "bytes",
+ "console_error_panic_hook",
+ "criterion",
+ "io-uring 0.7.11",
+ "lz4_flex",
+ "memchr",
+ "notify 6.1.1",
+ "proptest",
+ "rustc-hash 1.1.0",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tempfile",
+ "thiserror 2.0.17",
+ "toml 0.8.23",
+ "wasm-bindgen",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "dx-style"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.12",
+ "bumpalo",
+ "bytemuck",
+ "colored 3.0.0",
+ "criterion",
+ "cssparser 0.35.0",
+ "flatbuffers 25.9.23",
+ "flatc-rust",
+ "float-cmp 0.9.0",
+ "image",
+ "indexmap",
+ "lasso",
+ "lazy_static",
+ "libm",
+ "lightningcss",
+ "memchr",
+ "memmap2",
+ "notify 8.2.0",
+ "notify-debouncer-full",
+ "once_cell",
+ "rayon",
+ "regex",
+ "reqwest 0.12.25",
+ "rustc-hash 2.1.1",
+ "seahash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "tempfile",
+ "tokio",
+ "toml 0.9.8",
+ "twoway",
+ "winapi",
+]
+
+[[package]]
+name = "dx-workspace"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "console",
+ "memmap2",
+ "pathdiff",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tempfile",
+ "thiserror 1.0.69",
+ "toml 0.8.23",
+ "walkdir",
 ]
 
 [[package]]
@@ -2373,8 +2648,8 @@ dependencies = [
 name = "dx-www-client"
 version = "0.1.0"
 dependencies = [
- "debug",
- "error",
+ "dx-www-debug",
+ "dx-www-error",
 ]
 
 [[package]]
@@ -2411,6 +2686,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dx-www-debug"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "dx-www-dom"
 version = "0.1.0"
 dependencies = [
@@ -2421,6 +2705,15 @@ dependencies = [
  "once_cell",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "dx-www-error"
+version = "0.1.0"
+dependencies = [
+ "bincode 2.0.1",
+ "console_error_panic_hook",
+ "serde",
 ]
 
 [[package]]
@@ -2730,15 +3023,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "error"
-version = "0.1.0"
-dependencies = [
- "bincode 2.0.1",
- "console_error_panic_hook",
- "serde",
-]
-
-[[package]]
 name = "etcetera"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2980,31 +3264,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 
 [[package]]
-name = "font"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "console",
- "dirs",
- "futures",
- "indicatif",
- "rayon",
- "regex",
- "reqwest 0.12.25",
- "scraper 0.18.1",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-stream",
- "tracing",
- "tracing-subscriber",
- "url",
-]
-
-[[package]]
 name = "foreign-types"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3045,76 +3304,6 @@ name = "foreign-types-shared"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
-
-[[package]]
-name = "forge"
-version = "0.1.0"
-dependencies = [
- "ahash 0.8.12",
- "anyhow",
- "async-trait",
- "automerge",
- "axum 0.8.7",
- "base64 0.22.1",
- "bincode 1.3.3",
- "blake3",
- "bytes",
- "chrono",
- "clap",
- "colored 3.0.0",
- "crossbeam",
- "dashmap 6.1.0",
- "dirs",
- "dotenvy",
- "futures",
- "git2",
- "hex",
- "hmac",
- "ignore",
- "io-uring 0.7.11",
- "jwalk",
- "log",
- "lz4",
- "md5",
- "memchr",
- "memmap2",
- "notify 8.2.0",
- "notify-debouncer-full",
- "num_cpus",
- "once_cell",
- "parking_lot",
- "proptest",
- "rayon",
- "regex",
- "reqwest 0.12.25",
- "ropey",
- "rusqlite",
- "serde",
- "serde_cbor",
- "serde_json",
- "serializer",
- "sha2 0.10.9",
- "similar",
- "tempfile",
- "tokio",
- "tokio-test",
- "tokio-tungstenite 0.28.0",
- "toml 0.8.23",
- "tower 0.5.2",
- "tower-http 0.6.8",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "tree-sitter",
- "tree-sitter-rust",
- "url",
- "uuid",
- "walkdir",
- "whoami",
- "windows-sys 0.59.0",
- "yrs 0.21.3",
- "zip",
-]
 
 [[package]]
 name = "form_urlencoded"
@@ -3266,28 +3455,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
 dependencies = [
  "byteorder",
-]
-
-[[package]]
-name = "generator"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "blake3",
- "bumpalo",
- "bytemuck",
- "bytes",
- "criterion",
- "ed25519-dalek",
- "memmap2",
- "parking_lot",
- "rand 0.8.5",
- "rayon",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.17",
- "xxhash-rust",
 ]
 
 [[package]]
@@ -4003,31 +4170,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "i18n"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64 0.21.7",
- "chrono",
- "futures",
- "futures-util",
- "html-escape",
- "lazy_static",
- "regex",
- "reqwest 0.11.27",
- "scraper 0.18.1",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "thiserror 1.0.69",
- "tokio",
- "tokio-tungstenite 0.21.0",
- "url",
- "urlencoding",
- "uuid",
-]
-
-[[package]]
 name = "iana-time-zone"
 version = "0.1.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4049,19 +4191,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
-]
-
-[[package]]
-name = "icon"
-version = "0.1.0"
-dependencies = [
- "flatbuffers 24.12.23",
- "flatc-rust",
- "quick-xml",
- "regex",
- "serde",
- "serde_json",
- "walkdir",
 ]
 
 [[package]]
@@ -5079,54 +5208,6 @@ name = "md5"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
-
-[[package]]
-name = "media"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "chrono",
- "clap",
- "colored 2.2.0",
- "console",
- "directories",
- "dotenvy",
- "flate2",
- "futures",
- "hound",
- "image",
- "imageproc",
- "indicatif",
- "lofty",
- "lopdf",
- "once_cell",
- "oxipng",
- "pretty_assertions",
- "pulldown-cmark",
- "qrcode",
- "rayon",
- "regex",
- "reqwest 0.12.25",
- "sanitize-filename",
- "scraper 0.22.0",
- "serde",
- "serde_json",
- "strum",
- "symphonia",
- "tar",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
- "tokio-test",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid",
- "walkdir",
- "wiremock",
- "zip",
-]
 
 [[package]]
 name = "memchr"
@@ -7630,30 +7711,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serializer"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "bytes",
- "console_error_panic_hook",
- "criterion",
- "io-uring 0.7.11",
- "lz4_flex",
- "memchr",
- "notify 6.1.1",
- "proptest",
- "rustc-hash 1.1.0",
- "serde",
- "serde_json",
- "serde_yaml",
- "tempfile",
- "thiserror 2.0.17",
- "toml 0.8.23",
- "wasm-bindgen",
- "windows-sys 0.59.0",
-]
-
-[[package]]
 name = "servo_arc"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8122,45 +8179,6 @@ dependencies = [
  "quote",
  "rustversion",
  "syn 2.0.111",
-]
-
-[[package]]
-name = "style"
-version = "0.1.0"
-dependencies = [
- "ahash 0.8.12",
- "bumpalo",
- "bytemuck",
- "colored 3.0.0",
- "criterion",
- "cssparser 0.35.0",
- "flatbuffers 25.9.23",
- "flatc-rust",
- "float-cmp 0.9.0",
- "image",
- "indexmap",
- "lasso",
- "lazy_static",
- "libm",
- "lightningcss",
- "memchr",
- "memmap2",
- "notify 8.2.0",
- "notify-debouncer-full",
- "once_cell",
- "rayon",
- "regex",
- "reqwest 0.12.25",
- "rustc-hash 2.1.1",
- "seahash",
- "serde",
- "serde_json",
- "smallvec",
- "tempfile",
- "tokio",
- "toml 0.9.8",
- "twoway",
- "winapi",
 ]
 
 [[package]]
@@ -10286,24 +10304,6 @@ name = "wit-bindgen"
 version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f17a85883d4e6d00e8a97c586de764dabcc06133f7f1d55dce5cdc070ad7fe59"
-
-[[package]]
-name = "workspace"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "blake3",
- "console",
- "memmap2",
- "pathdiff",
- "serde",
- "serde_json",
- "serde_yaml",
- "tempfile",
- "thiserror 1.0.69",
- "toml 0.8.23",
- "walkdir",
-]
 
 [[package]]
 name = "writeable"

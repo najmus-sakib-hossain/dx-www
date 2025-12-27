@@ -1,5 +1,5 @@
 [package]
-name = "workspace"
+name = "dx-workspace"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -8,6 +8,8 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "Universal development environment configuration for dx ecosystem"
+keywords = ["workspace", "configuration", "development", "environment", "dx"]
+categories = ["development-tools", "config", "filesystem"]
 
 [dependencies]
 # Serialization
