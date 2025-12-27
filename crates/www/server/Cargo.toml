@@ -1,11 +1,11 @@
 [package]
 name = "dx-www-server"
-version = "0.1.0"
-edition = "2021"
-authors = ["Dx-WWW Runtime Team"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 description = "The Holographic Server - SSR, Binary Streaming, and Delta Patching"
-repository = "https://github.com/dx-sh/dx-www-runtime"
+repository.workspace = true
 keywords = ["server", "ssr", "binary", "edge", "htip"]
 
 [dependencies]

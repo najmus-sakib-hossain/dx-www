@@ -1,16 +1,16 @@
 [package]
 name = "driven"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 rust-version = "1.85"
-authors = ["DX Runtime Team <dev@dx-www.com>"]
+authors.workspace = true
 description = "Professional AI-assisted development orchestrator with binary-first architecture"
-repository = "https://github.com/dx-www/driven"
+repository.workspace = true
 documentation = "https://docs.rs/driven"
 keywords = ["ai", "development", "orchestrator", "rules", "binary"]
 categories = ["development-tools", "command-line-utilities"]
 readme = "README.md"
-license = "MIT OR Apache-2.0"
+license.workspace = true
 
 [lib]
 name = "driven"

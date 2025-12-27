@@ -34,9 +34,12 @@ impl CargoFixer {
         };
 
         // Check each field that should use workspace inheritance
+        // Note: Skip edition if rust-version is explicitly set (may conflict with workspace edition)
+        let has_rust_version = package.rust_version.is_some();
+        
         let fields_to_check = [
             ("version", !package.version.is_workspace()),
-            ("edition", !package.edition.is_workspace()),
+            ("edition", !package.edition.is_workspace() && !has_rust_version),
             ("authors", !package.authors.is_workspace()),
             ("license", !package.license.is_workspace()),
             ("repository", !package.repository.is_workspace()),
@@ -44,7 +47,7 @@ impl CargoFixer {
 
         for (field, needs_fix) in fields_to_check {
             if needs_fix {
-                if let Some(fix) = self.create_workspace_field_fix(&content, field, &cargo_path) {
+                if let Some(fix) = self.create_workspace_field_fix(&content, field, &cargo_path, &crate_info.name) {
                     fixes.push(fix);
                 }
             }
@@ -54,7 +57,7 @@ impl CargoFixer {
     }
 
     /// Create a fix for a single workspace field
-    fn create_workspace_field_fix(&self, content: &str, field: &str, cargo_path: &Path) -> Option<Fix> {
+    fn create_workspace_field_fix(&self, content: &str, field: &str, cargo_path: &Path, crate_name: &str) -> Option<Fix> {
         // Find the field in the content and create a replacement
         let patterns = [
             format!("{} = \"", field),
@@ -64,15 +67,15 @@ impl CargoFixer {
         for pattern in &patterns {
             if let Some(start) = content.find(pattern) {
                 // Find the end of the value
-                let after_eq = start + pattern.len() - 1;
-                let rest = &content[after_eq..];
+                let value_start = start + pattern.len();
+                let rest = &content[value_start..];
                 
                 let end = if pattern.ends_with('"') {
-                    // String value - find closing quote
-                    rest.find('"').map(|i| after_eq + i + 1)
+                    // String value - find closing quote (rest starts AFTER the opening quote)
+                    rest.find('"').map(|i| value_start + i + 1)
                 } else {
-                    // Array value - find closing bracket
-                    rest.find(']').map(|i| after_eq + i + 1)
+                    // Array value - find closing bracket (rest starts AFTER the opening bracket)
+                    rest.find(']').map(|i| value_start + i + 1)
                 };
 
                 if let Some(end_pos) = end {
@@ -80,7 +83,7 @@ impl CargoFixer {
                     let new_value = format!("{}.workspace = true", field);
                     
                     return Some(Fix::new(
-                        format!("Replace {} with workspace inheritance", field),
+                        format!("[{}] Replace {} with workspace inheritance", crate_name, field),
                         true,
                     ).with_change(FileChange::new(
                         cargo_path.to_path_buf(),
@@ -157,7 +160,17 @@ impl CargoFixer {
     }
 
     /// Create a fix to add a new field to Cargo.toml
-    fn create_add_field_fix(&self, content: &str, field: &str, value: &str, cargo_path: &Path) -> Option<Fix> {
+    /// 
+    /// NOTE: This function is disabled because adding fields via string replacement
+    /// is error-prone when multiple fixes target the same file. Instead, use
+    /// generate_comprehensive_fix() which rewrites the entire [package] section.
+    fn create_add_field_fix(&self, _content: &str, field: &str, _value: &str, _cargo_path: &Path) -> Option<Fix> {
+        // Return None - field additions should be done manually or via comprehensive rewrite
+        // This prevents corruption when multiple fixes are applied to the same file
+        let _ = field; // Suppress unused warning
+        None
+        
+        /* Original implementation disabled:
         // Find the [package] section and add the field after the name
         if let Some(package_start) = content.find("[package]") {
             // Find the next line after [package]
@@ -167,13 +180,6 @@ impl CargoFixer {
                 let rest = &after_package[newline_pos..];
                 if let Some(name_pos) = rest.find("name = ") {
                     // Find the end of the name line
-                    let name_start = package_start + newline_pos + name_pos;
-                    let name_rest = &content[name_start..];
-                    if let Some(name_end) = name_rest.find('\n') {
-                        let insert_pos = name_start + name_end;
-                        let old_content = &content[insert_pos..insert_pos + 1];
-                        let new_content = format!("\n{} = {}", field, value);
-                        
                         return Some(Fix::new(
                             format!("Add {} field to Cargo.toml", field),
                             true,
@@ -189,6 +195,7 @@ impl CargoFixer {
             }
         }
         None
+        */
     }
 
     /// Generate a description based on crate info
@@ -255,6 +262,8 @@ impl CargoFixer {
     /// Generate fixes for naming convention violations
     ///
     /// Suggests renaming packages to follow dx-{name} pattern
+    /// NOTE: Package renaming is NOT auto-fixable because it requires coordinated
+    /// changes across the entire workspace (dependencies, imports, etc.)
     pub fn fix_naming_convention(&self, crate_info: &CrateInfo) -> Option<Fix> {
         let expected_name = crate_info.expected_package_name();
         let current_name = &crate_info.name;
@@ -274,9 +283,10 @@ impl CargoFixer {
         let new_pattern = format!("name = \"{}\"", expected_name);
 
         if content.contains(&old_pattern) {
+            // Package renaming is NOT auto-fixable - requires manual coordination
             Some(Fix::new(
                 format!("Rename package from '{}' to '{}'", current_name, expected_name),
-                true,
+                false, // NOT auto-fixable
             ).with_change(FileChange::new(
                 cargo_path,
                 ChangeOperation::Modify {

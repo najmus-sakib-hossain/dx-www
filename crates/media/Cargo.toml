@@ -1,12 +1,12 @@
 [package]
 name = "media"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 rust-version = "1.85"
-authors = ["DX Team <hello@dx-media.dev>"]
+authors.workspace = true
 description = "Universal digital asset acquisition engine - One command, any media, from anywhere"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/anthropics/dx-media"
+license.workspace = true
+repository.workspace = true
 homepage = "https://github.com/anthropics/dx-media"
 documentation = "https://docs.rs/dx-media"
 keywords = ["media", "assets", "download", "cli", "api"]

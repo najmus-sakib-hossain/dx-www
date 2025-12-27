@@ -1,16 +1,16 @@
 [package]
 name = "serializer"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 rust-version = "1.75"
-authors = ["DX Runtime Team <dev@dx-www.com>"]
+authors.workspace = true
 description = "The world's most token-efficient serialization format"
-repository = "https://github.com/dx-www/dx-serializer"
+repository.workspace = true
 documentation = "https://docs.rs/dx-serializer"
 keywords = ["serialization", "parser", "format", "performance", "zero-copy"]
 categories = ["encoding", "parser-implementations"]
 readme = "README.md"
-license = "MIT OR Apache-2.0"
+license.workspace = true
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false

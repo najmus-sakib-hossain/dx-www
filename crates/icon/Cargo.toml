@@ -1,11 +1,11 @@
 [package]
 name = "icon"
-version = "0.0.1"
-edition = "2021"
-authors = ["dx-www Runtime Team <team@dx-www.dev>"]
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
 description = "High-performance icon library with FlatBuffers-based binary format"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/dx-www/dx-www-runtime"
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 flatbuffers = "24.3.25"

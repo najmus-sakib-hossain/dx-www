@@ -1,11 +1,11 @@
 [package]
 name = "i18n"
-version = "0.1.0"
-edition = "2021"
-authors = ["dx-www Runtime Team <team@dx-www.dev>"]
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
 description = "Multi-provider translation engine with support for Google, DeepL, and other translation APIs"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/dx-www/dx-www-runtime"
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 reqwest = { version = "0.11", default-features = false, features = [

@@ -1,0 +1,1611 @@
+# Crate Lint Validation Report
+
+## Summary
+
+| Metric | Value |
+|--------|-------|
+| Total Crates | 43 |
+| Compliant Crates | 0 |
+| Compliance Rate | 0.0% |
+| Total Violations | 589 |
+| Critical Violations | 252 |
+| Auto-fixable | 301 |
+
+## Violations by Category
+
+- **Metadata**: 258 violations
+- **Naming**: 30 violations
+- **Documentation**: 206 violations
+- **Structure**: 43 violations
+- **Dependency**: 52 violations
+
+## Violations by Crate
+
+### debug
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/debug\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/debug\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/debug\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/debug\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/debug\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'debug' does not follow pattern 'dx-www-{name}'. Suggested: 'dx-www-debug'
+  - File: `.\crates/www/debug\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-www-debug'
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/debug\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/debug\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/debug\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/debug\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/debug\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/debug\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### driven
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/driven\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/driven\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/driven\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/driven\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/driven\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/driven\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Naming**: Package name 'driven' does not follow pattern 'dx-{name}'. Suggested: 'dx-driven'
+  - File: `.\crates/driven\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-driven'
+- 🟡 **Naming**: Library name 'driven' should have 'dx_' prefix. Suggested: 'dx_driven'
+  - File: `.\crates/driven\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Change lib name to 'dx_driven'
+- 🔴 **Naming**: Package name 'driven' is too generic and must have 'dx-' prefix. Suggested: 'dx-driven'
+  - File: `.\crates/driven\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-driven'
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/driven\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/driven\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/driven\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx
+
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/dx\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/dx\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Naming**: Package name 'dx' does not follow pattern 'dx-{name}'. Suggested: 'dx-dx'
+  - File: `.\crates/dx\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-dx'
+- 🟡 **Naming**: Binary name 'dx' should follow 'dx-{name}' pattern
+  - File: `.\crates/dx\Cargo.toml`
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/dx\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/dx\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/dx\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/dx\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/dx\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-cli
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/cli\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/cli\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/cli\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/cli\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/cli\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/cli\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/cli\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/cli\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/cli\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/cli\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-crate-lint
+
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/crate-lint\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-db-teleport
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/www/db-teleport\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/www/db-teleport\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/www/db-teleport\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/www/db-teleport\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/db-teleport\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/db-teleport\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/db-teleport\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/db-teleport\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'dx-db-teleport' does not follow pattern 'dx-www-{name}'. Suggested: 'dx-www-db-teleport'
+  - File: `.\crates/www/db-teleport\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-www-db-teleport'
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/www/db-teleport\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/db-teleport\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/www/db-teleport\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/db-teleport\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/db-teleport\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/db-teleport\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/db-teleport\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-js-monorepo
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/monorepo\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/monorepo\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/monorepo\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/monorepo\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/monorepo\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/javascript/monorepo\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/javascript/monorepo\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/javascript/monorepo\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/javascript/monorepo\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/javascript/monorepo\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/javascript/monorepo\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/javascript/monorepo\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-js-runtime
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/runtime\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/runtime\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/runtime\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/runtime\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/javascript/runtime\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/javascript/runtime\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/javascript/runtime\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/javascript/runtime\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/javascript/runtime\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/javascript/runtime\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/javascript/runtime\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/javascript/runtime\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/javascript/runtime\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/javascript/runtime\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-reactor
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/www/reactor\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/www/reactor\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/www/reactor\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/www/reactor\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/reactor\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/reactor\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/reactor\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/reactor\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'dx-reactor' does not follow pattern 'dx-www-{name}'. Suggested: 'dx-www-reactor'
+  - File: `.\crates/www/reactor\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-www-reactor'
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/www/reactor\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/reactor\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/www/reactor\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/reactor\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/reactor\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/reactor\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/reactor\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'dx-www' does not follow pattern 'dx-www-{name}'. Suggested: 'dx-www-core'
+  - File: `.\crates/www/core\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-www-core'
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/core\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/core\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/core\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/core\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/core\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-a11y
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/a11y\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/a11y\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/a11y\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/a11y\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/a11y\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/a11y\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/a11y\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/a11y\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/a11y\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/a11y\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/a11y\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-auth
+
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/auth\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/auth\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/auth\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/auth\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/auth\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/auth\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/auth\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/auth\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/auth\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-binary
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/www/binary\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/www/binary\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/www/binary\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/www/binary\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/binary\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/binary\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/binary\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/binary\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/binary\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/binary\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/binary\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/binary\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/binary\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-cache
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/www/cache\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/www/cache\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/www/cache\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/www/cache\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/cache\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/cache\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/cache\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/cache\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/cache\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/cache\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/cache\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/cache\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/cache\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/cache\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-client
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/www/client\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/www/client\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/www/client\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/www/client\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/client\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/client\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/client\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/client\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/client\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/client\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/client\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/client\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/client\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/client\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-client-tiny
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/www/client-tiny\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/www/client-tiny\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/www/client-tiny\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/www/client-tiny\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/client-tiny\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/client-tiny\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/client-tiny\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/client-tiny\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/client-tiny\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/client-tiny\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/client-tiny\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/client-tiny\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/client-tiny\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/client-tiny\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/client-tiny\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-core
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/framework-core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/framework-core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/framework-core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/framework-core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/framework-core\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/framework-core\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/framework-core\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/framework-core\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/framework-core\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/framework-core\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/framework-core\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-db
+
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/db\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/db\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/db\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/db\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/db\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/db\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/db\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/db\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/db\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-dom
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/dom\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/dom\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/dom\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/dom\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/dom\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/dom\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/dom\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/dom\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/dom\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/dom\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/dom\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-fallback
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/fallback\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/fallback\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/fallback\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/fallback\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/fallback\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/fallback\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/fallback\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/fallback\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/fallback\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/fallback\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/fallback\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-form
+
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/form\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/form\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/form\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/form\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/form\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/www/form\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/form\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/www/form\README.md`
+- 🟡 **Documentation**: README.md should have a License section
+  - File: `.\crates/www/form\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/form\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/form\README.md`
+- 🟡 **Documentation**: README.md should have a License badge
+  - File: `.\crates/www/form\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/form\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-guard
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/guard\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/guard\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/guard\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/guard\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/guard\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/guard\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/guard\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/guard\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/guard\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/guard\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/guard\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-interaction
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/interaction\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/interaction\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/interaction\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/interaction\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/interaction\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/interaction\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/www/interaction\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/www/interaction\README.md`
+- 🟡 **Documentation**: README.md should have a License section
+  - File: `.\crates/www/interaction\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/interaction\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/interaction\README.md`
+- 🟡 **Documentation**: README.md should have a License badge
+  - File: `.\crates/www/interaction\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/interaction\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-morph
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/morph\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/morph\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/morph\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/morph\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/morph\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/morph\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/morph\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/morph\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/morph\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/morph\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/morph\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-offline
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/offline\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/offline\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/offline\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/offline\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/offline\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/offline\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/offline\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/offline\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/offline\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/offline\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/offline\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-packet
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/www/packet\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/www/packet\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/www/packet\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/www/packet\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/packet\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/packet\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/packet\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/packet\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/packet\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/packet\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/packet\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/packet\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/packet\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/packet\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-print
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/print\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/print\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/print\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/print\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/print\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/print\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/print\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/print\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/print\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/print\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/print\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-query
+
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/query\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/query\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/query\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/query\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/query\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/www/query\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/www/query\README.md`
+- 🟡 **Documentation**: README.md should have a License section
+  - File: `.\crates/www/query\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/query\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/query\README.md`
+- 🟡 **Documentation**: README.md should have a License badge
+  - File: `.\crates/www/query\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/query\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-rtl
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/rtl\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/rtl\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/rtl\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/rtl\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/rtl\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/rtl\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/rtl\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/rtl\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/rtl\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/rtl\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/rtl\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-sched
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/sched\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/sched\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/sched\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/sched\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/sched\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/sched\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/www/sched\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/sched\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/sched\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/sched\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/sched\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-server
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/www/server\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/www/server\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/www/server\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/www/server\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/server\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/server\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/server\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/server\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/server\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/server\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/server\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/server\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/server\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-state
+
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/state\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/state\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/state\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/state\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/state\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/www/state\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/state\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/state\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/state\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### dx-www-sync
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/sync\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/sync\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/sync\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/sync\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/sync\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/sync\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/www/sync\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/www/sync\README.md`
+- 🟡 **Documentation**: README.md should have a License section
+  - File: `.\crates/www/sync\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/sync\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/sync\README.md`
+- 🟡 **Documentation**: README.md should have a License badge
+  - File: `.\crates/www/sync\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/sync\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### error
+
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/www/error\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/www/error\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/www/error\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/www/error\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/www/error\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'error' does not follow pattern 'dx-www-{name}'. Suggested: 'dx-www-error'
+  - File: `.\crates/www/error\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-www-error'
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/www/error\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/www/error\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/www/error\README.md`
+- 🟡 **Documentation**: README.md should have a License section
+  - File: `.\crates/www/error\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/www/error\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/www/error\README.md`
+- 🟡 **Documentation**: README.md should have a License badge
+  - File: `.\crates/www/error\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/www/error\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### font
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'font' does not follow pattern 'dx-{name}'. Suggested: 'dx-font'
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-font'
+- 🔴 **Naming**: Package name 'font' is too generic and must have 'dx-' prefix. Suggested: 'dx-font'
+  - File: `.\crates/font\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-font'
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/font\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### forge
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/forge\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/forge\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/forge\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/forge\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/forge\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/forge\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Naming**: Package name 'forge' does not follow pattern 'dx-{name}'. Suggested: 'dx-forge'
+  - File: `.\crates/forge\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-forge'
+- 🔴 **Naming**: Package name 'forge' is too generic and must have 'dx-' prefix. Suggested: 'dx-forge'
+  - File: `.\crates/forge\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-forge'
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/forge\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/forge\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/forge\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/forge\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### generator
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/generator\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/generator\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/generator\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/generator\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/generator\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/generator\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Naming**: Package name 'generator' does not follow pattern 'dx-{name}'. Suggested: 'dx-generator'
+  - File: `.\crates/generator\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-generator'
+- 🔴 **Naming**: Package name 'generator' is too generic and must have 'dx-' prefix. Suggested: 'dx-generator'
+  - File: `.\crates/generator\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-generator'
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/generator\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/generator\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/generator\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/generator\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/generator\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/generator\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/generator\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### i18n
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'i18n' does not follow pattern 'dx-{name}'. Suggested: 'dx-i18n'
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-i18n'
+- 🔴 **Naming**: Package name 'i18n' is too generic and must have 'dx-' prefix. Suggested: 'dx-i18n'
+  - File: `.\crates/i18n\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-i18n'
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/i18n\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/i18n\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/i18n\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/i18n\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/i18n\README.md`
+- 🟡 **Documentation**: README.md should have a License section
+  - File: `.\crates/i18n\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/i18n\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/i18n\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/i18n\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### icon
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'icon' does not follow pattern 'dx-{name}'. Suggested: 'dx-icon'
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-icon'
+- 🔴 **Naming**: Package name 'icon' is too generic and must have 'dx-' prefix. Suggested: 'dx-icon'
+  - File: `.\crates/icon\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-icon'
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/icon\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/icon\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/icon\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/icon\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/icon\README.md`
+- 🟡 **Documentation**: README.md should have a License section
+  - File: `.\crates/icon\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/icon\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/icon\README.md`
+- 🟡 **Documentation**: README.md should have a License badge
+  - File: `.\crates/icon\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/icon\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### media
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/media\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/media\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/media\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/media\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/media\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🔴 **Naming**: Package name 'media' does not follow pattern 'dx-{name}'. Suggested: 'dx-media'
+  - File: `.\crates/media\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-media'
+- 🔴 **Naming**: Package name 'media' is too generic and must have 'dx-' prefix. Suggested: 'dx-media'
+  - File: `.\crates/media\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-media'
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/media\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/media\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/media\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/media\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/media\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/media\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### serializer
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/serializer\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/serializer\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/serializer\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/serializer\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/serializer\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/serializer\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Naming**: Package name 'serializer' does not follow pattern 'dx-{name}'. Suggested: 'dx-serializer'
+  - File: `.\crates/serializer\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-serializer'
+- 🟡 **Naming**: Library name 'serializer' should have 'dx_' prefix. Suggested: 'dx_serializer'
+  - File: `.\crates/serializer\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Change lib name to 'dx_serializer'
+- 🔴 **Naming**: Package name 'serializer' is too generic and must have 'dx-' prefix. Suggested: 'dx-serializer'
+  - File: `.\crates/serializer\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-serializer'
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/serializer\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/serializer\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/serializer\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/serializer\README.md`
+- 🟡 **Documentation**: README.md should have a Usage section
+  - File: `.\crates/serializer\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/serializer\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/serializer\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/serializer\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### style
+
+- 🔴 **Metadata**: Package should use version.workspace = true for workspace inheritance
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use version.workspace = true
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package should use authors.workspace = true for workspace inheritance
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use authors.workspace = true
+- 🔴 **Metadata**: Package should use license.workspace = true for workspace inheritance
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use license.workspace = true
+- 🔴 **Metadata**: Package should use repository.workspace = true for workspace inheritance
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use repository.workspace = true
+- 🟡 **Metadata**: Package should have a documentation field pointing to docs.rs
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add documentation = "https://docs.rs/crate-name"
+- 🟡 **Metadata**: Package should have a homepage field
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add homepage field
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'style' does not follow pattern 'dx-{name}'. Suggested: 'dx-style'
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-style'
+- 🟡 **Naming**: Library name 'style' should have 'dx_' prefix. Suggested: 'dx_style'
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Change lib name to 'dx_style'
+- 🔴 **Naming**: Package name 'style' is too generic and must have 'dx-' prefix. Suggested: 'dx-style'
+  - File: `.\crates/style\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-style'
+- 🟡 **Documentation**: README.md should have a Badges section
+  - File: `.\crates/style\README.md`
+- 🟡 **Documentation**: README.md should have a Overview section
+  - File: `.\crates/style\README.md`
+- 🟡 **Documentation**: README.md should have a Features section
+  - File: `.\crates/style\README.md`
+- 🟡 **Documentation**: README.md should have a Installation section
+  - File: `.\crates/style\README.md`
+- 🟡 **Documentation**: README.md should have a crates.io badge
+  - File: `.\crates/style\README.md`
+- 🟡 **Documentation**: README.md should have a docs.rs badge
+  - File: `.\crates/style\README.md`
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/style\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+
+### workspace
+
+- 🔴 **Metadata**: Package should use edition.workspace = true for workspace inheritance
+  - File: `.\crates/workspace\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Use edition.workspace = true
+- 🔴 **Metadata**: Package must have keywords field with 1-5 terms
+  - File: `.\crates/workspace\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add keywords = ["keyword1", "keyword2"]
+- 🔴 **Metadata**: Package must have categories field
+  - File: `.\crates/workspace\Cargo.toml`
+  - Fix: ✅ Auto-fixable - Add categories = ["development-tools"]
+- 🔴 **Naming**: Package name 'workspace' does not follow pattern 'dx-{name}'. Suggested: 'dx-workspace'
+  - File: `.\crates/workspace\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-workspace'
+- 🔴 **Naming**: Package name 'workspace' is too generic and must have 'dx-' prefix. Suggested: 'dx-workspace'
+  - File: `.\crates/workspace\Cargo.toml`
+  - Fix: ⚠️ Manual fix required - Rename package to 'dx-workspace'
+- 🔴 **Structure**: Crate must have a src/ directory
+  - File: `.\crates/workspace\src`
+  - Fix: ✅ Auto-fixable - Create src/ directory with lib.rs
+- 🟡 **Dependency**: Dependency 'notify' has conflicting versions: style: 8.2.0, forge: 8.2.0, driven: 7.0, serializer: 6.1, dx: 6.1, dx-js-monorepo: 6.1, dx-www-server: 6.1, dx-www: 6.1
+- 🟡 **Dependency**: Dependency 'zip' has conflicting versions: forge: 2.2.2, media: 2.2
+- 🟡 **Dependency**: Dependency 'dotenvy' has conflicting versions: forge: 0.15.7, media: 0.15
+- 🟡 **Dependency**: Dependency 'yrs' has conflicting versions: forge: 0.21.3, dx-www-offline: 0.18
+- 🟡 **Dependency**: Dependency 'deadpool-postgres' has conflicting versions: dx-www-db: 0.12, dx-db-teleport: 0.14
+- 🟡 **Dependency**: Dependency 'bumpalo' has conflicting versions: style: 3.14, generator: 3.16, dx-js-runtime: 3.16
+- 🟡 **Dependency**: Dependency 'bytemuck' has conflicting versions: style: 1.19.0, generator: 1.21, driven: 1.21, serializer: 1.18, dx-js-runtime: 1.21, dx-js-monorepo: 1.18, dx-www-binary: 1.14, dx-www-state: 1.14
+- 🟡 **Dependency**: Dependency 'serde' has conflicting versions: style: 1.0.219, forge: 1.0.228, media: 1, icon: 1.0, font: 1.0, generator: 1.0, workspace: 1.0, driven: 1.0, debug: 1.0, error: 1.0, i18n: 1.0, serializer: 1.0, dx: 1.0, dx-cli: 1.0, dx-crate-lint: 1.0, dx-js-runtime: 1.0, dx-js-monorepo: 1.0, dx-www-binary: 1.0, dx-www-packet: 1.0, dx-www-server: 1.0, dx-www-cache: 1.0, dx-www-form: 1.0, dx-www-query: 1.0, dx-www-db: 1.0, dx-www-state: 1.0, dx-www-auth: 1.0, dx-www-sync: 1.0, dx-www-offline: 1.0, dx-www: 1.0
+- 🟡 **Dependency**: Dependency 'parking_lot' has conflicting versions: forge: 0.12.5, generator: 0.12, dx-js-runtime: 0.12, dx-www-state: 0.12, dx-reactor: 0.12
+- 🟡 **Dependency**: Dependency 'tower-http' has conflicting versions: forge: 0.6.2, dx-www-server: 0.5
+- 🟡 **Dependency**: Dependency 'futures' has conflicting versions: forge: 0.3.31, media: 0.3, font: 0.3, i18n: 0.3, dx-www-server: 0.3, dx-reactor: 0.3, dx-db-teleport: 0.3
+- 🟡 **Dependency**: Dependency 'url' has conflicting versions: forge: 2.5.4, media: 2, font: 2.5, i18n: 2.5, dx: 2.5
+- 🟡 **Dependency**: Dependency 'rustc-hash' has conflicting versions: style: 2.0, serializer: 1.1, dx-js-monorepo: 1.1
+- 🟡 **Dependency**: Dependency 'serde_json' has conflicting versions: style: 1.0, forge: 1.0.145, media: 1, icon: 1.0, font: 1.0, generator: 1.0, workspace: 1.0, driven: 1.0, debug: 1.0, i18n: 1.0, serializer: 1.0, dx: 1.0, dx-cli: 1.0, dx-crate-lint: 1.0, dx-js-runtime: 1.0, dx-js-monorepo: 1.0, dx-www-server: 1.0, dx-www-cache: 1.0, dx-www-db: 1.0, dx-www: 1.0
+- 🟡 **Dependency**: Dependency 'flatbuffers' has conflicting versions: style: 25.2.10, icon: 24.3.25
+- 🟡 **Dependency**: Dependency 'reqwest' has conflicting versions: style: 0.12.5, forge: 0.12.8, media: 0.12, font: 0.12, i18n: 0.11, dx-www-query: 0.12
+- 🟡 **Dependency**: Dependency 'regex' has conflicting versions: style: 1.11.1, forge: 1.11, media: 1, icon: 1.12.2, font: 1.10, driven: 1.11, i18n: 1.10, dx-crate-lint: 1.11, dx-www: 1.10
+- 🟡 **Dependency**: Dependency 'dashmap' has conflicting versions: forge: 6.1.0, dx-www-server: 5.5, dx-www-query: 6.0, dx-www-sync: 6.0, dx-db-teleport: 6.0
+- 🟡 **Dependency**: Dependency 'bincode' has conflicting versions: forge: 1.3.3, error: 2.0.0-rc.3, dx-js-runtime: 1.3, dx-www-binary: 2.0.0-rc.3, dx-www-packet: 2.0.0-rc.3, dx-www-server: 2.0.0-rc.3, dx-www-cache: 2.0.0-rc.3, dx-www-form: 2.0.0-rc.3, dx-www-query: 2.0.0-rc.3, dx-www-db: 2.0.0-rc.3, dx-www-state: 2.0.0-rc.3, dx-www-auth: 2.0.0-rc.3, dx-www-sync: 2.0.0-rc.3, dx-www-offline: 2.0.0-rc.3, dx-www: 2.0.0-rc.3
+- 🟡 **Dependency**: Dependency 'walkdir' has conflicting versions: forge: 2.5.0, media: 2, icon: 2.4, workspace: 2.5, driven: 2.5, dx: 2.5, dx-crate-lint: 2.5, dx-www: 2.4
+- 🟡 **Dependency**: Dependency 'hex' has conflicting versions: forge: 0.4.3, dx-js-runtime: 0.4
+- 🟡 **Dependency**: Dependency 'bitflags' has conflicting versions: dx-www-form: 2.4, dx-reactor: 2.6
+- 🟡 **Dependency**: Dependency 'memmap2' has conflicting versions: style: 0.9.5, forge: 0.9.9, generator: 0.9, workspace: 0.9, driven: 0.9, dx-js-runtime: 0.9, dx-js-monorepo: 0.9
+- 🟡 **Dependency**: Dependency 'once_cell' has conflicting versions: style: 1.20.2, forge: 1.21.3, media: 1, dx: 1.20, dx-www-form: 1.19
+- 🟡 **Dependency**: Dependency 'anyhow' has conflicting versions: forge: 1.0.100, media: 1, font: 1.0, generator: 1.0, workspace: 1.0, driven: 1.0, dx: 1.0, dx-cli: 1.0, dx-crate-lint: 1.0, dx-js-runtime: 1.0, dx-www: 1.0
+- 🟡 **Dependency**: Dependency 'num_cpus' has conflicting versions: forge: 1.16.0, dx-cli: 1.16, dx-js-runtime: 1.16, dx-reactor: 1.16
+- 🟡 **Dependency**: Dependency 'lazy_static' has conflicting versions: style: 1.4.0, i18n: 1.4
+- 🟡 **Dependency**: Dependency 'tower' has conflicting versions: forge: 0.5.2, dx-www-server: 0.4
+- 🟡 **Dependency**: Dependency 'tokio-tungstenite' has conflicting versions: forge: 0.28.0, i18n: 0.21
+- 🟡 **Dependency**: Dependency 'scraper' has conflicting versions: media: 0.22, font: 0.18, i18n: 0.18
+- 🟡 **Dependency**: Dependency 'rayon' has conflicting versions: style: 1.11.0, forge: 1.11.0, media: 1.10, font: 1.8, generator: 1.10, dx-js-monorepo: 1.10
+- 🟡 **Dependency**: Dependency 'dirs' has conflicting versions: forge: 5.0.1, font: 5.0, dx-cli: 5.0
+- 🟡 **Dependency**: Dependency 'bytes' has conflicting versions: forge: 1.10.1, generator: 1.9, driven: 1.9, serializer: 1.5, dx-js-monorepo: 1.5, dx-www-server: 1.5, dx-www-db: 1.5
+- 🟡 **Dependency**: Dependency 'ignore' has conflicting versions: forge: 0.4.24, driven: 0.4, dx: 0.4
+- 🟡 **Dependency**: Dependency 'colored' has conflicting versions: style: 3.0.0, forge: 3.0.0, media: 2
+- 🟡 **Dependency**: Dependency 'lightningcss' has conflicting versions: style: 1.0.0-alpha.67, dx-www-print: 1.0.0-alpha.68
+- 🟡 **Dependency**: Dependency 'chrono' has conflicting versions: forge: 0.4.42, media: 0.4, debug: 0.4, i18n: 0.4, dx: 0.4, dx-www-server: 0.4, dx-www-auth: 0.4, dx-www: 0.4
+- 🟡 **Dependency**: Dependency 'tokio' has conflicting versions: style: 1.39.2, forge: 1.48.0, media: 1, font: 1.35, driven: 1.42, i18n: 1.0, dx: 1.40, dx-cli: 1.36, dx-js-runtime: 1.43, dx-www-server: 1.36, dx-www-query: 1.35, dx-www-db: 1.35, dx-www: 1.36, dx-db-teleport: 1.0
+- 🟡 **Dependency**: Dependency 'ed25519-dalek' has conflicting versions: generator: 2.1, dx: 2.1, dx-js-monorepo: 2.1, dx-www-binary: 2.1.0, dx-www-server: 2.1.0, dx-www-cache: 2.1.0, dx-www-auth: 2.1
+- 🟡 **Dependency**: Dependency 'zerocopy' has conflicting versions: driven: 0.8, dx-www-db: 0.7
+- 🟡 **Dependency**: Dependency 'axum' has conflicting versions: forge: 0.8.1, dx-www-server: 0.7
+- 🟡 **Dependency**: Dependency 'thiserror' has conflicting versions: media: 2, font: 1.0, generator: 2.0, workspace: 1.0, driven: 2.0, i18n: 1.0, serializer: 2.0, dx: 2.0, dx-crate-lint: 2.0, dx-js-runtime: 2.0, dx-js-monorepo: 2.0, dx-www-binary: 1.0, dx-www-db: 1.0, dx-www: 1.0, dx-reactor: 2.0, dx-db-teleport: 2.0
+- 🟡 **Dependency**: Dependency 'sha2' has conflicting versions: forge: 0.10.9, i18n: 0.10
+- 🟡 **Dependency**: Dependency 'oxc_parser' has conflicting versions: dx-js-runtime: 0.49, dx-www-a11y: 0.22, dx-www: 0.49
+- 🟡 **Dependency**: Dependency 'toml' has conflicting versions: style: 0.9.5, forge: 0.8, workspace: 0.8, driven: 0.8, serializer: 0.8, dx: 0.8, dx-crate-lint: 0.8, dx-js-monorepo: 0.8
+- 🟡 **Dependency**: Dependency 'uuid' has conflicting versions: forge: 1.11.0, media: 1, i18n: 1.6
+- 🟡 **Dependency**: Dependency 'blake3' has conflicting versions: forge: 1.8.2, generator: 1.5, workspace: 1.5, driven: 1.5, dx-js-runtime: 1.5, dx-js-monorepo: 1.5, dx-www-binary: 1.8, dx-www-server: 1.8, dx-www-cache: 1.8, dx-www: 1.5
+- 🟡 **Dependency**: Dependency 'crossbeam' has conflicting versions: forge: 0.8.4, dx-js-runtime: 0.8
+- 🟡 **Dependency**: Dependency 'miette' has conflicting versions: driven: 7.4, dx-www-a11y: 7.0
+- 🟡 **Dependency**: Dependency 'memchr' has conflicting versions: style: 2.7.5, forge: 2.7, driven: 2.7, serializer: 2.7
+- 🟡 **Dependency**: Dependency 'base64' has conflicting versions: forge: 0.22.1, i18n: 0.21, dx-www-auth: 0.22
+- 🟡 **Dependency**: Dependency 'clap' has conflicting versions: forge: 4.5.50, media: 4, font: 4.4, driven: 4.5, dx: 4.5, dx-cli: 4.5, dx-crate-lint: 4.5, dx-www: 4.5
+
+---
+
+*Generated by dx-crate-lint*

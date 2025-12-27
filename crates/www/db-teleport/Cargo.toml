@@ -1,11 +1,11 @@
 [package]
 name = "dx-db-teleport"
-version = "0.1.0"
-edition = "2021"
-authors = ["dx-www Runtime Team"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 description = "Reactive database caching with zero-copy binary responses"
-repository = "https://github.com/dx-sh/dx-www-runtime"
+repository.workspace = true
 keywords = ["cache", "database", "postgres", "reactive", "zero-copy"]
 
 [lib]

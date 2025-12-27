@@ -1,16 +1,16 @@
 [package]
 name = "dx-js-monorepo"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 rust-version = "1.75"
-authors = ["DX Runtime Team <dev@dx-www.com>"]
+authors.workspace = true
 description = "Binary-first monorepo management system with 30-100x performance improvements"
-repository = "https://github.com/dx-www/dx-js-monorepo"
+repository.workspace = true
 documentation = "https://docs.rs/dx-js-monorepo"
 keywords = ["monorepo", "workspace", "binary", "performance", "task-runner"]
 categories = ["development-tools", "command-line-utilities"]
 readme = "README.md"
-license = "MIT"
+license.workspace = true
 
 [lib]
 name = "dx_js_monorepo"

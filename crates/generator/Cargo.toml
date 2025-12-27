@@ -1,16 +1,16 @@
 [package]
 name = "generator"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 rust-version = "1.85"
-authors = ["DX Runtime Team <dev@dx-www.com>"]
+authors.workspace = true
 description = "Binary Dawn Code Generator - The world's fastest template engine built on Dx principles"
-repository = "https://github.com/dx-www/dx-generator"
+repository.workspace = true
 documentation = "https://docs.rs/dx-generator"
 keywords = ["code-generation", "template-engine", "binary", "zero-copy", "performance"]
 categories = ["development-tools", "template-engine", "code-generators"]
 readme = "README.md"
-license = "MIT OR Apache-2.0"
+license.workspace = true
 
 [lib]
 name = "dx_generator"

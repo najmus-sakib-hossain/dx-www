@@ -1,11 +1,11 @@
 [package]
 name = "dx-reactor"
-version = "0.1.0"
-edition = "2021"
-authors = ["dx-www Runtime Team"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 description = "Binary Dawn - Cross-platform I/O reactor with thread-per-core architecture"
-repository = "https://github.com/dx-sh/dx-www-runtime"
+repository.workspace = true
 keywords = ["reactor", "io_uring", "kqueue", "iocp", "async"]
 
 [lib]

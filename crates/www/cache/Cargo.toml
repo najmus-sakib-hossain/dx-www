@@ -1,11 +1,11 @@
 [package]
 name = "dx-www-cache"
-version = "1.0.0"
-edition = "2021"
-authors = ["Dx-WWW Runtime Team"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 description = "The Eternal Binary Cache Engine - 0ms second-visit LCP"
-repository = "https://github.com/dx-sh/dx-www-runtime"
+repository.workspace = true
 keywords = ["cache", "indexeddb", "wasm", "performance", "eternal"]
 
 [lib]

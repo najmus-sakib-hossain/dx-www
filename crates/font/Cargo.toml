@@ -1,11 +1,11 @@
 [package]
 name = "font"
-version = "0.0.1"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 description = "A comprehensive font search and download tool with access to 50k+ commercial-free fonts"
-authors = ["dx-font contributors"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/dx-www/dx-www-runtime"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 # Async runtime
