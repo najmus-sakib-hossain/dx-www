@@ -4,12 +4,19 @@ Technical architecture documentation for the DX platform.
 
 ## Contents
 
-- [Overview](./overview.md) - High-level system architecture
-- [Compiler](./compiler.md) - TSX → WASM compiler architecture
-- [Compiler Intelligence](./compiler-intelligence.md) - Auto-selection algorithm
-- [Project Structure](./project-structure.md) - Codebase organization
-- [Binary Protocol](./binary-protocol.md) - Binary communication protocol
-- [Bidirectional System](./bidirectional-system.md) - Dual-mode rendering system
+### Core Architecture
+- [Overview](./ARCHITECTURE.md) - High-level system architecture
+- [Compiler](./COMPILER.md) - TSX → WASM compiler architecture
+- [Compiler Intelligence](./COMPILER_INTELLIGENCE.md) - Auto-selection algorithm
+- [Project Structure](./PROJECT_STRUCTURE.md) - Codebase organization
+- [Bidirectional System](./BIDIRECTIONAL_SYSTEM.md) - Dual-mode rendering system
+- [Binary Dawn Structure](./BINARY_DAWN_FOLDER_STRUCTURE.md) - Binary architecture
+
+### Specifications
+- [DX Zero Specification](./DX_ZERO_SPECIFICATION.md) - Zero-cost abstraction spec
+- [DXL Lock Spec](./DXL_LOCK_SPEC.md) - Lock file format
+- [DXP Format Spec](./DXP_FORMAT_SPEC.md) - Package format
+- [DXRP Protocol Spec](./DXRP_PROTOCOL_SPEC.md) - Remote protocol
 
 ## Quick Overview
 
