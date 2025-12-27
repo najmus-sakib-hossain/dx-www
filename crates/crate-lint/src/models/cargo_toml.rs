@@ -41,9 +41,9 @@ pub struct Package {
     #[serde(default)]
     pub repository: RepositorySpec,
     #[serde(default)]
-    pub documentation: Option<String>,
+    pub documentation: DocumentationSpec,
     #[serde(default)]
-    pub homepage: Option<String>,
+    pub homepage: HomepageSpec,
     #[serde(default)]
     pub keywords: Option<Vec<String>>,
     #[serde(default)]
@@ -151,6 +151,60 @@ pub enum RepositorySpec {
 impl RepositorySpec {
     pub fn is_workspace(&self) -> bool {
         matches!(self, RepositorySpec::Workspace(w) if w.workspace)
+    }
+}
+
+/// Homepage specification - either literal or workspace inheritance
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(untagged)]
+pub enum HomepageSpec {
+    Literal(String),
+    Workspace(WorkspaceInherit),
+    #[default]
+    Missing,
+}
+
+impl HomepageSpec {
+    pub fn is_workspace(&self) -> bool {
+        matches!(self, HomepageSpec::Workspace(w) if w.workspace)
+    }
+    
+    pub fn as_literal(&self) -> Option<&str> {
+        match self {
+            HomepageSpec::Literal(s) => Some(s),
+            _ => None,
+        }
+    }
+    
+    pub fn is_set(&self) -> bool {
+        !matches!(self, HomepageSpec::Missing)
+    }
+}
+
+/// Documentation specification - either literal or workspace inheritance
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(untagged)]
+pub enum DocumentationSpec {
+    Literal(String),
+    Workspace(WorkspaceInherit),
+    #[default]
+    Missing,
+}
+
+impl DocumentationSpec {
+    pub fn is_workspace(&self) -> bool {
+        matches!(self, DocumentationSpec::Workspace(w) if w.workspace)
+    }
+    
+    pub fn as_literal(&self) -> Option<&str> {
+        match self {
+            DocumentationSpec::Literal(s) => Some(s),
+            _ => None,
+        }
+    }
+    
+    pub fn is_set(&self) -> bool {
+        !matches!(self, DocumentationSpec::Missing)
     }
 }
 

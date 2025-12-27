@@ -7,8 +7,10 @@ pub mod models;
 pub mod scanner;
 pub mod validators;
 pub mod report;
+pub mod fixer;
 
 pub use models::*;
 pub use scanner::*;
 pub use validators::*;
 pub use report::*;
+pub use fixer::*;

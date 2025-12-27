@@ -228,7 +228,7 @@ impl MetadataValidator {
         }
         
         // Check documentation
-        if package.documentation.is_none() {
+        if !package.documentation.is_set() {
             violations.push(
                 Violation::new(
                     "metadata-documentation-missing",
@@ -243,7 +243,7 @@ impl MetadataValidator {
         }
         
         // Check homepage
-        if package.homepage.is_none() {
+        if !package.homepage.is_set() {
             violations.push(
                 Violation::new(
                     "metadata-homepage-missing",
