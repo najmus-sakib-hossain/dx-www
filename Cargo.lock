@@ -2147,6 +2147,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "dx-crate-lint"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "console",
+ "owo-colors",
+ "proptest",
+ "regex",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.17",
+ "toml 0.8.23",
+ "walkdir",
+]
+
+[[package]]
 name = "dx-db-teleport"
 version = "0.1.0"
 dependencies = [

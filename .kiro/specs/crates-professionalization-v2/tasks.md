@@ -13,53 +13,53 @@ This implementation plan creates a `dx-crate-lint` validation tool and migration
   - Create README.md following the documentation standards
   - _Requirements: 1.1-1.9, 3.1-3.6_
 
-- [-] 2. Implement core data models
+- [x] 2. Implement core data models
   - [x] 2.1 Create CargoToml parsing structures
     - Implement `CargoToml`, `Package`, `VersionSpec`, `Dependency` structs
     - Add serde deserialization with proper handling of workspace inheritance
     - _Requirements: 1.1-1.9_
-  - [-] 2.2 Create Violation and Report models
+  - [x] 2.2 Create Violation and Report models
     - Implement `Violation`, `ViolationCategory`, `Severity`, `Fix` structs
     - Implement `ValidationReport` and `ReportSummary`
     - _Requirements: 7.1-7.5_
-  - [ ] 2.3 Write property test for CargoToml parsing round-trip
+  - [x] 2.3 Write property test for CargoToml parsing round-trip
     - **Property: Parsing round-trip** - For any valid CargoToml, serializing then deserializing produces equivalent structure
     - **Validates: Requirements 1.1-1.9**
 
-- [ ] 3. Implement Crate Scanner
-  - [ ] 3.1 Create CrateScanner and CrateInfo structures
+- [x] 3. Implement Crate Scanner
+  - [x] 3.1 Create CrateScanner and CrateInfo structures
     - Implement workspace root detection
     - Implement crate discovery via walkdir
     - Classify crates by type (TopLevelTool, Library, WwwModule, etc.)
     - _Requirements: 5.1_
-  - [ ] 3.2 Write property test for crate classification
+  - [x] 3.2 Write property test for crate classification
     - **Property 2: Naming Convention Compliance** - For any crate path, classification determines correct naming pattern
     - **Validates: Requirements 2.1, 2.2**
 
-- [ ] 4. Implement Metadata Validator
-  - [ ] 4.1 Create MetadataValidator with workspace inheritance checks
+- [x] 4. Implement Metadata Validator
+  - [x] 4.1 Create MetadataValidator with workspace inheritance checks
     - Check version.workspace, edition.workspace, authors.workspace, license.workspace, repository.workspace
     - Validate required fields: description, keywords, categories
     - _Requirements: 1.1-1.9_
-  - [ ] 4.2 Write property test for workspace inheritance validation
+  - [x] 4.2 Write property test for workspace inheritance validation
     - **Property 1: Workspace Inheritance Consistency** - For any Cargo.toml, workspace fields are correctly detected
     - **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5**
-  - [ ] 4.3 Write property test for keywords and categories validation
+  - [x] 4.3 Write property test for keywords and categories validation
     - **Property 9: Keywords and Categories Validity** - For any crate, keywords count is 1-5 and categories are valid
     - **Validates: Requirements 1.6, 1.7, 1.8**
 
-- [ ] 5. Implement Naming Validator
-  - [ ] 5.1 Create NamingValidator with pattern matching
+- [x] 5. Implement Naming Validator
+  - [x] 5.1 Create NamingValidator with pattern matching
     - Implement dx-{name} pattern for top-level tools
     - Implement dx-www-{name} pattern for www modules
     - Implement underscore convention for lib names
     - Check for forbidden generic names
     - _Requirements: 2.1-2.5_
-  - [ ] 5.2 Write property test for naming patterns
+  - [x] 5.2 Write property test for naming patterns
     - **Property 2: Naming Convention Compliance** - For any crate, naming follows location-based patterns
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
 
-- [ ] 6. Checkpoint - Core validators complete
+- [x] 6. Checkpoint - Core validators complete
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Implement Documentation Validator

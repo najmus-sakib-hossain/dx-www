@@ -6,7 +6,8 @@ use std::collections::HashMap;
 /// Represents a complete Cargo.toml file
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CargoToml {
-    pub package: Package,
+    #[serde(default)]
+    pub package: Option<Package>,
     #[serde(default)]
     pub lib: Option<LibConfig>,
     #[serde(default, rename = "bin")]
@@ -273,6 +274,16 @@ impl CargoToml {
         self.workspace.is_some()
     }
     
+    /// Check if this is a package (has [package] section)
+    pub fn is_package(&self) -> bool {
+        self.package.is_some()
+    }
+    
+    /// Get the package name, if this is a package
+    pub fn package_name(&self) -> Option<&str> {
+        self.package.as_ref().map(|p| p.name.as_str())
+    }
+    
     /// Get all internal dependencies (those with path or workspace = true)
     pub fn internal_dependencies(&self) -> Vec<(&String, &Dependency)> {
         self.dependencies
@@ -298,8 +309,10 @@ edition = "2021"
 serde = "1.0"
 "#;
         let cargo = CargoToml::parse(content).unwrap();
-        assert_eq!(cargo.package.name, "test-crate");
-        assert!(matches!(cargo.package.version, VersionSpec::Literal(ref v) if v == "0.1.0"));
+        assert!(cargo.package.is_some());
+        let package = cargo.package.unwrap();
+        assert_eq!(package.name, "test-crate");
+        assert!(matches!(package.version, VersionSpec::Literal(ref v) if v == "0.1.0"));
     }
 
     #[test]
@@ -317,11 +330,12 @@ repository.workspace = true
 internal = { workspace = true }
 "#;
         let cargo = CargoToml::parse(content).unwrap();
-        assert!(cargo.package.version.is_workspace());
-        assert!(cargo.package.edition.is_workspace());
-        assert!(cargo.package.authors.is_workspace());
-        assert!(cargo.package.license.is_workspace());
-        assert!(cargo.package.repository.is_workspace());
+        let package = cargo.package.unwrap();
+        assert!(package.version.is_workspace());
+        assert!(package.edition.is_workspace());
+        assert!(package.authors.is_workspace());
+        assert!(package.license.is_workspace());
+        assert!(package.repository.is_workspace());
         assert!(cargo.dependencies.get("internal").unwrap().is_workspace());
     }
 
@@ -343,5 +357,22 @@ local = { path = "../local" }
         let local = cargo.dependencies.get("local").unwrap();
         assert!(local.is_path());
         assert_eq!(local.path(), Some("../local"));
+    }
+
+    #[test]
+    fn test_parse_workspace_only() {
+        let content = r#"
+[workspace]
+resolver = "2"
+members = ["crates/test"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+"#;
+        let cargo = CargoToml::parse(content).unwrap();
+        assert!(cargo.is_workspace_root());
+        assert!(!cargo.is_package());
+        assert!(cargo.package.is_none());
     }
 }
