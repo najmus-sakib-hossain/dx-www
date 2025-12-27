@@ -35,6 +35,10 @@ pub fn extract_all_rules() -> DxRuleDatabase {
     next_id = extract_markdown_rules(&mut db, next_id);
     next_id = extract_cpp_rules(&mut db, next_id);
     next_id = extract_kotlin_rules(&mut db, next_id);
+    next_id = extract_json_rules(&mut db, next_id);
+    next_id = extract_css_rules(&mut db, next_id);
+    next_id = extract_html_rules(&mut db, next_id);
+    next_id = extract_yaml_rules(&mut db, next_id);
 
     println!("✅ Extracted {} total rules", db.rule_count);
     db
@@ -686,7 +690,139 @@ fn extract_kotlin_rules(db: &mut DxRuleDatabase, mut rule_id: u16) -> u16 {
     println!("  ✓ {} ktlint rules", ktlint_rules.len());
     rule_id
 }
+/// Extract JSON rules from Biome
+fn extract_json_rules(db: &mut DxRuleDatabase, mut rule_id: u16) -> u16 {
+    println!("📦 Extracting JSON rules (biome)...");
 
+    let json_rules = vec![
+        DxRule::new(rule_id, Language::Json, "noComments", RuleSource::Biome)
+            .category(DxCategory::Correctness)
+            .severity(DxSeverity::Error)
+            .description("Disallow comments in JSON files")
+            .docs_url("https://biomejs.dev/linter/rules/no-comments")
+            .recommended(),
+        DxRule::new(rule_id + 1, Language::Json, "noDuplicateKeys", RuleSource::Biome)
+            .category(DxCategory::Correctness)
+            .severity(DxSeverity::Error)
+            .description("Disallow duplicate keys in JSON objects")
+            .docs_url("https://biomejs.dev/linter/rules/no-duplicate-keys")
+            .recommended(),
+        DxRule::new(rule_id + 2, Language::Json, "noTrailingCommas", RuleSource::Biome)
+            .category(DxCategory::Correctness)
+            .severity(DxSeverity::Error)
+            .description("Disallow trailing commas in JSON")
+            .docs_url("https://biomejs.dev/linter/rules/no-trailing-commas")
+            .recommended(),
+    ];
+
+    rule_id += json_rules.len() as u16;
+    for rule in &json_rules {
+        db.add_rule(rule.clone());
+    }
+
+    println!("  ✅ {} JSON rules", json_rules.len());
+    rule_id
+}
+
+/// Extract CSS rules from Biome
+fn extract_css_rules(db: &mut DxRuleDatabase, mut rule_id: u16) -> u16 {
+    println!("📦 Extracting CSS rules (biome)...");
+
+    let css_rules = vec![
+        DxRule::new(rule_id, Language::Css, "noDuplicateSelectors", RuleSource::Biome)
+            .category(DxCategory::Suspicious)
+            .severity(DxSeverity::Warn)
+            .description("Disallow duplicate selectors")
+            .recommended(),
+        DxRule::new(rule_id + 1, Language::Css, "noInvalidPositionAtImportRule", RuleSource::Biome)
+            .category(DxCategory::Correctness)
+            .severity(DxSeverity::Error)
+            .description("Disallow invalid position for @import rules")
+            .recommended(),
+        DxRule::new(rule_id + 2, Language::Css, "noUnknownUnit", RuleSource::Biome)
+            .category(DxCategory::Correctness)
+            .severity(DxSeverity::Error)
+            .description("Disallow unknown CSS units")
+            .recommended(),
+        DxRule::new(rule_id + 3, Language::Css, "noShorthandPropertyOverrides", RuleSource::Biome)
+            .category(DxCategory::Suspicious)
+            .severity(DxSeverity::Warn)
+            .description("Disallow shorthand properties that override related longhand properties")
+            .recommended(),
+    ];
+
+    rule_id += css_rules.len() as u16;
+    for rule in &css_rules {
+        db.add_rule(rule.clone());
+    }
+
+    println!("  ✅ {} CSS rules", css_rules.len());
+    rule_id
+}
+
+/// Extract HTML rules from Biome
+fn extract_html_rules(db: &mut DxRuleDatabase, mut rule_id: u16) -> u16 {
+    println!("📦 Extracting HTML rules (biome)...");
+
+    let html_rules = vec![
+        DxRule::new(rule_id, Language::Html, "noBlankTarget", RuleSource::Biome)
+            .category(DxCategory::Security)
+            .severity(DxSeverity::Warn)
+            .description("Disallow target='_blank' without rel='noopener noreferrer'")
+            .docs_url("https://biomejs.dev/linter/rules/no-blank-target")
+            .recommended(),
+        DxRule::new(rule_id + 1, Language::Html, "useValidAnchor", RuleSource::Biome)
+            .category(DxCategory::Accessibility)
+            .severity(DxSeverity::Warn)
+            .description("Enforce valid anchor elements")
+            .recommended(),
+        DxRule::new(rule_id + 2, Language::Html, "useButtonType", RuleSource::Biome)
+            .category(DxCategory::Suspicious)
+            .severity(DxSeverity::Warn)
+            .description("Enforce explicit type attribute for button elements")
+            .recommended(),
+    ];
+
+    rule_id += html_rules.len() as u16;
+    for rule in &html_rules {
+        db.add_rule(rule.clone());
+    }
+
+    println!("  ✅ {} HTML rules", html_rules.len());
+    rule_id
+}
+
+/// Extract YAML rules
+fn extract_yaml_rules(db: &mut DxRuleDatabase, mut rule_id: u16) -> u16 {
+    println!("📦 Extracting YAML rules...");
+
+    let yaml_rules = vec![
+        DxRule::new(rule_id, Language::Yaml, "noDuplicateKeys", RuleSource::DxCheck)
+            .category(DxCategory::Correctness)
+            .severity(DxSeverity::Error)
+            .description("Disallow duplicate keys in YAML mappings")
+            .recommended(),
+        DxRule::new(rule_id + 1, Language::Yaml, "noTabs", RuleSource::DxCheck)
+            .category(DxCategory::Style)
+            .severity(DxSeverity::Warn)
+            .description("Disallow tabs in YAML files")
+            .recommended(),
+        DxRule::new(rule_id + 2, Language::Yaml, "noTrailingSpaces", RuleSource::DxCheck)
+            .category(DxCategory::Style)
+            .severity(DxSeverity::Warn)
+            .description("Disallow trailing spaces")
+            .fixable()
+            .recommended(),
+    ];
+
+    rule_id += yaml_rules.len() as u16;
+    for rule in &yaml_rules {
+        db.add_rule(rule.clone());
+    }
+
+    println!("  ✅ {} YAML rules", yaml_rules.len());
+    rule_id
+}
 #[cfg(test)]
 mod tests {
     use super::*;
