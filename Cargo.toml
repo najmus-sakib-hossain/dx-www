@@ -22,6 +22,7 @@ members = [
     # =========================================================================
     "crates/dx",
     "crates/cli",
+    "crates/crate-lint",
 
     # =========================================================================
     # DX STACK - JavaScript/TypeScript (in javascript/ folder)

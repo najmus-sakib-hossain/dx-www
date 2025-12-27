@@ -6,19 +6,19 @@ This implementation plan creates a `dx-crate-lint` validation tool and migration
 
 ## Tasks
 
-- [ ] 1. Set up dx-crate-lint crate structure
+- [x] 1. Set up dx-crate-lint crate structure
   - Create `crates/crate-lint/` directory with standard Rust crate structure
   - Set up Cargo.toml with workspace inheritance (demonstrating the standard)
   - Add dependencies: toml, serde, walkdir, regex, thiserror, clap
   - Create README.md following the documentation standards
   - _Requirements: 1.1-1.9, 3.1-3.6_
 
-- [ ] 2. Implement core data models
-  - [ ] 2.1 Create CargoToml parsing structures
+- [-] 2. Implement core data models
+  - [x] 2.1 Create CargoToml parsing structures
     - Implement `CargoToml`, `Package`, `VersionSpec`, `Dependency` structs
     - Add serde deserialization with proper handling of workspace inheritance
     - _Requirements: 1.1-1.9_
-  - [ ] 2.2 Create Violation and Report models
+  - [-] 2.2 Create Violation and Report models
     - Implement `Violation`, `ViolationCategory`, `Severity`, `Fix` structs
     - Implement `ValidationReport` and `ReportSummary`
     - _Requirements: 7.1-7.5_
