@@ -5,7 +5,7 @@ edition = "2024"
 rust-version = "1.85"
 authors = ["DX Team <hello@dx-media.dev>"]
 description = "Universal digital asset acquisition engine - One command, any media, from anywhere"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/anthropics/dx-media"
 homepage = "https://github.com/anthropics/dx-media"
 documentation = "https://docs.rs/dx-media"
@@ -61,11 +61,13 @@ utility-core = []
 
 # Full native processing (all features)
 full-native = [
-    "image-advanced", "image-qr",
-    "audio-core", "audio-tags",
+    "image-advanced",
+    "image-qr",
+    "audio-core",
+    "audio-tags",
     "document-core",
     "archive-core",
-    "utility-core"
+    "utility-core",
 ]
 
 # ═══════════════════════════════════════════════════════════════
@@ -79,7 +81,13 @@ futures = "0.3"
 async-trait = "0.1"
 
 # HTTP & Networking
-reqwest = { version = "0.12", features = ["json", "stream", "rustls-tls", "gzip", "brotli"] }
+reqwest = { version = "0.12", features = [
+    "json",
+    "stream",
+    "rustls-tls",
+    "gzip",
+    "brotli",
+] }
 url = "2"
 
 # Web Scraping
@@ -125,13 +133,27 @@ rayon = "1.10"
 # ═══════════════════════════════════════════════════════════════
 
 # Image Processing
-image = { version = "0.25", optional = true, default-features = false, features = ["png", "jpeg", "gif", "webp", "ico", "bmp"] }
+image = { version = "0.25", optional = true, default-features = false, features = [
+    "png",
+    "jpeg",
+    "gif",
+    "webp",
+    "ico",
+    "bmp",
+] }
 imageproc = { version = "0.25", optional = true }
 oxipng = { version = "9.1", optional = true }
 qrcode = { version = "0.14", optional = true }
 
 # Audio Processing
-symphonia = { version = "0.5", optional = true, features = ["mp3", "aac", "flac", "ogg", "wav", "pcm"] }
+symphonia = { version = "0.5", optional = true, features = [
+    "mp3",
+    "aac",
+    "flac",
+    "ogg",
+    "wav",
+    "pcm",
+] }
 hound = { version = "3.5", optional = true }
 lofty = { version = "0.21", optional = true }
 
@@ -140,7 +162,10 @@ lopdf = { version = "0.34", optional = true }
 pulldown-cmark = { version = "0.12", optional = true }
 
 # Archive Processing
-zip = { version = "2.2", optional = true, default-features = false, features = ["deflate", "aes-crypto"] }
+zip = { version = "2.2", optional = true, default-features = false, features = [
+    "deflate",
+    "aes-crypto",
+] }
 tar = { version = "0.4", optional = true }
 flate2 = { version = "1.0", optional = true }
 
@@ -152,5 +177,3 @@ flate2 = { version = "1.0", optional = true }
 tokio-test = "0.4"
 pretty_assertions = "1"
 wiremock = "0.6"
-
-

@@ -4,14 +4,21 @@ version = "0.0.1"
 edition = "2021"
 description = "A comprehensive font search and download tool with access to 50k+ commercial-free fonts"
 authors = ["dx-font contributors"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dx-www/dx-www-runtime"
 
 [dependencies]
 # Async runtime
 tokio = { version = "1.35", features = ["full"] }
 
 # HTTP client
-reqwest = { version = "0.12", features = ["json", "stream", "gzip", "brotli", "deflate"] }
+reqwest = { version = "0.12", features = [
+    "json",
+    "stream",
+    "gzip",
+    "brotli",
+    "deflate",
+] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

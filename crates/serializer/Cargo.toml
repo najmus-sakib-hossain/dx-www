@@ -10,7 +10,7 @@ documentation = "https://docs.rs/dx-serializer"
 keywords = ["serialization", "parser", "format", "performance", "zero-copy"]
 categories = ["encoding", "parser-implementations"]
 readme = "README.md"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false

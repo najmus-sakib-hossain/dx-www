@@ -2,9 +2,17 @@
 name = "i18n"
 version = "0.1.0"
 edition = "2021"
+authors = ["dx-www Runtime Team <team@dx-www.dev>"]
+description = "Multi-provider translation engine with support for Google, DeepL, and other translation APIs"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dx-www/dx-www-runtime"
 
 [dependencies]
-reqwest = { version = "0.11", default-features = false, features = ["json", "blocking", "rustls-tls"] }
+reqwest = { version = "0.11", default-features = false, features = [
+    "json",
+    "blocking",
+    "rustls-tls",
+] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

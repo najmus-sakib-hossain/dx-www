@@ -2,6 +2,10 @@
 name = "style"
 version = "0.0.0"
 edition = "2024"
+authors = ["dx-www Runtime Team <team@dx-www.dev>"]
+description = "Binary-first CSS engine with zero-copy parsing and FlatBuffers output"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dx-www/dx-www-runtime"
 
 [lib]
 name = "style"
@@ -28,7 +32,13 @@ flatbuffers = "25.2.10"
 smallvec = "1.13.2"
 seahash = "4.1.0"
 twoway = "0.2"
-winapi = { version = "0.3", features = ["wincon","consoleapi","minwindef","processenv","winbase"] }
+winapi = { version = "0.3", features = [
+    "wincon",
+    "consoleapi",
+    "minwindef",
+    "processenv",
+    "winbase",
+] }
 lightningcss = "1.0.0-alpha.67"
 # Additional performance optimization dependencies
 rustc-hash = "2.0"

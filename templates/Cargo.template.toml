@@ -1,0 +1,25 @@
+[package]
+name = "{crate_name}"
+version = "0.1.0"
+edition = "2021"
+authors = ["DX Team <team@dx.dev>"]
+description = "{description}"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/user/repo"
+documentation = "https://docs.rs/{crate_name}"
+readme = "README.md"
+keywords = ["keyword1", "keyword2"]
+categories = ["category1"]
+
+# Uncomment if this crate should not be published
+# publish = false
+
+[dependencies]
+# Add your dependencies here
+
+[dev-dependencies]
+# Add your dev dependencies here
+
+[features]
+default = []
+# Add your features here

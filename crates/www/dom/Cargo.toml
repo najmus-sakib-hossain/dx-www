@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Binary DOM operations with zero-copy element manipulation"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

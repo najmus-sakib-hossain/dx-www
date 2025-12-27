@@ -3,8 +3,27 @@
 **/*.rs.bk
 *.pdb
 
+# Cargo.lock in library crates (keep in binary crates)
+crates/*/Cargo.lock
+!crates/check/Cargo.lock
+!crates/dx/Cargo.lock
+!crates/cli/Cargo.lock
+
 # DX Cache Layer (Human-Pretty files)
 **/.dx/
+
+# Environment files (keep examples)
+.env
+.env.*
+!.env.example
+
+# Development artifacts and progress tracking
+**/PHASE*.md
+**/TASKLIST.md
+**/PROGRESS.md
+**/*_COMPLETE.md
+**/*_STATUS.md
+**/PLANNING.md
 
 # WASM Build Outputs
 examples/**/pkg/

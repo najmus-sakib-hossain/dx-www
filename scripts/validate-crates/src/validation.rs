@@ -62,7 +62,13 @@ pub fn validate_crate(crate_info: &CrateInfo) -> ValidationResult {
     // 5. Check for forbidden files (Requirements 2.2, 4.4, 5.1, 5.3)
     validate_forbidden_files(crate_info, &mut issues);
 
-    // 6. Check for file typos (Requirement 3.5)
+    // 6. Check for empty markdown files (Requirement 5.3)
+    validate_empty_files(&crate_path, crate_info, &mut issues);
+
+    // 7. Check for license compliance (Requirements 4.1, 4.2)
+    validate_license_compliance(&crate_path, crate_info, &mut issues);
+
+    // 8. Check for file typos (Requirement 3.5)
     validate_file_typos(crate_info, &mut issues);
 
     let passed = !issues.iter().any(|i| matches!(i.severity, Severity::Error));
@@ -372,6 +378,64 @@ fn validate_forbidden_files(crate_info: &CrateInfo, issues: &mut Vec<ValidationI
                 fix_suggestion: Some("Move to docs/archive/".to_string()),
             });
         }
+    }
+}
+
+/// Check for empty markdown files in a crate directory
+fn validate_empty_files(crate_path: &Path, crate_info: &CrateInfo, issues: &mut Vec<ValidationIssue>) {
+    for file in &crate_info.files {
+        if file.ends_with(".md") && file != "README.md" {
+            let file_path = crate_path.join(file);
+            if let Ok(content) = std::fs::read_to_string(&file_path) {
+                if content.trim().is_empty() || content.trim().len() < 10 {
+                    issues.push(ValidationIssue {
+                        severity: Severity::Warning,
+                        category: IssueCategory::DevelopmentArtifact,
+                        message: format!("Empty or nearly empty documentation file '{}'", file),
+                        fix_suggestion: Some("Remove or add meaningful content".to_string()),
+                    });
+                }
+            }
+        }
+    }
+}
+
+/// Check for license compliance (LICENSE file, Cargo.toml license field, README reference)
+fn validate_license_compliance(crate_path: &Path, crate_info: &CrateInfo, issues: &mut Vec<ValidationIssue>) {
+    let has_license_file = crate_info.files.iter().any(|f| 
+        f.eq_ignore_ascii_case("license") || 
+        f.eq_ignore_ascii_case("license.md") ||
+        f.eq_ignore_ascii_case("license.txt") ||
+        f.eq_ignore_ascii_case("license-mit") ||
+        f.eq_ignore_ascii_case("license-apache")
+    );
+    
+    let has_license_in_cargo = crate_info.manifest.package
+        .as_ref()
+        .and_then(|p| p.license.as_ref())
+        .is_some();
+    
+    // Check README for license reference
+    let readme_path = crate_path.join("README.md");
+    let has_license_in_readme = if readme_path.exists() {
+        std::fs::read_to_string(&readme_path)
+            .map(|content| {
+                let lower = content.to_lowercase();
+                lower.contains("license") || lower.contains("mit") || lower.contains("apache")
+            })
+            .unwrap_or(false)
+    } else {
+        false
+    };
+    
+    // At least one of the three should be present
+    if !has_license_file && !has_license_in_cargo && !has_license_in_readme {
+        issues.push(ValidationIssue {
+            severity: Severity::Warning,
+            category: IssueCategory::LicenseCompliance,
+            message: "No license information found (LICENSE file, Cargo.toml, or README)".to_string(),
+            fix_suggestion: Some("Add LICENSE file or license field in Cargo.toml".to_string()),
+        });
     }
 }
 
