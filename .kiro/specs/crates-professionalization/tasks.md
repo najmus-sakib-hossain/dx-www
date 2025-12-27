@@ -6,8 +6,8 @@ This implementation plan transforms the crates folder into a professional, consi
 
 ## Tasks
 
-- [-] 1. Create crate scanning and validation infrastructure
-  - [-] 1.1 Create the validation script structure
+- [x] 1. Create crate scanning and validation infrastructure
+  - [x] 1.1 Create the validation script structure
     - Create `scripts/validate-crates.rs` with main entry point
     - Implement crate discovery logic to find all Cargo.toml files
     - Parse Cargo.toml files using `toml` crate
@@ -18,7 +18,7 @@ This implementation plan transforms the crates folder into a professional, consi
     - Test that scanner correctly identifies crates with/without required files
     - **Validates: Requirements 1.1, 2.1**
 
-  - [ ] 1.3 Implement README analysis functions
+  - [x] 1.3 Implement README analysis functions
     - Create section detection for: title, description, installation, usage, license
     - Detect badge patterns and format consistency
     - Detect inappropriate content (task instructions, prompts)
@@ -29,7 +29,7 @@ This implementation plan transforms the crates folder into a professional, consi
     - **Property 4: No Development Instructions in README**
     - **Validates: Requirements 1.2, 1.4**
 
-  - [ ] 1.5 Implement naming validation
+  - [x] 1.5 Implement naming validation
     - Validate kebab-case directory names with regex `^[a-z][a-z0-9-]*$`
     - Compare directory names with Cargo.toml package names
     - _Requirements: 3.1, 3.3_

@@ -1,0 +1,20 @@
+[package]
+name = "validate-crates"
+version = "0.1.0"
+edition = "2021"
+description = "Validation script for crates professionalization"
+publish = false
+
+[workspace]
+
+[[bin]]
+name = "validate-crates"
+path = "src/main.rs"
+
+[dependencies]
+toml = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+walkdir = "2.5"
+regex = "1.10"
+anyhow = "1.0"
+colored = "2.1"
