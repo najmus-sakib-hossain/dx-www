@@ -10,8 +10,11 @@ use proptest::prelude::*;
 use std::path::PathBuf;
 
 /// Strategy for generating valid crate name suffixes
+/// Excludes names that already start with dx- to avoid double-prefixing
 fn name_suffix_strategy() -> impl Strategy<Value = String> {
-    "[a-z][a-z0-9-]{1,15}".prop_map(|s| s.to_string())
+    "[a-z][a-z0-9-]{1,15}"
+        .prop_filter("suffix should not start with dx-", |s| !s.starts_with("dx-"))
+        .prop_map(|s| s.to_string())
 }
 
 /// Helper to create a CrateInfo

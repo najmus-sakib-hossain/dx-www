@@ -188,6 +188,7 @@ impl CrateScanner {
     }
     
     /// Collect all files in a crate directory (non-recursive for top-level)
+    /// Returns paths relative to the crate directory
     fn collect_crate_files(&self, path: &Path) -> Vec<PathBuf> {
         let mut files = Vec::new();
         
@@ -196,20 +197,37 @@ impl CrateScanner {
             for entry in entries.flatten() {
                 let entry_path = entry.path();
                 if entry_path.is_file() {
-                    files.push(entry_path);
+                    // Store relative path from crate directory
+                    if let Ok(relative) = entry_path.strip_prefix(path) {
+                        files.push(relative.to_path_buf());
+                    }
                 }
             }
         }
         
-        // Also check for src directory
+        // Also check for src directory and its contents
         let src_dir = path.join("src");
         if src_dir.is_dir() {
-            for entry in WalkDir::new(&src_dir).max_depth(1) {
+            // Add the src directory itself
+            files.push(PathBuf::from("src"));
+            
+            for entry in WalkDir::new(&src_dir).max_depth(2) {
                 if let Ok(entry) = entry {
                     if entry.path().is_file() {
-                        files.push(entry.path().to_path_buf());
+                        // Store relative path from crate directory
+                        if let Ok(relative) = entry.path().strip_prefix(path) {
+                            files.push(relative.to_path_buf());
+                        }
                     }
                 }
+            }
+        }
+        
+        // Check for tests, benches, examples directories
+        for dir_name in &["tests", "benches", "examples", "docs"] {
+            let dir = path.join(dir_name);
+            if dir.is_dir() {
+                files.push(PathBuf::from(*dir_name));
             }
         }
         
@@ -339,5 +357,7 @@ version = "0.1.0"
         assert!(!crates[0].files.is_empty());
         assert!(crates[0].has_file("README.md"));
         assert!(crates[0].has_file("Cargo.toml"));
+        // Check that src directory is detected
+        assert!(crates[0].files.iter().any(|f| f.to_string_lossy() == "src" || f.to_string_lossy().starts_with("src/")));
     }
 }

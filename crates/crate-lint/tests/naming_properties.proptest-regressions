@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 2f60ae80f60453fa1dbddd4a53bf3656f2a15d95d97da0a1c44a5a8f8dfbb723 # shrinks to suffix = "dx-0", crate_type = TopLevelTool
