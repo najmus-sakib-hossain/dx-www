@@ -14,86 +14,80 @@ members = [
     "crates/driven",
     "crates/debug",
     "crates/error",
-    "crates/stack",
     "crates/i18n",
     "crates/serializer",
-    
+
     # =========================================================================
     # DX CLI (main entry points)
     # =========================================================================
     "crates/dx",
-    "crates/dx-cli",
-    
+    "crates/cli",
+
     # =========================================================================
-    # DX STACK - JavaScript/TypeScript (dx-js- prefix)
+    # DX STACK - JavaScript/TypeScript (in javascript/ folder)
     # =========================================================================
-    "crates/dx-js-runtime",
-    "crates/dx-js-monorepo",
-    
+    "crates/javascript/runtime",
+    "crates/javascript/monorepo",
+
     # =========================================================================
-    # DX WWW - Web Framework (dx-www- prefix)
+    # DX WWW - Web Framework (in www/ folder)
     # =========================================================================
     # Core Runtime
-    "crates/dx-www-core",
-    "crates/dx-www-dom",
-    "crates/dx-www-morph",
-    "crates/dx-www-sched",
-    
+    "crates/www/framework-core",
+    "crates/www/dom",
+    "crates/www/morph",
+    "crates/www/sched",
+
     # Binary Protocol
-    "crates/dx-www-binary",
-    "crates/dx-www-packet",
-    
+    "crates/www/binary",
+    "crates/www/packet",
+
     # Client Runtimes (WASM)
-    "crates/dx-www-client",
-    "crates/dx-www-client-tiny",
-    
+    "crates/www/client",
+    "crates/www/client-tiny",
+
     # Server & Cache
-    "crates/dx-www-server",
-    "crates/dx-www-cache",
-    
+    "crates/www/server",
+    "crates/www/cache",
+
     # Data Layer
-    "crates/dx-www-form",
-    "crates/dx-www-query",
-    "crates/dx-www-db",
-    
+    "crates/www/form",
+    "crates/www/query",
+    "crates/www/db",
+
     # Logic Layer
-    "crates/dx-www-state",
-    "crates/dx-www-auth",
-    
+    "crates/www/state",
+    "crates/www/auth",
+
     # Resilience Layer
-    "crates/dx-www-sync",
-    "crates/dx-www-offline",
-    "crates/dx-www-guard",
-    "crates/dx-www-interaction",
-    
+    "crates/www/sync",
+    "crates/www/offline",
+    "crates/www/guard",
+    "crates/www/interaction",
+
     # Polish Layer
-    "crates/dx-www-fallback",
-    "crates/dx-www-a11y",
-    "crates/dx-www-print",
-    "crates/dx-www-rtl",
-    
+    "crates/www/fallback",
+    "crates/www/a11y",
+    "crates/www/print",
+    "crates/www/rtl",
+
     # Compiler (transpiler-to-binary pipeline)
-    "crates/dx-www",
-    
+    "crates/www/core",
+
     # Binary Dawn - Cross-platform I/O reactor
-    "crates/dx-reactor",
-    "crates/dx-db-teleport",
-    
-    # =========================================================================
-    # EXAMPLES
-    # =========================================================================
-    "examples/hello-world",
+    "crates/reactor",
+    "crates/www/db-teleport",
 ]
 
 # Exclude nested workspaces (they manage their own internal crates)
 exclude = [
-    "crates/dx-js-bundler",         # Has 10 internal crates
-    "crates/dx-js-test-runner",     # Has own workspace
-    "crates/dx-js-package-manager", # Has 12 internal crates
-    "crates/dx-js-compatibility",   # Has 12 internal sub-crates
-    "crates/check",                 # Has own workspace with submodules
-    "playground",                   # Experiments
-    "benchmarks",                   # Performance tests
+    "crates/javascript/bundler",         # Has 10 internal crates
+    "crates/javascript/test-runner",     # Has own workspace
+    "crates/javascript/package-manager", # Has 12 internal crates
+    "crates/javascript/compatibility",   # Has 12 internal sub-crates
+    "crates/check",                      # Has own workspace with submodules
+    "playground",                        # Experiments
+    "benchmarks",                        # Performance tests
 ]
 
 [workspace.package]
@@ -141,7 +135,10 @@ reqwest = { version = "0.12", default-features = false }
 gloo-net = "0.6"
 dashmap = "6.1"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
-sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-rustls"], default-features = false }
+sqlx = { version = "0.8", features = [
+    "postgres",
+    "runtime-tokio-rustls",
+], default-features = false }
 tokio-postgres = "0.7"
 deadpool-postgres = "0.14"
 zerocopy = { version = "0.8", features = ["derive"] }
@@ -182,41 +179,40 @@ workspace = { path = "crates/workspace" }
 driven = { path = "crates/driven" }
 debug = { path = "crates/debug" }
 error = { path = "crates/error" }
-stack = { path = "crates/stack" }
 i18n = { path = "crates/i18n" }
 serializer = { path = "crates/serializer" }
 
 # =========================================================================
 # DX WWW
 # =========================================================================
-dx-www-core = { path = "crates/dx-www-core" }
-dx-www-dom = { path = "crates/dx-www-dom" }
-dx-www-morph = { path = "crates/dx-www-morph" }
-dx-www-sched = { path = "crates/dx-www-sched" }
-dx-www = { path = "crates/dx-www" }
-dx-www-binary = { path = "crates/dx-www-binary" }
-dx-www-packet = { path = "crates/dx-www-packet" }
-dx-www-client = { path = "crates/dx-www-client" }
-dx-www-client-tiny = { path = "crates/dx-www-client-tiny" }
-dx-www-server = { path = "crates/dx-www-server" }
-dx-www-cache = { path = "crates/dx-www-cache" }
-dx-www-form = { path = "crates/dx-www-form" }
-dx-www-query = { path = "crates/dx-www-query" }
-dx-www-db = { path = "crates/dx-www-db" }
-dx-www-state = { path = "crates/dx-www-state" }
-dx-www-auth = { path = "crates/dx-www-auth" }
-dx-www-sync = { path = "crates/dx-www-sync" }
-dx-www-offline = { path = "crates/dx-www-offline" }
-dx-www-guard = { path = "crates/dx-www-guard" }
-dx-www-interaction = { path = "crates/dx-www-interaction" }
-dx-www-fallback = { path = "crates/dx-www-fallback" }
-dx-www-a11y = { path = "crates/dx-www-a11y" }
-dx-www-print = { path = "crates/dx-www-print" }
-dx-www-rtl = { path = "crates/dx-www-rtl" }
+dx-www-core = { path = "crates/www/framework-core" }
+dx-www-dom = { path = "crates/www/dom" }
+dx-www-morph = { path = "crates/www/morph" }
+dx-www-sched = { path = "crates/www/sched" }
+dx-www = { path = "crates/www/core" }
+dx-www-binary = { path = "crates/www/binary" }
+dx-www-packet = { path = "crates/www/packet" }
+dx-www-client = { path = "crates/www/client" }
+dx-www-client-tiny = { path = "crates/www/client-tiny" }
+dx-www-server = { path = "crates/www/server" }
+dx-www-cache = { path = "crates/www/cache" }
+dx-www-form = { path = "crates/www/form" }
+dx-www-query = { path = "crates/www/query" }
+dx-www-db = { path = "crates/www/db" }
+dx-www-state = { path = "crates/www/state" }
+dx-www-auth = { path = "crates/www/auth" }
+dx-www-sync = { path = "crates/www/sync" }
+dx-www-offline = { path = "crates/www/offline" }
+dx-www-guard = { path = "crates/www/guard" }
+dx-www-interaction = { path = "crates/www/interaction" }
+dx-www-fallback = { path = "crates/www/fallback" }
+dx-www-a11y = { path = "crates/www/a11y" }
+dx-www-print = { path = "crates/www/print" }
+dx-www-rtl = { path = "crates/www/rtl" }
 
 # Binary Dawn
-dx-reactor = { path = "crates/dx-reactor" }
-dx-db-teleport = { path = "crates/dx-db-teleport" }
+dx-reactor = { path = "crates/reactor" }
+dx-db-teleport = { path = "crates/www/db-teleport" }
 
 
 # ============================================================================
@@ -224,12 +220,11 @@ dx-db-teleport = { path = "crates/dx-db-teleport" }
 # ============================================================================
 
 [profile.dev]
-panic = "abort"       # Required for no_std crates
+panic = "abort" # Required for no_std crates
 
 [profile.release]
-opt-level = "z"       # Optimize for size (not speed)
-lto = true            # Link Time Optimization (removes unused code)
-codegen-units = 1     # Slower build, smaller binary
-panic = "abort"       # Remove stack unwinding (~20KB savings)
-strip = true          # Strip symbols
-
+opt-level = "z"   # Optimize for size (not speed)
+lto = true        # Link Time Optimization (removes unused code)
+codegen-units = 1 # Slower build, smaller binary
+panic = "abort"   # Remove stack unwinding (~20KB savings)
+strip = true      # Strip symbols

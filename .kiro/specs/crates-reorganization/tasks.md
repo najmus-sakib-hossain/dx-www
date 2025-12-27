@@ -6,82 +6,82 @@ This plan reorganizes the DX workspace crates into a professional hierarchy and 
 
 ## Tasks
 
-- [-] 1. Preparation and Backup
-  - [-] 1.1 Create a git branch for the reorganization
+- [x] 1. Preparation and Backup
+  - [x] 1.1 Create a git branch for the reorganization
     - Run `git checkout -b refactor/crates-reorganization`
     - _Requirements: All_
-  - [ ] 1.2 Verify current workspace builds
+  - [x] 1.2 Verify current workspace builds
     - Run `cargo check --workspace` to ensure clean starting state
     - _Requirements: 8.3, 9.3, 13.1_
 
-- [ ] 2. Remove Unused Crates
-  - [ ] 2.1 Remove the stack crate
+- [x] 2. Remove Unused Crates
+  - [x] 2.1 Remove the stack crate
     - Delete `crates/stack/` directory
     - Remove from root Cargo.toml members list
     - _Requirements: 1.2_
-  - [ ] 2.2 Remove docs/api/stack.md
+  - [x] 2.2 Remove docs/api/stack.md
     - Delete the file
     - _Requirements: 12.4_
-  - [ ] 2.3 Verify build after removal
+  - [x] 2.3 Verify build after removal
     - Run `cargo check --workspace`
     - _Requirements: 8.3_
 
-- [ ] 3. Rename Top-Level Crates
-  - [ ] 3.1 Rename dx-cli to cli
+- [x] 3. Rename Top-Level Crates
+  - [x] 3.1 Rename dx-cli to cli
     - Run `git mv crates/dx-cli crates/cli`
     - Update root Cargo.toml member path
     - _Requirements: 2.1, 2.2, 2.3_
-  - [ ] 3.2 Rename dx-core to core
+  - [x] 3.2 Rename dx-core to core
     - Run `git mv crates/dx-core crates/core`
     - Update root Cargo.toml member path
     - _Requirements: 3.1, 3.2_
-  - [ ] 3.3 Rename dx-reactor to reactor
+  - [x] 3.3 Rename dx-reactor to reactor
     - Run `git mv crates/dx-reactor crates/reactor`
     - Update root Cargo.toml member path
     - _Requirements: 4.1, 4.2_
-  - [ ] 3.4 Rename dx-py to python
+  - [x] 3.4 Rename dx-py to python
     - Run `git mv crates/dx-py crates/python`
     - Update root Cargo.toml member path
     - _Requirements: 6.1, 6.2, 6.3_
-  - [ ] 3.5 Update all path dependencies for renamed crates
+  - [x] 3.5 Update all path dependencies for renamed crates
     - Search all Cargo.toml files for old paths
     - Update paths: `../dx-cli` → `../cli`, `../dx-core` → `../core`, etc.
     - _Requirements: 3.3, 4.3, 9.1_
-  - [ ] 3.6 Verify build after renames
+  - [x] 3.6 Verify build after renames
     - Run `cargo check --workspace`
     - _Requirements: 2.4, 8.3_
 
-- [ ] 4. Create JavaScript Crate Group
-  - [ ] 4.1 Create javascript directory and move bundler
+- [x] 4. Create JavaScript Crate Group
+  - [x] 4.1 Create javascript directory and move bundler
     - Run `mkdir crates/javascript`
     - Run `git mv crates/dx-js-bundler crates/javascript/bundler`
     - _Requirements: 5.1, 5.2_
-  - [ ] 4.2 Move remaining JavaScript crates
+  - [x] 4.2 Move remaining JavaScript crates
     - Run `git mv crates/dx-js-compatibility crates/javascript/compatibility`
     - Run `git mv crates/dx-js-monorepo crates/javascript/monorepo`
     - Run `git mv crates/dx-js-package-manager crates/javascript/package-manager`
     - Run `git mv crates/dx-js-runtime crates/javascript/runtime`
     - Run `git mv crates/dx-js-test-runner crates/javascript/test-runner`
     - _Requirements: 5.2_
-  - [ ] 4.3 Update root Cargo.toml for JavaScript crates
+  - [x] 4.3 Update root Cargo.toml for JavaScript crates
     - Update all member paths to new locations
     - _Requirements: 5.3, 8.1_
-  - [ ] 4.4 Update inter-crate dependencies for JavaScript crates
+  - [x] 4.4 Update inter-crate dependencies for JavaScript crates
     - Search and update all path dependencies within JavaScript crates
     - _Requirements: 5.4, 9.1_
-  - [ ] 4.5 Verify JavaScript crates build
+  - [x] 4.5 Verify JavaScript crates build
     - Run `cargo check -p dx-js-bundler -p dx-js-runtime` etc.
     - _Requirements: 8.3_
 
-- [ ] 5. Create WWW Crate Group
-  - [ ] 5.1 Create www directory and move main framework
+- [x] 5. Create WWW Crate Group
+  - [x] 5.1 Create www directory and move main framework
     - Run `mkdir crates/www`
     - Run `git mv crates/dx-www crates/www/core`
     - _Requirements: 7.1, 7.2_
-  - [ ] 5.2 Move dx-www-core to www/framework-core
+  - [x] 5.2 Move dx-www-core to www/framework-core
     - Run `git mv crates/dx-www-core crates/www/framework-core`
     - _Requirements: 7.2_
-  - [ ] 5.3 Move remaining WWW crates (batch 1: a11y through dom)
+  - [x] 5.3 Move remaining WWW crates (batch 1: a11y through dom)
     - Run `git mv crates/dx-www-a11y crates/www/a11y`
     - Run `git mv crates/dx-www-auth crates/www/auth`
     - Run `git mv crates/dx-www-binary crates/www/binary`
@@ -91,7 +91,7 @@ This plan reorganizes the DX workspace crates into a professional hierarchy and 
     - Run `git mv crates/dx-www-db crates/www/db`
     - Run `git mv crates/dx-www-dom crates/www/dom`
     - _Requirements: 7.2_
-  - [ ] 5.4 Move remaining WWW crates (batch 2: fallback through print)
+  - [x] 5.4 Move remaining WWW crates (batch 2: fallback through print)
     - Run `git mv crates/dx-www-fallback crates/www/fallback`
     - Run `git mv crates/dx-www-form crates/www/form`
     - Run `git mv crates/dx-www-guard crates/www/guard`
@@ -101,7 +101,7 @@ This plan reorganizes the DX workspace crates into a professional hierarchy and 
     - Run `git mv crates/dx-www-packet crates/www/packet`
     - Run `git mv crates/dx-www-print crates/www/print`
     - _Requirements: 7.2_
-  - [ ] 5.5 Move remaining WWW crates (batch 3: query through sync)
+  - [x] 5.5 Move remaining WWW crates (batch 3: query through sync)
     - Run `git mv crates/dx-www-query crates/www/query`
     - Run `git mv crates/dx-www-rtl crates/www/rtl`
     - Run `git mv crates/dx-www-sched crates/www/sched`
@@ -109,20 +109,20 @@ This plan reorganizes the DX workspace crates into a professional hierarchy and 
     - Run `git mv crates/dx-www-state crates/www/state`
     - Run `git mv crates/dx-www-sync crates/www/sync`
     - _Requirements: 7.2_
-  - [ ] 5.6 Move dx-db-teleport to www/db-teleport
+  - [x] 5.6 Move dx-db-teleport to www/db-teleport
     - Run `git mv crates/dx-db-teleport crates/www/db-teleport`
     - _Requirements: 7.2_
-  - [ ] 5.7 Update root Cargo.toml for WWW crates
+  - [x] 5.7 Update root Cargo.toml for WWW crates
     - Update all member paths to new locations
     - _Requirements: 7.3, 8.1_
-  - [ ] 5.8 Update inter-crate dependencies for WWW crates
+  - [x] 5.8 Update inter-crate dependencies for WWW crates
     - Search and update all path dependencies within WWW crates
     - _Requirements: 7.4, 9.1_
-  - [ ] 5.9 Verify WWW crates build
+  - [x] 5.9 Verify WWW crates build
     - Run `cargo check` on www crates
     - _Requirements: 8.3_
 
-- [ ] 6. Checkpoint - Verify Full Workspace Build
+- [x] 6. Checkpoint - Verify Full Workspace Build
   - Ensure all tests pass, ask the user if questions arise.
   - Run `cargo check --workspace`
   - Run `cargo build --workspace`

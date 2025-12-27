@@ -2113,7 +2113,6 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
- "stack",
  "tempfile",
  "term_size",
  "textwrap",
@@ -3652,23 +3651,6 @@ name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
-
-[[package]]
-name = "hello-world"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "dx-www-binary",
- "dx-www-core",
- "dx-www-dom",
- "dx-www-morph",
- "dx-www-sched",
- "ed25519-dalek",
- "js-sys",
- "rand 0.8.5",
- "wasm-bindgen",
- "web-sys",
-]
 
 [[package]]
 name = "hermit-abi"
@@ -8040,19 +8022,6 @@ name = "stable_deref_trait"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
-
-[[package]]
-name = "stack"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bitflags 2.10.0",
- "serde",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
- "toml 0.8.23",
-]
 
 [[package]]
 name = "static_assertions"

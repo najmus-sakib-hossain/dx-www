@@ -1245,3 +1245,63 @@ From `TASKLIST.md`:
 **Stop. Breathe. Delete 90% of this. Ship something that actually works.**
 
 ```
+
+
+All crates that are main dx tools will have their own folder like these
+
+Keep these folder names same in crates folder
+check/
+driven/
+dx/
+error/
+font/
+forge/
+generator/
+i18n/
+icon/
+media/
+serializer/
+stack/
+style/
+workspace/
+
+And here we need to change some stuffs,
+1. rename dx-cli to just cli and make it working
+2. there will be pythong, javascirpt folder instead of dx-py and dx-js-* folder
+3. make www folder put everything about dx-www web frameworks in that folder
+
+dx-cli/
+dx-core/
+dx-db-teleport/
+dx-js-bundler/
+dx-js-compatibility/
+dx-js-monorepo/
+dx-js-package-manager/
+dx-js-runtime/
+dx-js-test-runner/
+dx-py/
+dx-reactor/
+dx-www/
+dx-www-a11y/
+dx-www-auth/
+dx-www-binary/
+dx-www-cache/
+dx-www-client/
+dx-www-client-tiny/
+dx-www-core/
+dx-www-db/
+dx-www-dom/
+dx-www-fallback/
+dx-www-form/
+dx-www-guard/
+dx-www-interaction/
+dx-www-morph/
+dx-www-offline/
+dx-www-packet/
+dx-www-print/
+dx-www-query/
+dx-www-rtl/
+dx-www-sched/
+dx-www-server/
+dx-www-state/
+dx-www-sync/

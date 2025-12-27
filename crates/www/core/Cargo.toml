@@ -19,7 +19,7 @@ db-teleport = ["dx-db-teleport"]
 # CLI & Terminal
 clap = { version = "4.5", features = ["derive", "cargo"] }
 console = "0.15"
-indicatif = "0.17"  # Loading bars
+indicatif = "0.17"                                         # Loading bars
 
 # Parsing (The Heavy Lifting)
 regex = "1.10"
@@ -34,7 +34,7 @@ oxc_span = { version = "0.49", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 bincode = "2.0.0-rc.3"
-flate2 = "1.0" # For Gzipping templates
+flate2 = "1.0"                                     # For Gzipping templates
 
 # Code Generation
 quote = "1.0"
@@ -43,7 +43,7 @@ syn = "2.0"
 
 # Async/System
 tokio = { version = "1.36", features = ["full"] }
-notify = "6.1" # File watching
+notify = "6.1"                                    # File watching
 anyhow = "1.0"
 thiserror = "1.0"
 
@@ -58,20 +58,20 @@ blake3 = "1.5"
 chrono = "0.4"
 
 # Internal
-dx-www-packet = { path = "../dx-www-packet", features = ["std"] }
+dx-www-packet = { path = "../packet", features = ["std"] }
 
 # Binary Dawn - Cross-platform I/O reactor
-dx-reactor = { path = "../dx-reactor" }
-dx-db-teleport = { path = "../dx-db-teleport", optional = true }
+dx-reactor = { path = "../../reactor" }
+dx-db-teleport = { path = "../db-teleport", optional = true }
 
 # Ecosystem crates (compile-time features)
-dx-www-form = { path = "../dx-www-form" }
-dx-www-query = { path = "../dx-www-query" }
-dx-www-db = { path = "../dx-www-db" }
-dx-www-state = { path = "../dx-www-state" }
-dx-www-a11y = { path = "../dx-www-a11y" }
-dx-www-print = { path = "../dx-www-print" }
-dx-www-rtl = { path = "../dx-www-rtl"}
+dx-www-form = { path = "../form" }
+dx-www-query = { path = "../query" }
+dx-www-db = { path = "../db" }
+dx-www-state = { path = "../state" }
+dx-www-a11y = { path = "../a11y" }
+dx-www-print = { path = "../print" }
+dx-www-rtl = { path = "../rtl" }
 
 
 [dev-dependencies]

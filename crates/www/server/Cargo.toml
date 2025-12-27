@@ -25,16 +25,16 @@ futures = "0.3"
 chrono = { version = "0.4", features = ["serde"] }
 
 # Internal Dependencies
-dx-www-binary = { path = "../dx-www-binary" }
-dx-www-packet = { path = "../dx-www-packet", features = ["std"] }
+dx-www-binary = { path = "../binary" }
+dx-www-packet = { path = "../packet", features = ["std"] }
 
 # Ecosystem crates (server-side features)
-dx-www-query = { path = "../dx-www-query", optional = true }
-dx-www-db = { path = "../dx-www-db", features = ["postgres"], optional = true }
-dx-www-auth = { path = "../dx-www-auth", optional = true }
-dx-www-sync = { path = "../dx-www-sync", optional = true }
-dx-www-offline = { path = "../dx-www-offline", optional = true }
-dx-www-fallback = { path = "../dx-www-fallback", optional = true }
+dx-www-query = { path = "../query", optional = true }
+dx-www-db = { path = "../db", features = ["postgres"], optional = true }
+dx-www-auth = { path = "../auth", optional = true }
+dx-www-sync = { path = "../sync", optional = true }
+dx-www-offline = { path = "../offline", optional = true }
+dx-www-fallback = { path = "../fallback", optional = true }
 
 # Crypto (for Signed Payloads)
 ed25519-dalek = { version = "2.1.0", features = ["rand_core"] }

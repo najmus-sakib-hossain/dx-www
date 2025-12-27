@@ -1,6 +1,6 @@
 //! CLI definition and command routing
 //!
-//! DX CLI: The 10 Core Tools
+//! DX CLI: The 9 Core Tools
 //! ========================
 //!
 //! ASSET TOOLS:
@@ -12,7 +12,6 @@
 //! INFRASTRUCTURE:
 //!   forge      - Package manager + orchestrator for all dx-* crates
 //!   serializer - World-record data format (DX ∞)
-//!   stack      - Unified JS/TS development stack
 //!
 //! DEVELOPMENT:
 //!   driven     - AI agents control
@@ -116,10 +115,6 @@ pub enum Commands {
     /// World-record data format (DX ∞) - 73% smaller, 4x faster
     #[command(visible_alias = "ser", visible_alias = "data")]
     Serializer(commands::serializer::SerializerArgs),
-
-    /// Unified JS/TS development stack (runtime, bundler, test, pkg)
-    #[command(visible_alias = "js", visible_alias = "ts")]
-    Stack(commands::stack::StackArgs),
 
     // ═══════════════════════════════════════════════════════════════════
     //  DEVELOPMENT
@@ -513,7 +508,6 @@ impl Cli {
             // Infrastructure
             Commands::Forge(args) => commands::forge::run(args, &theme).await,
             Commands::Serializer(args) => commands::serializer::run(args, &theme).await,
-            Commands::Stack(args) => commands::stack::run(args, &theme).await,
 
             // Development
             Commands::Driven(args) => commands::driven::run(args, &theme).await,

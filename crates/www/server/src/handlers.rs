@@ -92,7 +92,23 @@ fn serve_spa_shell(state: ServerState) -> impl IntoResponse {
 
     // Fallback to demo HTML
     tracing::debug!("Using demo HTML (index.html not found in project)");
-    Html(include_str!("../../../examples/hello-world/demo.html")).into_response()
+    Html(r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DX WWW</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { color: #667eea; }
+    </style>
+</head>
+<body>
+    <h1>DX WWW Server</h1>
+    <p>Welcome to the DX binary web framework.</p>
+    <p>Create an <code>index.html</code> in your project directory to customize this page.</p>
+</body>
+</html>"#).into_response()
 }
 
 /// Stream binary artifacts (Day 16: The Binary Streamer)

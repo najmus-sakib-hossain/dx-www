@@ -58,7 +58,7 @@ bincode = "2.0.0-rc.3"
 serde-wasm-bindgen = "0.6"
 
 # Internal dependencies
-dx-www-binary = { path = "../dx-www-binary" }
+dx-www-binary = { path = "../binary" }
 
 # Error handling
 console_error_panic_hook = "0.1"
