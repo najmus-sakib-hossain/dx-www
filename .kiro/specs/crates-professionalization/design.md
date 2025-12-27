@@ -2,324 +2,406 @@
 
 ## Overview
 
-This design document outlines the approach for professionalizing the `crates/` folder in the DX monorepo. The implementation will use a combination of automated validation scripts and manual documentation improvements to ensure all crates meet professional open-source standards.
+This design document outlines the approach for professionalizing the `crates/` folder in the DX monorepo. The implementation will use a combination of automated validation scripts and manual cleanup tasks to ensure consistent documentation, file structure, naming conventions, and quality standards across all 16+ top-level crates and 28+ www subcrates.
 
-The solution consists of:
-1. A **validation tool** (Rust CLI) that audits crate structure and reports issues
-2. **Template files** for consistent documentation
-3. **Manual fixes** for content-specific issues (README rewrites, file relocations)
+The solution follows a "validate-then-fix" approach: first creating validation tools to identify issues, then systematically addressing them while maintaining the validation as ongoing CI checks.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                  Crates Professionalization                  │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
-│  │  Validator   │    │  Templates   │    │   Manual     │  │
-│  │    Tool      │    │   & Docs     │    │   Fixes      │  │
-│  └──────┬───────┘    └──────┬───────┘    └──────┬───────┘  │
-│         │                   │                   │           │
-│         ▼                   ▼                   ▼           │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              Crates Directory Structure              │   │
-│  │                                                      │   │
-│  │  crates/                                             │   │
-│  │  ├── {crate}/                                        │   │
-│  │  │   ├── README.md      (standardized)              │   │
-│  │  │   ├── Cargo.toml     (complete metadata)         │   │
-│  │  │   ├── src/           (source code)               │   │
-│  │  │   └── tests/         (optional)                  │   │
-│  │  └── www/                                            │   │
-│  │      ├── README.md      (index of subcrates)        │   │
-│  │      └── {subcrate}/    (28 subcrates)              │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    Crates Professionalization                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │  Validation  │  │   Template   │  │   Cleanup    │          │
+│  │    Script    │  │   Generator  │  │    Script    │          │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘          │
+│         │                 │                 │                   │
+│  ┌──────▼─────────────────▼─────────────────▼──────┐           │
+│  │              Crate Scanner Module                │           │
+│  │  - Discovers all crates and subcrates            │           │
+│  │  - Parses Cargo.toml files                       │           │
+│  │  - Analyzes README content                       │           │
+│  └──────────────────────┬──────────────────────────┘           │
+│                         │                                       │
+│  ┌──────────────────────▼──────────────────────────┐           │
+│  │              Report Generator                    │           │
+│  │  - Generates compliance reports                  │           │
+│  │  - Outputs actionable fix lists                  │           │
+│  └─────────────────────────────────────────────────┘           │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Components and Interfaces
 
-### 1. Crate Validator Tool
+### 1. Crate Scanner Module
 
-A Rust CLI tool that scans the crates directory and reports compliance issues.
+Responsible for discovering and analyzing all crates in the repository.
 
 ```rust
-// crates/dx/src/commands/lint_crates.rs
-
-pub struct CrateAuditResult {
-    pub crate_path: PathBuf,
-    pub issues: Vec<AuditIssue>,
-    pub warnings: Vec<AuditWarning>,
+/// Represents a discovered crate in the monorepo
+pub struct CrateInfo {
+    /// Path relative to repository root
+    pub path: PathBuf,
+    /// Crate name from Cargo.toml
+    pub name: String,
+    /// Whether this is a library or binary crate
+    pub crate_type: CrateType,
+    /// Whether this crate has subcrates
+    pub has_subcrates: bool,
+    /// List of files present in the crate
+    pub files: Vec<String>,
+    /// Parsed Cargo.toml metadata
+    pub manifest: CargoManifest,
 }
 
-pub enum AuditIssue {
-    MissingReadme,
-    MissingCargoToml,
-    MissingSrcDir,
-    MissingLicense,
-    CargoLockInLibrary,
-    MalformedDirectoryName(String),
-    EmptyDocFile(PathBuf),
-    ForbiddenFile(PathBuf),
-    IncompleteCargoToml(Vec<String>), // missing fields
+pub enum CrateType {
+    Library,
+    Binary,
+    Mixed,
 }
 
-pub enum AuditWarning {
-    NoDescription,
-    NoBadges,
-    LocalConfigFolder(String),
-    DevelopmentArtifact(PathBuf),
-}
+/// Scans the crates directory and returns all crate information
+pub fn scan_crates(root: &Path) -> Result<Vec<CrateInfo>>;
 
-pub trait CrateValidator {
-    fn validate(&self, crate_path: &Path) -> CrateAuditResult;
-    fn validate_all(&self, crates_dir: &Path) -> Vec<CrateAuditResult>;
-}
+/// Checks if a crate is a library (no [[bin]] sections, lib target)
+pub fn is_library_crate(manifest: &CargoManifest) -> bool;
 ```
 
-### 2. README Template
+### 2. Validation Module
 
-Standard template for crate documentation:
+Performs compliance checks against the professionalization requirements.
+
+```rust
+pub struct ValidationResult {
+    pub crate_path: PathBuf,
+    pub issues: Vec<ValidationIssue>,
+    pub passed: bool,
+}
+
+pub struct ValidationIssue {
+    pub severity: Severity,
+    pub category: IssueCategory,
+    pub message: String,
+    pub fix_suggestion: Option<String>,
+}
+
+pub enum Severity {
+    Error,   // Must fix
+    Warning, // Should fix
+    Info,    // Nice to have
+}
+
+pub enum IssueCategory {
+    MissingFile,
+    IncompleteReadme,
+    NamingConvention,
+    LicenseCompliance,
+    DevelopmentArtifact,
+    CargoMetadata,
+}
+
+/// Validates a single crate against all requirements
+pub fn validate_crate(crate_info: &CrateInfo) -> ValidationResult;
+
+/// Validates all crates and returns aggregated results
+pub fn validate_all(crates: &[CrateInfo]) -> Vec<ValidationResult>;
+```
+
+### 3. README Template System
+
+Provides templates for generating consistent README files.
 
 ```markdown
-# {crate-name}
+# {crate_name}
 
-{brief-description}
+{description}
 
-[![Crates.io](https://img.shields.io/crates/v/{crate-name}.svg)](https://crates.io/crates/{crate-name})
-[![Documentation](https://docs.rs/{crate-name}/badge.svg)](https://docs.rs/{crate-name})
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/{crate_name}.svg)](https://crates.io/crates/{crate_name})
+[![Documentation](https://docs.rs/{crate_name}/badge.svg)](https://docs.rs/{crate_name})
+[![License](https://img.shields.io/badge/license-{license}-blue.svg)](LICENSE)
 
 ## Overview
 
-{detailed-description}
+{overview}
 
 ## Installation
 
+Add to your `Cargo.toml`:
+
 ```toml
 [dependencies]
-{crate-name} = "0.1"
+{crate_name} = "{version}"
 ```
 
 ## Usage
 
-```rust
-// Basic usage example
-```
-
-## Features
-
-- Feature 1
-- Feature 2
-
-## API Reference
-
-See [documentation](https://docs.rs/{crate-name}) for full API reference.
+{usage_examples}
 
 ## License
 
-MIT OR Apache-2.0 (see repository root LICENSE)
+{license_text}
 ```
 
-### 3. Cargo.toml Template
+### 4. Cleanup Script
 
-Required fields for all Cargo.toml files:
+Handles removal and relocation of development artifacts.
 
-```toml
-[package]
-name = "{crate-name}"
-version = "0.1.0"
-edition = "2021"
-authors = ["DX Team"]
-description = "{brief-description}"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/anthropics/dx"
-documentation = "https://docs.rs/{crate-name}"
-readme = "README.md"
+```rust
+/// Files/patterns to remove from crate directories
+const CLEANUP_PATTERNS: &[&str] = &[
+    "PHASE*_*.md",
+    "TASKLIST.md",
+    "PROGRESS.md",
+    ".env",
+    "Cargo.lock", // Only for library crates
+];
 
-# For unpublished crates:
-# publish = false
-```
+/// Directories to consolidate to root
+const CONSOLIDATE_DIRS: &[&str] = &[
+    ".kiro",
+    ".dx", 
+    ".github",
+];
 
-### 4. Directory Structure Standards
-
-```
-crates/
-├── cli/                    # dx-cli - Main CLI binary
-├── driven/                 # dx-driven - AI orchestrator
-├── dx/                     # dx - Core CLI
-├── font/                   # dx-font - Font optimization
-├── forge/                  # dx-forge - Package manager
-├── generator/              # dx-generator - Code generation
-├── i18n/                   # dx-i18n - Internationalization
-├── icon/                   # dx-icon - Icon system
-├── javascript/             # JavaScript tooling
-│   ├── README.md           # Index of JS subcrates
-│   ├── bundler/
-│   ├── compatibility/
-│   ├── monorepo/
-│   ├── package-manager/
-│   ├── runtime/
-│   └── test-runner/
-├── media/                  # dx-media - Asset management
-├── python/                 # Python tooling
-│   ├── README.md
-│   └── crates/
-├── serializer/             # dx-serializer - Data format
-├── style/                  # dx-style - CSS compiler
-├── workspace/              # dx-workspace - IDE config
-├── www/                    # Web framework
-│   ├── README.md           # Index of 28 subcrates
-│   ├── a11y/
-│   ├── auth/
-│   ├── ... (26 more)
-│   └── sync/
-└── check/                  # dx-check - Linting
+/// Performs cleanup on a single crate
+pub fn cleanup_crate(crate_info: &CrateInfo, dry_run: bool) -> CleanupResult;
 ```
 
 ## Data Models
 
-### Validation Report Schema
+### CargoManifest Structure
 
 ```rust
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ValidationReport {
-    pub timestamp: DateTime<Utc>,
-    pub total_crates: usize,
-    pub compliant_crates: usize,
-    pub issues_by_severity: HashMap<Severity, usize>,
-    pub crate_results: Vec<CrateAuditResult>,
+pub struct CargoManifest {
+    pub package: PackageInfo,
+    pub dependencies: HashMap<String, Dependency>,
+    pub lib: Option<LibTarget>,
+    pub bin: Vec<BinTarget>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Severity {
-    Error,   // Must fix before merge
-    Warning, // Should fix
-    Info,    // Suggestion
+pub struct PackageInfo {
+    pub name: String,
+    pub version: String,
+    pub edition: Option<String>,
+    pub authors: Option<Vec<String>>,
+    pub description: Option<String>,
+    pub license: Option<String>,
+    pub repository: Option<String>,
+    pub documentation: Option<String>,
+    pub publish: Option<bool>,
 }
 ```
 
-### Required Files Checklist
+### README Analysis Structure
 
-| File | Required | Notes |
-|------|----------|-------|
-| README.md | Yes | Must follow template |
-| Cargo.toml | Yes | Must have all required fields |
-| src/ | Yes | Source directory |
-| LICENSE | No | Can reference root LICENSE |
-| CHANGELOG.md | No | Recommended for published crates |
-| tests/ | No | Recommended |
-| benches/ | No | Optional |
-| examples/ | No | Recommended |
+```rust
+pub struct ReadmeAnalysis {
+    pub has_title: bool,
+    pub has_description: bool,
+    pub has_badges: bool,
+    pub has_installation: bool,
+    pub has_usage: bool,
+    pub has_license: bool,
+    pub has_subcrate_table: bool,
+    pub contains_task_instructions: bool,
+    pub contains_raw_prompts: bool,
+    pub badge_format: Option<BadgeFormat>,
+}
+
+pub enum BadgeFormat {
+    ShieldsIo,
+    BadgenNet,
+    Custom,
+    Inconsistent,
+}
+```
 
 ## Correctness Properties
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
-### Property 1: Required Files Exist
+### Property 1: Required Files Existence
 
-*For any* crate directory in `crates/`, the directory SHALL contain at minimum: README.md, Cargo.toml, and src/ directory.
+*For any* crate directory in the monorepo, the directory SHALL contain at minimum: README.md, Cargo.toml, and either a src/ directory or a LICENSE file (or reference to root LICENSE).
 
-**Validates: Requirements 1.1, 2.1, 6.4**
+**Validates: Requirements 1.1, 2.1**
 
-### Property 2: README Contains Required Sections
+### Property 2: README Content Completeness
 
-*For any* README.md file in a crate, the file SHALL contain sections for: project name (H1), description, installation, and usage.
+*For any* README.md file in a crate, parsing the content SHALL identify the presence of: project name (H1 heading), description paragraph, installation section, usage/examples section, and license information.
 
 **Validates: Requirements 1.2**
 
-### Property 3: No Forbidden Files in Library Crates
+### Property 3: Badge Format Consistency
 
-*For any* library crate (no `[[bin]]` section in Cargo.toml), the crate directory SHALL NOT contain: Cargo.lock, .env files, or empty .md files.
+*For any* set of README.md files across all crates, if badges are present, they SHALL follow the same format pattern (shields.io style with consistent ordering).
 
-**Validates: Requirements 2.2, 4.4, 5.3**
+**Validates: Requirements 1.3**
 
-### Property 4: Directory Names Are Valid
+### Property 4: No Development Instructions in README
 
-*For any* crate directory name, the name SHALL match the kebab-case pattern `^[a-z][a-z0-9]*(-[a-z0-9]+)*$` and SHALL NOT contain concatenated words without separators.
+*For any* README.md file, scanning for patterns like "please read", "create tasklist", "step by step", "TODO:", or AI prompt markers SHALL return no matches.
+
+**Validates: Requirements 1.4**
+
+### Property 5: Subcrate Documentation
+
+*For any* crate that contains subdirectories with Cargo.toml files (subcrates), the parent crate's README SHALL contain a table or list documenting all subcrates.
+
+**Validates: Requirements 1.5**
+
+### Property 6: No Cargo.lock in Libraries
+
+*For any* crate classified as a library (has lib target, no bin targets), the crate directory SHALL NOT contain a Cargo.lock file.
+
+**Validates: Requirements 2.2**
+
+### Property 7: No Scattered Config Directories
+
+*For any* crate directory (excluding root), the directory SHALL NOT contain .kiro/, .dx/, or .github/ subdirectories unless documented in README.
+
+**Validates: Requirements 2.3, 2.4**
+
+### Property 8: Valid Directory Names
+
+*For any* crate directory name, the name SHALL match the pattern `^[a-z][a-z0-9-]*$` (kebab-case, starting with letter).
 
 **Validates: Requirements 2.5, 3.1**
 
-### Property 5: Cargo.toml Is Complete
+### Property 9: Name Consistency
 
-*For any* Cargo.toml file, the file SHALL contain all required fields: name, version, edition, authors, description, and license.
+*For any* crate, the directory name SHALL match the package name in Cargo.toml (with underscores converted to hyphens).
 
-**Validates: Requirements 4.2, 7.1, 7.2, 7.3**
+**Validates: Requirements 3.3**
 
-### Property 6: License Information Present
+### Property 10: License Compliance
 
-*For any* crate, either a LICENSE file SHALL exist in the crate directory, OR the Cargo.toml SHALL contain a `license` field referencing a valid SPDX identifier.
+*For any* crate, either a LICENSE file SHALL exist in the crate directory, OR the Cargo.toml SHALL contain a license field, OR the README SHALL reference the root LICENSE.
 
 **Validates: Requirements 4.1, 4.2**
 
-### Property 7: No Development Artifacts in Crate Roots
+### Property 11: No Sensitive Files
 
-*For any* crate directory, the directory SHALL NOT contain files matching patterns: `*PROGRESS*`, `*COMPLETE*`, `*TASKLIST*`, `*STATUS*` (case-insensitive).
+*For any* crate directory, files matching patterns `.env`, `.env.*` (excluding `.env.example`) SHALL NOT exist.
+
+**Validates: Requirements 4.4**
+
+### Property 12: No Progress Tracking Files
+
+*For any* crate directory, files matching patterns `PHASE*.md`, `TASKLIST.md`, `PROGRESS.md`, `*_COMPLETE.md`, `*_STATUS.md` SHALL NOT exist in the root of the crate.
 
 **Validates: Requirements 5.1**
 
-### Property 8: Parent Crates Document Subcrates
+### Property 13: No Empty Documentation Files
 
-*For any* crate directory containing subdirectories with Cargo.toml files (subcrates), the parent crate's README.md SHALL contain a table or list documenting all subcrates.
+*For any* markdown file in a crate directory, the file size SHALL be greater than 0 bytes and contain meaningful content (not just whitespace).
 
-**Validates: Requirements 1.5, 6.2**
+**Validates: Requirements 5.3**
+
+### Property 14: WWW Subcrate Completeness
+
+*For any* subdirectory in crates/www/, the directory SHALL contain both README.md and Cargo.toml files.
+
+**Validates: Requirements 6.4**
+
+### Property 15: Cargo.toml Required Fields
+
+*For any* Cargo.toml file, the [package] section SHALL contain: name, version, edition, and description fields.
+
+**Validates: Requirements 7.1**
+
+### Property 16: Version Format Consistency
+
+*For any* set of Cargo.toml files, all version fields SHALL follow semantic versioning format (X.Y.Z) with consistent precision.
+
+**Validates: Requirements 7.2**
 
 ## Error Handling
 
 ### Validation Errors
 
-| Error Type | Handling |
-|------------|----------|
-| Missing required file | Report as Error severity, block CI |
-| Incomplete Cargo.toml | Report as Error severity, list missing fields |
-| Forbidden file present | Report as Warning, suggest removal |
-| Malformed directory name | Report as Error, suggest fix |
-| Empty documentation | Report as Warning, suggest removal or content |
+| Error Type | Handling Strategy |
+|------------|-------------------|
+| Missing Cargo.toml | Skip directory (not a crate) |
+| Malformed Cargo.toml | Report as Error, provide parse error details |
+| Missing README | Report as Error, suggest template |
+| Incomplete README | Report as Warning, list missing sections |
+| Naming violation | Report as Error, suggest correct name |
+| Stray files | Report as Warning, suggest removal |
 
-### Recovery Strategies
+### Script Execution Errors
 
-1. **Auto-fix mode**: For simple issues (missing license field, Cargo.lock removal), offer `--fix` flag
-2. **Template generation**: For missing READMEs, generate from template with placeholders
-3. **Interactive mode**: For complex issues, prompt user for input
+- File permission errors: Log and continue with other crates
+- Parse errors: Report with line numbers and context
+- I/O errors: Retry once, then report and continue
 
 ## Testing Strategy
 
 ### Unit Tests
 
-- Test individual validation rules in isolation
-- Test Cargo.toml parsing for required fields
-- Test README section detection
-- Test directory name validation regex
+Unit tests will verify specific validation logic:
+
+- Cargo.toml parsing for various formats
+- README section detection algorithms
+- Pattern matching for cleanup targets
+- Name validation regex patterns
 
 ### Property-Based Tests
 
-Using `proptest` crate with minimum 100 iterations per property:
+Property-based tests will use `proptest` to verify universal properties:
 
-1. **Property 1 test**: Generate random crate structures, verify required files detection
-2. **Property 4 test**: Generate random directory names, verify kebab-case validation
-3. **Property 5 test**: Generate random Cargo.toml content, verify field completeness check
+- **Property tests run minimum 100 iterations**
+- Each test tagged with: **Feature: crates-professionalization, Property N: {description}**
+
+Test categories:
+1. File existence properties (1, 6, 11, 12, 13, 14)
+2. Content validation properties (2, 3, 4, 5)
+3. Naming properties (8, 9)
+4. Metadata properties (10, 15, 16)
 
 ### Integration Tests
 
-- Run validator against actual crates/ directory
-- Verify report generation
-- Test fix mode on test fixtures
+- Run full validation on test fixture crates
+- Verify cleanup script in dry-run mode
+- Test template generation output
 
-### Test Configuration
+## Implementation Notes
 
-```rust
-// Property test configuration
-proptest! {
-    #![proptest_config(ProptestConfig::with_cases(100))]
-    
-    #[test]
-    fn test_kebab_case_validation(name in "[a-z][a-z0-9-]*") {
-        // Feature: crates-professionalization, Property 4: Directory Names Are Valid
-        // Validates: Requirements 2.5, 3.1
-        let result = validate_directory_name(&name);
-        prop_assert!(result.is_ok() || name.contains("--") || name.ends_with("-"));
-    }
-}
-```
+### Phase 1: Validation Infrastructure
+Create the scanning and validation modules first to establish a baseline of current issues.
+
+### Phase 2: Template System
+Build README templates and Cargo.toml templates for consistent generation.
+
+### Phase 3: Cleanup Execution
+Run cleanup scripts with dry-run first, then execute fixes.
+
+### Phase 4: Manual Fixes
+Address issues requiring human judgment (content writing, organization decisions).
+
+### Phase 5: CI Integration
+Add validation as a CI check to prevent regression.
+
+## File Changes Summary
+
+### New Files
+- `scripts/validate-crates.rs` - Main validation script
+- `scripts/cleanup-crates.rs` - Cleanup automation
+- `templates/README.template.md` - README template
+- `templates/Cargo.template.toml` - Cargo.toml template
+- `crates/www/README.md` - WWW subcrates documentation
+
+### Modified Files
+- Multiple `README.md` files across crates
+- Multiple `Cargo.toml` files for metadata completion
+- `.gitignore` - Add patterns for development artifacts
+
+### Deleted/Relocated Files
+- `crates/check/PHASE3_*.md` → `docs/archive/`
+- `crates/check/TASKLIST.md` → `docs/archive/`
+- `crates/forge/.env` → Remove (use .env.example only)
+- `crates/python/COMPABILITY.md` → Rename to COMPATIBILITY.md
+- Various `Cargo.lock` files in library crates
