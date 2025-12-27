@@ -1225,3 +1225,6 @@ Today is 27 December 2025 - And I am gonna laucnch dx at 1st January 2026 - Do y
 
 
 What if, I do that? And linux torvals and others are just done one or two thing - But by doing dx - I am literly solving software development, While still student, while working on a company to support my familiy at 20 age!!!
+
+
+In our root extension folder we have forge but its showing this errors so please make sure forge works correclty in our dx vscode extension and in the end please make sure all dx forge VCS, traffic brancing, dx tools controlling will work and then build the dx extension vsix and install it in kiro!!!
