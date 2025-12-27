@@ -695,24 +695,39 @@ fn extract_json_rules(db: &mut DxRuleDatabase, mut rule_id: u16) -> u16 {
     println!("📦 Extracting JSON rules (biome)...");
 
     let json_rules = vec![
-        DxRule::new(rule_id, Language::Json, "noComments", RuleSource::Biome)
-            .category(DxCategory::Correctness)
-            .severity(DxSeverity::Error)
-            .description("Disallow comments in JSON files")
-            .docs_url("https://biomejs.dev/linter/rules/no-comments")
-            .recommended(),
-        DxRule::new(rule_id + 1, Language::Json, "noDuplicateKeys", RuleSource::Biome)
-            .category(DxCategory::Correctness)
-            .severity(DxSeverity::Error)
-            .description("Disallow duplicate keys in JSON objects")
-            .docs_url("https://biomejs.dev/linter/rules/no-duplicate-keys")
-            .recommended(),
-        DxRule::new(rule_id + 2, Language::Json, "noTrailingCommas", RuleSource::Biome)
-            .category(DxCategory::Correctness)
-            .severity(DxSeverity::Error)
-            .description("Disallow trailing commas in JSON")
-            .docs_url("https://biomejs.dev/linter/rules/no-trailing-commas")
-            .recommended(),
+        DxRule::new(
+            rule_id,
+            Language::Json,
+            "noComments",
+            "Disallow comments in JSON files",
+            DxCategory::Correctness,
+            RuleSource::Biome,
+        )
+        .severity(DxSeverity::Error)
+        .docs("https://biomejs.dev/linter/rules/no-comments")
+        .recommended(true),
+        DxRule::new(
+            rule_id + 1,
+            Language::Json,
+            "noDuplicateKeys",
+            "Disallow duplicate keys in JSON objects",
+            DxCategory::Correctness,
+            RuleSource::Biome,
+        )
+        .severity(DxSeverity::Error)
+        .docs("https://biomejs.dev/linter/rules/no-duplicate-keys")
+        .recommended(true),
+        DxRule::new(
+            rule_id + 2,
+            Language::Json,
+            "noTrailingCommas",
+            "Disallow trailing commas in JSON",
+            DxCategory::Correctness,
+            RuleSource::Biome,
+        )
+        .severity(DxSeverity::Error)
+        .docs("https://biomejs.dev/linter/rules/no-trailing-commas")
+        .recommended(true),
     ];
 
     rule_id += json_rules.len() as u16;
@@ -729,26 +744,44 @@ fn extract_css_rules(db: &mut DxRuleDatabase, mut rule_id: u16) -> u16 {
     println!("📦 Extracting CSS rules (biome)...");
 
     let css_rules = vec![
-        DxRule::new(rule_id, Language::Css, "noDuplicateSelectors", RuleSource::Biome)
-            .category(DxCategory::Suspicious)
-            .severity(DxSeverity::Warn)
-            .description("Disallow duplicate selectors")
-            .recommended(),
-        DxRule::new(rule_id + 1, Language::Css, "noInvalidPositionAtImportRule", RuleSource::Biome)
-            .category(DxCategory::Correctness)
-            .severity(DxSeverity::Error)
-            .description("Disallow invalid position for @import rules")
-            .recommended(),
-        DxRule::new(rule_id + 2, Language::Css, "noUnknownUnit", RuleSource::Biome)
-            .category(DxCategory::Correctness)
-            .severity(DxSeverity::Error)
-            .description("Disallow unknown CSS units")
-            .recommended(),
-        DxRule::new(rule_id + 3, Language::Css, "noShorthandPropertyOverrides", RuleSource::Biome)
-            .category(DxCategory::Suspicious)
-            .severity(DxSeverity::Warn)
-            .description("Disallow shorthand properties that override related longhand properties")
-            .recommended(),
+        DxRule::new(
+            rule_id,
+            Language::Css,
+            "noDuplicateSelectors",
+            "Disallow duplicate selectors",
+            DxCategory::Suspicious,
+            RuleSource::Biome,
+        )
+        .recommended(true),
+        DxRule::new(
+            rule_id + 1,
+            Language::Css,
+            "noInvalidPositionAtImportRule",
+            "Disallow invalid position for @import rules",
+            DxCategory::Correctness,
+            RuleSource::Biome,
+        )
+        .severity(DxSeverity::Error)
+        .recommended(true),
+        DxRule::new(
+            rule_id + 2,
+            Language::Css,
+            "noUnknownUnit",
+            "Disallow unknown CSS units",
+            DxCategory::Correctness,
+            RuleSource::Biome,
+        )
+        .severity(DxSeverity::Error)
+        .recommended(true),
+        DxRule::new(
+            rule_id + 3,
+            Language::Css,
+            "noShorthandPropertyOverrides",
+            "Disallow shorthand properties that override related longhand properties",
+            DxCategory::Suspicious,
+            RuleSource::Biome,
+        )
+        .recommended(true),
     ];
 
     rule_id += css_rules.len() as u16;
@@ -765,22 +798,34 @@ fn extract_html_rules(db: &mut DxRuleDatabase, mut rule_id: u16) -> u16 {
     println!("📦 Extracting HTML rules (biome)...");
 
     let html_rules = vec![
-        DxRule::new(rule_id, Language::Html, "noBlankTarget", RuleSource::Biome)
-            .category(DxCategory::Security)
-            .severity(DxSeverity::Warn)
-            .description("Disallow target='_blank' without rel='noopener noreferrer'")
-            .docs_url("https://biomejs.dev/linter/rules/no-blank-target")
-            .recommended(),
-        DxRule::new(rule_id + 1, Language::Html, "useValidAnchor", RuleSource::Biome)
-            .category(DxCategory::Accessibility)
-            .severity(DxSeverity::Warn)
-            .description("Enforce valid anchor elements")
-            .recommended(),
-        DxRule::new(rule_id + 2, Language::Html, "useButtonType", RuleSource::Biome)
-            .category(DxCategory::Suspicious)
-            .severity(DxSeverity::Warn)
-            .description("Enforce explicit type attribute for button elements")
-            .recommended(),
+        DxRule::new(
+            rule_id,
+            Language::Html,
+            "noBlankTarget",
+            "Disallow target='_blank' without rel='noopener noreferrer'",
+            DxCategory::Security,
+            RuleSource::Biome,
+        )
+        .docs("https://biomejs.dev/linter/rules/no-blank-target")
+        .recommended(true),
+        DxRule::new(
+            rule_id + 1,
+            Language::Html,
+            "useValidAnchor",
+            "Enforce valid anchor elements",
+            DxCategory::Accessibility,
+            RuleSource::Biome,
+        )
+        .recommended(true),
+        DxRule::new(
+            rule_id + 2,
+            Language::Html,
+            "useButtonType",
+            "Enforce explicit type attribute for button elements",
+            DxCategory::Suspicious,
+            RuleSource::Biome,
+        )
+        .recommended(true),
     ];
 
     rule_id += html_rules.len() as u16;
@@ -797,22 +842,35 @@ fn extract_yaml_rules(db: &mut DxRuleDatabase, mut rule_id: u16) -> u16 {
     println!("📦 Extracting YAML rules...");
 
     let yaml_rules = vec![
-        DxRule::new(rule_id, Language::Yaml, "noDuplicateKeys", RuleSource::DxCheck)
-            .category(DxCategory::Correctness)
-            .severity(DxSeverity::Error)
-            .description("Disallow duplicate keys in YAML mappings")
-            .recommended(),
-        DxRule::new(rule_id + 1, Language::Yaml, "noTabs", RuleSource::DxCheck)
-            .category(DxCategory::Style)
-            .severity(DxSeverity::Warn)
-            .description("Disallow tabs in YAML files")
-            .recommended(),
-        DxRule::new(rule_id + 2, Language::Yaml, "noTrailingSpaces", RuleSource::DxCheck)
-            .category(DxCategory::Style)
-            .severity(DxSeverity::Warn)
-            .description("Disallow trailing spaces")
-            .fixable()
-            .recommended(),
+        DxRule::new(
+            rule_id,
+            Language::Yaml,
+            "noDuplicateKeys",
+            "Disallow duplicate keys in YAML mappings",
+            DxCategory::Correctness,
+            RuleSource::DxCheck,
+        )
+        .severity(DxSeverity::Error)
+        .recommended(true),
+        DxRule::new(
+            rule_id + 1,
+            Language::Yaml,
+            "noTabs",
+            "Disallow tabs in YAML files",
+            DxCategory::Style,
+            RuleSource::DxCheck,
+        )
+        .recommended(true),
+        DxRule::new(
+            rule_id + 2,
+            Language::Yaml,
+            "noTrailingSpaces",
+            "Disallow trailing spaces",
+            DxCategory::Style,
+            RuleSource::DxCheck,
+        )
+        .fixable(true)
+        .recommended(true),
     ];
 
     rule_id += yaml_rules.len() as u16;

@@ -173,6 +173,8 @@ fn build_dx_rule(dxs_rule: &DxsRule, meta: &DxsMeta, index: usize) -> Result<DxR
         is_formatter: dxs_rule.is_formatter,
         docs_url: dxs_rule.docs_url.clone(),
         options_schema: dxs_rule.options_schema.clone(),
+        deprecated_by: None,
+        related_rules: vec![],
     })
 }
 
