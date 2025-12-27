@@ -93,6 +93,7 @@ impl ObjectFlags {
     pub const AWAITABLE: Self = Self(1 << 4);
     pub const STACK_ALLOCATED: Self = Self(1 << 5);
     pub const GC_TRACKED: Self = Self(1 << 6);
+    pub const GC_MARKED: Self = Self(1 << 7);
     
     pub fn contains(&self, other: Self) -> bool {
         (self.0 & other.0) == other.0
@@ -183,6 +184,42 @@ impl PyObjectHeader {
     #[inline]
     pub fn refcount(&self) -> u32 {
         self.refcount.strong_count()
+    }
+    
+    /// Mark object for GC tracing
+    #[inline]
+    pub fn gc_mark(&self) {
+        self.set_flag(ObjectFlags::GC_MARKED);
+    }
+    
+    /// Unmark object after GC tracing
+    #[inline]
+    pub fn gc_unmark(&self) {
+        self.clear_flag(ObjectFlags::GC_MARKED);
+    }
+    
+    /// Check if object is marked
+    #[inline]
+    pub fn is_gc_marked(&self) -> bool {
+        self.has_flag(ObjectFlags::GC_MARKED)
+    }
+    
+    /// Track object in GC
+    #[inline]
+    pub fn gc_track(&self) {
+        self.set_flag(ObjectFlags::GC_TRACKED);
+    }
+    
+    /// Untrack object from GC
+    #[inline]
+    pub fn gc_untrack(&self) {
+        self.clear_flag(ObjectFlags::GC_TRACKED);
+    }
+    
+    /// Check if object is tracked by GC
+    #[inline]
+    pub fn is_gc_tracked(&self) -> bool {
+        self.has_flag(ObjectFlags::GC_TRACKED)
     }
 }
 

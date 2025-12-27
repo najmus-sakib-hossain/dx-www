@@ -31,6 +31,30 @@ struct Cli {
     #[arg(short, long)]
     verbose: bool,
     
+    /// Enable JIT compilation
+    #[arg(long, default_value = "true")]
+    jit: bool,
+    
+    /// Disable JIT compilation
+    #[arg(long)]
+    no_jit: bool,
+    
+    /// Enable async mode for I/O operations
+    #[arg(long, short = 'a')]
+    r#async: bool,
+    
+    /// Show GC statistics on exit
+    #[arg(long)]
+    gc_stats: bool,
+    
+    /// Set GC threshold (number of allocations before collection)
+    #[arg(long, default_value = "10000")]
+    gc_threshold: usize,
+    
+    /// Enable debug mode
+    #[arg(long, short = 'd')]
+    debug: bool,
+    
     #[command(subcommand)]
     subcommand: Option<Commands>,
 }
@@ -285,11 +309,11 @@ fn print_info() {
     println!();
     println!("Features:");
     println!("  - Binary Python Bytecode (DPB)");
-    println!("  - SIMD-Accelerated String Operations");
+    println!("  - SIMD-Accelerated String Operations (AVX2/AVX-512/NEON)");
     println!("  - Lock-Free Parallel Garbage Collector");
     println!("  - Tiered JIT with Cranelift Backend");
     println!("  - Speculative Type Prediction");
-    println!("  - Memory Teleportation FFI");
+    println!("  - Memory Teleportation FFI (NumPy zero-copy)");
     println!("  - Binary Module Format (DPM)");
     println!("  - Thread-Per-Core Parallel Executor");
     println!("  - Stack Allocation Fast Path");
@@ -299,13 +323,16 @@ fn print_info() {
     println!("  - Compiler-Inlined Decorators");
     println!("  - Persistent Compilation Cache (PCC)");
     println!("  - Cross-Process Shared Objects");
+    println!("  - Async I/O (io_uring/kqueue/IOCP)");
     println!();
     println!("CPU Features:");
     
     #[cfg(target_arch = "x86_64")]
     {
-        if is_x86_feature_detected!("avx2") {
-            println!("  - AVX2: enabled");
+        if is_x86_feature_detected!("avx512f") {
+            println!("  - AVX-512: enabled (64 bytes/iteration)");
+        } else if is_x86_feature_detected!("avx2") {
+            println!("  - AVX2: enabled (32 bytes/iteration)");
         } else {
             println!("  - AVX2: not available");
         }
@@ -314,10 +341,22 @@ fn print_info() {
         }
     }
     
+    #[cfg(target_arch = "aarch64")]
+    {
+        println!("  - NEON: enabled (16 bytes/iteration)");
+    }
+    
     println!();
     println!("Threads: {}", std::thread::available_parallelism()
         .map(|p| p.get())
         .unwrap_or(1));
+    println!();
+    println!("CLI Flags:");
+    println!("  --jit / --no-jit  Enable/disable JIT compilation");
+    println!("  --async / -a      Enable async I/O mode");
+    println!("  --gc-stats        Show GC statistics on exit");
+    println!("  --gc-threshold N  Set GC collection threshold");
+    println!("  --debug / -d      Enable debug mode");
 }
 
 fn print_help() {

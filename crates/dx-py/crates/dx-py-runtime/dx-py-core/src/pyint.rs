@@ -1,7 +1,7 @@
 //! PyInt - Python integer type
 
 use crate::header::{PyObjectHeader, TypeTag, ObjectFlags};
-use crate::{CoreError, CoreResult};
+use crate::error::{RuntimeError, RuntimeResult};
 
 /// Python integer object
 /// 
@@ -32,49 +32,49 @@ impl PyInt {
     }
     
     /// Add two integers
-    pub fn add(&self, other: &PyInt) -> CoreResult<PyInt> {
+    pub fn add(&self, other: &PyInt) -> RuntimeResult<PyInt> {
         self.value
             .checked_add(other.value)
             .map(PyInt::new)
-            .ok_or(CoreError::OverflowError)
+            .ok_or(RuntimeError::overflow_error("addition"))
     }
     
     /// Subtract two integers
-    pub fn sub(&self, other: &PyInt) -> CoreResult<PyInt> {
+    pub fn sub(&self, other: &PyInt) -> RuntimeResult<PyInt> {
         self.value
             .checked_sub(other.value)
             .map(PyInt::new)
-            .ok_or(CoreError::OverflowError)
+            .ok_or(RuntimeError::overflow_error("subtraction"))
     }
     
     /// Multiply two integers
-    pub fn mul(&self, other: &PyInt) -> CoreResult<PyInt> {
+    pub fn mul(&self, other: &PyInt) -> RuntimeResult<PyInt> {
         self.value
             .checked_mul(other.value)
             .map(PyInt::new)
-            .ok_or(CoreError::OverflowError)
+            .ok_or(RuntimeError::overflow_error("multiplication"))
     }
     
     /// Floor divide two integers
-    pub fn floordiv(&self, other: &PyInt) -> CoreResult<PyInt> {
+    pub fn floordiv(&self, other: &PyInt) -> RuntimeResult<PyInt> {
         if other.value == 0 {
-            return Err(CoreError::ValueError("division by zero".into()));
+            return Err(RuntimeError::ZeroDivisionError);
         }
         Ok(PyInt::new(self.value / other.value))
     }
     
     /// Modulo two integers
-    pub fn modulo(&self, other: &PyInt) -> CoreResult<PyInt> {
+    pub fn modulo(&self, other: &PyInt) -> RuntimeResult<PyInt> {
         if other.value == 0 {
-            return Err(CoreError::ValueError("modulo by zero".into()));
+            return Err(RuntimeError::ZeroDivisionError);
         }
         Ok(PyInt::new(self.value % other.value))
     }
     
     /// Power (with overflow check)
-    pub fn pow(&self, exp: &PyInt) -> CoreResult<PyInt> {
+    pub fn pow(&self, exp: &PyInt) -> RuntimeResult<PyInt> {
         if exp.value < 0 {
-            return Err(CoreError::ValueError("negative exponent".into()));
+            return Err(RuntimeError::value_error("negative exponent"));
         }
         let mut result: i64 = 1;
         let mut base = self.value;
@@ -82,30 +82,30 @@ impl PyInt {
         
         while exp > 0 {
             if exp & 1 == 1 {
-                result = result.checked_mul(base).ok_or(CoreError::OverflowError)?;
+                result = result.checked_mul(base).ok_or(RuntimeError::overflow_error("power"))?;
             }
             exp >>= 1;
             if exp > 0 {
-                base = base.checked_mul(base).ok_or(CoreError::OverflowError)?;
+                base = base.checked_mul(base).ok_or(RuntimeError::overflow_error("power"))?;
             }
         }
         Ok(PyInt::new(result))
     }
     
     /// Negate
-    pub fn neg(&self) -> CoreResult<PyInt> {
+    pub fn neg(&self) -> RuntimeResult<PyInt> {
         self.value
             .checked_neg()
             .map(PyInt::new)
-            .ok_or(CoreError::OverflowError)
+            .ok_or(RuntimeError::overflow_error("negation"))
     }
     
     /// Absolute value
-    pub fn abs(&self) -> CoreResult<PyInt> {
+    pub fn abs(&self) -> RuntimeResult<PyInt> {
         self.value
             .checked_abs()
             .map(PyInt::new)
-            .ok_or(CoreError::OverflowError)
+            .ok_or(RuntimeError::overflow_error("absolute value"))
     }
     
     /// Bitwise AND
@@ -129,20 +129,20 @@ impl PyInt {
     }
     
     /// Left shift
-    pub fn lshift(&self, other: &PyInt) -> CoreResult<PyInt> {
+    pub fn lshift(&self, other: &PyInt) -> RuntimeResult<PyInt> {
         if other.value < 0 {
-            return Err(CoreError::ValueError("negative shift count".into()));
+            return Err(RuntimeError::value_error("negative shift count"));
         }
         if other.value >= 64 {
-            return Err(CoreError::OverflowError);
+            return Err(RuntimeError::overflow_error("left shift"));
         }
         Ok(PyInt::new(self.value << other.value))
     }
     
     /// Right shift
-    pub fn rshift(&self, other: &PyInt) -> CoreResult<PyInt> {
+    pub fn rshift(&self, other: &PyInt) -> RuntimeResult<PyInt> {
         if other.value < 0 {
-            return Err(CoreError::ValueError("negative shift count".into()));
+            return Err(RuntimeError::value_error("negative shift count"));
         }
         if other.value >= 64 {
             return Ok(PyInt::new(if self.value < 0 { -1 } else { 0 }));

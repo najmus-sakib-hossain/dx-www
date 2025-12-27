@@ -1,7 +1,7 @@
 //! PyStr - Python string type
 
 use crate::header::{PyObjectHeader, TypeTag, ObjectFlags};
-use crate::{CoreError, CoreResult};
+use crate::error::{RuntimeError, RuntimeResult};
 use std::sync::Arc;
 
 /// Python string object
@@ -98,21 +98,19 @@ impl PyStr {
     }
     
     /// Get character at index
-    pub fn getitem(&self, index: i64) -> CoreResult<PyStr> {
+    pub fn getitem(&self, index: i64) -> RuntimeResult<PyStr> {
         let len = self.len() as i64;
         let idx = if index < 0 { len + index } else { index };
         
         if idx < 0 || idx >= len {
-            return Err(CoreError::IndexError(format!(
-                "string index out of range: {}", index
-            )));
+            return Err(RuntimeError::index_error(index, len as usize));
         }
         
         self.data
             .chars()
             .nth(idx as usize)
             .map(|c| PyStr::new(c.to_string()))
-            .ok_or_else(|| CoreError::IndexError("index out of range".into()))
+            .ok_or_else(|| RuntimeError::index_error(index, len as usize))
     }
     
     /// Slice string

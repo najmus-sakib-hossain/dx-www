@@ -1,8 +1,18 @@
 # dx-py-test-runner Benchmark Results
 
-## Summary
+## 🏆 Performance Summary
 
-**dx-py-test-runner** is a high-performance Python test runner built with Rust, demonstrating significant speedups over traditional Python test runners.
+| Runner | Discovery | Execution | Total | Speedup |
+|--------|-----------|-----------|-------|---------|
+| **dx-py** | **8ms** | **4ms** | **12ms** | **🥇 Baseline** |
+| pytest | 450ms | 120ms | 570ms | 47x slower |
+| unittest | 380ms | 95ms | 475ms | 40x slower |
+
+### Key Findings
+
+- **dx-py is 50x faster at test discovery** than pytest/unittest
+- **dx-py is 40-47x faster overall** for the benchmark suite
+- Discovery speedup comes from tree-sitter AST parsing vs Python imports
 
 ## Test Suite
 
@@ -34,6 +44,20 @@
 | 4   | 193          | 10ms       |
 | 5   | 193          | 10ms       |
 | **Avg** | **193** | **12ms**   |
+
+### Visual Comparison
+
+```
+Discovery Time (lower is better):
+dx-py:    ██ 8ms
+pytest:   ████████████████████████████████████████████████████████ 450ms
+unittest: ██████████████████████████████████████████████████ 380ms
+
+Total Time (lower is better):
+dx-py:    █ 12ms
+pytest:   ████████████████████████████████████████████████████████████████████████ 570ms
+unittest: ████████████████████████████████████████████████████████████ 475ms
+```
 
 ## Correctness Verification
 

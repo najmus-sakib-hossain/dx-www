@@ -20,6 +20,8 @@ pub use vm::VirtualMachine;
 pub use jit_integration::{JitIntegration, JitError, JitStats};
 pub use async_integration::{AsyncRuntime, AsyncError, FutureResult};
 
+use dx_py_core::RuntimeError;
+
 /// Interpreter error types
 #[derive(Debug, thiserror::Error)]
 pub enum InterpreterError {
@@ -55,6 +57,9 @@ pub enum InterpreterError {
     
     #[error("Core error: {0}")]
     Core(#[from] dx_py_core::CoreError),
+    
+    #[error("{0}")]
+    RuntimeError(#[from] RuntimeError),
 }
 
 pub type InterpreterResult<T> = Result<T, InterpreterError>;

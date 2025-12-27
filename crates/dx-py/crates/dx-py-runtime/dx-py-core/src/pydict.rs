@@ -2,7 +2,7 @@
 
 use crate::header::{PyObjectHeader, TypeTag, ObjectFlags};
 use crate::pylist::PyValue;
-use crate::{CoreError, CoreResult};
+use crate::error::{RuntimeError, RuntimeResult};
 use dashmap::DashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -64,22 +64,20 @@ impl std::fmt::Debug for PyKey {
 
 impl PyKey {
     /// Try to convert a PyValue to a PyKey
-    pub fn from_value(value: &PyValue) -> CoreResult<Self> {
+    pub fn from_value(value: &PyValue) -> RuntimeResult<Self> {
         match value {
             PyValue::None => Ok(PyKey::None),
             PyValue::Bool(b) => Ok(PyKey::Bool(*b)),
             PyValue::Int(i) => Ok(PyKey::Int(*i)),
             PyValue::Str(s) => Ok(PyKey::Str(Arc::clone(s))),
             PyValue::Tuple(t) => {
-                let keys: CoreResult<Vec<PyKey>> = t.to_vec()
+                let keys: RuntimeResult<Vec<PyKey>> = t.to_vec()
                     .iter()
                     .map(PyKey::from_value)
                     .collect();
                 Ok(PyKey::Tuple(keys?))
             }
-            _ => Err(CoreError::TypeError(format!(
-                "unhashable type: '{}'", value.type_name()
-            ))),
+            _ => Err(RuntimeError::type_error("hashable type", value.type_name())),
         }
     }
     
@@ -136,11 +134,11 @@ impl PyDict {
     }
     
     /// Get item by key
-    pub fn getitem(&self, key: &PyKey) -> CoreResult<PyValue> {
+    pub fn getitem(&self, key: &PyKey) -> RuntimeResult<PyValue> {
         self.entries
             .get(key)
             .map(|v| v.clone())
-            .ok_or_else(|| CoreError::KeyError(format!("{:?}", key)))
+            .ok_or_else(|| RuntimeError::key_error(format!("{:?}", key)))
     }
     
     /// Get item with default
@@ -157,11 +155,11 @@ impl PyDict {
     }
     
     /// Delete item
-    pub fn delitem(&self, key: &PyKey) -> CoreResult<()> {
+    pub fn delitem(&self, key: &PyKey) -> RuntimeResult<()> {
         self.entries
             .remove(key)
             .map(|_| ())
-            .ok_or_else(|| CoreError::KeyError(format!("{:?}", key)))
+            .ok_or_else(|| RuntimeError::key_error(format!("{:?}", key)))
     }
     
     /// Check if contains key
@@ -193,15 +191,15 @@ impl PyDict {
     }
     
     /// Pop item with key
-    pub fn pop(&self, key: &PyKey, default: Option<PyValue>) -> CoreResult<PyValue> {
+    pub fn pop(&self, key: &PyKey, default: Option<PyValue>) -> RuntimeResult<PyValue> {
         match self.entries.remove(key) {
             Some((_, v)) => Ok(v),
-            None => default.ok_or_else(|| CoreError::KeyError(format!("{:?}", key))),
+            None => default.ok_or_else(|| RuntimeError::key_error(format!("{:?}", key))),
         }
     }
     
     /// Pop arbitrary item
-    pub fn popitem(&self) -> CoreResult<(PyKey, PyValue)> {
+    pub fn popitem(&self) -> RuntimeResult<(PyKey, PyValue)> {
         // Get first key
         let key = self.entries
             .iter()
@@ -213,7 +211,7 @@ impl PyDict {
                 let v = self.entries.remove(&k).unwrap().1;
                 Ok((k, v))
             }
-            None => Err(CoreError::KeyError("dictionary is empty".into())),
+            None => Err(RuntimeError::key_error("dictionary is empty")),
         }
     }
     

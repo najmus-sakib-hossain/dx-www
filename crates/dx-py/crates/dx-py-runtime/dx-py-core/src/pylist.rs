@@ -1,7 +1,7 @@
 //! PyList - Python list type
 
 use crate::header::{PyObjectHeader, TypeTag, ObjectFlags};
-use crate::{CoreError, CoreResult};
+use crate::error::{RuntimeError, RuntimeResult};
 use parking_lot::RwLock;
 use std::sync::Arc;
 
@@ -107,30 +107,26 @@ impl PyList {
     }
     
     /// Get item at index
-    pub fn getitem(&self, index: i64) -> CoreResult<PyValue> {
+    pub fn getitem(&self, index: i64) -> RuntimeResult<PyValue> {
         let elements = self.elements.read();
         let len = elements.len() as i64;
         let idx = if index < 0 { len + index } else { index };
         
         if idx < 0 || idx >= len {
-            return Err(CoreError::IndexError(format!(
-                "list index out of range: {}", index
-            )));
+            return Err(RuntimeError::index_error(index, elements.len()));
         }
         
         Ok(elements[idx as usize].clone())
     }
     
     /// Set item at index
-    pub fn setitem(&self, index: i64, value: PyValue) -> CoreResult<()> {
+    pub fn setitem(&self, index: i64, value: PyValue) -> RuntimeResult<()> {
         let mut elements = self.elements.write();
         let len = elements.len() as i64;
         let idx = if index < 0 { len + index } else { index };
         
         if idx < 0 || idx >= len {
-            return Err(CoreError::IndexError(format!(
-                "list assignment index out of range: {}", index
-            )));
+            return Err(RuntimeError::index_error(index, elements.len()));
         }
         
         elements[idx as usize] = value;
@@ -155,10 +151,10 @@ impl PyList {
     }
     
     /// Remove and return item at index
-    pub fn pop(&self, index: Option<i64>) -> CoreResult<PyValue> {
+    pub fn pop(&self, index: Option<i64>) -> RuntimeResult<PyValue> {
         let mut elements = self.elements.write();
         if elements.is_empty() {
-            return Err(CoreError::IndexError("pop from empty list".into()));
+            return Err(RuntimeError::index_error(-1, 0));
         }
         
         let len = elements.len() as i64;
@@ -169,14 +165,14 @@ impl PyList {
         };
         
         if idx >= elements.len() {
-            return Err(CoreError::IndexError("pop index out of range".into()));
+            return Err(RuntimeError::index_error(idx as i64, elements.len()));
         }
         
         Ok(elements.remove(idx))
     }
     
     /// Remove first occurrence of value
-    pub fn remove(&self, value: &PyValue) -> CoreResult<()> {
+    pub fn remove(&self, value: &PyValue) -> RuntimeResult<()> {
         let mut elements = self.elements.write();
         for (i, elem) in elements.iter().enumerate() {
             if Self::values_equal(elem, value) {
@@ -184,7 +180,7 @@ impl PyList {
                 return Ok(());
             }
         }
-        Err(CoreError::ValueError("list.remove(x): x not in list".into()))
+        Err(RuntimeError::value_error("list.remove(x): x not in list"))
     }
     
     /// Clear the list
@@ -227,7 +223,7 @@ impl PyList {
     }
     
     /// Sort in place (simplified - only works for homogeneous numeric lists)
-    pub fn sort(&self) -> CoreResult<()> {
+    pub fn sort(&self) -> RuntimeResult<()> {
         let mut elements = self.elements.write();
         
         // Check if all elements are comparable (simplified: only ints)
@@ -243,7 +239,7 @@ impl PyList {
             });
             Ok(())
         } else {
-            Err(CoreError::TypeError("'<' not supported between instances".into()))
+            Err(RuntimeError::type_error("comparable types", "mixed types"))
         }
     }
     
@@ -257,12 +253,12 @@ impl PyList {
     }
     
     /// Find index of value
-    pub fn index(&self, value: &PyValue) -> CoreResult<usize> {
+    pub fn index(&self, value: &PyValue) -> RuntimeResult<usize> {
         self.elements
             .read()
             .iter()
             .position(|v| Self::values_equal(v, value))
-            .ok_or_else(|| CoreError::ValueError("value not in list".into()))
+            .ok_or_else(|| RuntimeError::value_error("value not in list"))
     }
     
     /// Check if contains value

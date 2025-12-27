@@ -8,3 +8,4 @@ pub mod collections_tests;
 pub mod gc_tests;
 pub mod jit_tests;
 pub mod async_tests;
+pub mod ffi_tests;
